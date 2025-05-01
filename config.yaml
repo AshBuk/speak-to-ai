@@ -1,0 +1,37 @@
+# Speak to AI - Configuration File
+
+# General settings
+general:
+  debug: false
+  model_path: "sources/language-models/base.bin"
+  temp_audio_path: "/tmp"
+  model_precision: "base"
+  language: "auto"  # Auto-detect language, or specify "en", etc.
+  log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable file logging)
+
+# Hotkey settings
+hotkeys:
+  start_recording: "ctrl+shift+space"
+  stop_recording: "ctrl+shift+space"  # Same combination for start/stop
+  copy_to_clipboard: "ctrl+shift+c"
+  paste_to_active_app: "ctrl+shift+v"
+
+# Audio recording settings
+audio:
+  device: "default"
+  sample_rate: 16000
+  format: "s16le"
+  channels: 1
+  recording_method: "arecord"  # Options: "arecord", "ffmpeg"
+
+# Text output settings
+output:
+  default_mode: "clipboard"  # Options: "clipboard", "active_window", "web"
+  clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xclip"
+  type_tool: "auto"  # Options: "auto", "xdotool", "wl-clipboard", "dbus"
+
+# Web server settings
+web_server:
+  enabled: false
+  port: 8080
+  host: "localhost" 

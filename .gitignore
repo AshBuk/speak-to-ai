@@ -1,0 +1,32 @@
+# Go binaries and artifacts
+*.exe
+*.test
+*.out
+
+# Project executable
+/speak-to-ai
+/packaging
+
+# Compiled Go packages
+/bin/
+/pkg/
+
+# Whisper models (large files)
+/sources/language-models/*.bin
+
+# Temporary directories and logs
+/tmp/
+/logs/
+*.log
+
+# Web directory (planned for development)
+/web/
+
+# Editor/IDE specific files
+.vscode/
+.cursor/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+.directory
