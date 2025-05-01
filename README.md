@@ -1,11 +1,11 @@
-# 🧠 Speak to AI
+# Speak to AI
 
 **Speak to AI** is an open-source local speech-to-text application for **Linux** that converts speech into text and inserts it into AI chats and other applications.  
 The application runs in the background as a daemon, providing system-wide access via hotkeys for a seamless experience.
 
 ---
 
-## 🌟 Features
+## Features
 
 - **100% Local & Private**  
   Speech processing happens entirely on your device — no internet required, no data sent to external servers.
