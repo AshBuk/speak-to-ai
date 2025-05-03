@@ -19,8 +19,9 @@
 /logs/
 *.log
 
-# Web directory (planned for development)
-/web/
+# planned for development
+/web
+/examples
 
 # Editor/IDE specific files
 .vscode/

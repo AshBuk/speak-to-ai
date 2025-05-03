@@ -5,11 +5,17 @@ import (
 	"flag"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/hotkeys"
+	"github.com/AshBuk/speak-to-ai/output"
+	"github.com/AshBuk/speak-to-ai/websocket"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // Command-line flags
@@ -21,15 +27,15 @@ var (
 	debug        bool
 )
 
-// EnvironmentType represents the display server type
+// represents the display server type
 type EnvironmentType string
 
 const (
-	// EnvironmentX11 represents X11 display server
+	// X11 display server
 	EnvironmentX11 EnvironmentType = "X11"
-	// EnvironmentWayland represents Wayland display server
+	// Wayland display server
 	EnvironmentWayland EnvironmentType = "Wayland"
-	// EnvironmentUnknown represents unknown display server
+	// Unknown display server
 	EnvironmentUnknown EnvironmentType = "Unknown"
 )
 
@@ -53,61 +59,75 @@ func main() {
 	log.Printf("Detected environment: %s", env)
 
 	// Load configuration
-	config, err := LoadConfig(configFile)
+	cfg, err := config.LoadConfig(configFile)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	// Override debug flag from command line if specified
 	if debug {
-		config.General.Debug = true
+		cfg.General.Debug = true
 	}
 
 	// Create directory for models and temporary files if it doesn't exist
-	ensureDirectories(config)
+	ensureDirectories(cfg)
 
 	// Initialize model manager
-	modelsDir := filepath.Dir(config.General.ModelPath)
-	modelManager := NewModelManager(config, modelsDir, quantizePath)
-
-	// Preload models in a background goroutine to avoid delaying startup
-	go func() {
-		log.Println("Preloading models...")
-		if err := modelManager.PreloadModels(); err != nil {
-			log.Printf("Warning: model preloading failed: %v", err)
-		}
-	}()
+	modelManager := whisper.NewModelManager(cfg)
 
 	// Get model path from manager for immediate usage
-	modelFilePath, err := modelManager.GetModelPath(config.General.ModelType, config.General.ModelPrecision)
+	modelFilePath, err := modelManager.GetModelPath()
 	if err != nil {
 		log.Printf("Warning: Failed to get model path: %v", err)
 		log.Println("Will continue startup and attempt to load model later")
 	}
 
-	// Initialize audio manager (recorder)
-	recorder, err := GetRecorder(config)
+	// Initialize audio recorder
+	recorder, err := audio.GetRecorder(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize audio recorder: %v", err)
 	}
 
 	// Initialize whisper engine
-	whisperEngine := NewWhisperEngine(config, whisperPath, modelFilePath)
+	whisperEngine := whisper.NewWhisperEngine(cfg, whisperPath, modelFilePath)
 
 	// Initialize output manager based on environment
-	outputter, err := GetOutputter(config)
+	outputEnv := convertEnvironmentType(env)
+	outputter, err := output.GetOutputterFromConfig(cfg, outputEnv)
 	if err != nil {
 		log.Printf("Warning: Failed to initialize text outputter: %v", err)
 	}
 
+	// Convert string environment to hotkeys.EnvironmentType
+	var hotkeyEnv hotkeys.EnvironmentType
+	switch env {
+	case "X11":
+		hotkeyEnv = hotkeys.EnvironmentX11
+	case "Wayland":
+		hotkeyEnv = hotkeys.EnvironmentWayland
+	default:
+		hotkeyEnv = hotkeys.EnvironmentUnknown
+	}
+
+	// Create hotkey config adapter
+	hotkeyConfig := hotkeys.NewConfigAdapter(
+		cfg.Hotkeys.StartRecording,
+		cfg.Hotkeys.CopyToClipboard,
+		cfg.Hotkeys.PasteToActiveApp,
+	)
+
 	// Initialize hotkey manager with environment information
-	hotkeyManager := NewHotkeyManager(config, EnvironmentType(env))
+	hotkeyManager := hotkeys.NewHotkeyManager(hotkeyConfig, hotkeyEnv)
 
 	// Initialize WebSocket server
-	wsServer := NewWebSocketServer(config, recorder, whisperEngine)
+	// Create a simple logger implementation
+	logger := &simpleLogger{}
+	wsServer := websocket.NewWebSocketServer(cfg, recorder, whisperEngine, logger)
 
-	// Start WebSocket server
-	go wsServer.Start()
+	// Start WebSocket server if enabled
+	if cfg.WebServer.Enabled {
+		go wsServer.Start()
+	}
 
 	// Helper variable to store last transcript for clipboard/paste
 	var lastTranscript string
@@ -157,8 +177,10 @@ func main() {
 
 				log.Printf("Transcript: %s", r.transcript)
 
-				// Send transcript to WebSocket clients
-				wsServer.BroadcastMessage("transcript", r.transcript)
+				// Send transcript to WebSocket clients if server is enabled
+				if cfg.WebServer.Enabled {
+					wsServer.BroadcastMessage("transcript", r.transcript)
+				}
 
 				// Store transcript for clipboard/paste operations
 				lastTranscript = r.transcript
@@ -226,9 +248,9 @@ func main() {
 
 	// Cleanup
 	hotkeyManager.Stop()
-
-	// Stop WebSocket server
-	wsServer.Stop()
+	if cfg.WebServer.Enabled {
+		wsServer.Stop()
+	}
 
 	// Cleanup any temp files using the interface
 	if recorder != nil {
@@ -240,51 +262,63 @@ func main() {
 	log.Println("Daemon shutdown complete")
 }
 
-// detectEnvironment determines if the system is running X11 or Wayland
+// detectEnvironment detects the current display server environment
 func detectEnvironment() EnvironmentType {
 	// Check for Wayland
-	wayland := os.Getenv("WAYLAND_DISPLAY")
-	if wayland != "" {
+	if os.Getenv("WAYLAND_DISPLAY") != "" {
 		return EnvironmentWayland
 	}
 
 	// Check for X11
-	x11 := os.Getenv("DISPLAY")
-	if x11 != "" {
+	if os.Getenv("DISPLAY") != "" {
 		return EnvironmentX11
 	}
 
-	// Try to detect using commands
-	if commandExists("weston-info") || commandExists("swaybg") {
-		return EnvironmentWayland
-	}
-
-	if commandExists("xdpyinfo") {
-		return EnvironmentX11
-	}
-
+	// If neither is detected, assume X11 as fallback
 	return EnvironmentUnknown
 }
 
-// commandExists checks if a command exists in the system
-func commandExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
-}
-
 // ensureDirectories creates necessary directories for the application
-func ensureDirectories(config *Config) {
-	// Create models directory
-	modelsDir := filepath.Dir(config.General.ModelPath)
+func ensureDirectories(cfg *config.Config) {
+	// Create model directory if it doesn't exist
+	modelsDir := filepath.Dir(cfg.General.ModelPath)
 	if err := os.MkdirAll(modelsDir, 0755); err != nil {
 		log.Printf("Warning: Failed to create models directory: %v", err)
 	}
 
-	// Create temp directory for audio recordings if specified
-	tempDir := config.General.TempAudioPath
-	if tempDir != "" {
-		if err := os.MkdirAll(tempDir, 0755); err != nil {
-			log.Printf("Warning: Failed to create temp directory: %v", err)
-		}
+	// Create temp directory if it doesn't exist
+	if err := os.MkdirAll(cfg.General.TempAudioPath, 0755); err != nil {
+		log.Printf("Warning: Failed to create temp directory: %v", err)
 	}
+}
+
+// convertEnvironmentType converts EnvironmentType to output.EnvironmentType
+func convertEnvironmentType(env EnvironmentType) output.EnvironmentType {
+	switch env {
+	case EnvironmentX11:
+		return output.EnvironmentX11
+	case EnvironmentWayland:
+		return output.EnvironmentWayland
+	default:
+		return output.EnvironmentUnknown
+	}
+}
+
+// simpleLogger implements the Logger interface for websocket
+type simpleLogger struct{}
+
+func (l *simpleLogger) Info(format string, args ...interface{}) {
+	log.Printf("[INFO] "+format, args...)
+}
+
+func (l *simpleLogger) Debug(format string, args ...interface{}) {
+	log.Printf("[DEBUG] "+format, args...)
+}
+
+func (l *simpleLogger) Warning(format string, args ...interface{}) {
+	log.Printf("[WARNING] "+format, args...)
+}
+
+func (l *simpleLogger) Error(format string, args ...interface{}) {
+	log.Printf("[ERROR] "+format, args...)
 }

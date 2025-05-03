@@ -1,4 +1,4 @@
-package main
+package whisper
 
 import (
 	"bytes"
@@ -8,17 +8,19 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // WhisperEngine represents an interface for working with whisper
 type WhisperEngine struct {
-	config     *Config
+	config     *config.Config
 	whisperBin string
 	modelPath  string
 }
 
 // NewWhisperEngine creates a new instance of WhisperEngine
-func NewWhisperEngine(config *Config, whisperBin, modelPath string) *WhisperEngine {
+func NewWhisperEngine(config *config.Config, whisperBin, modelPath string) *WhisperEngine {
 	return &WhisperEngine{
 		config:     config,
 		whisperBin: whisperBin,
@@ -59,7 +61,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 		return "", fmt.Errorf("error checking audio file size: %w", err)
 	}
 
-	// Set a reasonable size limit (e.g. 50MB)
+	// Set a reasonable size limit
 	const maxFileSize int64 = 50 * 1024 * 1024
 	if fileSize > maxFileSize {
 		return "", fmt.Errorf("audio file too large (%d bytes), max allowed is %d bytes", fileSize, maxFileSize)

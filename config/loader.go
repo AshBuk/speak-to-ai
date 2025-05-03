@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -30,11 +30,14 @@ type Config struct {
 
 	// Audio recording settings
 	Audio struct {
-		Device          string `yaml:"device"`
-		SampleRate      int    `yaml:"sample_rate"`
-		Format          string `yaml:"format"`
-		Channels        int    `yaml:"channels"`
-		RecordingMethod string `yaml:"recording_method"` // 'arecord', 'ffmpeg', 'go-native'
+		Device           string `yaml:"device"`
+		SampleRate       int    `yaml:"sample_rate"`
+		Format           string `yaml:"format"`
+		Channels         int    `yaml:"channels"`
+		RecordingMethod  string `yaml:"recording_method"`   // 'arecord', 'ffmpeg', 'go-native'
+		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds
+		EnableStreaming  bool   `yaml:"enable_streaming"`   // Whether to enable audio streaming
+		MaxRecordingTime int    `yaml:"max_recording_time"` // Max recording time in seconds
 	} `yaml:"audio"`
 
 	// Text output settings
@@ -46,10 +49,23 @@ type Config struct {
 
 	// Web server settings
 	WebServer struct {
-		Enabled bool   `yaml:"enabled"`
-		Port    int    `yaml:"port"`
-		Host    string `yaml:"host"`
+		Enabled     bool   `yaml:"enabled"`
+		Port        int    `yaml:"port"`
+		Host        string `yaml:"host"`
+		AuthToken   string `yaml:"auth_token"`   // Optional auth token
+		APIVersion  string `yaml:"api_version"`  // API version
+		LogRequests bool   `yaml:"log_requests"` // Whether to log requests
+		CORSOrigins string `yaml:"cors_origins"` // Allowed origins for CORS
+		MaxClients  int    `yaml:"max_clients"`  // Maximum number of clients
 	} `yaml:"web_server"`
+
+	// Security settings
+	Security struct {
+		AllowedCommands []string `yaml:"allowed_commands"`   // Whitelist of allowed commands
+		CheckIntegrity  bool     `yaml:"check_integrity"`    // Whether to check config integrity
+		ConfigHash      string   `yaml:"config_hash"`        // Hash for integrity check
+		MaxTempFileSize int64    `yaml:"max_temp_file_size"` // Max temp file size in bytes
+	} `yaml:"security"`
 }
 
 // LoadConfig loads configuration from file
@@ -57,7 +73,7 @@ func LoadConfig(filename string) (*Config, error) {
 	var config Config
 
 	// Set default values
-	setDefaultConfig(&config)
+	SetDefaultConfig(&config)
 
 	// Read configuration file
 	data, err := os.ReadFile(filename)
@@ -73,40 +89,11 @@ func LoadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 
+	// Validate configuration
+	if err := ValidateConfig(&config); err != nil {
+		log.Printf("Configuration validation error: %v", err)
+		log.Println("Using validated configuration with corrections")
+	}
+
 	return &config, nil
-}
-
-// setDefaultConfig sets default values
-func setDefaultConfig(config *Config) {
-	// General settings
-	config.General.Debug = false
-	config.General.ModelPath = "sources/language-models/base.bin"
-	config.General.TempAudioPath = "/tmp"
-	config.General.ModelType = "base"
-	config.General.ModelPrecision = "f16"
-	config.General.Language = "auto" // Auto-detect language
-	config.General.LogFile = ""      // No log file by default
-
-	// Hotkey settings (defaults)
-	config.Hotkeys.StartRecording = "ctrl+shift+space"
-	config.Hotkeys.StopRecording = "ctrl+shift+space" // Same combination for start/stop
-	config.Hotkeys.CopyToClipboard = "ctrl+shift+c"
-	config.Hotkeys.PasteToActiveApp = "ctrl+shift+v"
-
-	// Audio settings
-	config.Audio.Device = "default"
-	config.Audio.SampleRate = 16000
-	config.Audio.Format = "s16le"
-	config.Audio.Channels = 1
-	config.Audio.RecordingMethod = "arecord"
-
-	// Output settings
-	config.Output.DefaultMode = "clipboard"
-	config.Output.ClipboardTool = "auto" // auto-detect
-	config.Output.TypeTool = "auto"      // auto-detect
-
-	// Web server settings
-	config.WebServer.Enabled = true
-	config.WebServer.Port = 8080
-	config.WebServer.Host = "localhost"
 }
