@@ -13,6 +13,7 @@ OUTPUT_DIR="dist"
 echo "Creating AppDir structure..."
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin"
+mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo"
@@ -34,15 +35,84 @@ else
     echo "Warning: sources/core directory not found"
 fi
 
-# Create AppRun script
-echo "Creating AppRun script..."
+# Include the pre-downloaded Whisper model
+if [ -f "sources/language-models/base.bin" ]; then
+    echo "Including pre-downloaded Whisper model..."
+    cp sources/language-models/base.bin "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models/"
+else
+    echo "Warning: Whisper model not found at sources/language-models/base.bin"
+fi
+
+# Copy required dependencies for offline use
+echo "Copying required dependencies..."
+# Find and include xclip
+XCLIP_PATH=$(which xclip 2>/dev/null || echo "")
+if [ -n "$XCLIP_PATH" ]; then
+    echo "Including xclip dependency..."
+    cp "$XCLIP_PATH" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+    
+    # Copy necessary shared libraries
+    ldd "$XCLIP_PATH" | grep "=>" | awk '{print $3}' | while read -r lib; do
+        if [ -f "$lib" ] && [[ "$lib" != /lib* ]]; then
+            cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/"
+        fi
+    done
+else
+    echo "Warning: xclip not found in PATH"
+fi
+
+# Find and include notify-send (libnotify-tools)
+NOTIFY_PATH=$(which notify-send 2>/dev/null || echo "")
+if [ -n "$NOTIFY_PATH" ]; then
+    echo "Including notify-send dependency..."
+    cp "$NOTIFY_PATH" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+    
+    # Copy necessary shared libraries
+    ldd "$NOTIFY_PATH" | grep "=>" | awk '{print $3}' | while read -r lib; do
+        if [ -f "$lib" ] && [[ "$lib" != /lib* ]]; then
+            cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/"
+        fi
+    done
+else
+    echo "Warning: notify-send not found in PATH"
+fi
+
+# Create AppRun script with first-launch behavior
+echo "Creating enhanced AppRun script..."
 cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
 #!/bin/bash
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 export PATH="${HERE}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+
+# Create user config directory
+CONFIG_DIR="${HOME}/.config/speak-to-ai"
+mkdir -p "${CONFIG_DIR}"
+mkdir -p "${CONFIG_DIR}/language-models"
+
+# First launch checks
+if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
+    echo "First launch detected: Setting up configuration..."
+    cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
+    
+    # Update the config to point to the correct model path
+    sed -i "s|sources/language-models/base.bin|${CONFIG_DIR}/language-models/base.bin|g" "${CONFIG_DIR}/config.yaml"
+fi
+
+# Check if model exists in user directory, copy if not
+if [ ! -f "${CONFIG_DIR}/language-models/base.bin" ]; then
+    echo "Copying Whisper model to user directory..."
+    if [ -f "${HERE}/sources/language-models/base.bin" ]; then
+        cp "${HERE}/sources/language-models/base.bin" "${CONFIG_DIR}/language-models/base.bin"
+    else
+        echo "Warning: Model not found in AppImage. Please download it manually."
+    fi
+fi
+
+# Run the application with user config
 cd "${HERE}"
-exec "${HERE}/usr/bin/speak-to-ai" "$@"
+exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
 EOF
 chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
 

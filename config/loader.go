@@ -24,6 +24,7 @@ type Config struct {
 	Hotkeys struct {
 		StartRecording   string `yaml:"start_recording"`
 		StopRecording    string `yaml:"stop_recording"`
+		CopilotKey       string `yaml:"copilot_key"` // Special key for AI assistants (e.g. Copilot)
 		CopyToClipboard  string `yaml:"copy_to_clipboard"`
 		PasteToActiveApp string `yaml:"paste_to_active_app"`
 	} `yaml:"hotkeys"`

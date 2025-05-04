@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/AshBuk/speak-to-ai/internal/app"
 )
@@ -28,6 +30,9 @@ func init() {
 }
 
 func main() {
+	// Adjust paths for AppImage environment
+	adjustPathsForAppImage()
+
 	// Create application instance
 	application := app.NewApp(configFile, debug, whisperPath, modelPath, quantizePath)
 
@@ -44,4 +49,51 @@ func main() {
 	}
 
 	os.Exit(0)
-} 
+}
+
+// adjustPathsForAppImage detects if running inside an AppImage and adjusts paths accordingly
+func adjustPathsForAppImage() {
+	// Check for AppImage environment
+	appImagePath := os.Getenv("APPIMAGE")
+	if appImagePath == "" {
+		// Not running in AppImage, use default paths
+		return
+	}
+
+	// Get AppImage directory
+	appDir := os.Getenv("APPDIR")
+	if appDir == "" {
+		// Try to detect AppDir from ARGV0
+		argv0 := os.Getenv("ARGV0")
+		if argv0 != "" && strings.HasSuffix(argv0, "/AppRun") {
+			appDir = filepath.Dir(argv0)
+		}
+	}
+
+	if appDir == "" {
+		log.Println("Warning: Running in AppImage but could not detect AppDir")
+		return
+	}
+
+	log.Printf("Running inside AppImage, base path: %s", appDir)
+
+	// Adjust paths for AppImage
+	if whisperPath == "sources/core/whisper" {
+		whisperPath = filepath.Join(appDir, "sources/core/whisper")
+		log.Printf("Adjusted whisper path: %s", whisperPath)
+	}
+
+	if quantizePath == "sources/core/quantize" {
+		quantizePath = filepath.Join(appDir, "sources/core/quantize")
+		log.Printf("Adjusted quantize path: %s", quantizePath)
+	}
+
+	// If no model path specified, check built-in model
+	if modelPath == "" {
+		builtinModelPath := filepath.Join(appDir, "sources/language-models/base.bin")
+		if _, err := os.Stat(builtinModelPath); err == nil {
+			modelPath = builtinModelPath
+			log.Printf("Using built-in model: %s", modelPath)
+		}
+	}
+}

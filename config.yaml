@@ -11,8 +11,9 @@ general:
 
 # Hotkey settings
 hotkeys:
-  start_recording: "ctrl+shift+space"
-  stop_recording: "ctrl+shift+space"  # Same combination for start/stop
+  start_recording: "alt+comma"  # Alt+, (comma) - Same as Copilot key
+  stop_recording: "alt+comma"   # Same combination for start/stop
+  copilot_key: "alt+comma"      # Microsoft Copilot key
   copy_to_clipboard: "ctrl+shift+c"
   paste_to_active_app: "ctrl+shift+v"
 

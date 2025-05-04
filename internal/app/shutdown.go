@@ -7,6 +7,11 @@ func (a *App) RunAndWait() error {
 		go a.WebSocketServer.Start()
 	}
 
+	// Start the tray manager if available
+	if a.TrayManager != nil {
+		a.TrayManager.Start()
+	}
+
 	// Register hotkey callbacks
 	a.registerCallbacks()
 
@@ -41,6 +46,11 @@ func (a *App) Shutdown() error {
 		a.WebSocketServer.Stop()
 	}
 
+	// Stop tray manager if available
+	if a.TrayManager != nil {
+		a.TrayManager.Stop()
+	}
+
 	// Cleanup any temp files
 	if a.Recorder != nil {
 		if err := a.Recorder.CleanupFile(); err != nil {
@@ -56,10 +66,7 @@ func (a *App) Shutdown() error {
 func (a *App) registerCallbacks() {
 	a.HotkeyManager.RegisterCallbacks(
 		// Record start callback
-		func() error {
-			a.Logger.Info("Starting recording...")
-			return a.Recorder.StartRecording()
-		},
+		a.handleStartRecording,
 		// Record stop and transcribe callback
 		a.handleStopRecordingAndTranscribe,
 		// Copy to clipboard callback

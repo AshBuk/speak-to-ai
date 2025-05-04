@@ -6,6 +6,7 @@
 # Project executable
 /speak-to-ai
 /packaging
+/dist
 
 # Compiled Go packages
 /bin/

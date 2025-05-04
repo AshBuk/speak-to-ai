@@ -5,9 +5,40 @@ import (
 	"time"
 )
 
+// handleStartRecording handles starting the recording
+func (a *App) handleStartRecording() error {
+	a.Logger.Info("Starting recording...")
+
+	// Show notification
+	if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
+		if err := a.NotifyManager.NotifyStartRecording(); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
+	}
+
+	// Update tray icon
+	if a.TrayManager != nil {
+		a.TrayManager.SetRecordingState(true)
+	}
+
+	return a.Recorder.StartRecording()
+}
+
 // handleStopRecordingAndTranscribe handles stopping recording and transcribing the audio
 func (a *App) handleStopRecordingAndTranscribe() error {
 	a.Logger.Info("Stopping recording...")
+
+	// Show notification
+	if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
+		if err := a.NotifyManager.NotifyStopRecording(); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
+	}
+
+	// Update tray icon
+	if a.TrayManager != nil {
+		a.TrayManager.SetRecordingState(false)
+	}
 
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
@@ -39,6 +70,12 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	case r := <-resultCh:
 		if r.err != nil {
 			a.Logger.Error("Error processing audio: %v", r.err)
+
+			// Show error notification
+			if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
+				a.NotifyManager.NotifyError("Failed to process audio")
+			}
+
 			return r.err
 		}
 
@@ -52,7 +89,24 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 		// Store transcript for clipboard/paste operations
 		a.LastTranscript = r.transcript
 
+		// Automatically copy to clipboard if enabled
+		if a.OutputManager != nil && a.Config.Output.DefaultMode == "clipboard" {
+			if err := a.OutputManager.CopyToClipboard(r.transcript); err != nil {
+				a.Logger.Warning("Failed to copy transcript to clipboard: %v", err)
+			} else {
+				// Show success notification
+				if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
+					a.NotifyManager.NotifyTranscriptionComplete()
+				}
+			}
+		}
+
 	case <-ctx.Done():
+		// Show timeout notification
+		if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
+			a.NotifyManager.NotifyError("Transcription timed out")
+		}
+
 		return ctx.Err()
 	}
 

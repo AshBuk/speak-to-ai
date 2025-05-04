@@ -10,7 +10,9 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
+	"github.com/AshBuk/speak-to-ai/internal/tray"
 	"github.com/AshBuk/speak-to-ai/output"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
@@ -27,6 +29,8 @@ type App struct {
 	OutputManager   output.Outputter
 	HotkeyManager   *hotkeys.HotkeyManager
 	WebSocketServer *websocket.WebSocketServer
+	TrayManager     tray.TrayManagerInterface
+	NotifyManager   *notify.NotificationManager
 	LastTranscript  string
 	ShutdownCh      chan os.Signal
 	Ctx             context.Context

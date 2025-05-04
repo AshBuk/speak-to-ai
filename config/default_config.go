@@ -12,8 +12,9 @@ func SetDefaultConfig(config *Config) {
 	config.General.LogFile = ""      // No log file by default
 
 	// Hotkey settings (defaults)
-	config.Hotkeys.StartRecording = "ctrl+shift+space"
-	config.Hotkeys.StopRecording = "ctrl+shift+space" // Same combination for start/stop
+	config.Hotkeys.StartRecording = "alt+comma" // AltGr + , (comma)
+	config.Hotkeys.StopRecording = "alt+comma"  // Same combination for start/stop
+	config.Hotkeys.CopilotKey = "alt+comma"     // Also set as copilot key for Windows keyboards
 	config.Hotkeys.CopyToClipboard = "ctrl+shift+c"
 	config.Hotkeys.PasteToActiveApp = "ctrl+shift+v"
 
@@ -43,7 +44,7 @@ func SetDefaultConfig(config *Config) {
 	config.WebServer.MaxClients = 10
 
 	// Security settings
-	config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wl-copy", "xclip"}
+	config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wl-copy", "xclip", "notify-send"}
 	config.Security.CheckIntegrity = false
 	config.Security.ConfigHash = ""
 	config.Security.MaxTempFileSize = 50 * 1024 * 1024 // 50MB by default

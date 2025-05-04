@@ -8,7 +8,9 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
+	"github.com/AshBuk/speak-to-ai/internal/tray"
 	"github.com/AshBuk/speak-to-ai/output"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
@@ -114,7 +116,32 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 	// Initialize WebSocket server
 	a.WebSocketServer = websocket.NewWebSocketServer(a.Config, a.Recorder, a.WhisperEngine, a.Logger)
 
+	// Initialize notification manager
+	a.NotifyManager = notify.NewNotificationManager("Speak-to-AI")
+
+	// Initialize system tray
+	a.initializeTrayManager()
+
 	return nil
+}
+
+// initializeTrayManager initializes the system tray manager
+func (a *App) initializeTrayManager() {
+	// Create a toggle function for the tray
+	toggleFunc := func() error {
+		if a.HotkeyManager.IsRecording() {
+			return a.HotkeyManager.SimulateHotkeyPress("stop_recording")
+		}
+		return a.HotkeyManager.SimulateHotkeyPress("start_recording")
+	}
+
+	// Create exit function
+	exitFunc := func() {
+		a.Cancel() // Trigger application shutdown
+	}
+
+	// Create the appropriate tray manager
+	a.TrayManager = tray.CreateDefaultTrayManager(exitFunc, toggleFunc)
 }
 
 // convertEnvironmentType converts platform.EnvironmentType to output.EnvironmentType
