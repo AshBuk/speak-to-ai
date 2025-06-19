@@ -13,6 +13,8 @@
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
+        "--device=all",
+        "--filesystem=home",
         "--filesystem=xdg-config/speak-to-ai:create",
         "--talk-name=org.freedesktop.Notifications",
         "--system-talk-name=org.freedesktop.UPower",
