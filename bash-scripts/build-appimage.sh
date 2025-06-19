@@ -166,7 +166,7 @@ echo "Creating icon symlink..."
 ln -sf "./usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.png"
 
 # Download AppImage tool if not present (to a separate tools directory)
-TOOLS_DIR="${OUTPUT_DIR}/tools"
+TOOLS_DIR="$(pwd)/tools"
 mkdir -p "${TOOLS_DIR}"
 if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
     echo "Downloading appimagetool..."
@@ -190,6 +190,9 @@ export ARCH="${ARCH}"
 export VERSION="${APP_VERSION}"
 
 echo "Attempting to build AppImage with architecture: ${ARCH}"
+echo "Tools directory: ${TOOLS_DIR}"
+echo "Looking for appimagetool at: ${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
+ls -la "${TOOLS_DIR}/" || echo "Tools directory not found"
 
 # Try to build AppImage directly (with FUSE workaround for CI)
 if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
