@@ -165,11 +165,13 @@ echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZS
 echo "Creating icon symlink..."
 ln -sf "./usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.png"
 
-# Download AppImage tool if not present
-if [ ! -f "${OUTPUT_DIR}/appimagetool-${ARCH}.AppImage" ]; then
+# Download AppImage tool if not present (to a separate tools directory)
+TOOLS_DIR="${OUTPUT_DIR}/tools"
+mkdir -p "${TOOLS_DIR}"
+if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
     echo "Downloading appimagetool..."
-    wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" -O "${OUTPUT_DIR}/appimagetool-${ARCH}.AppImage"
-    chmod +x "${OUTPUT_DIR}/appimagetool-${ARCH}.AppImage"
+    wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" -O "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
+    chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
 fi
 
 # Verify AppDir setup
@@ -190,7 +192,7 @@ export VERSION="${APP_VERSION}"
 echo "Attempting to build AppImage with architecture: ${ARCH}"
 
 # Try to build AppImage directly (with FUSE workaround for CI)
-if ./appimagetool-${ARCH}.AppImage --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
+if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
     # Find the AppImage that was created
     APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
     
@@ -210,7 +212,7 @@ else
     # Alternative: extract appimagetool and run directly
     if [ ! -d "appimagetool-extracted" ]; then
         echo "Extracting appimagetool..."
-        ./appimagetool-${ARCH}.AppImage --appimage-extract
+        "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract
         mv squashfs-root appimagetool-extracted
     fi
     
