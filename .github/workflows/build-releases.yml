@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.21'
+        go-version: '1.22'
         
     - name: Install dependencies
       run: |
@@ -40,7 +40,9 @@ jobs:
           libxinerama-dev \
           ffmpeg \
           alsa-utils \
-          wget
+          wget \
+          build-essential \
+          pkg-config
           
     - name: Download Whisper model if not present
       run: |
@@ -59,8 +61,8 @@ jobs:
           git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
           cd /tmp/whisper-cpp
           make -j$(nproc)
-          cp main sources/core/whisper
-          cp quantize sources/core/quantize
+          cp main ${{ github.workspace }}/sources/core/whisper
+          cp quantize ${{ github.workspace }}/sources/core/quantize
         fi
         
     - name: Build AppImage

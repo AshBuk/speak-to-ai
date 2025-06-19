@@ -21,7 +21,7 @@ mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
 
 echo "Building ${APP_NAME}..."
-go build -o "${APP_NAME}" cmd/daemon/*.go
+go build -o "${APP_NAME}" cmd/daemon/main.go
 
 echo "Copying files to AppDir..."
 cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
