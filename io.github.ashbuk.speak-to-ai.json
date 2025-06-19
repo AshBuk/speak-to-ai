@@ -42,6 +42,8 @@
                 "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
                 "install -Dm755 sources/core/whisper /app/bin/whisper",
                 "install -Dm755 sources/core/quantize /app/bin/quantize",
+                "install -Dm644 icons/io.github.ashbuk.speak-to-ai.svg /app/share/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg",
+                "install -Dm644 icons/io.github.ashbuk.speak-to-ai.png /app/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png",
                 "install -Dm644 io.github.ashbuk.speak-to-ai.desktop /app/share/applications/io.github.ashbuk.speak-to-ai.desktop",
                 "install -Dm644 io.github.ashbuk.speak-to-ai.appdata.xml /app/share/metainfo/io.github.ashbuk.speak-to-ai.appdata.xml"
             ],
