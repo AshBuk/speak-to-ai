@@ -173,6 +173,12 @@ jobs:
           ldd ${{ github.workspace }}/sources/core/whisper || echo "Static binary (no dependencies)"
         fi
         
+    - name: Pre-download Go modules for Flatpak
+      run: |
+        echo "Pre-downloading Go modules..."
+        go mod download
+        go mod verify
+        
     - name: Build Flatpak
       run: |
         chmod +x bash-scripts/build-flatpak.sh

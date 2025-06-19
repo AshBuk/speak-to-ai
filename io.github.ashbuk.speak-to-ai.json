@@ -25,15 +25,18 @@
         "env": {
             "GOBIN": "/app/bin",
             "GOROOT": "/usr/lib/sdk/golang"
-        }
+        },
+        "build-args": [
+            "--share=network"
+        ]
     },
     "modules": [
         {
             "name": "speak-to-ai",
             "buildsystem": "simple",
             "build-commands": [
-                ". /usr/lib/sdk/golang/enable.sh; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; go build -o speak-to-ai cmd/daemon/main.go",
+                ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
+                ". /usr/lib/sdk/golang/enable.sh; go build -v -o speak-to-ai cmd/daemon/main.go",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
                 "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
                 "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",

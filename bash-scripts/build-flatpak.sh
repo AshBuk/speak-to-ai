@@ -35,10 +35,9 @@ mkdir -p "${FLATPAK_DIR}"
 
 echo "Building Flatpak package..."
 
-# Build the Flatpak
+# Build the Flatpak with network access for Go modules
 flatpak-builder \
     --force-clean \
-    --sandbox \
     --user \
     --install-deps-from=flathub \
     --install-deps-only \
@@ -48,10 +47,9 @@ flatpak-builder \
     "${FLATPAK_DIR}/build-dir" \
     "${APP_ID}.json"
 
-# Build again without install-deps-only to actually build
+# Build again without install-deps-only to actually build (with network access)
 flatpak-builder \
     --force-clean \
-    --sandbox \
     --user \
     --ccache \
     --repo="${FLATPAK_DIR}/repo" \
