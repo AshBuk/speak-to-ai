@@ -189,8 +189,8 @@ export VERSION="${APP_VERSION}"
 
 echo "Attempting to build AppImage with architecture: ${ARCH}"
 
-# Try to build AppImage directly
-if ./appimagetool-${ARCH}.AppImage --no-appstream "${APP_NAME}.AppDir"; then
+# Try to build AppImage directly (with FUSE workaround for CI)
+if ./appimagetool-${ARCH}.AppImage --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
     # Find the AppImage that was created
     APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
     
@@ -206,6 +206,32 @@ if ./appimagetool-${ARCH}.AppImage --no-appstream "${APP_NAME}.AppDir"; then
         exit 1
     fi
 else
-    echo "Error: AppImage creation failed."
-    exit 1
+    echo "Primary method failed, trying alternative approach..."
+    # Alternative: extract appimagetool and run directly
+    if [ ! -d "appimagetool-extracted" ]; then
+        echo "Extracting appimagetool..."
+        ./appimagetool-${ARCH}.AppImage --appimage-extract
+        mv squashfs-root appimagetool-extracted
+    fi
+    
+    echo "Using extracted appimagetool..."
+    if ./appimagetool-extracted/AppRun --no-appstream "${APP_NAME}.AppDir"; then
+        # Find the AppImage that was created
+        APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
+        
+        if [ -n "$APPIMAGE_FILE" ]; then
+            chmod +x "$APPIMAGE_FILE"
+            echo "AppImage created successfully: $APPIMAGE_FILE"
+            ls -lh "$APPIMAGE_FILE"
+            echo "=== AppImage build completed successfully! ==="
+            exit 0
+        else
+            echo "Error: AppImage was built but could not be found."
+            ls -la
+            exit 1
+        fi
+    else
+        echo "Error: Both AppImage creation methods failed."
+        exit 1
+    fi
 fi 
