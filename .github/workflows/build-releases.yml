@@ -24,6 +24,17 @@ jobs:
       with:
         go-version: '1.22'
         
+    - name: Debug - Show environment
+      run: |
+        echo "=== Environment Debug ==="
+        echo "Go version: $(go version)"
+        echo "Working directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "Go mod contents:"
+        cat go.mod
+        echo "========================"
+        
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -44,6 +55,17 @@ jobs:
           build-essential \
           pkg-config
           
+    - name: Debug - Test Go build
+      run: |
+        echo "=== Testing Go Build ==="
+        go mod tidy
+        echo "Building application..."
+        go build -v -o speak-to-ai cmd/daemon/main.go
+        echo "Build successful, binary info:"
+        ls -la speak-to-ai
+        file speak-to-ai
+        echo "========================"
+          
     - name: Download Whisper model if not present
       run: |
         if [ ! -f "sources/language-models/base.bin" ]; then
@@ -51,6 +73,7 @@ jobs:
           mkdir -p sources/language-models
           wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
             -O "sources/language-models/base.bin"
+          echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
         fi
         
     - name: Build Whisper.cpp if not present
@@ -61,14 +84,26 @@ jobs:
           git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
           cd /tmp/whisper-cpp
           make -j$(nproc)
+          echo "Whisper.cpp built, copying binaries..."
           cp main ${{ github.workspace }}/sources/core/whisper
           cp quantize ${{ github.workspace }}/sources/core/quantize
+          echo "Binaries copied:"
+          ls -la ${{ github.workspace }}/sources/core/
         fi
+        
+    - name: Debug - Pre-build status
+      run: |
+        echo "=== Pre-build Debug ==="
+        echo "Sources structure:"
+        find sources -type f -exec ls -la {} \;
+        echo "AppImage script exists:"
+        ls -la bash-scripts/build-appimage.sh
+        echo "========================"
         
     - name: Build AppImage
       run: |
         chmod +x bash-scripts/build-appimage.sh
-        bash bash-scripts/build-appimage.sh
+        bash -x bash-scripts/build-appimage.sh
         
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v3
@@ -82,6 +117,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Debug - Show environment
+      run: |
+        echo "=== Flatpak Environment Debug ==="
+        echo "Working directory: $(pwd)"
+        echo "Flatpak manifest exists:"
+        ls -la io.github.ashbuk.speak-to-ai.json
+        echo "Flatpak script exists:"
+        ls -la bash-scripts/build-flatpak.sh
+        echo "========================"
       
     - name: Install Flatpak and dependencies
       run: |
@@ -115,7 +160,7 @@ jobs:
     - name: Build Flatpak
       run: |
         chmod +x bash-scripts/build-flatpak.sh
-        bash bash-scripts/build-flatpak.sh
+        bash -x bash-scripts/build-flatpak.sh
         
     - name: Upload Flatpak artifact
       uses: actions/upload-artifact@v3

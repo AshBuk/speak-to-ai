@@ -3,15 +3,18 @@
 # Speak-to-AI AppImage builder script
 
 set -e  # Exit on error
+set -x  # Show commands being executed
 
 # Configuration
 APP_NAME="speak-to-ai"
-APP_VERSION="0.1.0"
+APP_VERSION="0.1.2"
 ARCH="x86_64"
 OUTPUT_DIR="dist"
 
-echo "Creating AppDir structure..."
+echo "=== Starting AppImage build for ${APP_NAME} v${APP_VERSION} ==="
+
 # Create necessary directories
+echo "Creating AppDir structure..."
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications"
@@ -21,18 +24,21 @@ mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
 
 echo "Building ${APP_NAME}..."
-go build -o "${APP_NAME}" cmd/daemon/main.go
+if [ ! -f "${APP_NAME}" ]; then
+    go build -o "${APP_NAME}" cmd/daemon/main.go
+fi
 
-echo "Copying files to AppDir..."
+echo "Copying main application..."
 cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 
-# If sources/core directory exists
-if [ -d "sources/core" ]; then
-    echo "Copying core sources..."
-    cp -r sources/core/* "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/"
+# Copy core sources if they exist
+if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
+    echo "Copying whisper binaries..."
+    cp sources/core/whisper "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/"
+    cp sources/core/quantize "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/" || true
 else
-    echo "Warning: sources/core directory not found"
+    echo "Warning: Whisper binaries not found in sources/core"
 fi
 
 # Include the pre-downloaded Whisper model
@@ -43,46 +49,28 @@ else
     echo "Warning: Whisper model not found at sources/language-models/base.bin"
 fi
 
-# Copy required dependencies for offline use
-echo "Copying required dependencies..."
-
-# Function to copy binary with its libraries
-copy_binary_with_libs() {
+# Copy system dependencies
+echo "Copying system dependencies..."
+copy_if_exists() {
     local binary_name="$1"
     local binary_path=$(which "$binary_name" 2>/dev/null || echo "")
     
     if [ -n "$binary_path" ]; then
         echo "Including $binary_name dependency..."
         cp "$binary_path" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
-        
-        # Copy necessary shared libraries
-        ldd "$binary_path" 2>/dev/null | grep "=>" | awk '{print $3}' | while read -r lib; do
-            if [ -f "$lib" ] && [[ "$lib" != /lib* ]] && [[ "$lib" != /usr/lib* ]]; then
-                echo "  Copying library: $lib"
-                cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/" 2>/dev/null || true
-            fi
-        done
     else
         echo "Warning: $binary_name not found in PATH"
     fi
 }
 
-# Copy X11 clipboard tool
-copy_binary_with_libs "xclip"
-
-# Copy Wayland clipboard tools
-copy_binary_with_libs "wl-copy"
-copy_binary_with_libs "wl-paste"
-
-# Copy notification tool
-copy_binary_with_libs "notify-send"
-
-# Copy audio recording tools if available
-copy_binary_with_libs "arecord"
-copy_binary_with_libs "ffmpeg"
+copy_if_exists "xclip"
+copy_if_exists "wl-copy"
+copy_if_exists "wl-paste"
+copy_if_exists "notify-send"
+copy_if_exists "arecord"
 
 # Create AppRun script with first-launch behavior
-echo "Creating enhanced AppRun script..."
+echo "Creating AppRun script..."
 cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
 #!/bin/bash
 SELF=$(readlink -f "$0")
@@ -142,14 +130,6 @@ EOF
 echo "Creating desktop file symlink..."
 ln -sf "./usr/share/applications/${APP_NAME}.desktop" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.desktop"
 
-# Verify desktop file exists
-if [ -f "$DESKTOP_FILE" ]; then
-    echo "Desktop file created at: $DESKTOP_FILE"
-else
-    echo "Error: Desktop file was not created properly at: $DESKTOP_FILE"
-    exit 1
-fi
-
 # Create AppStream metadata
 echo "Creating AppStream metadata..."
 cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.xml" << EOF
@@ -176,12 +156,10 @@ cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.x
 </component>
 EOF
 
-# Create a placeholder icon
-# In a real application, you would use a proper icon file
-echo "Creating placeholder icon (replace with a real icon)..."
-cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" << EOF
-iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=
-EOF
+# Create a simple icon (placeholder)
+echo "Creating placeholder icon..."
+# Create a minimal PNG icon
+echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=" | base64 -d > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
 
 # Link the icon to the root directory as required by AppImage
 echo "Creating icon symlink..."
@@ -196,22 +174,17 @@ fi
 
 # Verify AppDir setup
 echo "Verifying AppDir structure..."
-ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 echo "Root files:"
 ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
-echo "Desktop file:"
-ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications/"
-echo "Icon:"
-ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/"
+echo "Binary files:"
+ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 
-# Build AppImage, bypassing the AppStream validation
+# Build AppImage
 echo "Building AppImage..."
 cd "${OUTPUT_DIR}"
 
-# Set environment variables to bypass validation
-export ARCH="${ARCH}"  # Export explicitly
-export NO_APPSTREAM_VALIDATE=1
-export DISABLE_APPIMAGE_EXTRACT=1
+# Set environment variables
+export ARCH="${ARCH}"
 export VERSION="${APP_VERSION}"
 
 echo "Attempting to build AppImage with architecture: ${ARCH}"
@@ -225,13 +198,14 @@ if ./appimagetool-${ARCH}.AppImage --no-appstream "${APP_NAME}.AppDir"; then
         chmod +x "$APPIMAGE_FILE"
         echo "AppImage created successfully: $APPIMAGE_FILE"
         ls -lh "$APPIMAGE_FILE"
-        echo "Done! AppImage is ready for use."
+        echo "=== AppImage build completed successfully! ==="
         exit 0
     else
-        echo "Warning: AppImage was built but could not be found. Please check the 'dist' directory."
+        echo "Error: AppImage was built but could not be found."
+        ls -la
         exit 1
     fi
 else
-    echo "AppImage creation failed. Installation may be incomplete."
+    echo "Error: AppImage creation failed."
     exit 1
 fi 
