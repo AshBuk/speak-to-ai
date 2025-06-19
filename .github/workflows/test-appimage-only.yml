@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*-appimage-test'
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-appimage:
     runs-on: ubuntu-22.04
@@ -135,5 +139,7 @@ jobs:
           
         draft: false
         prerelease: true
+        fail_on_unmatched_files: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

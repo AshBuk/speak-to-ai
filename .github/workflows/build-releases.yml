@@ -11,6 +11,10 @@ on:
         required: true
         default: '0.1.0'
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-appimage:
     runs-on: ubuntu-22.04
