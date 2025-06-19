@@ -12,9 +12,9 @@ func SetDefaultConfig(config *Config) {
 	config.General.LogFile = ""      // No log file by default
 
 	// Hotkey settings (defaults)
-	config.Hotkeys.StartRecording = "alt+comma" // AltGr + , (comma)
-	config.Hotkeys.StopRecording = "alt+comma"  // Same combination for start/stop
-	config.Hotkeys.CopilotKey = "alt+comma"     // Also set as copilot key for Windows keyboards
+	config.Hotkeys.StartRecording = "altgr+comma" // AltGr + , (comma) - Microsoft Copilot key
+	config.Hotkeys.StopRecording = "altgr+comma"  // Same combination for start/stop
+	config.Hotkeys.CopilotKey = "altgr+comma"     // Microsoft Copilot key
 	config.Hotkeys.CopyToClipboard = "ctrl+shift+c"
 	config.Hotkeys.PasteToActiveApp = "ctrl+shift+v"
 

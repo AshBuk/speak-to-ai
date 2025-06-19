@@ -1,96 +1,178 @@
-# Speak to AI
+# 🎤 Speak-to-AI
 
-**Speak to AI** is an open-source local speech-to-text application for **Linux** that converts speech into text and inserts it into AI chats and other applications.  
-The application runs in the background as a daemon, providing system-wide access via hotkeys for a seamless experience.
+[![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
----
+A minimalist, privacy-focused desktop application that enables voice input for AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
 
-## Features
+## ✨ Features
 
-- **100% Local & Private**  
-  Speech processing happens entirely on your device — no internet required, no data sent to external servers.
+- 🎤 **100% Offline** speech recognition using Whisper.cpp
+- 🔧 **System tray integration** with recording status (🎤 / 💤)
+- ⌨️ **Microsoft Copilot key support** (AltGr + ,) and customizable hotkeys
+- 📋 **Multiple output modes**: clipboard copy, direct typing simulation
+- 🖥️ **Cross-platform support** for X11 and Wayland
+- 🔒 **Privacy-first**: no data sent to external servers
+- 🔔 **Visual notifications** for recording status
+- 📦 **Portable**: available as AppImage and Flatpak
 
-- **Whisper.cpp Integration**  
-  Uses an optimized implementation of OpenAI's Whisper model for efficient CPU-based transcription.
+## 🚀 Installation
 
-- **Minimalist Design**  
-  Lightweight and fast. Built with simplicity, performance, and low system resource usage in mind.
+### AppImage (Recommended)
 
-- **Multiple Output Methods**  
-  - 📋 Copy to clipboard (`wl-copy`, `xclip`)  
-  - ⌨️ Simulate input into active window (`xdotool`, `wl-clipboard`)
-
-- **Hotkey Support**  
-  - Built-in support for Copilot key (or Alt+Comma)
-  - Trigger voice input from any application with customizable global hotkeys
-
-- **Desktop Integration**
-  - System tray indicator (🎤 / 💤)
-  - Desktop notifications
-  - Automatic configuration on first launch
-
-- **Linux Compatibility**  
-  Fully supports both **Wayland** and **X11** display servers.
-
----
-
-## 📋 Installation
-
-### Pre-built Binaries
-
-Download AppImage from the Releases page and make it executable:
+Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
 ```bash
-chmod +x Speak-to-AI-*.AppImage
+chmod +x speak-to-ai-*.AppImage
+./speak-to-ai-*.AppImage
 ```
 
-Run the AppImage:
+### Flatpak
+
+Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
 ```bash
-./Speak-to-AI-*.AppImage
+flatpak install speak-to-ai-*.flatpak
+flatpak run io.github.ashbuk.speak-to-ai
 ```
 
-The first time you run the application, it will automatically:
-1. Create a configuration file at `~/.config/speak-to-ai/config.yaml`
-2. Set up the application to use the embedded Whisper model
+## ⌨️ Default Hotkeys
 
----
+- **AltGr + **, (comma): Start/Stop recording (Microsoft Copilot key)
+- **Alt + **, (comma): Alternative hotkey
+- **Ctrl + Shift + C**: Copy last transcription to clipboard
+- **Ctrl + Shift + V**: Paste to active application
 
 ## 🔧 Configuration
 
-After installation, you can customize the configuration by editing:
+Configuration file is automatically created at:
+- **AppImage**: `~/.config/speak-to-ai/config.yaml`
+- **Flatpak**: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
+
+### Example Configuration
+
+```yaml
+# General settings
+general:
+  debug: false
+  model_path: "~/.config/speak-to-ai/language-models/base.bin"
+  language: "auto"  # Auto-detect or specify "en", "ru", etc.
+
+# Hotkey settings
+hotkeys:
+  start_recording: "altgr+comma"    # Microsoft Copilot key
+  alt_start_recording: "alt+comma"  # Alternative
+  copy_to_clipboard: "ctrl+shift+c"
+  paste_to_active_app: "ctrl+shift+v"
+
+# Audio settings
+audio:
+  device: "default"
+  sample_rate: 16000
+  recording_method: "arecord"  # Options: "arecord", "ffmpeg"
+
+# Output settings
+output:
+  default_mode: "clipboard"  # Options: "clipboard", "active_window"
+  clipboard_tool: "auto"     # Options: "auto", "wl-copy", "xclip"
+```
+
+## 🔨 Building from Source
+
+### Prerequisites
+
+- Go 1.21+
+- Linux development libraries:
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install libasound2-dev libx11-dev libxext-dev libxi-dev libxrandr-dev
+  
+  # Fedora
+  sudo dnf install alsa-lib-devel libX11-devel libXext-devel libXi-devel libXrandr-devel
+  ```
+
+### Build Commands
+
+```bash
+# Clone repository
+git clone https://github.com/AshBuk/speak-to-ai.git
+cd speak-to-ai
+
+# Build executable
+go build -o speak-to-ai cmd/daemon/main.go
+
+# Build AppImage
+bash bash-scripts/build-appimage.sh
+
+# Build Flatpak (requires flatpak-builder)
+bash bash-scripts/build-flatpak.sh
+```
+
+## 🏗️ Architecture
 
 ```
-~/.config/speak-to-ai/config.yaml
+    A[Hotkey] --> B[Local Daemon (Go)]
+    B --> C[whisper.cpp Execution]
+    C --> D[Transcript (stdout)]
+    D --> E{Mode}
+    E -->|Clipboard| F1[wl-copy / xclip]
+    E -->|Simulated Input| F2[xdotool / wl-clipboard]
 ```
 
-### Key Configuration Options:
+### Components
 
-- **Hotkeys**
-  - Default recording toggle: `Copilot` or `alt+comma` keys 
-  - Copy to clipboard: `ctrl+shift+c`
-  - Paste to active window: `ctrl+shift+v`
+- **Local Daemon**: Go application handling hotkeys, audio recording, and output
+- **Whisper Engine**: Uses `whisper.cpp` binary for speech recognition
+- **Audio Recording**: Supports `arecord` and `ffmpeg` backends
+- **Text Output**: Clipboard copy or typing simulation via system tools
 
-- **Audio Settings**
-  - Recording tool: `arecord` (or `ffmpeg`)
-  - Sample rate, format, and channels
+## 📋 System Requirements
 
-- **Output Settings**
-  - Default mode: `clipboard` (options: `clipboard`, `active_window`)
+- **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
+- **Desktop**: X11 or Wayland environment
+- **Audio**: Microphone/recording capability
+- **Storage**: ~200MB for model and dependencies
+- **Memory**: ~500MB RAM during operation
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push to branch: `git push origin feature-name` 
+5. Submit a Pull Request
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Hotkeys not working:**
+- Ensure you have proper permissions (for evdev support)
+- Try running with `sudo` for testing (not recommended for production)
+- Check if X11/Wayland environment is detected correctly
+
+**Audio recording fails:**
+- Verify microphone permissions
+- Test with `arecord -t wav -d 3 test.wav` to ensure system recording works
+- Check audio device in configuration
+
+**Transcription is poor:**
+- Ensure clear audio input (minimal background noise)
+- Consider using a better quality microphone
+- Check if the correct language is set in configuration
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
+- [getlantern/systray](https://github.com/getlantern/systray) for cross-platform system tray support
+- OpenAI for the original Whisper model
 
 ---
 
-## 🧩 Dependencies
-
-All necessary dependencies are included in the AppImage! No additional installation required.
-
-- `whisper.cpp` (included)
-- `xclip` for X11 clipboard (included)
-- `wl-clipboard` for Wayland clipboard
-- `notify-send` for desktop notifications (included)
-
-## 🛠️ Building from Source
-
-If you want to build from source, refer to the Development Documentation.
+**Made with ❤️ for privacy-conscious AI users**
 
 ---

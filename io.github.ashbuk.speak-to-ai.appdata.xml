@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.ashbuk.speak-to-ai</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Speak-to-AI</name>
+  <summary>Offline speech-to-text for AI assistants</summary>
+  <description>
+    <p>
+      A minimalist, privacy-focused desktop application that enables voice input for AI assistants 
+      without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>100% offline speech recognition using Whisper.cpp</li>
+      <li>System tray integration with recording status</li>
+      <li>Configurable hotkeys including Microsoft Copilot key support</li>
+      <li>Multiple output modes: clipboard, direct typing simulation</li>
+      <li>Cross-platform support for X11 and Wayland</li>
+      <li>Privacy-first: no data sent to external servers</li>
+    </ul>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main interface showing system tray integration</caption>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/AshBuk/speak-to-ai</url>
+  <url type="bugtracker">https://github.com/AshBuk/speak-to-ai/issues</url>
+  <url type="vcs-browser">https://github.com/AshBuk/speak-to-ai</url>
+  <developer_name>Asher Buk</developer_name>
+  <launchable type="desktop-id">io.github.ashbuk.speak-to-ai.desktop</launchable>
+  <provides>
+    <binary>speak-to-ai</binary>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2024-12-19"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+  <keywords>
+    <keyword>speech</keyword>
+    <keyword>voice</keyword>
+    <keyword>transcription</keyword>
+    <keyword>ai</keyword>
+    <keyword>whisper</keyword>
+    <keyword>offline</keyword>
+    <keyword>privacy</keyword>
+  </keywords>
+</component> 

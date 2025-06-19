@@ -11,9 +11,10 @@ general:
 
 # Hotkey settings
 hotkeys:
-  start_recording: "alt+comma"  # Alt+, (comma) - Same as Copilot key
-  stop_recording: "alt+comma"   # Same combination for start/stop
-  copilot_key: "alt+comma"      # Microsoft Copilot key
+  start_recording: "altgr+comma"    # AltGr+, (comma) - Microsoft Copilot key
+  stop_recording: "altgr+comma"     # Same combination for start/stop  
+  copilot_key: "altgr+comma"        # Microsoft Copilot key
+  alt_start_recording: "alt+comma"  # Alternative: Alt+, (comma)
   copy_to_clipboard: "ctrl+shift+c"
   paste_to_active_app: "ctrl+shift+v"
 

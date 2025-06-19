@@ -1,0 +1,183 @@
+name: Build Releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        default: '0.1.0'
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          xclip \
+          libnotify-bin \
+          libasound2-dev \
+          libx11-dev \
+          libxext-dev \
+          libxi-dev \
+          libxrandr-dev \
+          libxcursor-dev \
+          libxinerama-dev \
+          ffmpeg \
+          wget
+          
+    - name: Download Whisper model if not present
+      run: |
+        if [ ! -f "sources/language-models/base.bin" ]; then
+          echo "Downloading Whisper base model..."
+          mkdir -p sources/language-models
+          wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
+            -O "sources/language-models/base.bin"
+        fi
+        
+    - name: Build Whisper.cpp if not present
+      run: |
+        if [ ! -f "sources/core/whisper" ] || [ ! -f "sources/core/quantize" ]; then
+          echo "Building Whisper.cpp..."
+          mkdir -p sources/core
+          git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
+          cd /tmp/whisper-cpp
+          make -j$(nproc)
+          cp main sources/core/whisper
+          cp quantize sources/core/quantize
+        fi
+        
+    - name: Build AppImage
+      run: |
+        chmod +x bash-scripts/build-appimage.sh
+        bash bash-scripts/build-appimage.sh
+        
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: speak-to-ai-appimage
+        path: dist/*.AppImage
+        
+  build-flatpak:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Flatpak and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y flatpak flatpak-builder
+        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+        flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+        
+    - name: Download Whisper model if not present
+      run: |
+        if [ ! -f "sources/language-models/base.bin" ]; then
+          echo "Downloading Whisper base model..."
+          mkdir -p sources/language-models
+          wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
+            -O "sources/language-models/base.bin"
+        fi
+        
+    - name: Build Whisper.cpp if not present
+      run: |
+        if [ ! -f "sources/core/whisper" ] || [ ! -f "sources/core/quantize" ]; then
+          echo "Building Whisper.cpp..."
+          mkdir -p sources/core
+          git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
+          cd /tmp/whisper-cpp
+          make -j$(nproc)
+          cp main ${{ github.workspace }}/sources/core/whisper
+          cp quantize ${{ github.workspace }}/sources/core/quantize
+        fi
+        
+    - name: Build Flatpak
+      run: |
+        chmod +x bash-scripts/build-flatpak.sh
+        bash bash-scripts/build-flatpak.sh
+        
+    - name: Upload Flatpak artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: speak-to-ai-flatpak
+        path: dist/*.flatpak
+        
+  create-release:
+    needs: [build-appimage, build-flatpak]
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download AppImage artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: speak-to-ai-appimage
+        path: ./artifacts/
+        
+    - name: Download Flatpak artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: speak-to-ai-flatpak
+        path: ./artifacts/
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./artifacts/*.AppImage
+          ./artifacts/*.flatpak
+        body: |
+          ## Speak-to-AI Release ${{ github.ref_name }}
+          
+          ### Features:
+          - 🎤 Offline speech-to-text using Whisper.cpp
+          - 🔧 System tray integration with recording status
+          - ⌨️ Microsoft Copilot key support (AltGr + ,)
+          - 📋 Multiple output modes: clipboard, direct typing
+          - 🖥️ Cross-platform support for X11 and Wayland
+          - 🔒 Privacy-first: no data sent to external servers
+          
+          ### Installation:
+          
+          **AppImage:**
+          ```bash
+          chmod +x speak-to-ai-*.AppImage
+          ./speak-to-ai-*.AppImage
+          ```
+          
+          **Flatpak:**
+          ```bash
+          flatpak install speak-to-ai-*.flatpak
+          flatpak run io.github.ashbuk.speak-to-ai
+          ```
+          
+          ### System Requirements:
+          - Linux (Ubuntu 20.04+, Fedora 35+, or similar)
+          - X11 or Wayland desktop environment
+          - Audio recording capability (microphone)
+          - ~200MB disk space for model and dependencies
+          
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

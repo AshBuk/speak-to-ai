@@ -1,0 +1,51 @@
+{
+    "app-id": "io.github.ashbuk.speak-to-ai",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "23.08",
+    "sdk": "org.freedesktop.Sdk",
+    "sdk-extensions": [
+        "org.freedesktop.Sdk.Extension.golang"
+    ],
+    "command": "speak-to-ai",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri",
+        "--filesystem=xdg-config/speak-to-ai:create",
+        "--talk-name=org.freedesktop.Notifications",
+        "--system-talk-name=org.freedesktop.UPower",
+        "--own-name=org.mpris.MediaPlayer2.speak-to-ai"
+    ],
+    "build-options": {
+        "append-path": "/usr/lib/sdk/golang/bin",
+        "env": {
+            "GOBIN": "/app/bin",
+            "GOROOT": "/usr/lib/sdk/golang"
+        }
+    },
+    "modules": [
+        {
+            "name": "speak-to-ai",
+            "buildsystem": "simple",
+            "build-commands": [
+                ". /usr/lib/sdk/golang/enable.sh; go mod download",
+                ". /usr/lib/sdk/golang/enable.sh; go build -o speak-to-ai cmd/daemon/main.go",
+                "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
+                "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
+                "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
+                "install -Dm755 sources/core/whisper /app/bin/whisper",
+                "install -Dm755 sources/core/quantize /app/bin/quantize",
+                "install -Dm644 io.github.ashbuk.speak-to-ai.desktop /app/share/applications/io.github.ashbuk.speak-to-ai.desktop",
+                "install -Dm644 io.github.ashbuk.speak-to-ai.appdata.xml /app/share/metainfo/io.github.ashbuk.speak-to-ai.appdata.xml"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ]
+        }
+    ]
+} 

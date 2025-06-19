@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Speak-to-AI
+Comment=Offline speech-to-text for AI assistants
+Exec=speak-to-ai
+Icon=io.github.ashbuk.speak-to-ai
+Type=Application
+Categories=Utility;AudioVideo;
+Keywords=speech;voice;transcription;ai;whisper;
+Terminal=false
+StartupNotify=true
+X-Flatpak-RenamedFrom=speak-to-ai.desktop; 
