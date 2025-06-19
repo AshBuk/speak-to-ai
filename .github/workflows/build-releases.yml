@@ -29,6 +29,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           xclip \
+          wl-clipboard \
           libnotify-bin \
           libasound2-dev \
           libx11-dev \
@@ -38,6 +39,7 @@ jobs:
           libxcursor-dev \
           libxinerama-dev \
           ffmpeg \
+          alsa-utils \
           wget
           
     - name: Download Whisper model if not present

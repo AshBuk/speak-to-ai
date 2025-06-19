@@ -45,37 +45,41 @@ fi
 
 # Copy required dependencies for offline use
 echo "Copying required dependencies..."
-# Find and include xclip
-XCLIP_PATH=$(which xclip 2>/dev/null || echo "")
-if [ -n "$XCLIP_PATH" ]; then
-    echo "Including xclip dependency..."
-    cp "$XCLIP_PATH" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
-    
-    # Copy necessary shared libraries
-    ldd "$XCLIP_PATH" | grep "=>" | awk '{print $3}' | while read -r lib; do
-        if [ -f "$lib" ] && [[ "$lib" != /lib* ]]; then
-            cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/"
-        fi
-    done
-else
-    echo "Warning: xclip not found in PATH"
-fi
 
-# Find and include notify-send (libnotify-tools)
-NOTIFY_PATH=$(which notify-send 2>/dev/null || echo "")
-if [ -n "$NOTIFY_PATH" ]; then
-    echo "Including notify-send dependency..."
-    cp "$NOTIFY_PATH" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+# Function to copy binary with its libraries
+copy_binary_with_libs() {
+    local binary_name="$1"
+    local binary_path=$(which "$binary_name" 2>/dev/null || echo "")
     
-    # Copy necessary shared libraries
-    ldd "$NOTIFY_PATH" | grep "=>" | awk '{print $3}' | while read -r lib; do
-        if [ -f "$lib" ] && [[ "$lib" != /lib* ]]; then
-            cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/"
-        fi
-    done
-else
-    echo "Warning: notify-send not found in PATH"
-fi
+    if [ -n "$binary_path" ]; then
+        echo "Including $binary_name dependency..."
+        cp "$binary_path" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+        
+        # Copy necessary shared libraries
+        ldd "$binary_path" 2>/dev/null | grep "=>" | awk '{print $3}' | while read -r lib; do
+            if [ -f "$lib" ] && [[ "$lib" != /lib* ]] && [[ "$lib" != /usr/lib* ]]; then
+                echo "  Copying library: $lib"
+                cp "$lib" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/" 2>/dev/null || true
+            fi
+        done
+    else
+        echo "Warning: $binary_name not found in PATH"
+    fi
+}
+
+# Copy X11 clipboard tool
+copy_binary_with_libs "xclip"
+
+# Copy Wayland clipboard tools
+copy_binary_with_libs "wl-copy"
+copy_binary_with_libs "wl-paste"
+
+# Copy notification tool
+copy_binary_with_libs "notify-send"
+
+# Copy audio recording tools if available
+copy_binary_with_libs "arecord"
+copy_binary_with_libs "ffmpeg"
 
 # Create AppRun script with first-launch behavior
 echo "Creating enhanced AppRun script..."
