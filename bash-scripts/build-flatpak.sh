@@ -18,16 +18,16 @@ if ! command -v flatpak-builder &> /dev/null; then
     exit 1
 fi
 
-# Check required runtime
-if ! flatpak list --runtime | grep -q "org.freedesktop.Platform.*23.08"; then
+# Check required runtime (user installation)
+if ! flatpak list --user --runtime | grep -q "org.freedesktop.Platform.*23.08"; then
     echo "Installing required Flatpak runtime..."
-    flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+    flatpak install --user -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
 fi
 
-# Check SDK extension
-if ! flatpak list | grep -q "org.freedesktop.Sdk.Extension.golang"; then
+# Check SDK extension (user installation)
+if ! flatpak list --user | grep -q "org.freedesktop.Sdk.Extension.golang"; then
     echo "Installing Golang SDK extension..."
-    flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+    flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//23.08
 fi
 
 # Create output directory
@@ -41,8 +41,19 @@ flatpak-builder \
     --sandbox \
     --user \
     --install-deps-from=flathub \
+    --install-deps-only \
     --ccache \
     --mirror-screenshots-url=https://dl.flathub.org/media/ \
+    --repo="${FLATPAK_DIR}/repo" \
+    "${FLATPAK_DIR}/build-dir" \
+    "${APP_ID}.json"
+
+# Build again without install-deps-only to actually build
+flatpak-builder \
+    --force-clean \
+    --sandbox \
+    --user \
+    --ccache \
     --repo="${FLATPAK_DIR}/repo" \
     "${FLATPAK_DIR}/build-dir" \
     "${APP_ID}.json"
@@ -51,6 +62,7 @@ echo "Creating Flatpak bundle..."
 
 # Create bundle (.flatpak file)
 flatpak build-bundle \
+    --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
     "${FLATPAK_DIR}/repo" \
     "${OUTPUT_DIR}/${APP_ID}.flatpak" \
     "${APP_ID}"

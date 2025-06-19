@@ -142,9 +142,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y flatpak flatpak-builder cmake build-essential
-        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
-        flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+        # Use user remote instead of system remote
+        flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak install --user -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//23.08
         
     - name: Download Whisper model if not present
       run: |
