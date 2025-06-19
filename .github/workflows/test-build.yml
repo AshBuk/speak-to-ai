@@ -1,0 +1,109 @@
+name: Test Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-basic:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Test environment
+      run: |
+        echo "=== Environment Test ==="
+        echo "PWD: $(pwd)"
+        echo "User: $(whoami)"
+        echo "OS: $(uname -a)"
+        echo "Available space:"
+        df -h
+        echo "Directory contents:"
+        ls -la
+        echo "========================"
+        
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+        
+    - name: Test Go installation
+      run: |
+        echo "=== Go Test ==="
+        go version
+        echo "GOPATH: $GOPATH"
+        echo "GOROOT: $GOROOT"
+        echo "Go env:"
+        go env
+        echo "========================"
+        
+    - name: Test Go modules
+      run: |
+        echo "=== Go Modules Test ==="
+        echo "go.mod contents:"
+        cat go.mod
+        echo "Running go mod tidy..."
+        go mod tidy
+        echo "go mod download..."
+        go mod download
+        echo "========================"
+        
+    - name: Test Go build
+      run: |
+        echo "=== Go Build Test ==="
+        echo "Attempting to build..."
+        go build -v -o test-binary cmd/daemon/main.go
+        echo "Build result:"
+        ls -la test-binary
+        file test-binary
+        echo "========================"
+        
+  test-dependencies:
+    runs-on: ubuntu-22.04
+    needs: test-basic
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Test system dependencies
+      run: |
+        echo "=== System Dependencies Test ==="
+        sudo apt-get update
+        echo "Installing basic dependencies..."
+        sudo apt-get install -y \
+          wget \
+          build-essential \
+          pkg-config
+        echo "Dependencies installed successfully"
+        echo "========================"
+        
+    - name: Test whisper model download
+      run: |
+        echo "=== Whisper Model Test ==="
+        mkdir -p sources/language-models
+        echo "Downloading whisper model..."
+        wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
+          -O "sources/language-models/base.bin"
+        echo "Model download result:"
+        ls -lh sources/language-models/base.bin
+        echo "========================"
+        
+    - name: Test whisper.cpp build
+      run: |
+        echo "=== Whisper.cpp Build Test ==="
+        mkdir -p sources/core
+        echo "Cloning whisper.cpp..."
+        git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
+        cd /tmp/whisper-cpp
+        echo "Building whisper.cpp..."
+        make -j$(nproc)
+        echo "Build completed, checking binaries:"
+        find . -name "*whisper-cli*" -o -name "*quantize*" | head -5
+        echo "Copying binaries..."
+        cp build/bin/whisper-cli ${{ github.workspace }}/sources/core/whisper
+        cp build/bin/quantize ${{ github.workspace }}/sources/core/quantize
+        echo "Final result:"
+        ls -la ${{ github.workspace }}/sources/core/
+        echo "========================" 

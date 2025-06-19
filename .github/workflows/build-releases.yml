@@ -85,8 +85,8 @@ jobs:
           cd /tmp/whisper-cpp
           make -j$(nproc)
           echo "Whisper.cpp built, copying binaries..."
-          cp main ${{ github.workspace }}/sources/core/whisper
-          cp quantize ${{ github.workspace }}/sources/core/quantize
+          cp build/bin/whisper-cli ${{ github.workspace }}/sources/core/whisper
+          cp build/bin/quantize ${{ github.workspace }}/sources/core/quantize
           echo "Binaries copied:"
           ls -la ${{ github.workspace }}/sources/core/
         fi
@@ -153,8 +153,8 @@ jobs:
           git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
           cd /tmp/whisper-cpp
           make -j$(nproc)
-          cp main ${{ github.workspace }}/sources/core/whisper
-          cp quantize ${{ github.workspace }}/sources/core/quantize
+          cp build/bin/whisper-cli ${{ github.workspace }}/sources/core/whisper
+          cp build/bin/quantize ${{ github.workspace }}/sources/core/quantize
         fi
         
     - name: Build Flatpak
