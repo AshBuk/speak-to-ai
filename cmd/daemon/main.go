@@ -30,8 +30,9 @@ func init() {
 }
 
 func main() {
-	// Adjust paths for AppImage environment
+	// Adjust paths for AppImage and Flatpak environments
 	adjustPathsForAppImage()
+	adjustPathsForFlatpak()
 
 	// Create application instance
 	application := app.NewApp(configFile, debug, whisperPath, modelPath, quantizePath)
@@ -94,6 +95,47 @@ func adjustPathsForAppImage() {
 		if _, err := os.Stat(builtinModelPath); err == nil {
 			modelPath = builtinModelPath
 			log.Printf("Using built-in model: %s", modelPath)
+		}
+	}
+}
+
+// adjustPathsForFlatpak detects if running inside a Flatpak and adjusts paths accordingly
+func adjustPathsForFlatpak() {
+	// Check for Flatpak environment
+	flatpakInfo := os.Getenv("FLATPAK_ID")
+	if flatpakInfo == "" {
+		// Not running in Flatpak, use default paths
+		return
+	}
+
+	log.Printf("Running inside Flatpak: %s", flatpakInfo)
+
+	// Adjust paths for Flatpak
+	if whisperPath == "sources/core/whisper" {
+		whisperPath = "/app/bin/whisper"
+		log.Printf("Adjusted whisper path: %s", whisperPath)
+	}
+
+	if quantizePath == "sources/core/quantize" {
+		quantizePath = "/app/bin/quantize"
+		log.Printf("Adjusted quantize path: %s", quantizePath)
+	}
+
+	// If no model path specified, check built-in model
+	if modelPath == "" {
+		builtinModelPath := "/app/share/speak-to-ai/models/base.bin"
+		if _, err := os.Stat(builtinModelPath); err == nil {
+			modelPath = builtinModelPath
+			log.Printf("Using built-in model: %s", modelPath)
+		}
+	}
+
+	// Adjust config file path for Flatpak if not specified
+	if configFile == "config.yaml" {
+		flatpakConfigPath := "/app/share/speak-to-ai/config.yaml"
+		if _, err := os.Stat(flatpakConfigPath); err == nil {
+			configFile = flatpakConfigPath
+			log.Printf("Using Flatpak config: %s", configFile)
 		}
 	}
 }

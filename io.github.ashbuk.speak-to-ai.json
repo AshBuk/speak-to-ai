@@ -6,7 +6,7 @@
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.golang"
     ],
-    "command": "speak-to-ai",
+    "command": "flatpak-wrapper.sh",
     "finish-args": [
         "--share=ipc",
         "--socket=x11",
@@ -14,8 +14,10 @@
         "--socket=pulseaudio",
         "--device=dri",
         "--device=all",
+        "--device=input",
         "--filesystem=home",
         "--filesystem=xdg-config/speak-to-ai:create",
+        "--filesystem=/dev/input:ro",
         "--talk-name=org.freedesktop.Notifications",
         "--system-talk-name=org.freedesktop.UPower",
         "--own-name=org.mpris.MediaPlayer2.speak-to-ai"
@@ -36,8 +38,9 @@
             "buildsystem": "simple",
             "build-commands": [
                 ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; go build -v -o speak-to-ai cmd/daemon/main.go",
+                ". /usr/lib/sdk/golang/enable.sh; go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
+                "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
                 "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
                 "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
                 "install -Dm755 sources/core/whisper /app/bin/whisper",

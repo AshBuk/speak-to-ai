@@ -65,7 +65,7 @@ jobs:
         echo "=== Testing Go Build ==="
         go mod tidy
         echo "Building application..."
-        go build -v -o speak-to-ai cmd/daemon/main.go
+        go build -tags systray -v -o speak-to-ai cmd/daemon/main.go
         echo "Build successful, binary info:"
         ls -la speak-to-ai
         file speak-to-ai

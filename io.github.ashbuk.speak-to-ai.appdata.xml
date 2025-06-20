@@ -9,6 +9,7 @@
     <p>
       A minimalist, privacy-focused desktop application that enables voice input for AI assistants 
       without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
+      Licensed under MIT License - free and open source software.
     </p>
     <p>Features:</p>
     <ul>
@@ -22,18 +23,32 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <caption>Main interface showing system tray integration</caption>
+      <caption>System tray integration with recording status indicators</caption>
+      <image>https://raw.githubusercontent.com/AshBuk/speak-to-ai/main/icons/io.github.ashbuk.speak-to-ai.png</image>
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/AshBuk/speak-to-ai</url>
   <url type="bugtracker">https://github.com/AshBuk/speak-to-ai/issues</url>
   <url type="vcs-browser">https://github.com/AshBuk/speak-to-ai</url>
+  <url type="help">https://github.com/AshBuk/speak-to-ai/blob/main/README.md</url>
+  <url type="donation">https://github.com/sponsors/AshBuk</url>
   <developer_name>Asher Buk</developer_name>
   <launchable type="desktop-id">io.github.ashbuk.speak-to-ai.desktop</launchable>
   <provides>
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="0.2.5" date="2024-12-20">
+      <description>
+        <p>Bug fixes and improvements:</p>
+        <ul>
+          <li>Fixed model path handling for AppImage and Flatpak</li>
+          <li>Enabled real system tray integration</li>
+          <li>Added input device permission checks</li>
+          <li>Improved first-time setup experience</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.0" date="2024-12-19"/>
   </releases>
   <content_rating type="oars-1.1"/>

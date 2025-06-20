@@ -24,6 +24,15 @@ func NewModelManager(config *config.Config) *ModelManager {
 
 // GetModelPath returns the path to the requested model, downloading it if needed
 func (m *ModelManager) GetModelPath() (string, error) {
+	// If model path is specified directly, use it
+	if m.config.General.ModelPath != "" {
+		// Check if it's a direct file path
+		if isValidFile(m.config.General.ModelPath) {
+			return m.config.General.ModelPath, nil
+		}
+	}
+
+	// Otherwise, use the standard model naming convention
 	modelType := m.config.General.ModelType
 	precision := m.config.General.ModelPrecision
 
@@ -46,6 +55,12 @@ func (m *ModelManager) getModelDir() string {
 	if dir == "" {
 		dir = "models"
 	}
+
+	// If the path looks like a file (has extension), return its directory
+	if filepath.Ext(dir) != "" {
+		return filepath.Dir(dir)
+	}
+
 	return dir
 }
 

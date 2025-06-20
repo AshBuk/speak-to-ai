@@ -7,7 +7,7 @@ set -x  # Show commands being executed
 
 # Configuration
 APP_NAME="speak-to-ai"
-APP_VERSION="0.1.2"
+APP_VERSION="0.2.5"
 ARCH="x86_64"
 OUTPUT_DIR="dist"
 
@@ -25,7 +25,7 @@ mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
 
 echo "Building ${APP_NAME}..."
 if [ ! -f "${APP_NAME}" ]; then
-    go build -o "${APP_NAME}" cmd/daemon/main.go
+    go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
 fi
 
 echo "Copying main application..."
@@ -100,6 +100,17 @@ if [ ! -f "${CONFIG_DIR}/language-models/base.bin" ]; then
     else
         echo "Warning: Model not found in AppImage. Please download it manually."
     fi
+fi
+
+# Check for input device permissions
+if [ ! -r /dev/input/event0 ] 2>/dev/null; then
+    echo "Warning: No access to input devices. Hotkeys may not work."
+    echo "To enable hotkeys, please run:"
+    echo "  sudo usermod -a -G input \$USER"
+    echo "  sudo udevadm control --reload-rules"
+    echo "  sudo udevadm trigger"
+    echo "Then log out and log back in."
+    echo ""
 fi
 
 # Run the application with user config
