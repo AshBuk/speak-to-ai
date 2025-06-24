@@ -47,6 +47,12 @@
         {
             "name": "valgrind",
             "buildsystem": "autotools",
+            "build-options": {
+                "env": {
+                    "CFLAGS": "-fno-stack-protector",
+                    "CXXFLAGS": "-fno-stack-protector"
+                }
+            },
             "config-opts": [
                 "--disable-docs",
                 "--disable-stack-protector"
