@@ -63,7 +63,8 @@ jobs:
           wget \
           build-essential \
           pkg-config \
-          cmake
+          cmake \
+          valgrind
           
     - name: Debug - Test Go build
       run: |
@@ -162,7 +163,8 @@ jobs:
           autotools-dev \
           automake \
           autoconf \
-          libtool
+          libtool \
+          valgrind
         # Use user remote instead of system remote
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         flatpak install --user -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08

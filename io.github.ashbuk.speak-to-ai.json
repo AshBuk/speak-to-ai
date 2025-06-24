@@ -50,7 +50,8 @@
             "config-opts": [
                 "--disable-dumper",
                 "--disable-tests",
-                "--disable-gtk-doc"
+                "--disable-gtk-doc",
+                "--disable-valgrind"
             ],
             "sources": [
                 {
