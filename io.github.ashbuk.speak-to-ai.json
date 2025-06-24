@@ -51,7 +51,7 @@
                 "--disable-dumper",
                 "--disable-tests",
                 "--disable-gtk-doc",
-                "--without-valgrind"
+                "--disable-valgrind"
             ],
             "sources": [
                 {
