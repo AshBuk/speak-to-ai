@@ -45,13 +45,26 @@
             ]
         },
         {
+            "name": "valgrind",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-docs"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://sourceware.org/pub/valgrind/valgrind-3.22.0.tar.bz2",
+                    "sha256": "c811db9add2c5f729944caf47c4e7493a4d9e4e95ca1e4d7a7d70131ff1c102b"
+                }
+            ]
+        },
+        {
             "name": "libdbusmenu-glib",
             "buildsystem": "autotools",
             "config-opts": [
                 "--disable-dumper",
                 "--disable-tests",
-                "--disable-gtk-doc",
-                "--disable-valgrind"
+                "--disable-gtk-doc"
             ],
             "sources": [
                 {
