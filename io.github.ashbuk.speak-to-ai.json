@@ -34,11 +34,52 @@
     },
     "modules": [
         {
+            "name": "libdbusmenu-glib",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-dumper",
+                "--disable-tests"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
+                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                }
+            ]
+        },
+        {
+            "name": "libayatana-indicator",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-indicator/archive/refs/tags/0.9.4.tar.gz",
+                    "sha256": "611bb384b73fa6311777ba4c88615a6f5b3f19d0fdbe37c9ebd65a44ba6c43ae"
+                }
+            ]
+        },
+        {
+            "name": "ayatana-appindicator",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DENABLE_BINDINGS_MONO=NO",
+                "-DENABLE_BINDINGS_VALA=NO"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator/archive/refs/tags/0.5.93.tar.gz",
+                    "sha256": "82a036dc5b5dd5078af45aed74ab3e20e9b717ce27cbc45c6ca6a5c82ff8c853"
+                }
+            ]
+        },
+        {
             "name": "speak-to-ai",
             "buildsystem": "simple",
             "build-commands": [
                 ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
+                ". /usr/lib/sdk/golang/enable.sh; export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH; go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
                 "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
                 "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",

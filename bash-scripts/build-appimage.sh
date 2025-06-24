@@ -23,7 +23,7 @@ mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
 
-echo "Building ${APP_NAME}..."
+echo "Building ${APP_NAME} with systray support..."
 if [ ! -f "${APP_NAME}" ]; then
     go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
 fi
@@ -68,6 +68,10 @@ copy_if_exists "wl-copy"
 copy_if_exists "wl-paste"
 copy_if_exists "notify-send"
 copy_if_exists "arecord"
+
+# Note: linuxdeploy will automatically handle library dependencies
+# Manual library copying is only needed as fallback
+echo "Libraries will be handled by linuxdeploy automatically..."
 
 # Create AppRun script with first-launch behavior
 echo "Creating AppRun script..."
@@ -167,18 +171,31 @@ cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.x
 </component>
 EOF
 
-# Create a simple icon (placeholder)
-echo "Creating placeholder icon..."
-# Create a minimal PNG icon
-echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=" | base64 -d > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+# Copy real application icon
+echo "Copying application icon..."
+if [ -f "icons/io.github.ashbuk.speak-to-ai.png" ]; then
+    cp "icons/io.github.ashbuk.speak-to-ai.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+    echo "Real icon copied successfully"
+else
+    echo "Warning: Real icon not found, creating placeholder..."
+    # Create a minimal PNG icon as fallback
+    echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=" | base64 -d > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+fi
 
 # Link the icon to the root directory as required by AppImage
 echo "Creating icon symlink..."
 ln -sf "./usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.png"
 
-# Download AppImage tool if not present (to a separate tools directory)
+# Download AppImage tools if not present (to a separate tools directory)
 TOOLS_DIR="$(pwd)/tools"
 mkdir -p "${TOOLS_DIR}"
+
+if [ ! -f "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" ]; then
+    echo "Downloading linuxdeploy..."
+    wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage" -O "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
+    chmod +x "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
+fi
+
 if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
     echo "Downloading appimagetool..."
     wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" -O "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
@@ -192,18 +209,39 @@ ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 echo "Binary files:"
 ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 
-# Build AppImage
-echo "Building AppImage..."
+# Use linuxdeploy to automatically include dependencies
+echo "Using linuxdeploy to gather dependencies..."
 cd "${OUTPUT_DIR}"
 
 # Set environment variables
 export ARCH="${ARCH}"
 export VERSION="${APP_VERSION}"
 
-echo "Attempting to build AppImage with architecture: ${ARCH}"
-echo "Tools directory: ${TOOLS_DIR}"
-echo "Looking for appimagetool at: ${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
-ls -la "${TOOLS_DIR}/" || echo "Tools directory not found"
+echo "Running linuxdeploy to prepare AppDir with dependencies..."
+
+# Use linuxdeploy to automatically copy libraries and dependencies
+if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
+    --appdir "${APP_NAME}.AppDir" \
+    --executable "${APP_NAME}.AppDir/usr/bin/${APP_NAME}" \
+    --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
+    --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
+    --output appimage; then
+    
+    # Find the AppImage that was created
+    APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "*tool*" -type f -print | head -n 1)
+    
+    if [ -n "$APPIMAGE_FILE" ]; then
+        chmod +x "$APPIMAGE_FILE"
+        echo "AppImage created successfully with linuxdeploy: $APPIMAGE_FILE"
+        ls -lh "$APPIMAGE_FILE"
+        echo "=== AppImage build completed successfully! ==="
+        exit 0
+    else
+        echo "Warning: linuxdeploy completed but AppImage not found, trying manual approach..."
+    fi
+fi
+
+echo "Linuxdeploy failed or didn't produce AppImage, falling back to manual appimagetool..."
 
 # Try to build AppImage directly (with FUSE workaround for CI)
 if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
@@ -247,7 +285,7 @@ else
             exit 1
         fi
     else
-        echo "Error: Both AppImage creation methods failed."
+        echo "Error: All AppImage creation methods failed."
         exit 1
     fi
 fi 
