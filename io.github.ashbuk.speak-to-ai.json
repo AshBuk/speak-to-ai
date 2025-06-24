@@ -49,28 +49,24 @@
             ]
         },
         {
-            "name": "libayatana-indicator",
+            "name": "org.ayatana.libayatana-indicator",
             "buildsystem": "cmake-ninja",
             "sources": [
                 {
                     "type": "archive",
                     "url": "https://github.com/AyatanaIndicators/libayatana-indicator/archive/refs/tags/0.9.4.tar.gz",
-                    "sha256": "611bb384b73fa6311777ba4c88615a6f5b3f19d0fdbe37c9ebd65a44ba6c43ae"
+                    "sha256": "a18d3c682e29afd77db24366f8475b26bda22b0e16ff569a2ec71cd6eb4eac95"
                 }
             ]
         },
         {
-            "name": "ayatana-appindicator",
+            "name": "org.ayatana.libayatana-appindicator",
             "buildsystem": "cmake-ninja",
-            "config-opts": [
-                "-DENABLE_BINDINGS_MONO=NO",
-                "-DENABLE_BINDINGS_VALA=NO"
-            ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator/archive/refs/tags/0.5.93.tar.gz",
-                    "sha256": "82a036dc5b5dd5078af45aed74ab3e20e9b717ce27cbc45c6ca6a5c82ff8c853"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator/archive/refs/tags/0.5.94.tar.gz",
+                    "sha256": "884a6bc77994c0b58c961613ca4c4b974dc91aa0f804e70e92f38a542d0d0f90"
                 }
             ]
         },
