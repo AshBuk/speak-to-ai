@@ -48,7 +48,8 @@
             "name": "valgrind",
             "buildsystem": "autotools",
             "config-opts": [
-                "--disable-docs"
+                "--disable-docs",
+                "--disable-stack-protector"
             ],
             "sources": [
                 {
