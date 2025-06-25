@@ -1,27 +1,30 @@
 From e63121874a8bc1cba73707e9a5ba5992efdd9eaa Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Stefan=20Br=C3=BCns?= <stefan.bruens@rwth-aachen.de>
 Date: Mon, 18 Nov 2019 19:58:53 +0100
-Subject: [PATCH 3/3] Fix HAVE_VALGRIND AM_CONDITIONAL
+Subject: [PATCH] Fix HAVE_VALGRIND AM_CONDITIONAL
 
 The AM_CONDITIONAL should also be run with --disable-tests, otherwise
 HAVE_VALGRIND is undefined.
 ---
- configure.ac | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
 index ace54d1..cbd38a6 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -120,8 +120,8 @@ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
+@@ -115,10 +115,10 @@ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
                                    [have_tests=yes]
  )
- PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
+-PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
 -AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
  ])
-+AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
  
++PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
++AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
++
  AC_SUBST(DBUSMENUTESTS_CFLAGS)
  AC_SUBST(DBUSMENUTESTS_LIBS)
+ 
 -- 
 2.24.0 
