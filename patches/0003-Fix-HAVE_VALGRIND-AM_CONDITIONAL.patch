@@ -13,7 +13,7 @@ diff --git a/configure.ac b/configure.ac
 index ace54d1..cbd38a6 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -115,10 +115,10 @@ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
+@@ -119,10 +119,10 @@ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
                                    [have_tests=yes]
  )
 -PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
