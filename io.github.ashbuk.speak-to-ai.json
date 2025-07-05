@@ -62,17 +62,14 @@
                 "--disable-dumper",
                 "--disable-tests",
                 "--disable-gtk-doc",
-                "--disable-vala"
+                "--disable-vala",
+                "--with-gtk=2"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/libdbusmenu/16.04.1+16.04.20160927-0ubuntu1/libdbusmenu_16.04.1+16.04.20160927.orig.tar.gz",
-                    "sha256": "e598c698e820c2e1a0c5c633c58aae1946f36e65ac72435b9ef35d676d99aad5"
-                },
-                {
-                    "type": "patch",
-                    "path": "patches/0009-Fix-VALGRIND-conditional-final.patch"
+                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
+                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
                 }
             ]
         },
