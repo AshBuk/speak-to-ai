@@ -61,7 +61,7 @@
                 },
                 {
                     "type": "patch",
-                    "path": "patches/0007-Fix-VALGRIND-conditional-final.patch"
+                    "path": "patches/0008-Fix-VALGRIND-move-outside-tests.patch"
                 }
             ]
         },
