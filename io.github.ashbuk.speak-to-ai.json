@@ -63,7 +63,7 @@
                 "--disable-tests",
                 "--disable-gtk-doc",
                 "--disable-vala",
-                "--with-gtk=2"
+                "--with-gtk=3"
             ],
             "sources": [
                 {
