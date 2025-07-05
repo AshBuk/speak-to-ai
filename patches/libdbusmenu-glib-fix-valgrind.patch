@@ -1,18 +1,15 @@
 --- a/configure.ac
 +++ b/configure.ac
-@@ -119,8 +119,11 @@ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
-                                   [have_tests=yes],
-                                   [have_tests=no]
+@@ -119,8 +119,11 @@ AS_IF([test "x$enable_tests" != "xno"],[
+                                   [have_tests=yes]
  )
 -PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
 -AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
-+AS_IF([test "x$have_tests" != "xno"], [
++AS_IF([test "x$enable_tests" != "xno"], [
 +    PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
 +], [
 +    have_valgrind=no
  ])
- 
 +AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
-+
- AC_SUBST(DBUSMENUTESTS_CFLAGS)
- AC_SUBST(DBUSMENUTESTS_LIBS) 
+ 
+ AC_SUBST(DBUSMENUTESTS_CFLAGS) 
