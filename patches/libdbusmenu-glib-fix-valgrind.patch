@@ -1,5 +1,5 @@
---- libdbusmenu-16.04.0-orig/configure.ac	2025-07-06 16:30:13.565107534 +0300
-+++ libdbusmenu-16.04.0/configure.ac	2025-07-06 16:30:25.877820347 +0300
+--- libdbusmenu-16.04.0-orig/configure.ac	2025-07-06 16:39:17.199040778 +0300
++++ libdbusmenu-16.04.0/configure.ac	2025-07-06 16:39:29.759903170 +0300
 @@ -119,10 +119,11 @@
                                    gio-unix-2.0  >= $GIO_UNIX_REQUIRED_VERSION,
                                    [have_tests=yes]
@@ -14,3 +14,38 @@
  AC_SUBST(DBUSMENUTESTS_CFLAGS)
  AC_SUBST(DBUSMENUTESTS_LIBS)
  
+--- libdbusmenu-16.04.0-orig/tests/Makefile.am	2025-07-06 16:39:17.198213365 +0300
++++ libdbusmenu-16.04.0/tests/Makefile.am	2025-07-06 16:40:14.887304252 +0300
+@@ -15,12 +15,10 @@
+ 	test-glib-submenu
+ 
+ if WANT_DBUSMENUDUMPER
+-if HAVE_VALGRIND
+-TESTS += \
+-	test-json
+-# Hangs see https://bugs.launchpad.net/ubuntu/+source/libdbusmenu/+bug/1429291
+-#	test-json-instruction
+-endif
++# Valgrind tests are disabled for production builds
++# if HAVE_VALGRIND
++# TESTS += test-json
++# endif
+ endif
+ 
+ if WANT_LIBDBUSMENUGTK
+@@ -72,11 +70,10 @@
+ 	test-glib-simple-items
+ 
+ if WANT_DBUSMENUDUMPER
+-if HAVE_VALGRIND
+-check_PROGRAMS += \
+-	test-json-client \
+-	test-json-server
+-endif
++# Valgrind programs are disabled for production builds
++# if HAVE_VALGRIND
++# check_PROGRAMS += test-json-client test-json-server
++# endif
+ endif
+ 
+ if WANT_LIBDBUSMENUGTK
