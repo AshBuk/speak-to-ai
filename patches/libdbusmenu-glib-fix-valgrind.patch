@@ -1,12 +1,19 @@
---- libdbusmenu-16.04.0-orig/configure.ac	2025-07-06 16:07:56.246204352 +0300
-+++ libdbusmenu-16.04.0/configure.ac	2025-07-06 16:09:20.455467769 +0300
-@@ -120,9 +120,13 @@
+--- libdbusmenu-16.04.0-orig/configure.ac	2025-07-06 16:14:42.486707461 +0300
++++ libdbusmenu-16.04.0/configure.ac	2025-07-06 16:15:11.047765535 +0300
+@@ -114,15 +114,20 @@
+ 	[enable_tests=$enableval], [enable_tests=auto])
+ AM_CONDITIONAL([WANT_TESTS], [test "x$enable_tests" != "xno"])
+ 
++# Initialize valgrind variable
++have_valgrind=no
++
+ AS_IF([test "x$enable_tests" != "xno"],[
+ PKG_CHECK_MODULES(DBUSMENUTESTS,  json-glib-1.0 >= $JSON_GLIB_REQUIRED_VERSION
+                                   gio-unix-2.0  >= $GIO_UNIX_REQUIRED_VERSION,
                                    [have_tests=yes]
  )
  PKG_CHECK_MODULES(DBUSMENUTESTSVALGRIND, valgrind, have_valgrind=yes, have_valgrind=no)
 -AM_CONDITIONAL([HAVE_VALGRIND], [test "x$have_valgrind" = "xyes"])
-+], [
-+have_valgrind=no
  ])
  
 +# Always define the conditional after ensuring the variable is set
