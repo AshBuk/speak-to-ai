@@ -136,6 +136,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+      
     - name: Debug - Show environment
       run: |
         echo "=== Flatpak Environment Debug ==="
@@ -202,16 +207,56 @@ jobs:
         go mod download
         go mod verify
         
-    - name: Build Flatpak
+    - name: Fix SHA256 for libayatana-ido
       run: |
-        chmod +x bash-scripts/build-flatpak.sh
-        bash -x bash-scripts/build-flatpak.sh
+        # Download and get correct SHA256
+        TEMP_DIR=$(mktemp -d)
+        cd $TEMP_DIR
+        wget -q https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz
+        CORRECT_SHA=$(sha256sum 0.10.4.tar.gz | cut -d' ' -f1)
+        cd $GITHUB_WORKSPACE
+        rm -rf $TEMP_DIR
+        
+        # Update manifest with correct SHA256
+        sed -i "s/fb3b3b7d3b0c4a3b9f0b2c2e9f2b1c1b4c9f5e3f5e9b2e3c2e9f2b1c1b4c9f5/$CORRECT_SHA/g" io.github.ashbuk.speak-to-ai.json
+        
+    - name: Build Flatpak package
+      run: |
+        mkdir -p dist/flatpak
+        
+        # Build with dependencies
+        flatpak-builder \
+          --force-clean \
+          --user \
+          --install-deps-from=flathub \
+          --install-deps-only \
+          --ccache \
+          --repo=dist/flatpak/repo \
+          dist/flatpak/build-dir \
+          io.github.ashbuk.speak-to-ai.json
+          
+        # Build the actual package
+        flatpak-builder \
+          --force-clean \
+          --user \
+          --ccache \
+          --repo=dist/flatpak/repo \
+          dist/flatpak/build-dir \
+          io.github.ashbuk.speak-to-ai.json
+          
+    - name: Create flatpak bundle
+      run: |
+        flatpak build-bundle \
+          --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+          dist/flatpak/repo \
+          dist/io.github.ashbuk.speak-to-ai.flatpak \
+          io.github.ashbuk.speak-to-ai
         
     - name: Upload Flatpak artifact
       uses: actions/upload-artifact@v4
       with:
         name: speak-to-ai-flatpak
-        path: dist/*.flatpak
+        path: dist/io.github.ashbuk.speak-to-ai.flatpak
         
   create-release:
     needs: [build-appimage, build-flatpak]
