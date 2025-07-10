@@ -57,15 +57,9 @@
         },
         {
             "name": "libdbusmenu-glib",
-            "buildsystem": "autotools",
-            "config-opts": [
-                "--disable-dumper",
-                "--disable-tests",
-                "--disable-gtk-doc",
-                "--disable-vala",
-                "--with-gtk=3"
-            ],
+            "buildsystem": "simple",
             "build-commands": [
+                "autoreconf -fiv",
                 "./configure --prefix=/app --disable-dumper --disable-tests --disable-gtk-doc --disable-vala --with-gtk=3",
                 "make",
                 "make install"
