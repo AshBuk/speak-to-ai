@@ -66,7 +66,6 @@
                 "--with-gtk=3"
             ],
             "build-commands": [
-                "autoreconf -fiv",
                 "./configure --prefix=/app --disable-dumper --disable-tests --disable-gtk-doc --disable-vala --with-gtk=3",
                 "make",
                 "make install"
