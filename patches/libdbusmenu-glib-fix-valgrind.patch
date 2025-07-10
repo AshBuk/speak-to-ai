@@ -49,3 +49,33 @@
  endif
  
  if WANT_LIBDBUSMENUGTK
+--- libdbusmenu-16.04.0-orig/libdbusmenu-glib/defaults.c	2025-07-06 16:39:17.199040778 +0300
++++ libdbusmenu-16.04.0/libdbusmenu-glib/defaults.c	2025-07-06 16:39:29.759903170 +0300
+@@ -46,8 +46,8 @@
+ 	GVariant * value;
+ };
+ 
+-#define DBUSMENU_DEFAULTS_GET_PRIVATE(o) \
+-(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUSMENU_TYPE_DEFAULTS, DbusmenuDefaultsPrivate))
++#define DBUSMENU_DEFAULTS_GET_PRIVATE(o) \
++(dbusmenu_defaults_get_instance_private (o))
+ 
+ static void dbusmenu_defaults_class_init (DbusmenuDefaultsClass *klass);
+ static void dbusmenu_defaults_init       (DbusmenuDefaults *self);
+@@ -58,7 +58,7 @@
+ static DefaultEntry * entry_create (const GVariantType * type, GVariant * variant);
+ static void entry_destroy (gpointer entry);
+ 
+-G_DEFINE_TYPE (DbusmenuDefaults, dbusmenu_defaults, G_TYPE_OBJECT);
++G_DEFINE_TYPE_WITH_PRIVATE (DbusmenuDefaults, dbusmenu_defaults, G_TYPE_OBJECT);
+ 
+ static void
+ dbusmenu_defaults_class_init (DbusmenuDefaultsClass *klass)
+ @@ -66,8 +66,6 @@
+ 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+ 
+-	g_type_class_add_private (klass, sizeof (DbusmenuDefaultsPrivate));
+-
+ 	object_class->dispose = dbusmenu_defaults_dispose;
+ 	object_class->finalize = dbusmenu_defaults_finalize;
+ 	return;
