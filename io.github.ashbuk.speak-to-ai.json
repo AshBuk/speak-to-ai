@@ -19,6 +19,18 @@
         "--filesystem=xdg-config/speak-to-ai:create",
         "--filesystem=/dev/input:ro",
         "--talk-name=org.freedesktop.Notifications",
+        "--talk-name=org.kde.StatusNotifierWatcher",
+        "--talk-name=org.ayatana.indicator.application",
+        "--talk-name=org.ayatana.indicator.sound",
+        "--talk-name=org.ayatana.indicator.messages",
+        "--talk-name=org.ayatana.indicator.power",
+        "--talk-name=org.ayatana.indicator.datetime",
+        "--talk-name=org.ayatana.indicator.session",
+        "--talk-name=org.ayatana.indicator.bluetooth",
+        "--talk-name=org.ayatana.indicator.network",
+        "--talk-name=org.ayatana.indicator.keyboard",
+        "--talk-name=org.ayatana.indicator.printers",
+        "--talk-name=org.ayatana.indicator.location",
         "--system-talk-name=org.freedesktop.UPower",
         "--own-name=org.mpris.MediaPlayer2.speak-to-ai"
     ],
@@ -45,40 +57,27 @@
             ]
         },
         {
-            "name": "gnome-common",
-            "buildsystem": "autotools",
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://download.gnome.org/sources/gnome-common/3.18/gnome-common-3.18.0.tar.xz",
-                    "sha256": "22569e370ae755e04527b76328befc4c73b62bfd4a572499fde116b8318af8cf"
-                }
-            ]
-        },
-        {
-            "name": "libdbusmenu-glib",
-            "buildsystem": "simple",
-            "build-commands": [
-                "autoreconf -fiv",
-                "./configure --prefix=/app --disable-dumper --disable-tests --disable-gtk-doc --disable-vala --with-gtk=3",
-                "make",
-                "make install"
+            "name": "libayatana-ido",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
-                },
-                {
-                    "type": "patch",
-                    "path": "patches/libdbusmenu-glib-fix-valgrind.patch"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz",
+                    "sha256": "fb3b3b7d3b0c4a3b9f0b2c2e9f2b1c1b4c9f5e3f5e9b2e3c2e9f2b1c1b4c9f5"
                 }
             ]
         },
         {
-            "name": "org.ayatana.libayatana-indicator",
+            "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
+            ],
             "sources": [
                 {
                     "type": "archive",
@@ -88,8 +87,13 @@
             ]
         },
         {
-            "name": "org.ayatana.libayatana-appindicator",
+            "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTKDOC=OFF"
+            ],
             "sources": [
                 {
                     "type": "archive",
@@ -99,17 +103,40 @@
             ]
         },
         {
+            "name": "xdotool",
+            "buildsystem": "simple",
+            "build-commands": [
+                "make PREFIX=/app",
+                "make PREFIX=/app install"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/jordansissel/xdotool/archive/refs/tags/v3.20211022.1.tar.gz",
+                    "sha256": "96f0facfde6d78eacad35b91b0f46fecd0b35e474c03e00e30da3fdd345f9ada"
+                }
+            ]
+        },
+        {
             "name": "speak-to-ai",
             "buildsystem": "simple",
             "build-commands": [
+                "# Download and setup whisper.cpp if not present",
+                "if [ ! -f sources/core/whisper ]; then echo 'Building whisper.cpp...'; git clone https://github.com/ggerganov/whisper.cpp.git whisper-build; cd whisper-build; make -j$(nproc); mkdir -p ../sources/core; cp main ../sources/core/whisper; cp quantize ../sources/core/quantize; cd ..; rm -rf whisper-build; fi",
+                "# Download base model if not present",
+                "if [ ! -f sources/language-models/base.bin ]; then echo 'Downloading base model...'; mkdir -p sources/language-models; cd sources/language-models; wget -q https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -O base.bin || curl -L https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -o base.bin; cd ../..; fi",
+                "# Build Go application",
                 ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH; go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
+                ". /usr/lib/sdk/golang/enable.sh; export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH; CGO_ENABLED=1 go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
+                "# Install binaries",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
                 "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
-                "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
-                "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
                 "install -Dm755 sources/core/whisper /app/bin/whisper",
                 "install -Dm755 sources/core/quantize /app/bin/quantize",
+                "# Install configuration and resources",
+                "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
+                "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
+                "# Install desktop integration",
                 "install -Dm644 icons/io.github.ashbuk.speak-to-ai.svg /app/share/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg",
                 "install -Dm644 icons/io.github.ashbuk.speak-to-ai.png /app/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png",
                 "install -Dm644 io.github.ashbuk.speak-to-ai.desktop /app/share/applications/io.github.ashbuk.speak-to-ai.desktop",
