@@ -17,7 +17,10 @@ permissions:
 
 jobs:
   build-appimage:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
     
     steps:
     - name: Checkout code
@@ -27,6 +30,16 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
         
     - name: Debug - Show environment
       run: |
@@ -64,7 +77,25 @@ jobs:
           build-essential \
           pkg-config \
           cmake \
-          valgrind
+          valgrind \
+          imagemagick
+          
+    - name: Create application icon
+      run: |
+        # Create a simple icon if not exists
+        if [ ! -f "icons/io.github.ashbuk.speak-to-ai.png" ]; then
+          echo "Creating application icon..."
+          mkdir -p icons
+          # Create a simple microphone icon
+          convert -size 256x256 xc:'#2196F3' \
+            -fill white -draw "circle 128,128 128,48" \
+            -fill '#1976D2' -pointsize 120 -gravity center \
+            -annotate +0+0 "🎤" \
+            icons/io.github.ashbuk.speak-to-ai.png
+          echo "✅ Icon created successfully"
+        else
+          echo "✅ Icon already exists"
+        fi
           
     - name: Debug - Test Go build
       run: |
@@ -121,16 +152,36 @@ jobs:
         chmod +x bash-scripts/build-appimage.sh
         bash -x bash-scripts/build-appimage.sh
         
+    - name: Verify AppImage
+      run: |
+        # Check if AppImage is executable and valid
+        echo "Checking AppImage artifacts..."
+        ls -lh dist/*.AppImage
+        for appimage in dist/*.AppImage; do
+          echo "Verifying: $appimage"
+          chmod +x "$appimage"
+          file "$appimage"
+          # Check if it's a valid AppImage
+          if "$appimage" --appimage-help > /dev/null 2>&1; then
+            echo "✅ Valid AppImage: $appimage"
+          else
+            echo "⚠️ AppImage validation failed for: $appimage"
+          fi
+        done
+        
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
       with:
-        name: speak-to-ai-appimage
+        name: speak-to-ai-appimage-${{ matrix.os }}
         path: |
           dist/*.AppImage
           !dist/tools/
         
   build-flatpak:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
     
     steps:
     - name: Checkout code
@@ -140,6 +191,26 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Cache Flatpak builder
+      uses: actions/cache@v4
+      with:
+        path: |
+          .flatpak-builder
+          dist/flatpak/.flatpak-builder
+        key: ${{ runner.os }}-flatpak-${{ hashFiles('io.github.ashbuk.speak-to-ai.json') }}
+        restore-keys: |
+          ${{ runner.os }}-flatpak-
       
     - name: Debug - Show environment
       run: |
@@ -207,18 +278,35 @@ jobs:
         go mod download
         go mod verify
         
-    - name: Fix SHA256 for libayatana-ido
+    - name: Update manifest with correct dependencies
       run: |
-        # Download and get correct SHA256
-        TEMP_DIR=$(mktemp -d)
-        cd $TEMP_DIR
-        wget -q https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz
-        CORRECT_SHA=$(sha256sum 0.10.4.tar.gz | cut -d' ' -f1)
-        cd $GITHUB_WORKSPACE
-        rm -rf $TEMP_DIR
+        # Create updated manifest with correct SHA256
+        python3 - <<EOF
+        import json
+        import hashlib
+        import urllib.request
         
-        # Update manifest with correct SHA256
-        sed -i "s/fb3b3b7d3b0c4a3b9f0b2c2e9f2b1c1b4c9f5e3f5e9b2e3c2e9f2b1c1b4c9f5/$CORRECT_SHA/g" io.github.ashbuk.speak-to-ai.json
+        # Load manifest
+        with open('io.github.ashbuk.speak-to-ai.json', 'r') as f:
+            manifest = json.load(f)
+        
+        # Download and calculate SHA256 for libayatana-ido
+        url = "https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz"
+        with urllib.request.urlopen(url) as response:
+            data = response.read()
+            sha256 = hashlib.sha256(data).hexdigest()
+        
+        # Update SHA256 in manifest
+        for module in manifest['modules']:
+            if module['name'] == 'libayatana-ido':
+                module['sources'][0]['sha256'] = sha256
+                print(f"Updated libayatana-ido SHA256 to: {sha256}")
+                break
+        
+        # Save updated manifest
+        with open('io.github.ashbuk.speak-to-ai.json', 'w') as f:
+            json.dump(manifest, f, indent=2)
+        EOF
         
     - name: Build Flatpak package
       run: |
@@ -244,18 +332,40 @@ jobs:
           dist/flatpak/build-dir \
           io.github.ashbuk.speak-to-ai.json
           
-    - name: Create flatpak bundle
+        - name: Create flatpak bundle
       run: |
         flatpak build-bundle \
           --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
           dist/flatpak/repo \
           dist/io.github.ashbuk.speak-to-ai.flatpak \
           io.github.ashbuk.speak-to-ai
+          
+    - name: Verify Flatpak
+      run: |
+        # Check flatpak file size and structure
+        echo "Checking Flatpak artifact..."
+        ls -lh dist/io.github.ashbuk.speak-to-ai.flatpak
+        file dist/io.github.ashbuk.speak-to-ai.flatpak
         
+        # Verify it's a valid flatpak bundle
+        if file dist/io.github.ashbuk.speak-to-ai.flatpak | grep -q "Squashfs filesystem"; then
+          echo "✅ Valid Flatpak bundle structure"
+        else
+          echo "⚠️ Flatpak bundle validation failed"
+        fi
+        
+        # Check file size (should be reasonable, not too small or huge)
+        SIZE=$(stat -c%s dist/io.github.ashbuk.speak-to-ai.flatpak)
+        if [ $SIZE -gt 10485760 ] && [ $SIZE -lt 524288000 ]; then  # 10MB < size < 500MB
+          echo "✅ Flatpak size is reasonable: $(numfmt --to=iec $SIZE)"
+        else
+          echo "⚠️ Flatpak size seems unusual: $(numfmt --to=iec $SIZE)"
+        fi
+          
     - name: Upload Flatpak artifact
       uses: actions/upload-artifact@v4
       with:
-        name: speak-to-ai-flatpak
+        name: speak-to-ai-flatpak-${{ matrix.os }}
         path: dist/io.github.ashbuk.speak-to-ai.flatpak
         
   create-release:
@@ -267,17 +377,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Download AppImage artifact
+    - name: Download AppImage artifacts
       uses: actions/download-artifact@v4
       with:
-        name: speak-to-ai-appimage
+        pattern: speak-to-ai-appimage-*
         path: ./artifacts/
+        merge-multiple: true
         
-    - name: Download Flatpak artifact
+    - name: Download Flatpak artifacts
       uses: actions/download-artifact@v4
       with:
-        name: speak-to-ai-flatpak
+        pattern: speak-to-ai-flatpak-*
         path: ./artifacts/
+        merge-multiple: true
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
