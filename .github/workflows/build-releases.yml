@@ -332,7 +332,7 @@ jobs:
           dist/flatpak/build-dir \
           io.github.ashbuk.speak-to-ai.json
           
-        - name: Create flatpak bundle
+    - name: Create flatpak bundle
       run: |
         flatpak build-bundle \
           --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
