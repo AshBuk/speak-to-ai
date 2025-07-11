@@ -57,7 +57,7 @@
             ]
         },
         {
-            "name": "libayatana-ido",
+            "name": "ayatana-ido",
             "buildsystem": "cmake-ninja",
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
@@ -66,7 +66,7 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz",
+                    "url": "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz",
                     "sha256": "fb3b3b7d3b0c4a3b9f0b2c2e9f2b1c1b4c9f5e3f5e9b2e3c2e9f2b1c1b4c9f5"
                 }
             ]

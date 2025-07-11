@@ -19,7 +19,7 @@ jobs:
   build-appimage:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -180,7 +180,7 @@ jobs:
   build-flatpak:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -290,17 +290,17 @@ jobs:
         with open('io.github.ashbuk.speak-to-ai.json', 'r') as f:
             manifest = json.load(f)
         
-        # Download and calculate SHA256 for libayatana-ido
-        url = "https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.10.4.tar.gz"
+        # Download and calculate SHA256 for ayatana-ido
+        url = "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz"
         with urllib.request.urlopen(url) as response:
             data = response.read()
             sha256 = hashlib.sha256(data).hexdigest()
         
         # Update SHA256 in manifest
         for module in manifest['modules']:
-            if module['name'] == 'libayatana-ido':
+            if module['name'] == 'ayatana-ido':
                 module['sources'][0]['sha256'] = sha256
-                print(f"Updated libayatana-ido SHA256 to: {sha256}")
+                print(f"Updated ayatana-ido SHA256 to: {sha256}")
                 break
         
         # Save updated manifest
