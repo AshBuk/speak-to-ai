@@ -36,6 +36,36 @@
                         ]
         },
         {
+            "name": "graphviz",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-static",
+                "--disable-dependency-tracking",
+                "--disable-ltdl-install",
+                "--disable-swig",
+                "--disable-sharp",
+                "--disable-guile",
+                "--disable-java",
+                "--disable-lua",
+                "--disable-ocaml",
+                "--disable-perl",
+                "--disable-php",
+                "--disable-python",
+                "--disable-r",
+                "--disable-ruby",
+                "--disable-tcl",
+                "--without-qt",
+                "--without-x"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://gitlab.com/graphviz/graphviz/-/archive/9.0.0/graphviz-9.0.0.tar.gz",
+                    "sha256": "504d19b5d0e5398a57e9d9de42393f90b9e79aff0969b4ebc3b891ccb39602ed"
+                }
+            ]
+        },
+        {
             "name": "vala",
             "buildsystem": "autotools",
             "sources": [
