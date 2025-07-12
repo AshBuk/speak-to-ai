@@ -61,7 +61,8 @@
             "buildsystem": "cmake-ninja",
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
-                "-DENABLE_TESTS=OFF"
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_IDO=OFF"
             ],
             "sources": [
                 {
