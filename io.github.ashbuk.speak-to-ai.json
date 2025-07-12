@@ -36,35 +36,47 @@
                         ]
         },
         {
-            "name": "libdbusmenu-glib",
-            "buildsystem": "autotools",
+            "name": "libayatana-ido",
+            "buildsystem": "cmake-ninja",
             "config-opts": [
-                "--disable-static",
-                "--disable-tests",
-                "--disable-gtk-doc"
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                    "url": "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz",
+                    "sha256": "bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38"
                 }
             ]
         },
         {
-            "name": "libappindicator-gtk3",
-            "buildsystem": "autotools",
+            "name": "libayatana-indicator",
+            "buildsystem": "cmake-ninja",
             "config-opts": [
-                "--disable-static",
-                "--disable-tests",
-                "--disable-gtk-doc",
-                "--with-gtk=3"
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/libappindicator/12.10/12.10.0/+download/libappindicator-12.10.0.tar.gz",
-                    "sha256": "d5907c1f98084acf28fd19593cb70672caa0ca1cf82d747ba6f4830d4cc3b49f"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-indicator/archive/refs/tags/0.9.4.tar.gz",
+                    "sha256": "a18d3c682e29afd77db24366f8475b26bda22b0e16ff569a2ec71cd6eb4eac95"
+                }
+            ]
+        },
+        {
+            "name": "libayatana-appindicator",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator/archive/refs/tags/0.5.93.tar.gz",
+                    "sha256": "cbefed7a918a227bf71286246e237fcd3a9c8499b3eaac4897811a869409edf0"
                 }
             ]
         },
