@@ -57,22 +57,6 @@
             ]
         },
         {
-            "name": "ayatana-ido",
-            "buildsystem": "cmake-ninja",
-            "config-opts": [
-                "-DCMAKE_BUILD_TYPE=Release",
-                "-DENABLE_TESTS=OFF",
-                "-DENABLE_VALA=OFF"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz",
-                    "sha256": "bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38"
-                }
-            ]
-        },
-        {
             "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
             "config-opts": [
