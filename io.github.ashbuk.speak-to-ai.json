@@ -101,7 +101,8 @@
                 "--disable-dumper",
                 "--disable-gtk2",
                 "--with-gtk=3",
-                "--enable-gtk3"
+                "--enable-gtk3",
+                "--disable-valgrind"
             ],
             "sources": [
                 {
