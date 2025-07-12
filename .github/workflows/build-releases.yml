@@ -202,15 +202,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
           
-    - name: Cache Flatpak builder
-      uses: actions/cache@v4
-      with:
-        path: |
-          .flatpak-builder
-          dist/flatpak/.flatpak-builder
-        key: ${{ runner.os }}-flatpak-${{ hashFiles('io.github.ashbuk.speak-to-ai.json') }}
-        restore-keys: |
-          ${{ runner.os }}-flatpak-
+    # Cache disabled for debugging HAVE_VALGRIND issue
+    # - name: Cache Flatpak builder
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: |
+    #       .flatpak-builder
+    #       dist/flatpak/.flatpak-builder
+    #     key: ${{ runner.os }}-flatpak-${{ hashFiles('io.github.ashbuk.speak-to-ai.json') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-flatpak-
       
     - name: Debug - Show environment
       run: |
@@ -289,22 +290,22 @@ jobs:
       run: |
         mkdir -p dist/flatpak
         
-        # Build with dependencies
+        # Build with dependencies (cache disabled for debugging)
         flatpak-builder \
           --force-clean \
           --user \
           --install-deps-from=flathub \
           --install-deps-only \
-          --ccache \
+          --disable-cache \
           --repo=dist/flatpak/repo \
           dist/flatpak/build-dir \
           io.github.ashbuk.speak-to-ai.json
           
-        # Build the actual package
+        # Build the actual package (cache disabled for debugging)
         flatpak-builder \
           --force-clean \
           --user \
-          --ccache \
+          --disable-cache \
           --repo=dist/flatpak/repo \
           dist/flatpak/build-dir \
           io.github.ashbuk.speak-to-ai.json
