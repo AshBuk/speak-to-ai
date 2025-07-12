@@ -57,20 +57,17 @@
             ]
         },
         {
-            "name": "libdbusmenu-gtk3",
-            "buildsystem": "autotools",
+            "name": "libayatana-ido",
+            "buildsystem": "cmake-ninja",
             "config-opts": [
-                "--disable-static",
-                "--disable-tests",
-                "--disable-gtk-doc",
-                "--disable-dumper",
-                "--with-gtk=3"
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-ido/archive/refs/tags/0.9.4.tar.gz",
+                    "sha256": "a18d3c682e29afd77db24366f8475b26bda22b0e16ff569a2ec71cd6eb4eac95"
                 }
             ]
         },
