@@ -20,6 +20,7 @@
         "--filesystem=/dev/input:ro",
         "--talk-name=org.freedesktop.Notifications",
         "--talk-name=org.kde.StatusNotifierWatcher",
+        "--talk-name=org.freedesktop.StatusNotifierWatcher",
         "--env=XDG_CURRENT_DESKTOP=GNOME",
         "--env=DESKTOP_SESSION=gnome"
     ],
@@ -31,6 +32,39 @@
                     "type": "archive",
                     "url": "https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz",
                     "sha256": "67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd"
+                }
+                        ]
+        },
+        {
+            "name": "libdbusmenu-glib",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-static",
+                "--disable-tests",
+                "--disable-gtk-doc"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
+                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                }
+            ]
+        },
+        {
+            "name": "libappindicator-gtk3",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-static",
+                "--disable-tests",
+                "--disable-gtk-doc",
+                "--with-gtk=3"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://launchpad.net/libappindicator/12.10/12.10.0/+download/libappindicator-12.10.0.tar.gz",
+                    "sha256": "d5907c1f98084acf28fd19593cb70672caa0ca1cf82d747ba6f4830d4cc3b49f"
                 }
             ]
         },
