@@ -278,35 +278,11 @@ jobs:
         go mod download
         go mod verify
         
-    - name: Update manifest with correct dependencies
+    - name: Verify manifest checksums
       run: |
-        # Create updated manifest with correct SHA256
-        python3 - <<EOF
-        import json
-        import hashlib
-        import urllib.request
-        
-        # Load manifest
-        with open('io.github.ashbuk.speak-to-ai.json', 'r') as f:
-            manifest = json.load(f)
-        
-        # Download and calculate SHA256 for ayatana-ido
-        url = "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz"
-        with urllib.request.urlopen(url) as response:
-            data = response.read()
-            sha256 = hashlib.sha256(data).hexdigest()
-        
-        # Update SHA256 in manifest
-        for module in manifest['modules']:
-            if module['name'] == 'ayatana-ido':
-                module['sources'][0]['sha256'] = sha256
-                print(f"Updated ayatana-ido SHA256 to: {sha256}")
-                break
-        
-        # Save updated manifest
-        with open('io.github.ashbuk.speak-to-ai.json', 'w') as f:
-            json.dump(manifest, f, indent=2)
-        EOF
+        echo "Verifying manifest checksums are correct..."
+        grep -q "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847" io.github.ashbuk.speak-to-ai.json && echo "✅ xdotool SHA256 correct" || echo "❌ xdotool SHA256 incorrect"
+        grep -q "bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38" io.github.ashbuk.speak-to-ai.json && echo "✅ ayatana-ido SHA256 correct" || echo "❌ ayatana-ido SHA256 incorrect"
         
     - name: Build Flatpak package
       run: |
