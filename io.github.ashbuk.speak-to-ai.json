@@ -21,33 +21,17 @@
         "--talk-name=org.freedesktop.Notifications",
         "--talk-name=org.kde.StatusNotifierWatcher",
         "--talk-name=org.ayatana.indicator.application",
-        "--talk-name=org.ayatana.indicator.sound",
+        "--talk-name=org.ayatana.indicator.datetime",
         "--talk-name=org.ayatana.indicator.messages",
         "--talk-name=org.ayatana.indicator.power",
-        "--talk-name=org.ayatana.indicator.datetime",
         "--talk-name=org.ayatana.indicator.session",
-        "--talk-name=org.ayatana.indicator.bluetooth",
-        "--talk-name=org.ayatana.indicator.network",
-        "--talk-name=org.ayatana.indicator.keyboard",
-        "--talk-name=org.ayatana.indicator.printers",
-        "--talk-name=org.ayatana.indicator.location",
-        "--system-talk-name=org.freedesktop.UPower",
-        "--own-name=org.mpris.MediaPlayer2.speak-to-ai"
+        "--talk-name=org.ayatana.indicator.sound",
+        "--env=XDG_CURRENT_DESKTOP=GNOME",
+        "--env=DESKTOP_SESSION=gnome"
     ],
-    "build-options": {
-        "append-path": "/usr/lib/sdk/golang/bin",
-        "env": {
-            "GOBIN": "/app/bin",
-            "GOROOT": "/usr/lib/sdk/golang"
-        },
-        "build-args": [
-            "--share=network"
-        ]
-    },
     "modules": [
         {
             "name": "intltool",
-            "buildsystem": "autotools",
             "sources": [
                 {
                     "type": "archive",
@@ -59,25 +43,44 @@
         {
             "name": "ayatana-ido",
             "buildsystem": "cmake-ninja",
+            "builddir": true,
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DENABLE_TESTS=OFF"
             ],
+            "build-options": {
+                "env": {
+                    "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig"
+                }
+            },
             "sources": [
                 {
                     "type": "archive",
                     "url": "https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz",
                     "sha256": "bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38"
                 }
+            ],
+            "modules": [
+                {
+                    "name": "vala",
+                    "buildsystem": "autotools",
+                    "sources": [
+                        {
+                            "type": "archive",
+                            "url": "https://download.gnome.org/sources/vala/0.56/vala-0.56.17.tar.xz",
+                            "sha256": "26100c4e4ef0049c619275f140d97cf565883d00c7543c82bcce5a426934ed6a"
+                        }
+                    ]
+                }
             ]
         },
         {
             "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
+            "builddir": true,
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
-                "-DENABLE_TESTS=OFF",
-                "-DENABLE_IDO=OFF"
+                "-DENABLE_TESTS=OFF"
             ],
             "sources": [
                 {
@@ -90,10 +93,12 @@
         {
             "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
+            "builddir": true,
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DENABLE_TESTS=OFF",
-                "-DENABLE_GTKDOC=OFF"
+                "-DENABLE_BINDINGS_MONO=OFF",
+                "-DENABLE_BINDINGS_VALA=OFF"
             ],
             "sources": [
                 {
@@ -113,35 +118,42 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://github.com/jordansissel/xdotool/archive/refs/tags/v3.20211022.1.tar.gz",
-                    "sha256": "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847"
+                    "url": "https://github.com/jordansissel/xdotool/releases/download/v3.20211022.1/xdotool-3.20211022.1.tar.gz",
+                    "sha256": "96f0facfde6d78eacad35b91b0f46fecd0b35e474c03e00e30da3fdd345f9ada"
                 }
             ]
         },
         {
             "name": "speak-to-ai",
             "buildsystem": "simple",
+            "build-options": {
+                "env": {
+                    "GOPATH": "/run/build/speak-to-ai/go",
+                    "GOPROXY": "https://proxy.golang.org",
+                    "GOSUMDB": "sum.golang.org",
+                    "CGO_ENABLED": "1"
+                },
+                "append-path": "/usr/lib/sdk/golang/bin",
+                "append-ld-library-path": "/usr/lib/sdk/golang/lib"
+            },
             "build-commands": [
-                "# Download and setup whisper.cpp if not present",
-                "if [ ! -f sources/core/whisper ]; then echo 'Building whisper.cpp...'; git clone https://github.com/ggerganov/whisper.cpp.git whisper-build; cd whisper-build; make -j$(nproc); mkdir -p ../sources/core; cp main ../sources/core/whisper; cp quantize ../sources/core/quantize; cd ..; rm -rf whisper-build; fi",
-                "# Download base model if not present",
-                "if [ ! -f sources/language-models/base.bin ]; then echo 'Downloading base model...'; mkdir -p sources/language-models; cd sources/language-models; wget -q https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -O base.bin || curl -L https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -o base.bin; cd ../..; fi",
-                "# Build Go application",
-                ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH; CGO_ENABLED=1 go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
-                "# Install binaries",
-                "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
-                "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
-                "install -Dm755 sources/core/whisper /app/bin/whisper",
-                "install -Dm755 sources/core/quantize /app/bin/quantize",
-                "# Install configuration and resources",
-                "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
-                "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",
-                "# Install desktop integration",
-                "install -Dm644 icons/io.github.ashbuk.speak-to-ai.svg /app/share/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg",
-                "install -Dm644 icons/io.github.ashbuk.speak-to-ai.png /app/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png",
-                "install -Dm644 io.github.ashbuk.speak-to-ai.desktop /app/share/applications/io.github.ashbuk.speak-to-ai.desktop",
-                "install -Dm644 io.github.ashbuk.speak-to-ai.appdata.xml /app/share/metainfo/io.github.ashbuk.speak-to-ai.appdata.xml"
+                "mkdir -p /app/bin",
+                "mkdir -p /app/share/applications",
+                "mkdir -p /app/share/icons/hicolor/scalable/apps",
+                "mkdir -p /app/share/icons/hicolor/256x256/apps",
+                "mkdir -p /app/share/metainfo",
+                "mkdir -p /app/share/speak-to-ai/models",
+                "mkdir -p /app/share/speak-to-ai/config",
+                "cp -r sources/core/* /app/bin/",
+                "chmod +x /app/bin/whisper",
+                "go build -o /app/bin/speak-to-ai-daemon cmd/daemon/main.go",
+                "cp config.yaml /app/share/speak-to-ai/config/",
+                "cp flatpak-wrapper.sh /app/bin/",
+                "chmod +x /app/bin/flatpak-wrapper.sh",
+                "cp io.github.ashbuk.speak-to-ai.desktop /app/share/applications/",
+                "cp icons/io.github.ashbuk.speak-to-ai.svg /app/share/icons/hicolor/scalable/apps/",
+                "cp icons/io.github.ashbuk.speak-to-ai.png /app/share/icons/hicolor/256x256/apps/",
+                "cp io.github.ashbuk.speak-to-ai.appdata.xml /app/share/metainfo/"
             ],
             "sources": [
                 {
