@@ -55,21 +55,30 @@
             "build-options": {
                 "env": {
                     "GOPATH": "/run/build/speak-to-ai/go",
-                    "GOPROXY": "https://proxy.golang.org",
+                    "GOPROXY": "https://proxy.golang.org,https://goproxy.cn,direct",
                     "GOSUMDB": "sum.golang.org",
+                    "GOPRIVATE": "",
                     "CGO_ENABLED": "1"
                 },
                 "append-path": "/usr/lib/sdk/golang/bin",
-                "append-ld-library-path": "/usr/lib/sdk/golang/lib"
+                "append-ld-library-path": "/usr/lib/sdk/golang/lib",
+                "build-args": [
+                    "--share=network"
+                ]
             },
             "build-commands": [
                 "# Download and setup whisper.cpp if not present",
                 "if [ ! -f sources/core/whisper ]; then echo 'Building whisper.cpp...'; git clone https://github.com/ggerganov/whisper.cpp.git whisper-build; cd whisper-build; make -j$(nproc); mkdir -p ../sources/core; cp main ../sources/core/whisper; cp quantize ../sources/core/quantize; cd ..; rm -rf whisper-build; fi",
                 "# Download base model if not present",
                 "if [ ! -f sources/language-models/base.bin ]; then echo 'Downloading base model...'; mkdir -p sources/language-models; cd sources/language-models; wget -q https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -O base.bin || curl -L https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -o base.bin; cd ../..; fi",
-                "# Build Go application",
-                ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org; go mod download",
-                ". /usr/lib/sdk/golang/enable.sh; export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH; CGO_ENABLED=1 go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
+                "# Build Go application with network fallback",
+                ". /usr/lib/sdk/golang/enable.sh",
+                "echo 'Attempting to download Go modules...'",
+                "export GOPROXY=https://proxy.golang.org,https://goproxy.cn,direct",
+                "export GOSUMDB=sum.golang.org",
+                "go mod download || (echo 'Primary proxy failed, trying direct mode...' && export GOPROXY=direct && export GOSUMDB=off && go mod download) || (echo 'Direct mode failed, trying vendor mode...' && go mod vendor)",
+                "export PKG_CONFIG_PATH=/app/lib/pkgconfig:$PKG_CONFIG_PATH",
+                "CGO_ENABLED=1 go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
                 "# Install binaries",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
                 "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
