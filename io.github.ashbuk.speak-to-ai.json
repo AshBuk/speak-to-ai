@@ -98,7 +98,10 @@
                 "--disable-static",
                 "--disable-tests",
                 "--disable-gtk-doc",
-                "--with-gtk=3"
+                "--disable-dumper",
+                "--disable-gtk2",
+                "--with-gtk=3",
+                "--enable-gtk3"
             ],
             "sources": [
                 {
