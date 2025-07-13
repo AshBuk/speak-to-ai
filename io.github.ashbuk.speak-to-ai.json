@@ -56,8 +56,43 @@
                 }
             ]
         },
-
-
+        {
+            "name": "libdbusmenu-glib",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-static",
+                "--disable-tests",
+                "--disable-gtk-doc",
+                "--disable-dumper",
+                "--disable-valgrind"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
+                    "tag": "16.04.1+18.10.20180917-0ubuntu6"
+                }
+            ]
+        },
+        {
+            "name": "libdbusmenu-gtk3",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-static", 
+                "--disable-tests",
+                "--disable-gtk-doc",
+                "--disable-dumper",
+                "--disable-valgrind",
+                "--with-gtk=3"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
+                    "tag": "16.04.1+18.10.20180917-0ubuntu6"
+                }
+            ]
+        },
         {
             "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
