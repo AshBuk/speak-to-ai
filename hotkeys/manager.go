@@ -49,6 +49,7 @@ func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
 		log.Println("Using D-Bus keyboard provider (GNOME/KDE)")
 		return dbusProvider
 	}
+	log.Println("D-Bus GlobalShortcuts portal not available, trying evdev...")
 
 	// Fallback to evdev provider (requires root permissions but works everywhere)
 	evdevProvider := NewEvdevKeyboardProvider(h.config, h.environment)
@@ -56,6 +57,7 @@ func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
 		log.Println("Using evdev keyboard provider (requires root permissions)")
 		return evdevProvider
 	}
+	log.Println("evdev not available, hotkeys will be disabled")
 
 	// Final fallback to dummy provider with helpful instructions
 	log.Println("Warning: No supported keyboard provider available.")

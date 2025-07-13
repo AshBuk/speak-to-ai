@@ -8,6 +8,15 @@ import (
 func (a *App) handleStartRecording() error {
 	a.Logger.Info("Starting recording...")
 
+	// Ensure model is available (lazy loading)
+	if err := a.ensureModelAvailable(); err != nil {
+		a.Logger.Error("Model not available: %v", err)
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("❌ Model unavailable")
+		}
+		return fmt.Errorf("model not available: %w", err)
+	}
+
 	// Set up audio level monitoring
 	a.Recorder.SetAudioLevelCallback(func(level float64) {
 		// Update tray tooltip with audio level
