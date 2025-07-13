@@ -14,9 +14,6 @@ func SetDefaultConfig(config *Config) {
 	// Hotkey settings (defaults)
 	config.Hotkeys.StartRecording = "altgr+comma" // AltGr + , (comma) - Microsoft Copilot key
 	config.Hotkeys.StopRecording = "altgr+comma"  // Same combination for start/stop
-	config.Hotkeys.CopilotKey = "altgr+comma"     // Microsoft Copilot key
-	config.Hotkeys.CopyToClipboard = "ctrl+shift+c"
-	config.Hotkeys.PasteToActiveApp = "ctrl+shift+v"
 
 	// Audio settings
 	config.Audio.Device = "default"
@@ -29,7 +26,7 @@ func SetDefaultConfig(config *Config) {
 	config.Audio.MaxRecordingTime = 300 // 5 minutes max by default
 
 	// Output settings
-	config.Output.DefaultMode = "clipboard"
+	config.Output.DefaultMode = "active_window"
 	config.Output.ClipboardTool = "auto" // auto-detect
 	config.Output.TypeTool = "auto"      // auto-detect
 

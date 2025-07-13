@@ -194,8 +194,18 @@ func (a *App) initializeTrayManager() {
 		a.Cancel() // Trigger application shutdown
 	}
 
+	// Create show config function
+	showConfigFunc := func() error {
+		return a.handleShowConfig()
+	}
+
+	// Create reload config function
+	reloadConfigFunc := func() error {
+		return a.handleReloadConfig()
+	}
+
 	// Create the appropriate tray manager
-	a.TrayManager = tray.CreateDefaultTrayManager(exitFunc, toggleFunc)
+	a.TrayManager = tray.CreateDefaultTrayManager(exitFunc, toggleFunc, showConfigFunc, reloadConfigFunc)
 }
 
 // convertEnvironmentType converts platform.EnvironmentType to output.EnvironmentType
@@ -226,8 +236,6 @@ func (a *App) initializeHotkeyManager() {
 	// Create hotkey config adapter
 	hotkeyConfig := hotkeys.NewConfigAdapter(
 		a.Config.Hotkeys.StartRecording,
-		a.Config.Hotkeys.CopyToClipboard,
-		a.Config.Hotkeys.PasteToActiveApp,
 	)
 
 	// Initialize hotkey manager with environment information
