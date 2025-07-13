@@ -37,6 +37,11 @@ func (nm *NotificationManager) NotifyError(errMsg string) error {
 	return nm.sendNotification("❌ Error", errMsg, "dialog-error")
 }
 
+// ShowNotification shows a generic notification
+func (nm *NotificationManager) ShowNotification(summary, body string) error {
+	return nm.sendNotification(summary, body, "dialog-information")
+}
+
 // sendNotification sends a notification with the given parameters
 func (nm *NotificationManager) sendNotification(summary, body, icon string) error {
 	cmd := exec.Command("notify-send",

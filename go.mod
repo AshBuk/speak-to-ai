@@ -12,6 +12,8 @@ require (
 
 // require github.com/vcaesar/keycode v0.10.1 // indirect
 
+require github.com/godbus/dbus/v5 v5.1.0
+
 require (
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 // indirect

@@ -17,16 +17,19 @@ import (
 
 // BaseRecorder implements common functionality for audio recorders
 type BaseRecorder struct {
-	config      *config.Config
-	cmd         *exec.Cmd
-	outputFile  string
-	ctx         context.Context
-	cancel      context.CancelFunc
-	mutex       sync.Mutex
-	cmdTimeout  time.Duration
-	buffer      *bytes.Buffer    // For in-memory recording
-	useBuffer   bool             // Whether to use in-memory buffer instead of file
-	tempManager *TempFileManager // For managing temp files
+	config             *config.Config
+	cmd                *exec.Cmd
+	outputFile         string
+	ctx                context.Context
+	cancel             context.CancelFunc
+	mutex              sync.Mutex
+	cmdTimeout         time.Duration
+	buffer             *bytes.Buffer      // For in-memory recording
+	useBuffer          bool               // Whether to use in-memory buffer instead of file
+	tempManager        *TempFileManager   // For managing temp files
+	audioLevelCallback AudioLevelCallback // Callback for audio level updates
+	currentAudioLevel  float64            // Current audio level (0.0 to 1.0)
+	levelMutex         sync.RWMutex       // Mutex for audio level access
 }
 
 // NewBaseRecorder creates a new base recorder instance
@@ -58,7 +61,65 @@ func (b *BaseRecorder) UseStreaming() bool {
 
 // GetAudioStream returns the audio stream for streaming mode
 func (b *BaseRecorder) GetAudioStream() (io.Reader, error) {
-	return nil, fmt.Errorf("streaming not supported by this recorder")
+	return b.buffer, nil
+}
+
+// SetAudioLevelCallback sets the callback for audio level monitoring
+func (b *BaseRecorder) SetAudioLevelCallback(callback AudioLevelCallback) {
+	b.levelMutex.Lock()
+	defer b.levelMutex.Unlock()
+	b.audioLevelCallback = callback
+}
+
+// GetAudioLevel returns the current audio level (0.0 to 1.0)
+func (b *BaseRecorder) GetAudioLevel() float64 {
+	b.levelMutex.RLock()
+	defer b.levelMutex.RUnlock()
+	return b.currentAudioLevel
+}
+
+// updateAudioLevel updates the current audio level and calls callback if set
+func (b *BaseRecorder) updateAudioLevel(level float64) {
+	b.levelMutex.Lock()
+	b.currentAudioLevel = level
+	callback := b.audioLevelCallback
+	b.levelMutex.Unlock()
+
+	if callback != nil {
+		callback(level)
+	}
+}
+
+// calculateAudioLevel calculates audio level from PCM data
+func (b *BaseRecorder) calculateAudioLevel(data []byte) float64 {
+	if len(data) == 0 {
+		return 0.0
+	}
+
+	// Assume 16-bit PCM data
+	var sum int64 = 0
+	samples := len(data) / 2
+
+	for i := 0; i < len(data)-1; i += 2 {
+		// Convert bytes to 16-bit signed integer
+		sample := int16(data[i]) | int16(data[i+1])<<8
+		sum += int64(sample) * int64(sample)
+	}
+
+	if samples == 0 {
+		return 0.0
+	}
+
+	// Calculate RMS (Root Mean Square)
+	rms := float64(sum) / float64(samples)
+	rms = rms / (32768.0 * 32768.0) // Normalize to 0-1 range
+
+	// Apply square root for RMS
+	if rms > 0 {
+		return rms * 10.0 // Amplify for better visibility
+	}
+
+	return 0.0
 }
 
 // CleanupFile removes the temporary audio file
@@ -131,9 +192,17 @@ func (b *BaseRecorder) StartProcessTemplate(cmdName string, args []string, outpu
 	// Create command with context
 	b.cmd = exec.CommandContext(b.ctx, cmdName, args...)
 
-	// Set up output redirection if using buffer
+	// Set up output redirection and audio level monitoring
 	if b.useBuffer && outputPipe {
-		b.cmd.Stdout = b.buffer
+		// Create a pipe to monitor audio data
+		stdout, err := b.cmd.StdoutPipe()
+		if err != nil {
+			b.cancel()
+			return fmt.Errorf("failed to create stdout pipe: %w", err)
+		}
+
+		// Start goroutine to read data and monitor audio levels
+		go b.monitorAudioLevel(stdout)
 	}
 
 	// Start the process
@@ -143,6 +212,35 @@ func (b *BaseRecorder) StartProcessTemplate(cmdName string, args []string, outpu
 	}
 
 	return nil
+}
+
+// monitorAudioLevel reads audio data and calculates levels
+func (b *BaseRecorder) monitorAudioLevel(reader io.Reader) {
+	buf := make([]byte, 4096) // Buffer for reading audio data
+
+	for {
+		select {
+		case <-b.ctx.Done():
+			return
+		default:
+			n, err := reader.Read(buf)
+			if err != nil {
+				if err != io.EOF {
+					log.Printf("Error reading audio data: %v", err)
+				}
+				return
+			}
+
+			if n > 0 {
+				// Write to buffer
+				b.buffer.Write(buf[:n])
+
+				// Calculate and update audio level
+				level := b.calculateAudioLevel(buf[:n])
+				b.updateAudioLevel(level)
+			}
+		}
+	}
 }
 
 // StopProcess stops the recording process with proper cleanup and retries

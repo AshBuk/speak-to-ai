@@ -43,24 +43,26 @@ func NewHotkeyManager(config HotkeyConfig, environment EnvironmentType) *HotkeyM
 // selectKeyboardProvider chooses the most appropriate keyboard provider based on
 // environment and availability
 func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
-	// Try evdev provider first (requires root permissions on Linux)
+	// Try D-Bus provider first (works without root permissions on modern DEs)
+	dbusProvider := NewDbusKeyboardProvider(h.config, h.environment)
+	if dbusProvider.IsSupported() {
+		log.Println("Using D-Bus keyboard provider (GNOME/KDE)")
+		return dbusProvider
+	}
+
+	// Fallback to evdev provider (requires root permissions but works everywhere)
 	evdevProvider := NewEvdevKeyboardProvider(h.config, h.environment)
 	if evdevProvider.IsSupported() {
-		log.Println("Using evdev keyboard provider")
+		log.Println("Using evdev keyboard provider (requires root permissions)")
 		return evdevProvider
 	}
 
-	// If evdev is not available, try gohook (X11 environments)
-	if h.environment == EnvironmentX11 {
-		hookProvider := NewHookKeyboardProvider(h.config)
-		if hookProvider.IsSupported() {
-			log.Println("Using hook-based keyboard provider for X11")
-			return hookProvider
-		}
-	}
-
-	// Fallback to a dummy provider that logs warnings
-	log.Println("Warning: No supported keyboard provider available. Hotkeys will not work.")
+	// Final fallback to dummy provider with helpful instructions
+	log.Println("Warning: No supported keyboard provider available.")
+	log.Println("For hotkeys to work:")
+	log.Println("  - On GNOME/KDE: Ensure D-Bus session is running")
+	log.Println("  - On other DEs: Run with sudo or add user to 'input' group")
+	log.Println("  - Alternative: Use system-wide hotkey tools like sxhkd")
 	return NewDummyKeyboardProvider()
 }
 

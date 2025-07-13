@@ -1,115 +1,131 @@
 package app
 
 import (
-	"context"
-	"time"
+	"fmt"
 )
 
-// handleStartRecording handles starting the recording
+// handleStartRecording handles the start of recording
 func (a *App) handleStartRecording() error {
 	a.Logger.Info("Starting recording...")
 
-	// Show notification
-	if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
-		if err := a.NotifyManager.NotifyStartRecording(); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
+	// Set up audio level monitoring
+	a.Recorder.SetAudioLevelCallback(func(level float64) {
+		// Update tray tooltip with audio level
+		if a.TrayManager != nil {
+			levelPercentage := int(level * 100)
+			if levelPercentage > 100 {
+				levelPercentage = 100
+			}
+
+			// Create visual level indicator
+			var levelBar string
+			bars := levelPercentage / 10
+			for i := 0; i < 10; i++ {
+				if i < bars {
+					levelBar += "█"
+				} else {
+					levelBar += "░"
+				}
+			}
+
+			tooltip := fmt.Sprintf("🎤 Recording... Level: %s %d%%", levelBar, levelPercentage)
+			a.TrayManager.SetTooltip(tooltip)
 		}
+
+		// Log level for debugging
+		a.Logger.Debug("Audio level: %.2f", level)
+	})
+
+	// Start recording
+	if err := a.Recorder.StartRecording(); err != nil {
+		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
-	// Update tray icon
+	// Update tray state
 	if a.TrayManager != nil {
 		a.TrayManager.SetRecordingState(true)
 	}
 
-	return a.Recorder.StartRecording()
+	// Show notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.NotifyStartRecording()
+	}
+
+	return nil
 }
 
-// handleStopRecordingAndTranscribe handles stopping recording and transcribing the audio
+// handleStopRecordingAndTranscribe handles stopping recording and transcription
 func (a *App) handleStopRecordingAndTranscribe() error {
-	a.Logger.Info("Stopping recording...")
+	a.Logger.Info("Stopping recording and transcribing...")
 
-	// Show notification
-	if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
-		if err := a.NotifyManager.NotifyStopRecording(); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
-	}
-
-	// Update tray icon
-	if a.TrayManager != nil {
-		a.TrayManager.SetRecordingState(false)
-	}
-
+	// Stop recording
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to stop recording: %w", err)
 	}
 
-	// Process audio with whisper
-	a.Logger.Info("Processing audio file: %s", audioFile)
-
-	// Set a reasonable timeout for processing (e.g. 30 seconds)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Use a channel to collect the result or error
-	type result struct {
-		transcript string
-		err        error
+	// Update tray state
+	if a.TrayManager != nil {
+		a.TrayManager.SetRecordingState(false)
+		a.TrayManager.SetTooltip("🔄 Transcribing...")
 	}
 
-	resultCh := make(chan result, 1)
+	// Show notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.NotifyStopRecording()
+	}
 
-	go func() {
-		transcript, err := a.WhisperEngine.Transcribe(audioFile)
-		resultCh <- result{transcript, err}
-	}()
+	// Transcribe audio
+	transcript, err := a.WhisperEngine.Transcribe(audioFile)
+	if err != nil {
+		// Reset tray state on error
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("❌ Transcription failed")
+		}
+		return fmt.Errorf("failed to transcribe audio: %w", err)
+	}
 
-	// Wait for result or timeout
-	select {
-	case r := <-resultCh:
-		if r.err != nil {
-			a.Logger.Error("Error processing audio: %v", r.err)
+	// Store transcript
+	a.LastTranscript = transcript
 
-			// Show error notification
-			if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
-				a.NotifyManager.NotifyError("Failed to process audio")
+	// Output the transcript based on default mode
+	if a.OutputManager != nil {
+		switch a.Config.Output.DefaultMode {
+		case "clipboard":
+			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
-
-			return r.err
-		}
-
-		a.Logger.Info("Transcript: %s", r.transcript)
-
-		// Send transcript to WebSocket clients if server is enabled
-		if a.Config.WebServer.Enabled {
-			a.WebSocketServer.BroadcastMessage("transcript", r.transcript)
-		}
-
-		// Store transcript for clipboard/paste operations
-		a.LastTranscript = r.transcript
-
-		// Automatically copy to clipboard if enabled
-		if a.OutputManager != nil && a.Config.Output.DefaultMode == "clipboard" {
-			if err := a.OutputManager.CopyToClipboard(r.transcript); err != nil {
-				a.Logger.Warning("Failed to copy transcript to clipboard: %v", err)
-			} else {
-				// Show success notification
-				if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
-					a.NotifyManager.NotifyTranscriptionComplete()
-				}
+		case "active_window":
+			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+				a.Logger.Warning("Failed to type to active window: %v", err)
+			}
+		case "combined":
+			// Try clipboard first, then typing
+			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+				a.Logger.Warning("Failed to copy to clipboard: %v", err)
+			}
+			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+				a.Logger.Warning("Failed to type to active window: %v", err)
+			}
+		default:
+			// Default to clipboard
+			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
 		}
-
-	case <-ctx.Done():
-		// Show timeout notification
-		if a.NotifyManager != nil && a.NotifyManager.IsAvailable() {
-			a.NotifyManager.NotifyError("Transcription timed out")
-		}
-
-		return ctx.Err()
 	}
 
+	// Reset tray state
+	if a.TrayManager != nil {
+		a.TrayManager.SetTooltip("✅ Ready")
+	}
+
+	// Show completion notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.NotifyTranscriptionComplete()
+	}
+
+	a.Logger.Info("Transcription completed: %s", transcript)
 	return nil
 }
 
