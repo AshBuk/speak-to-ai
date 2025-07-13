@@ -56,19 +56,7 @@
                 }
             ]
         },
-        {
-            "name": "autotools-deps",
-            "buildsystem": "simple",
-            "build-commands": [
-                "echo 'Installing autotools dependencies for libdbusmenu...'"
-            ],
-            "sources": [
-                {
-                    "type": "inline",
-                    "contents": "# Placeholder for autotools dependencies"
-                }
-            ]
-        },
+
         {
             "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
