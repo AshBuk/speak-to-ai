@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const maxTempFiles = 50 // Maximum number of temporary files to keep
+
 // TempFileManager handles temporary audio files lifecycle
 type TempFileManager struct {
 	tempFiles      map[string]time.Time
@@ -39,6 +41,12 @@ func GetTempFileManager() *TempFileManager {
 func (t *TempFileManager) AddFile(path string) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
+
+	// Cleanup old files if too many
+	if len(t.tempFiles) >= maxTempFiles {
+		t.cleanupOldFilesLocked()
+	}
+
 	t.tempFiles[path] = time.Now()
 }
 
@@ -79,7 +87,11 @@ func (t *TempFileManager) cleanupRoutine() {
 func (t *TempFileManager) cleanupOldFiles() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
+	t.cleanupOldFilesLocked()
+}
 
+// cleanupOldFilesLocked removes files older than the timeout (must be called with mutex locked)
+func (t *TempFileManager) cleanupOldFilesLocked() {
 	now := time.Now()
 	for path, timestamp := range t.tempFiles {
 		if now.Sub(timestamp) > t.cleanupTimeout {

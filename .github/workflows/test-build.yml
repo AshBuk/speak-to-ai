@@ -63,7 +63,6 @@ jobs:
       run: |
         echo "Checking project structure..."
         echo "✅ Flatpak manifest:" && ls -la io.github.ashbuk.speak-to-ai.json
-        echo "✅ Wrapper script:" && ls -la flatpak-wrapper.sh
         echo "✅ Build scripts:" && ls -la bash-scripts/
         echo "✅ Configuration:" && ls -la config.yaml
         echo "✅ Desktop file:" && ls -la io.github.ashbuk.speak-to-ai.desktop

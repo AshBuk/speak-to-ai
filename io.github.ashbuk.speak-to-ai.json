@@ -6,7 +6,7 @@
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.golang"
     ],
-    "command": "flatpak-wrapper.sh",
+    "command": "speak-to-ai",
     "finish-args": [
         "--share=ipc",
         "--socket=x11",
@@ -193,7 +193,6 @@
                 "CGO_ENABLED=1 go build -tags systray -v -o speak-to-ai cmd/daemon/main.go",
                 "# Install binaries",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
-                "install -Dm755 flatpak-wrapper.sh /app/bin/flatpak-wrapper.sh",
                 "install -Dm755 sources/core/whisper /app/bin/whisper",
                 "install -Dm755 sources/core/quantize /app/bin/quantize",
                 "# Install configuration and resources",

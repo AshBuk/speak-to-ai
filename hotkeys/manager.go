@@ -43,7 +43,14 @@ func NewHotkeyManager(config HotkeyConfig, environment EnvironmentType) *HotkeyM
 // selectKeyboardProvider chooses the most appropriate keyboard provider based on
 // environment and availability
 func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
-	// Try evdev provider first (requires root permissions on Linux)
+	// Try D-Bus provider first (Flatpak/Wayland environments)
+	dbusProvider := NewDBusProvider()
+	if dbusProvider.IsSupported() {
+		log.Println("Using D-Bus global shortcuts provider")
+		return dbusProvider
+	}
+
+	// Try evdev provider (requires root permissions on Linux)
 	evdevProvider := NewEvdevKeyboardProvider(h.config, h.environment)
 	if evdevProvider.IsSupported() {
 		log.Println("Using evdev keyboard provider")
