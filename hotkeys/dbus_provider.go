@@ -5,18 +5,20 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 )
 
 // DbusKeyboardProvider implements KeyboardEventProvider using D-Bus portal
 type DbusKeyboardProvider struct {
-	config      HotkeyConfig
-	environment EnvironmentType
-	callbacks   map[string]func() error
-	conn        *dbus.Conn
-	isListening bool
-	mutex       sync.Mutex
+	config        HotkeyConfig
+	environment   EnvironmentType
+	callbacks     map[string]func() error
+	conn          *dbus.Conn
+	sessionHandle string
+	isListening   bool
+	mutex         sync.Mutex
 }
 
 // NewDbusKeyboardProvider creates a new D-Bus keyboard provider
@@ -130,35 +132,121 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 
-	for hotkey, callback := range p.callbacks {
-		// Create shortcut options
-		options := map[string]dbus.Variant{
+	// Step 1: Create a session using Request/Response pattern
+	sessionOptions := map[string]dbus.Variant{
+		"handle_token":         dbus.MakeVariant("speak_to_ai_session"),
+		"session_handle_token": dbus.MakeVariant("speak_to_ai_session_handle"),
+	}
+
+	call := obj.Call("org.freedesktop.portal.GlobalShortcuts.CreateSession", 0, sessionOptions)
+	if call.Err != nil {
+		return fmt.Errorf("failed to create GlobalShortcuts session: %w", call.Err)
+	}
+
+	// Get the request handle from the call
+	if len(call.Body) == 0 {
+		return fmt.Errorf("no request handle returned from CreateSession")
+	}
+
+	requestHandle, ok := call.Body[0].(dbus.ObjectPath)
+	if !ok {
+		return fmt.Errorf("invalid request handle type from CreateSession")
+	}
+
+	// Wait for the Response signal to get the session handle
+	sessionHandle, err := p.waitForSessionResponse(requestHandle)
+	if err != nil {
+		return fmt.Errorf("failed to get session handle: %w", err)
+	}
+
+	p.sessionHandle = sessionHandle
+
+	// Step 2: Prepare shortcuts for binding
+	shortcuts := make([]struct {
+		ID   string
+		Data map[string]dbus.Variant
+	}, 0, len(p.callbacks))
+
+	for hotkey := range p.callbacks {
+		shortcutData := map[string]dbus.Variant{
 			"description": dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
 		}
-
-		// Register the shortcut
-		call := obj.Call("org.freedesktop.portal.GlobalShortcuts.CreateShortcut", 0,
-			"",     // parent_window (empty for no parent)
-			hotkey, // shortcut_id
-			hotkey, // shortcut
-			options)
-
-		if call.Err != nil {
-			log.Printf("Warning: failed to register hotkey %s: %v", hotkey, call.Err)
-			continue
-		}
-
-		// Start listening for this shortcut
-		go p.listenForShortcut(hotkey, callback)
+		shortcuts = append(shortcuts, struct {
+			ID   string
+			Data map[string]dbus.Variant
+		}{
+			ID:   hotkey,
+			Data: shortcutData,
+		})
 	}
+
+	// Step 3: Bind shortcuts to the session
+	bindOptions := map[string]dbus.Variant{}
+	call = obj.Call("org.freedesktop.portal.GlobalShortcuts.BindShortcuts", 0,
+		dbus.ObjectPath(sessionHandle), shortcuts, "", bindOptions)
+	if call.Err != nil {
+		return fmt.Errorf("failed to bind shortcuts: %w", call.Err)
+	}
+
+	// Step 4: Start listening for shortcut activations
+	go p.listenForShortcuts()
 
 	return nil
 }
 
-// listenForShortcut listens for a specific shortcut activation
-func (p *DbusKeyboardProvider) listenForShortcut(shortcut string, callback func() error) {
-	// Add signal match rule
-	rule := "type='signal',interface='org.freedesktop.portal.GlobalShortcuts',member='Activated',path='/org/freedesktop/portal/desktop'"
+// waitForSessionResponse waits for the Response signal from a CreateSession request
+func (p *DbusKeyboardProvider) waitForSessionResponse(requestHandle dbus.ObjectPath) (string, error) {
+	// Subscribe to the Response signal
+	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.Request',member='Response',path='%s'", requestHandle)
+	err := p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule).Err
+	if err != nil {
+		return "", fmt.Errorf("failed to add match rule: %w", err)
+	}
+
+	// Create a channel to receive the signal
+	c := make(chan *dbus.Signal, 1)
+	p.conn.Signal(c)
+
+	// Wait for the Response signal with a timeout
+	timeout := time.After(5 * time.Second)
+	select {
+	case sig := <-c:
+		if sig.Name == "org.freedesktop.portal.Request.Response" && sig.Path == requestHandle {
+			if len(sig.Body) >= 2 {
+				// Body[0] is response code, Body[1] is results
+				responseCode, ok := sig.Body[0].(uint32)
+				if !ok || responseCode != 0 {
+					return "", fmt.Errorf("CreateSession request failed with code %v", responseCode)
+				}
+
+				results, ok := sig.Body[1].(map[string]dbus.Variant)
+				if !ok {
+					return "", fmt.Errorf("invalid results format in Response signal")
+				}
+
+				sessionHandleVariant, exists := results["session_handle"]
+				if !exists {
+					return "", fmt.Errorf("session_handle not found in Response results")
+				}
+
+				sessionHandle, ok := sessionHandleVariant.Value().(string)
+				if !ok {
+					return "", fmt.Errorf("invalid session_handle type in Response results")
+				}
+
+				return sessionHandle, nil
+			}
+		}
+		return "", fmt.Errorf("unexpected signal received: %s", sig.Name)
+	case <-timeout:
+		return "", fmt.Errorf("timeout waiting for CreateSession response")
+	}
+}
+
+// listenForShortcuts listens for shortcut activations from the GlobalShortcuts portal
+func (p *DbusKeyboardProvider) listenForShortcuts() {
+	// Add signal match rule for the session
+	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.GlobalShortcuts',member='Activated',path='%s'", p.sessionHandle)
 	p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule)
 
 	// Listen for signals
@@ -167,11 +255,16 @@ func (p *DbusKeyboardProvider) listenForShortcut(shortcut string, callback func(
 
 	for sig := range c {
 		if sig.Name == "org.freedesktop.portal.GlobalShortcuts.Activated" {
-			if len(sig.Body) > 0 {
-				if activatedShortcut, ok := sig.Body[0].(string); ok && activatedShortcut == shortcut {
-					log.Printf("Hotkey activated: %s", shortcut)
-					if err := callback(); err != nil {
-						log.Printf("Error executing hotkey callback: %v", err)
+			if len(sig.Body) >= 2 {
+				// Body[0] is session handle, Body[1] is shortcut_id
+				if sessionHandle, ok := sig.Body[0].(dbus.ObjectPath); ok && string(sessionHandle) == p.sessionHandle {
+					if shortcutId, ok := sig.Body[1].(string); ok {
+						if callback, exists := p.callbacks[shortcutId]; exists {
+							log.Printf("Hotkey activated: %s", shortcutId)
+							if err := callback(); err != nil {
+								log.Printf("Error executing hotkey callback: %v", err)
+							}
+						}
 					}
 				}
 			}

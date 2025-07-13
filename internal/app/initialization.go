@@ -88,12 +88,9 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 		a.Config.General.ModelPath = modelPath
 	}
 
-	// Get model path from manager with progress reporting for first run
-	modelFilePath, err := a.handleFirstRunModelDownload()
-	if err != nil {
-		a.Logger.Warning("Failed to get model path: %v", err)
-		a.Logger.Info("Will continue startup and attempt to load model later")
-	}
+	// Get model path from config (no blocking download)
+	modelFilePath := a.Config.General.ModelPath
+	a.Logger.Info("Model path configured: %s", modelFilePath)
 
 	// Initialize audio recorder
 	a.Recorder, err = audio.GetRecorder(a.Config)
@@ -126,11 +123,11 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 	return nil
 }
 
-// handleFirstRunModelDownload handles model download with progress for first run
-func (a *App) handleFirstRunModelDownload() (string, error) {
+// ensureModelAvailable ensures the model is available, downloading if necessary
+func (a *App) ensureModelAvailable() error {
 	// Check if model already exists
-	if modelPath, err := a.ModelManager.GetModelPath(); err == nil {
-		return modelPath, nil
+	if _, err := a.ModelManager.GetModelPath(); err == nil {
+		return nil
 	}
 
 	// Model doesn't exist, need to download
@@ -138,7 +135,7 @@ func (a *App) handleFirstRunModelDownload() (string, error) {
 
 	// Show notification about download starting
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first run...")
+		a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first use...")
 	}
 
 	// Create progress callback
@@ -153,7 +150,7 @@ func (a *App) handleFirstRunModelDownload() (string, error) {
 
 		// Update tray tooltip if available
 		if a.TrayManager != nil {
-			status := fmt.Sprintf("Downloading model: %.1f%%", percentage)
+			status := fmt.Sprintf("📥 Downloading model: %.1f%%", percentage)
 			a.TrayManager.SetTooltip(status)
 		}
 	}
@@ -161,26 +158,25 @@ func (a *App) handleFirstRunModelDownload() (string, error) {
 	// Download with progress
 	modelPath, err := a.ModelManager.GetModelPathWithProgress(progressCallback)
 	if err != nil {
-		// Show error notification
-		if a.NotifyManager != nil {
-			a.NotifyManager.ShowNotification("Speak-to-AI",
-				fmt.Sprintf("Failed to download model: %v", err))
+		// Reset tray tooltip on error
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("❌ Model download failed")
 		}
-		return "", err
+		return fmt.Errorf("failed to download model: %w", err)
 	}
 
 	// Show completion notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Speak-to-AI", "Model download completed successfully!")
+		a.NotifyManager.ShowNotification("Speak-to-AI", "Model downloaded successfully!")
 	}
 
 	// Reset tray tooltip
 	if a.TrayManager != nil {
-		a.TrayManager.SetTooltip("Speak-to-AI - Ready")
+		a.TrayManager.SetTooltip("✅ Ready")
 	}
 
-	a.Logger.Info("Model download completed: %s", modelPath)
-	return modelPath, nil
+	a.Logger.Info("Model downloaded successfully: %s", modelPath)
+	return nil
 }
 
 // initializeTrayManager initializes the system tray manager
