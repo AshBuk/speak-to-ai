@@ -14,7 +14,6 @@
         "--socket=pulseaudio",
         "--device=dri",
         "--device=all",
-        "--device=input",
         "--filesystem=home",
         "--filesystem=xdg-config/speak-to-ai:create",
         "--filesystem=/dev/input:ro",
@@ -32,7 +31,10 @@
         "--talk-name=org.ayatana.indicator.printers",
         "--talk-name=org.ayatana.indicator.location",
         "--system-talk-name=org.freedesktop.UPower",
-        "--own-name=org.mpris.MediaPlayer2.speak-to-ai"
+        "--own-name=org.mpris.MediaPlayer2.speak-to-ai",
+        "--talk-name=org.gnome.Shell",
+        "--talk-name=org.kde.kglobalaccel",
+        "--talk-name=org.freedesktop.portal.Desktop"
     ],
     "build-options": {
         "append-path": "/usr/lib/sdk/golang/bin",

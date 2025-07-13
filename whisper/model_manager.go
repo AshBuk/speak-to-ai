@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
 )
@@ -14,6 +16,9 @@ import (
 type ModelManager struct {
 	config *config.Config
 }
+
+// ProgressCallback is called during model download with progress information
+type ProgressCallback func(downloaded, total int64, percentage float64)
 
 // NewModelManager creates a new model manager instance
 func NewModelManager(config *config.Config) *ModelManager {
@@ -24,6 +29,11 @@ func NewModelManager(config *config.Config) *ModelManager {
 
 // GetModelPath returns the path to the requested model, downloading it if needed
 func (m *ModelManager) GetModelPath() (string, error) {
+	return m.GetModelPathWithProgress(nil)
+}
+
+// GetModelPathWithProgress returns the path to the requested model with progress callback
+func (m *ModelManager) GetModelPathWithProgress(progressCallback ProgressCallback) (string, error) {
 	// If model path is specified directly, use it
 	if m.config.General.ModelPath != "" {
 		// Check if it's a direct file path
@@ -46,7 +56,7 @@ func (m *ModelManager) GetModelPath() (string, error) {
 	}
 
 	// If not, try to download it
-	return m.downloadModel(modelType, precision)
+	return m.downloadModelWithProgress(modelType, precision, progressCallback)
 }
 
 // getModelDir returns the directory for storing models
@@ -64,8 +74,8 @@ func (m *ModelManager) getModelDir() string {
 	return dir
 }
 
-// downloadModel downloads a model from the server
-func (m *ModelManager) downloadModel(modelType, precision string) (string, error) {
+// downloadModelWithProgress downloads a model from the server with progress reporting
+func (m *ModelManager) downloadModelWithProgress(modelType, precision string, progressCallback ProgressCallback) (string, error) {
 	// Create model directory if it doesn't exist
 	modelDir := m.getModelDir()
 	if err := os.MkdirAll(modelDir, 0755); err != nil {
@@ -98,13 +108,59 @@ func (m *ModelManager) downloadModel(modelType, precision string) (string, error
 		return "", fmt.Errorf("bad status: %s", resp.Status)
 	}
 
+	// Get content length for progress tracking
+	contentLength := resp.ContentLength
+	if contentLength <= 0 {
+		// Try to get from header
+		if lengthStr := resp.Header.Get("Content-Length"); lengthStr != "" {
+			if parsed, err := strconv.ParseInt(lengthStr, 10, 64); err == nil {
+				contentLength = parsed
+			}
+		}
+	}
+
+	// Create progress reader if callback provided
+	var reader io.Reader = resp.Body
+	if progressCallback != nil && contentLength > 0 {
+		reader = &progressReader{
+			reader:           resp.Body,
+			total:            contentLength,
+			progressCallback: progressCallback,
+		}
+	}
+
 	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, reader)
 	if err != nil {
 		return "", fmt.Errorf("failed to save model: %w", err)
 	}
 
 	return modelPath, nil
+}
+
+// progressReader wraps an io.Reader to report download progress
+type progressReader struct {
+	reader           io.Reader
+	total            int64
+	downloaded       int64
+	progressCallback ProgressCallback
+	lastReportTime   time.Time
+}
+
+// Read implements io.Reader interface with progress reporting
+func (pr *progressReader) Read(p []byte) (int, error) {
+	n, err := pr.reader.Read(p)
+	pr.downloaded += int64(n)
+
+	// Report progress every 100ms to avoid too frequent updates
+	now := time.Now()
+	if pr.progressCallback != nil && (now.Sub(pr.lastReportTime) > 100*time.Millisecond || err == io.EOF) {
+		percentage := float64(pr.downloaded) / float64(pr.total) * 100
+		pr.progressCallback(pr.downloaded, pr.total, percentage)
+		pr.lastReportTime = now
+	}
+
+	return n, err
 }
 
 // ValidateModel checks if a model file is valid

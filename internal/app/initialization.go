@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -87,8 +88,8 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 		a.Config.General.ModelPath = modelPath
 	}
 
-	// Get model path from manager for immediate usage
-	modelFilePath, err := a.ModelManager.GetModelPath()
+	// Get model path from manager with progress reporting for first run
+	modelFilePath, err := a.handleFirstRunModelDownload()
 	if err != nil {
 		a.Logger.Warning("Failed to get model path: %v", err)
 		a.Logger.Info("Will continue startup and attempt to load model later")
@@ -123,6 +124,63 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 	a.initializeTrayManager()
 
 	return nil
+}
+
+// handleFirstRunModelDownload handles model download with progress for first run
+func (a *App) handleFirstRunModelDownload() (string, error) {
+	// Check if model already exists
+	if modelPath, err := a.ModelManager.GetModelPath(); err == nil {
+		return modelPath, nil
+	}
+
+	// Model doesn't exist, need to download
+	a.Logger.Info("Model not found, downloading...")
+
+	// Show notification about download starting
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first run...")
+	}
+
+	// Create progress callback
+	progressCallback := func(downloaded, total int64, percentage float64) {
+		// Format sizes for display
+		downloadedMB := float64(downloaded) / (1024 * 1024)
+		totalMB := float64(total) / (1024 * 1024)
+
+		// Log progress
+		a.Logger.Info("Download progress: %.1f%% (%.1f MB / %.1f MB)",
+			percentage, downloadedMB, totalMB)
+
+		// Update tray tooltip if available
+		if a.TrayManager != nil {
+			status := fmt.Sprintf("Downloading model: %.1f%%", percentage)
+			a.TrayManager.SetTooltip(status)
+		}
+	}
+
+	// Download with progress
+	modelPath, err := a.ModelManager.GetModelPathWithProgress(progressCallback)
+	if err != nil {
+		// Show error notification
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Speak-to-AI",
+				fmt.Sprintf("Failed to download model: %v", err))
+		}
+		return "", err
+	}
+
+	// Show completion notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Speak-to-AI", "Model download completed successfully!")
+	}
+
+	// Reset tray tooltip
+	if a.TrayManager != nil {
+		a.TrayManager.SetTooltip("Speak-to-AI - Ready")
+	}
+
+	a.Logger.Info("Model download completed: %s", modelPath)
+	return modelPath, nil
 }
 
 // initializeTrayManager initializes the system tray manager

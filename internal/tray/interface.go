@@ -4,5 +4,6 @@ package tray
 type TrayManagerInterface interface {
 	Start()
 	SetRecordingState(isRecording bool)
+	SetTooltip(tooltip string)
 	Stop()
 }

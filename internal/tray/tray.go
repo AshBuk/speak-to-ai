@@ -84,7 +84,12 @@ func (tm *TrayManager) SetRecordingState(isRecording bool) {
 	}
 }
 
-// Stop stops the tray manager by quitting systray
+// SetTooltip sets the tooltip text for the tray icon
+func (tm *TrayManager) SetTooltip(tooltip string) {
+	systray.SetTooltip(tooltip)
+}
+
+// Stop stops the tray manager
 func (tm *TrayManager) Stop() {
 	systray.Quit()
 }

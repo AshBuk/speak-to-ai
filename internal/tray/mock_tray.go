@@ -38,6 +38,11 @@ func (tm *MockTrayManager) SetRecordingState(isRecording bool) {
 	}
 }
 
+// SetTooltip sets the tooltip text (mock implementation)
+func (tm *MockTrayManager) SetTooltip(tooltip string) {
+	log.Printf("Tray tooltip: %s", tooltip)
+}
+
 // Stop stops the mock tray manager (no-op)
 func (tm *MockTrayManager) Stop() {
 	log.Println("Mock tray manager stopped")
