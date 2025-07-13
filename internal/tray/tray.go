@@ -3,8 +3,10 @@
 package tray
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/getlantern/systray"
 )
 
@@ -17,6 +19,7 @@ type TrayManager struct {
 	onToggle       func() error
 	onShowConfig   func() error
 	onReloadConfig func() error
+	config         *config.Config
 
 	// Menu items
 	toggleItem       *systray.MenuItem
@@ -30,6 +33,13 @@ type TrayManager struct {
 	hotkeysMenu *systray.MenuItem
 	audioMenu   *systray.MenuItem
 	aiModelMenu *systray.MenuItem
+	outputMenu  *systray.MenuItem
+
+	// Dynamic settings items
+	hotkeyItems map[string]*systray.MenuItem
+	audioItems  map[string]*systray.MenuItem
+	modelItems  map[string]*systray.MenuItem
+	outputItems map[string]*systray.MenuItem
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -42,6 +52,10 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 		onToggle:       onToggle,
 		onShowConfig:   onShowConfig,
 		onReloadConfig: onReloadConfig,
+		hotkeyItems:    make(map[string]*systray.MenuItem),
+		audioItems:     make(map[string]*systray.MenuItem),
+		modelItems:     make(map[string]*systray.MenuItem),
+		outputItems:    make(map[string]*systray.MenuItem),
 	}
 }
 
@@ -86,6 +100,119 @@ func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("🎹 Hotkeys", "Hotkey settings")
 	tm.audioMenu = tm.settingsItem.AddSubMenuItem("🎤 Audio", "Audio settings")
 	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("🤖 AI Model", "AI model settings")
+	tm.outputMenu = tm.settingsItem.AddSubMenuItem("📋 Output", "Output settings")
+
+	// Populate with initial values if config is available
+	if tm.config != nil {
+		tm.populateSettingsMenus()
+	}
+}
+
+// populateSettingsMenus populates the settings submenus with current config values
+func (tm *TrayManager) populateSettingsMenus() {
+	if tm.config == nil {
+		return
+	}
+
+	// Populate Hotkeys menu
+	tm.hotkeyItems["start_recording"] = tm.hotkeysMenu.AddSubMenuItem(
+		fmt.Sprintf("Start Recording: %s", tm.config.Hotkeys.StartRecording),
+		"Current start recording hotkey",
+	)
+	tm.hotkeyItems["start_recording"].Disable()
+
+	// Populate Audio menu
+	tm.audioItems["device"] = tm.audioMenu.AddSubMenuItem(
+		fmt.Sprintf("Device: %s", tm.config.Audio.Device),
+		"Current audio device",
+	)
+	tm.audioItems["device"].Disable()
+
+	tm.audioItems["sample_rate"] = tm.audioMenu.AddSubMenuItem(
+		fmt.Sprintf("Sample Rate: %d Hz", tm.config.Audio.SampleRate),
+		"Current sample rate",
+	)
+	tm.audioItems["sample_rate"].Disable()
+
+	tm.audioItems["method"] = tm.audioMenu.AddSubMenuItem(
+		fmt.Sprintf("Method: %s", tm.config.Audio.RecordingMethod),
+		"Current recording method",
+	)
+	tm.audioItems["method"].Disable()
+
+	// Populate AI Model menu
+	tm.modelItems["type"] = tm.aiModelMenu.AddSubMenuItem(
+		fmt.Sprintf("Model: %s", tm.config.General.ModelType),
+		"Current model type",
+	)
+	tm.modelItems["type"].Disable()
+
+	tm.modelItems["language"] = tm.aiModelMenu.AddSubMenuItem(
+		fmt.Sprintf("Language: %s", tm.config.General.Language),
+		"Current language setting",
+	)
+	tm.modelItems["language"].Disable()
+
+	// Populate Output menu
+	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
+		fmt.Sprintf("Mode: %s", tm.config.Output.DefaultMode),
+		"Current output mode",
+	)
+	tm.outputItems["mode"].Disable()
+
+	tm.outputItems["clipboard_tool"] = tm.outputMenu.AddSubMenuItem(
+		fmt.Sprintf("Clipboard Tool: %s", tm.config.Output.ClipboardTool),
+		"Current clipboard tool",
+	)
+	tm.outputItems["clipboard_tool"].Disable()
+
+	tm.outputItems["type_tool"] = tm.outputMenu.AddSubMenuItem(
+		fmt.Sprintf("Type Tool: %s", tm.config.Output.TypeTool),
+		"Current typing tool",
+	)
+	tm.outputItems["type_tool"].Disable()
+}
+
+// UpdateSettings updates the settings display with new configuration
+func (tm *TrayManager) UpdateSettings(config *config.Config) {
+	tm.config = config
+
+	// Update existing menu items if they exist
+	if tm.hotkeyItems["start_recording"] != nil {
+		tm.hotkeyItems["start_recording"].SetTitle(fmt.Sprintf("Start Recording: %s", config.Hotkeys.StartRecording))
+	}
+
+	if tm.audioItems["device"] != nil {
+		tm.audioItems["device"].SetTitle(fmt.Sprintf("Device: %s", config.Audio.Device))
+	}
+
+	if tm.audioItems["sample_rate"] != nil {
+		tm.audioItems["sample_rate"].SetTitle(fmt.Sprintf("Sample Rate: %d Hz", config.Audio.SampleRate))
+	}
+
+	if tm.audioItems["method"] != nil {
+		tm.audioItems["method"].SetTitle(fmt.Sprintf("Method: %s", config.Audio.RecordingMethod))
+	}
+
+	if tm.modelItems["type"] != nil {
+		tm.modelItems["type"].SetTitle(fmt.Sprintf("Model: %s", config.General.ModelType))
+	}
+
+	if tm.modelItems["language"] != nil {
+		tm.modelItems["language"].SetTitle(fmt.Sprintf("Language: %s", config.General.Language))
+	}
+
+	if tm.outputItems["mode"] != nil {
+		tm.outputItems["mode"].SetTitle(fmt.Sprintf("Mode: %s", config.Output.DefaultMode))
+	}
+
+	if tm.outputItems["clipboard_tool"] != nil {
+		tm.outputItems["clipboard_tool"].SetTitle(fmt.Sprintf("Clipboard Tool: %s", config.Output.ClipboardTool))
+	}
+
+	if tm.outputItems["type_tool"] != nil {
+		tm.outputItems["type_tool"].SetTitle(fmt.Sprintf("Type Tool: %s", config.Output.TypeTool))
+	}
 }
 
 // handleMenuClicks handles all menu item clicks

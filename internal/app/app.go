@@ -22,6 +22,7 @@ import (
 type App struct {
 	Logger          logger.Logger
 	Config          *config.Config
+	ConfigFile      string // Path to the configuration file
 	Environment     platform.EnvironmentType
 	ModelManager    *whisper.ModelManager
 	Recorder        audio.AudioRecorder
