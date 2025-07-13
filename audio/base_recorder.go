@@ -30,6 +30,12 @@ type BaseRecorder struct {
 	audioLevelCallback AudioLevelCallback // Callback for audio level updates
 	currentAudioLevel  float64            // Current audio level (0.0 to 1.0)
 	levelMutex         sync.RWMutex       // Mutex for audio level access
+
+	// Streaming support
+	streamingEnabled bool
+	pipeReader       *io.PipeReader
+	pipeWriter       *io.PipeWriter
+	stdoutPipe       io.ReadCloser
 }
 
 // NewBaseRecorder creates a new base recorder instance
@@ -41,11 +47,12 @@ func NewBaseRecorder(config *config.Config) BaseRecorder {
 		config.Audio.SampleRate <= 16000
 
 	return BaseRecorder{
-		config:      config,
-		cmdTimeout:  60 * time.Second, // Default timeout
-		useBuffer:   useBuffer,
-		buffer:      bytes.NewBuffer(nil),
-		tempManager: GetTempFileManager(), // Use the global temp file manager
+		config:           config,
+		cmdTimeout:       60 * time.Second, // Default timeout
+		useBuffer:        useBuffer,
+		buffer:           bytes.NewBuffer(nil),
+		tempManager:      GetTempFileManager(), // Use the global temp file manager
+		streamingEnabled: config.Audio.EnableStreaming,
 	}
 }
 
@@ -56,11 +63,14 @@ func (b *BaseRecorder) GetOutputFile() string {
 
 // UseStreaming indicates if this recorder supports streaming mode
 func (b *BaseRecorder) UseStreaming() bool {
-	return false // Base implementation doesn't support streaming
+	return b.streamingEnabled
 }
 
 // GetAudioStream returns the audio stream for streaming mode
 func (b *BaseRecorder) GetAudioStream() (io.Reader, error) {
+	if b.streamingEnabled && b.pipeReader != nil {
+		return b.pipeReader, nil
+	}
 	return b.buffer, nil
 }
 
@@ -292,7 +302,6 @@ func (b *BaseRecorder) StopProcess() error {
 			if err != nil {
 				log.Printf("Process exited with error: %v", err)
 			}
-			break
 		case <-time.After(500 * time.Millisecond):
 			// Process still running, continue to next retry
 			continue
@@ -308,6 +317,86 @@ func (b *BaseRecorder) StopProcess() error {
 		if _, err := os.Stat(b.outputFile); os.IsNotExist(err) {
 			return fmt.Errorf("audio file was not created")
 		}
+	}
+
+	return nil
+}
+
+// ExecuteRecordingCommand executes a recording command with proper setup for streaming or file output
+// This is the main method that inheritors should use instead of StartProcessTemplate
+func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	// Create context with timeout
+	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
+
+	// Setup streaming pipe if needed
+	if b.streamingEnabled {
+		b.pipeReader, b.pipeWriter = io.Pipe()
+	}
+
+	// Setup output file or buffer
+	if b.useBuffer {
+		b.buffer.Reset()
+	} else {
+		if err := b.createTempFile(); err != nil {
+			return err
+		}
+	}
+
+	// Create command with context
+	b.cmd = exec.CommandContext(b.ctx, cmdName, args...)
+
+	// Handle streaming mode
+	if b.streamingEnabled {
+		// Get stdout pipe before starting the command
+		var err error
+		b.stdoutPipe, err = b.cmd.StdoutPipe()
+		if err != nil {
+			return fmt.Errorf("failed to create stdout pipe: %w", err)
+		}
+
+		// Start the command
+		if err := b.cmd.Start(); err != nil {
+			return fmt.Errorf("failed to start recording: %w", err)
+		}
+
+		// Setup goroutine to copy from stdout pipe to our pipe writer
+		go func() {
+			defer b.pipeWriter.Close()
+			buf := make([]byte, 4096)
+			for {
+				n, err := b.stdoutPipe.Read(buf)
+				if n > 0 {
+					b.pipeWriter.Write(buf[:n])
+				}
+				if err != nil {
+					break
+				}
+			}
+		}()
+
+		return nil
+	}
+
+	// Handle buffer mode
+	if b.useBuffer {
+		// Create a pipe to monitor audio data
+		stdout, err := b.cmd.StdoutPipe()
+		if err != nil {
+			b.cancel()
+			return fmt.Errorf("failed to create stdout pipe: %w", err)
+		}
+
+		// Start goroutine to read data and monitor audio levels
+		go b.monitorAudioLevel(stdout)
+	}
+
+	// Start the process
+	if err := b.cmd.Start(); err != nil {
+		b.cancel()
+		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
 	return nil

@@ -20,7 +20,30 @@ func NewArecordRecorder(config *config.Config) *ArecordRecorder {
 
 // StartRecording starts audio recording
 func (a *ArecordRecorder) StartRecording() error {
-	// Prepare arecord command
+	// Build arecord command arguments
+	args := a.buildCommandArgs()
+
+	// Use BaseRecorder's ExecuteRecordingCommand for all process management
+	return a.ExecuteRecordingCommand("arecord", args)
+}
+
+// StopRecording stops recording and returns the path to the recorded file
+func (a *ArecordRecorder) StopRecording() (string, error) {
+	// Close streaming pipe if enabled
+	if a.streamingEnabled && a.pipeWriter != nil {
+		defer a.pipeWriter.Close()
+	}
+
+	// Stop the recording process using BaseRecorder
+	if err := a.StopProcess(); err != nil {
+		return "", err
+	}
+
+	return a.outputFile, nil
+}
+
+// buildCommandArgs builds the command arguments for arecord
+func (a *ArecordRecorder) buildCommandArgs() []string {
 	args := []string{
 		"-D", a.config.Audio.Device,
 		"-f", a.config.Audio.Format,
@@ -28,24 +51,13 @@ func (a *ArecordRecorder) StartRecording() error {
 		"-c", fmt.Sprintf("%d", a.config.Audio.Channels),
 	}
 
-	if a.useBuffer {
-		// Add args to output to stdout
+	if a.useBuffer || a.streamingEnabled {
+		// Output to stdout for buffer/streaming mode
 		args = append(args, "-t", "raw")
 	} else {
-		// Add output file
+		// Output to file
 		args = append(args, a.outputFile)
 	}
 
-	// Start command using template method
-	return a.StartProcessTemplate("arecord", args, true)
-}
-
-// StopRecording stops recording and returns the path to the recorded file
-func (a *ArecordRecorder) StopRecording() (string, error) {
-	if err := a.StopProcess(); err != nil {
-		return "", err
-	}
-
-	// Return the file path
-	return a.outputFile, nil
+	return args
 }
