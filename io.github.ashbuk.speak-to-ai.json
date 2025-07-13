@@ -57,25 +57,7 @@
             ]
         },
 
-        {
-            "name": "libdbusmenu-gtk3",
-            "buildsystem": "simple",
-            "build-commands": [
-                "sed -i 's/AM_CONDITIONAL(HAVE_VALGRIND/#AM_CONDITIONAL(HAVE_VALGRIND/' configure.ac",
-                "sed -i '/VALGRIND_CHECK_RULES/d' configure.ac",
-                "autoreconf -fiv",
-                "./configure --prefix=/app --disable-static --disable-tests --disable-gtk-doc --disable-dumper --disable-valgrind --with-gtk=3",
-                "make -j$(nproc)",
-                "make install"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
-                }
-            ]
-        },
+
         {
             "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
