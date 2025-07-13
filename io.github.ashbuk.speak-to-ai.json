@@ -14,7 +14,6 @@
         "--socket=pulseaudio",
         "--device=dri",
         "--device=all",
-        "--device=input",
         "--filesystem=home",
         "--filesystem=xdg-config/speak-to-ai:create",
         "--filesystem=/dev/input:ro",
