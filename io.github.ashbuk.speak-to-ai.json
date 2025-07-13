@@ -57,6 +57,19 @@
             ]
         },
         {
+            "name": "autotools-deps",
+            "buildsystem": "simple",
+            "build-commands": [
+                "echo 'Installing autotools dependencies for libdbusmenu...'"
+            ],
+            "sources": [
+                {
+                    "type": "inline",
+                    "contents": "# Placeholder for autotools dependencies"
+                }
+            ]
+        },
+        {
             "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
             "config-opts": [
@@ -64,7 +77,14 @@
                 "--disable-tests",
                 "--disable-gtk-doc",
                 "--disable-dumper",
+                "--disable-valgrind",
                 "--with-gtk=3"
+            ],
+            "build-commands": [
+                "autoreconf -fiv",
+                "./configure --prefix=/app --disable-static --disable-tests --disable-gtk-doc --disable-dumper --disable-valgrind --with-gtk=3",
+                "make -j$(nproc)",
+                "make install"
             ],
             "sources": [
                 {
