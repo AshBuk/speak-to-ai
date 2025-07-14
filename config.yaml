@@ -12,11 +12,7 @@ general:
 # Hotkey settings
 hotkeys:
   start_recording: "altgr+comma"    # AltGr+, (comma) - Microsoft Copilot key
-  stop_recording: "altgr+comma"     # Same combination for start/stop  
-  copilot_key: "altgr+comma"        # Microsoft Copilot key
-  alt_start_recording: "alt+comma"  # Alternative: Alt+, (comma)
-  copy_to_clipboard: "ctrl+shift+c"
-  paste_to_active_app: "ctrl+shift+v"
+  stop_recording: "altgr+comma"     # Same combination for start/stop
 
 # Audio recording settings
 audio:
@@ -28,7 +24,7 @@ audio:
 
 # Text output settings
 output:
-  default_mode: "clipboard"  # Options: "clipboard", "active_window", "web"
+  default_mode: "active_window"  # Options: "clipboard", "active_window", "web"
   clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xclip"
   type_tool: "auto"  # Options: "auto", "xdotool", "wl-clipboard", "dbus"
 

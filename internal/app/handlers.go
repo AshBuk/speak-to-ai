@@ -97,30 +97,10 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	// Store transcript
 	a.LastTranscript = transcript
 
-	// Output the transcript based on default mode
+	// Automatically type the transcript to the active window
 	if a.OutputManager != nil {
-		switch a.Config.Output.DefaultMode {
-		case "clipboard":
-			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
-				a.Logger.Warning("Failed to copy to clipboard: %v", err)
-			}
-		case "active_window":
-			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
-				a.Logger.Warning("Failed to type to active window: %v", err)
-			}
-		case "combined":
-			// Try clipboard first, then typing
-			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
-				a.Logger.Warning("Failed to copy to clipboard: %v", err)
-			}
-			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
-				a.Logger.Warning("Failed to type to active window: %v", err)
-			}
-		default:
-			// Default to clipboard
-			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
-				a.Logger.Warning("Failed to copy to clipboard: %v", err)
-			}
+		if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+			a.Logger.Warning("Failed to type to active window: %v", err)
 		}
 	}
 
@@ -168,4 +148,36 @@ func (a *App) handlePasteToActiveWindow() error {
 
 	a.Logger.Info("Pasting transcript to active application")
 	return a.OutputManager.TypeToActiveWindow(a.LastTranscript)
+}
+
+// handleShowConfig handles showing the configuration file
+func (a *App) handleShowConfig() error {
+	a.Logger.Info("Opening configuration file")
+
+	// Show notification about config file location
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Configuration File", "Config file: config.yaml")
+	}
+
+	// TODO: Open config file in default editor
+	// For now, just log the location
+	a.Logger.Info("Configuration file location: config.yaml")
+
+	return nil
+}
+
+// handleReloadConfig handles reloading the configuration
+func (a *App) handleReloadConfig() error {
+	a.Logger.Info("Reloading configuration...")
+
+	// Show notification about config reload
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Configuration", "Reloading configuration...")
+	}
+
+	// TODO: Implement config reload logic
+	// For now, just log the action
+	a.Logger.Info("Configuration reload requested (not yet implemented)")
+
+	return nil
 }

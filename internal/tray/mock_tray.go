@@ -9,17 +9,21 @@ import (
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
 type MockTrayManager struct {
-	isRecording bool
-	onExit      func()
-	onToggle    func() error
+	isRecording    bool
+	onExit         func()
+	onToggle       func() error
+	onShowConfig   func() error
+	onReloadConfig func() error
 }
 
 // NewMockTrayManager creates a new mock tray manager instance
-func NewMockTrayManager(onExit func(), onToggle func() error) TrayManagerInterface {
+func NewMockTrayManager(onExit func(), onToggle func() error, onShowConfig func() error, onReloadConfig func() error) TrayManagerInterface {
 	return &MockTrayManager{
-		isRecording: false,
-		onExit:      onExit,
-		onToggle:    onToggle,
+		isRecording:    false,
+		onExit:         onExit,
+		onToggle:       onToggle,
+		onShowConfig:   onShowConfig,
+		onReloadConfig: onReloadConfig,
 	}
 }
 

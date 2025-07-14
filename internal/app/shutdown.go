@@ -69,9 +69,5 @@ func (a *App) registerCallbacks() {
 		a.handleStartRecording,
 		// Record stop and transcribe callback
 		a.handleStopRecordingAndTranscribe,
-		// Copy to clipboard callback
-		a.handleCopyToClipboard,
-		// Paste to active app callback
-		a.handlePasteToActiveWindow,
 	)
 }

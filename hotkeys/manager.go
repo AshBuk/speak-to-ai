@@ -15,8 +15,6 @@ type HotkeyManager struct {
 	stopListening    chan bool
 	recordingStarted func() error
 	recordingStopped func() error
-	copyToClipboard  func() error
-	pasteToActiveApp func() error
 	hotkeysMutex     sync.Mutex
 	environment      EnvironmentType
 	provider         KeyboardEventProvider
@@ -72,13 +70,9 @@ func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
 func (h *HotkeyManager) RegisterCallbacks(
 	recordingStarted func() error,
 	recordingStopped func() error,
-	copyToClipboard func() error,
-	pasteToActiveApp func() error,
 ) {
 	h.recordingStarted = recordingStarted
 	h.recordingStopped = recordingStopped
-	h.copyToClipboard = copyToClipboard
-	h.pasteToActiveApp = pasteToActiveApp
 }
 
 // ParseHotkey converts string representation to KeyCombination
@@ -112,8 +106,6 @@ func (h *HotkeyManager) Start() error {
 
 	log.Println("Starting hotkey manager...")
 	log.Printf("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
-	log.Printf("- Copy to clipboard: %s", h.config.GetCopyToClipboardHotkey())
-	log.Printf("- Paste to active app: %s", h.config.GetPasteToActiveAppHotkey())
 
 	// Register hotkeys with the provider
 	err := h.provider.RegisterHotkey(h.config.GetStartRecordingHotkey(), func() error {
@@ -139,28 +131,6 @@ func (h *HotkeyManager) Start() error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
-	}
-
-	err = h.provider.RegisterHotkey(h.config.GetCopyToClipboardHotkey(), func() error {
-		if h.copyToClipboard != nil {
-			log.Println("Copy to clipboard hotkey detected")
-			return h.copyToClipboard()
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to register copy to clipboard hotkey: %w", err)
-	}
-
-	err = h.provider.RegisterHotkey(h.config.GetPasteToActiveAppHotkey(), func() error {
-		if h.pasteToActiveApp != nil {
-			log.Println("Paste to active app hotkey detected")
-			return h.pasteToActiveApp()
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to register paste to active app hotkey: %w", err)
 	}
 
 	// Start the provider
@@ -199,14 +169,6 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 				return err
 			}
 			h.isRecording = false
-		}
-	case "copy_to_clipboard":
-		if h.copyToClipboard != nil {
-			return h.copyToClipboard()
-		}
-	case "paste_to_active_app":
-		if h.pasteToActiveApp != nil {
-			return h.pasteToActiveApp()
 		}
 	default:
 		return fmt.Errorf("unknown hotkey: %s", hotkeyName)
