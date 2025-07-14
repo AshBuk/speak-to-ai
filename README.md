@@ -134,33 +134,6 @@ bash bash-scripts/build-flatpak.sh
 - **Storage**: ~200MB for model and dependencies
 - **Memory**: ~500MB RAM during operation
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name` 
-5. Submit a Pull Request
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Hotkeys not working:**
-- Ensure you have proper permissions (for evdev support)
-- Try running with `sudo` for testing (not recommended for production)
-- Check if X11/Wayland environment is detected correctly
-
-**Audio recording fails:**
-- Verify microphone permissions
-- Test with `arecord -t wav -d 3 test.wav` to ensure system recording works
-- Check audio device in configuration
-
-**Transcription is poor:**
-- Ensure clear audio input (minimal background noise)
-- Consider using a better quality microphone
-- Check if the correct language is set in configuration
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -173,6 +146,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for privacy-conscious AI users**
+**Made with ❤️ for privacy-conscious Linux users**
 
 ---
