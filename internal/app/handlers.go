@@ -1,7 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"time"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // handleStartRecording handles the start of recording
@@ -84,14 +90,59 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 		a.NotifyManager.NotifyStopRecording()
 	}
 
-	// Transcribe audio
-	transcript, err := a.WhisperEngine.Transcribe(audioFile)
+	// Start asynchronous transcription
+	go a.transcribeAsync(audioFile)
+
+	return nil
+}
+
+// transcribeAsync performs transcription in a separate goroutine with cancellable context
+func (a *App) transcribeAsync(audioFile string) {
+	// Create context with timeout for transcription
+	ctx, cancel := context.WithTimeout(a.Ctx, 2*time.Minute)
+	defer cancel()
+
+	// Channel for transcription result
+	type transcriptionResult struct {
+		transcript string
+		err        error
+	}
+	resultChan := make(chan transcriptionResult, 1)
+
+	// Start transcription in another goroutine
+	go func() {
+		transcript, err := a.WhisperEngine.Transcribe(audioFile)
+		select {
+		case resultChan <- transcriptionResult{transcript: transcript, err: err}:
+		case <-ctx.Done():
+			// Context cancelled, don't send result
+		}
+	}()
+
+	// Wait for result or cancellation
+	select {
+	case result := <-resultChan:
+		a.handleTranscriptionResult(result.transcript, result.err)
+	case <-ctx.Done():
+		a.handleTranscriptionCancellation(ctx.Err())
+	}
+}
+
+// handleTranscriptionResult handles the result of transcription
+func (a *App) handleTranscriptionResult(transcript string, err error) {
 	if err != nil {
 		// Reset tray state on error
 		if a.TrayManager != nil {
 			a.TrayManager.SetTooltip("❌ Transcription failed")
 		}
-		return fmt.Errorf("failed to transcribe audio: %w", err)
+
+		// Show error notification
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Transcription failed: %v", err))
+		}
+
+		a.Logger.Error("Failed to transcribe audio: %v", err)
+		return
 	}
 
 	// Store transcript
@@ -115,69 +166,118 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	}
 
 	a.Logger.Info("Transcription completed: %s", transcript)
-	return nil
 }
 
-// handleCopyToClipboard handles copying the transcript to clipboard
-func (a *App) handleCopyToClipboard() error {
-	if a.OutputManager == nil {
-		a.Logger.Info("Output manager not initialized")
-		return nil
+// handleTranscriptionCancellation handles cancellation of transcription
+func (a *App) handleTranscriptionCancellation(err error) {
+	a.Logger.Warning("Transcription cancelled: %v", err)
+
+	// Reset tray state
+	if a.TrayManager != nil {
+		a.TrayManager.SetTooltip("⚠️  Transcription cancelled")
 	}
 
-	if a.LastTranscript == "" {
-		a.Logger.Info("No transcript available to copy")
-		return nil
+	// Show cancellation notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Cancelled", "Transcription was cancelled")
 	}
-
-	a.Logger.Info("Copying transcript to clipboard")
-	return a.OutputManager.CopyToClipboard(a.LastTranscript)
-}
-
-// handlePasteToActiveWindow handles pasting the transcript to the active window
-func (a *App) handlePasteToActiveWindow() error {
-	if a.OutputManager == nil {
-		a.Logger.Info("Output manager not initialized")
-		return nil
-	}
-
-	if a.LastTranscript == "" {
-		a.Logger.Info("No transcript available to paste")
-		return nil
-	}
-
-	a.Logger.Info("Pasting transcript to active application")
-	return a.OutputManager.TypeToActiveWindow(a.LastTranscript)
 }
 
 // handleShowConfig handles showing the configuration file
 func (a *App) handleShowConfig() error {
-	a.Logger.Info("Opening configuration file")
+	a.Logger.Info("Opening configuration file: %s", a.ConfigFile)
 
 	// Show notification about config file location
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Configuration File", "Config file: config.yaml")
+		a.NotifyManager.ShowNotification("Configuration File", fmt.Sprintf("Opening: %s", a.ConfigFile))
 	}
 
-	// TODO: Open config file in default editor
-	// For now, just log the location
-	a.Logger.Info("Configuration file location: config.yaml")
+	// Get editor from environment variable
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		// Fallback to xdg-open
+		editor = "xdg-open"
+		a.Logger.Debug("$EDITOR not set, using xdg-open as fallback")
+	} else {
+		a.Logger.Debug("Using editor from $EDITOR: %s", editor)
+	}
 
+	// Check if config file exists
+	if _, err := os.Stat(a.ConfigFile); os.IsNotExist(err) {
+		errMsg := fmt.Sprintf("Configuration file not found: %s", a.ConfigFile)
+		a.Logger.Error(errMsg)
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Error", errMsg)
+		}
+		return fmt.Errorf("config file not found: %s", a.ConfigFile)
+	}
+
+	// Start editor in background
+	cmd := exec.Command(editor, a.ConfigFile)
+
+	// For GUI applications, detach from parent process
+	if editor == "xdg-open" {
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		cmd.Stdin = nil
+	}
+
+	err := cmd.Start()
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to open config file with %s: %v", editor, err)
+		a.Logger.Error(errMsg)
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Error", errMsg)
+		}
+		return fmt.Errorf("failed to open config file: %w", err)
+	}
+
+	a.Logger.Info("Successfully opened config file with %s", editor)
 	return nil
 }
 
 // handleReloadConfig handles reloading the configuration
 func (a *App) handleReloadConfig() error {
-	a.Logger.Info("Reloading configuration...")
+	a.Logger.Info("Reloading configuration from: %s", a.ConfigFile)
 
 	// Show notification about config reload
 	if a.NotifyManager != nil {
 		a.NotifyManager.ShowNotification("Configuration", "Reloading configuration...")
 	}
 
-	// TODO: Implement config reload logic
-	// For now, just log the action
-	a.Logger.Info("Configuration reload requested (not yet implemented)")
+	// Load new configuration
+	newConfig, err := config.LoadConfig(a.ConfigFile)
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to reload config: %v", err)
+		a.Logger.Error(errMsg)
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Error", errMsg)
+		}
+		return fmt.Errorf("failed to reload config: %w", err)
+	}
 
+	// Store old config for comparison
+	oldConfig := a.Config
+	a.Config = newConfig
+
+	// Reinitialize components that depend on configuration
+	err = a.reinitializeComponents(oldConfig)
+	if err != nil {
+		// Rollback to old config on failure
+		a.Config = oldConfig
+		errMsg := fmt.Sprintf("Failed to reinitialize components: %v", err)
+		a.Logger.Error(errMsg)
+		if a.NotifyManager != nil {
+			a.NotifyManager.ShowNotification("Error", errMsg)
+		}
+		return fmt.Errorf("failed to reinitialize components: %w", err)
+	}
+
+	// Success notification
+	if a.NotifyManager != nil {
+		a.NotifyManager.ShowNotification("Configuration", "Configuration reloaded successfully!")
+	}
+
+	a.Logger.Info("Configuration reloaded successfully")
 	return nil
 }

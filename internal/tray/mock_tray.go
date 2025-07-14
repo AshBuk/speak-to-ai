@@ -1,10 +1,11 @@
 //go:build !systray
-// +build !systray
 
 package tray
 
 import (
 	"log"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
@@ -45,6 +46,11 @@ func (tm *MockTrayManager) SetRecordingState(isRecording bool) {
 // SetTooltip sets the tooltip text (mock implementation)
 func (tm *MockTrayManager) SetTooltip(tooltip string) {
 	log.Printf("Tray tooltip: %s", tooltip)
+}
+
+// UpdateSettings updates the settings display (mock implementation)
+func (tm *MockTrayManager) UpdateSettings(config *config.Config) {
+	log.Printf("Mock tray: Settings updated with config")
 }
 
 // Stop stops the mock tray manager (no-op)

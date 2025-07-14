@@ -61,13 +61,3 @@ func (a *App) Shutdown() error {
 	a.Logger.Info("Daemon shutdown complete")
 	return nil
 }
-
-// registerCallbacks registers all the hotkey callbacks
-func (a *App) registerCallbacks() {
-	a.HotkeyManager.RegisterCallbacks(
-		// Record start callback
-		a.handleStartRecording,
-		// Record stop and transcribe callback
-		a.handleStopRecordingAndTranscribe,
-	)
-}
