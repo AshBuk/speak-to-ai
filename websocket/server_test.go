@@ -98,10 +98,15 @@ func createTestConfig() *config.Config {
 	return cfg
 }
 
+func createTestWhisperEngine(cfg *config.Config) *whisper.WhisperEngine {
+	engine, _ := whisper.NewWhisperEngine(cfg, "/dev/null")
+	return engine
+}
+
 func TestNewWebSocketServer(t *testing.T) {
 	cfg := createTestConfig()
 	recorder := &MockAudioRecorder{}
-	whisperEngine := whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null")
+	whisperEngine, _ := whisper.NewWhisperEngine(cfg, "/dev/null")
 	logger := &MockLogger{}
 
 	server := NewWebSocketServer(cfg, recorder, whisperEngine, logger)
@@ -131,7 +136,7 @@ func TestWebSocketServer_Start_Disabled(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.Enabled = false
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	err := server.Start()
 
@@ -148,7 +153,7 @@ func TestWebSocketServer_Start_Enabled(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.Port = 0 // Use random port for testing
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	err := server.Start()
 
@@ -167,7 +172,7 @@ func TestWebSocketServer_Stop(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.Port = 0 // Use random port for testing
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	// Start server
 	err := server.Start()
@@ -190,7 +195,7 @@ func TestWebSocketServer_Authentication_NoToken(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.AuthToken = ""
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	// Create test request
 	req := httptest.NewRequest("GET", "/ws", nil)
@@ -206,7 +211,7 @@ func TestWebSocketServer_Authentication_WithToken(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.AuthToken = "test-token"
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	tests := []struct {
 		name       string
@@ -265,7 +270,7 @@ func TestWebSocketServer_ValidateToken(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.AuthToken = "test-token"
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	tests := []struct {
 		name     string
@@ -308,7 +313,7 @@ func TestWebSocketServer_ValidateToken_NoAuthToken(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.WebServer.AuthToken = ""
 
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	result := server.validateToken("any-token")
 
@@ -319,7 +324,7 @@ func TestWebSocketServer_ValidateToken_NoAuthToken(t *testing.T) {
 
 func TestWebSocketServer_SendMessage(t *testing.T) {
 	cfg := createTestConfig()
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	// Create test WebSocket connection
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -373,7 +378,7 @@ func TestWebSocketServer_SendMessage(t *testing.T) {
 
 func TestWebSocketServer_ExecuteWithRetry_Success(t *testing.T) {
 	cfg := createTestConfig()
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	// Create mock connection
 	conn := &websocket.Conn{}
@@ -405,7 +410,7 @@ func TestWebSocketServer_ExecuteWithRetry_Success(t *testing.T) {
 
 func TestWebSocketServer_ExecuteWithRetry_MaxRetries(t *testing.T) {
 	cfg := createTestConfig()
-	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, whisper.NewWhisperEngine(cfg, "/bin/true", "/dev/null"), &MockLogger{})
+	server := NewWebSocketServer(cfg, &MockAudioRecorder{}, createTestWhisperEngine(cfg), &MockLogger{})
 
 	// Create mock connection
 	conn := &websocket.Conn{}

@@ -39,7 +39,7 @@ type App struct {
 }
 
 // NewApp creates a new application instance with the specified configuration
-func NewApp(configFile string, debug bool, whisperPath, modelPath, quantizePath string) *App {
+func NewApp(configFile string, debug bool, modelPath, quantizePath string) *App {
 	app := &App{
 		ShutdownCh: make(chan os.Signal, 1),
 	}

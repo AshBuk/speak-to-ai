@@ -182,7 +182,7 @@ func (m *MockModelManager) ValidateModel(modelPath string) error {
 }
 
 func createTestApp() *App {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Set up minimal configuration
 	app.Config = &config.Config{}
@@ -194,7 +194,7 @@ func createTestApp() *App {
 	app.TrayManager = &MockTrayManager{}
 
 	// Используем реальные типы для этих полей:
-	app.WhisperEngine = whisper.NewWhisperEngine(app.Config, "/bin/true", "/dev/null")
+	app.WhisperEngine, _ = whisper.NewWhisperEngine(app.Config, "/dev/null")
 	app.NotifyManager = notify.NewNotificationManager("test-app")
 	app.ModelManager = whisper.NewModelManager(app.Config)
 
