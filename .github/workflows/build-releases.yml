@@ -126,13 +126,11 @@ jobs:
           echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
         fi
         
-    # Legacy binaries no longer needed with go-whisper bindings
-        
     - name: Debug - Pre-build status
       run: |
         echo "=== Pre-build Debug ==="
         echo "Library structure:"
-        ls -la lib/ || echo "No lib directory"
+        ls -la lib/
         echo "AppImage script exists:"
         ls -la bash-scripts/build-appimage.sh
         echo "========================"
