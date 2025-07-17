@@ -40,8 +40,6 @@ flatpak run io.github.ashbuk.speak-to-ai
 
 - **AltGr + **, (comma): Start/Stop recording (Microsoft Copilot key)
 - **Alt + **, (comma): Alternative hotkey
-- **Ctrl + Shift + C**: Copy last transcription to clipboard
-- **Ctrl + Shift + V**: Paste to active application
 
 ## 🔧 Configuration
 
@@ -62,8 +60,6 @@ general:
 hotkeys:
   start_recording: "altgr+comma"    # Microsoft Copilot key
   alt_start_recording: "alt+comma"  # Alternative
-  copy_to_clipboard: "ctrl+shift+c"
-  paste_to_active_app: "ctrl+shift+v"
 
 # Audio settings
 audio:
