@@ -77,7 +77,10 @@ web_server:
 
 ## 🔨 Building from Source
 
-### Prerequisites (for developers)
+
+_________________________________________________________________________________________________________
+**For developers**
+### Prerequisites 
 
 - Go 1.21+
 - Linux development libraries:
