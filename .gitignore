@@ -31,6 +31,7 @@
 # Editor/IDE specific files
 .vscode/
 .cursor/
+.claude/
 
 # OS generated files
 .DS_Store
