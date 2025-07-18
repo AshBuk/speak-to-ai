@@ -58,6 +58,13 @@ func (a *App) Shutdown() error {
 		}
 	}
 
+	// Close whisper engine to free resources
+	if a.WhisperEngine != nil {
+		if err := a.WhisperEngine.Close(); err != nil {
+			a.Logger.Warning("Failed to close whisper engine: %v", err)
+		}
+	}
+
 	a.Logger.Info("Daemon shutdown complete")
 	return nil
 }

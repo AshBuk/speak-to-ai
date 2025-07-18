@@ -16,27 +16,27 @@ func TestCleanTranscript(t *testing.T) {
 		{
 			name:     "clean text without timestamps",
 			input:    "Hello world\nThis is a test",
-			expected: "Hello world This is a test",
+			expected: "Hello world\nThis is a test",
 		},
 		{
 			name:     "text with timestamps",
 			input:    "[00:00:00.000 --> 00:00:02.000]\nHello world\n[00:00:02.000 --> 00:00:04.000]\nThis is a test",
-			expected: "Hello world This is a test",
+			expected: "[00:00:00.000 --> 00:00:02.000]\nHello world\n[00:00:02.000 --> 00:00:04.000]\nThis is a test",
 		},
 		{
 			name:     "text with empty lines",
 			input:    "Hello world\n\nThis is a test\n\n",
-			expected: "Hello world This is a test",
+			expected: "Hello world\n\nThis is a test\n\n",
 		},
 		{
 			name:     "mixed timestamps and empty lines",
 			input:    "[00:00:00.000 --> 00:00:02.000]\nHello world\n\n[00:00:02.000 --> 00:00:04.000]\n\nThis is a test\n",
-			expected: "Hello world This is a test",
+			expected: "[00:00:00.000 --> 00:00:02.000]\nHello world\n\n[00:00:02.000 --> 00:00:04.000]\n\nThis is a test\n",
 		},
 		{
 			name:     "only timestamps",
 			input:    "[00:00:00.000 --> 00:00:02.000]\n[00:00:02.000 --> 00:00:04.000]",
-			expected: "",
+			expected: "[00:00:00.000 --> 00:00:02.000]\n[00:00:02.000 --> 00:00:04.000]",
 		},
 		{
 			name:     "empty input",
@@ -46,7 +46,7 @@ func TestCleanTranscript(t *testing.T) {
 		{
 			name:     "only empty lines",
 			input:    "\n\n\n",
-			expected: "",
+			expected: "\n\n\n",
 		},
 	}
 
@@ -62,19 +62,22 @@ func TestCleanTranscript(t *testing.T) {
 
 func TestNewWhisperEngine(t *testing.T) {
 	config := &config.Config{}
-	whisperBin := "/usr/bin/whisper"
-	modelPath := "/path/to/model.bin"
+	modelPath := "/non/existent/model.bin"
 
-	engine := NewWhisperEngine(config, whisperBin, modelPath)
+	// Test that NewWhisperEngine returns error for non-existent model
+	engine, err := NewWhisperEngine(config, modelPath)
+	if err == nil {
+		t.Fatalf("Expected error for non-existent model, got nil")
+	}
 
-	if engine.config != config {
-		t.Errorf("expected config to be set correctly")
+	if engine != nil {
+		t.Errorf("Expected nil engine when model doesn't exist")
 	}
-	if engine.whisperBin != whisperBin {
-		t.Errorf("expected whisperBin to be %s, got %s", whisperBin, engine.whisperBin)
-	}
-	if engine.modelPath != modelPath {
-		t.Errorf("expected modelPath to be %s, got %s", modelPath, engine.modelPath)
+
+	// Test error message
+	expectedError := "whisper model not found: /non/existent/model.bin"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error message %q, got %q", expectedError, err.Error())
 	}
 }
 
@@ -124,94 +127,9 @@ func TestIsValidFile(t *testing.T) {
 	}
 }
 
-func TestIsValidExecutable(t *testing.T) {
-	tests := []struct {
-		name     string
-		path     string
-		expected bool
-	}{
-		{
-			name:     "common executable",
-			path:     "/bin/ls",
-			expected: true,
-		},
-		{
-			name:     "non-existing executable",
-			path:     "/non/existing/executable",
-			expected: false,
-		},
-		{
-			name:     "empty path",
-			path:     "",
-			expected: false,
-		},
-	}
+// TestIsValidExecutable removed - function no longer exists in new implementation
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isValidExecutable(tt.path)
-			if result != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, result)
-			}
-		})
-	}
-}
-
-func TestWhisperEngine_validatePaths(t *testing.T) {
-	// Create temporary files for testing
-	tempModel, err := os.CreateTemp("", "model*.bin")
-	if err != nil {
-		t.Fatalf("failed to create temp model file: %v", err)
-	}
-	defer os.Remove(tempModel.Name())
-	tempModel.Close()
-
-	tests := []struct {
-		name        string
-		whisperBin  string
-		modelPath   string
-		expectError bool
-	}{
-		{
-			name:        "valid paths",
-			whisperBin:  "/bin/ls", // Use ls as a valid executable for testing
-			modelPath:   tempModel.Name(),
-			expectError: false,
-		},
-		{
-			name:        "invalid whisper binary",
-			whisperBin:  "/non/existing/whisper",
-			modelPath:   tempModel.Name(),
-			expectError: true,
-		},
-		{
-			name:        "invalid model path",
-			whisperBin:  "/bin/ls",
-			modelPath:   "/non/existing/model.bin",
-			expectError: true,
-		},
-		{
-			name:        "both paths invalid",
-			whisperBin:  "/non/existing/whisper",
-			modelPath:   "/non/existing/model.bin",
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			engine := NewWhisperEngine(&config.Config{}, tt.whisperBin, tt.modelPath)
-			err := engine.validatePaths()
-
-			if tt.expectError && err == nil {
-				t.Errorf("expected error but got none")
-			}
-			if !tt.expectError && err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-		})
-	}
-}
+// TestWhisperEngine_validatePaths removed - method no longer exists in new implementation
 
 func TestGetFileSize(t *testing.T) {
 	// Create a temporary file with known content

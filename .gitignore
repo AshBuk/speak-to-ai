@@ -11,9 +11,13 @@
 # Compiled Go packages
 /bin/
 /pkg/
+/lib/
 
 # Whisper models (large files)
 /sources/language-models/*.bin
+
+# All binary files
+*.bin
 
 # Temporary directories and logs
 /tmp/

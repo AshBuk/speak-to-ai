@@ -13,11 +13,10 @@ import (
 func TestNewApp(t *testing.T) {
 	configFile := "config.yaml"
 	debug := true
-	whisperPath := "/usr/bin/whisper"
 	modelPath := "/path/to/model"
 	quantizePath := "/path/to/quantize"
 
-	app := NewApp(configFile, debug, whisperPath, modelPath, quantizePath)
+	app := NewApp(configFile, debug, modelPath, quantizePath)
 
 	if app == nil {
 		t.Fatal("NewApp returned nil")
@@ -45,7 +44,7 @@ func TestNewApp(t *testing.T) {
 }
 
 func TestApp_ContextCancellation(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Cancel the context
 	app.Cancel()
@@ -60,7 +59,7 @@ func TestApp_ContextCancellation(t *testing.T) {
 }
 
 func TestApp_SignalHandling(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Test that signal channel is properly configured
 	if cap(app.ShutdownCh) == 0 {
@@ -82,7 +81,7 @@ func TestApp_SignalHandling(t *testing.T) {
 }
 
 func TestApp_ComponentInitialization(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Test initial state
 	if app.Logger != nil {
@@ -128,7 +127,7 @@ func TestApp_ComponentInitialization(t *testing.T) {
 
 func TestApp_ConfigFile(t *testing.T) {
 	configFile := "test-config.yaml"
-	app := NewApp(configFile, false, "", "", "")
+	app := NewApp(configFile, false, "", "")
 
 	// ConfigFile should be set after initialization
 	if app.ConfigFile != "" {
@@ -137,7 +136,7 @@ func TestApp_ConfigFile(t *testing.T) {
 }
 
 func TestApp_Environment(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Environment should be unknown initially
 	if app.Environment != "" {
@@ -146,7 +145,7 @@ func TestApp_Environment(t *testing.T) {
 }
 
 func TestApp_LastTranscript(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Test LastTranscript field
 	if app.LastTranscript != "" {
@@ -184,7 +183,7 @@ func (m *MockLogger) Error(format string, args ...interface{}) {
 }
 
 func TestApp_ComponentAssignment(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	// Test component assignment
 	mockLogger := &MockLogger{}
@@ -215,7 +214,7 @@ func TestApp_ComponentAssignment(t *testing.T) {
 }
 
 func TestApp_ConvertEnvironmentType(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "", "")
+	app := NewApp("config.yaml", false, "", "")
 
 	tests := []struct {
 		name     string
