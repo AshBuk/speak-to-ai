@@ -29,15 +29,16 @@ cmake --build build --config Release
 echo "Setting up library paths..."
 cd ../..
 mkdir -p lib
-cp build/whisper.cpp/build/src/libwhisper.a lib/
+# Copy shared library (modern whisper.cpp builds .so instead of .a)
+cp build/whisper.cpp/build/src/libwhisper.so* lib/
 cp build/whisper.cpp/include/whisper.h lib/
 
 echo "Build complete!"
 echo "Library files:"
-echo "  - lib/libwhisper.a"
-echo "  - lib/whisper.h"
+ls -la lib/
 echo ""
 echo "To use with Go:"
 echo "export C_INCLUDE_PATH=$(pwd)/lib"
 echo "export LIBRARY_PATH=$(pwd)/lib"
+echo "export LD_LIBRARY_PATH=$(pwd)/lib"
 echo "export CGO_LDFLAGS=\"-L$(pwd)/lib -lwhisper\""
