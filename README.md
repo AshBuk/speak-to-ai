@@ -94,14 +94,22 @@ output:
 git clone https://github.com/AshBuk/speak-to-ai.git
 cd speak-to-ai
 
-# Build executable
-go build -o speak-to-ai cmd/daemon/main.go
+# Build everything (recommended)
+make all
 
-# Build AppImage
-bash bash-scripts/build-appimage.sh
+# Or build individual components
+make build           # Build executable only
+make build-systray   # Build with system tray support
+make whisper-libs    # Build whisper.cpp libraries only
+make test           # Run tests
 
-# Build Flatpak (requires flatpak-builder)
-bash bash-scripts/build-flatpak.sh
+# Build packages
+make appimage       # Build AppImage
+make flatpak        # Build Flatpak (requires flatpak-builder)
+
+# Other commands
+make clean          # Clean build artifacts
+make help           # Show all available targets
 ```
 
 ## 🏗️ Architecture

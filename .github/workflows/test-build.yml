@@ -29,25 +29,18 @@ jobs:
           libglib2.0-dev \
           libdbus-1-dev \
           pkg-config \
-          build-essential
+          build-essential \
+          cmake
         
-    - name: Test Go modules
+    - name: Test complete build
       run: |
-        echo "Testing Go modules..."
-        go mod tidy
-        go mod verify
-        
-    - name: Test basic compilation
-      run: |
-        echo "Testing basic compilation..."
-        go build -v -o test-basic cmd/daemon/main.go
-        ls -la test-basic
+        echo "Testing complete build..."
+        make build
         
     - name: Test systray compilation
       run: |
         echo "Testing systray compilation..."
-        go build -tags systray -v -o test-systray cmd/daemon/main.go
-        ls -la test-systray
+        make build-systray
         
     - name: Test configuration loading
       run: |

@@ -78,7 +78,8 @@ jobs:
           pkg-config \
           cmake \
           valgrind \
-          imagemagick
+          imagemagick \
+          make
           
     - name: Create application icon
       run: |
@@ -97,20 +98,10 @@ jobs:
           echo "✅ Icon already exists"
         fi
           
-    - name: Build Whisper libraries
+    - name: Build application
       run: |
-        echo "=== Building Whisper libraries ==="
-        bash bash-scripts/build-whisper.sh
-        echo "Library files:"
-        ls -la lib/
-        echo "========================"
-        
-    - name: Debug - Test Go build
-      run: |
-        echo "=== Testing Go Build with Systray ==="
-        go mod tidy
-        echo "Building application with go-whisper bindings..."
-        bash bash-scripts/build-go.sh
+        echo "=== Building application with Makefile ==="
+        make all
         echo "Build successful, binary info:"
         ls -la speak-to-ai
         file speak-to-ai
@@ -244,10 +235,9 @@ jobs:
             -O "sources/language-models/base.bin"
         fi
         
-    - name: Build Whisper libraries for Flatpak
+    - name: Install make for Flatpak build
       run: |
-        echo "Building Whisper libraries for Flatpak..."
-        bash bash-scripts/build-whisper.sh
+        sudo apt-get install -y make
         
     - name: Pre-download Go modules for Flatpak
       run: |
