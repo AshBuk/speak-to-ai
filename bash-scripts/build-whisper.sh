@@ -19,15 +19,18 @@ cd whisper.cpp
 
 # Build the library
 echo "Building libwhisper.a..."
-make clean
-make libwhisper.a
+# Clean previous build
+rm -rf build
+# Build using CMake (modern whisper.cpp uses CMake)
+cmake -B build
+cmake --build build --config Release
 
 # Create symlink for easy access
 echo "Setting up library paths..."
 cd ../..
 mkdir -p lib
-cp build/whisper.cpp/libwhisper.a lib/
-cp build/whisper.cpp/whisper.h lib/
+cp build/whisper.cpp/build/src/libwhisper.a lib/
+cp build/whisper.cpp/include/whisper.h lib/
 
 echo "Build complete!"
 echo "Library files:"
