@@ -3,22 +3,26 @@
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A minimalist, privacy-focused desktop application that enables voice input for AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
+A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
 
 ## ✨ Features
 
-- 🎤 **100% Offline** speech recognition using Whisper.cpp
-- 🔧 **System tray integration** with recording status (🎤 / 💤)
-- ⌨️ **Microsoft Copilot key support** (AltGr + ,) and customizable hotkeys
-- 📋 **Multiple output modes**: clipboard copy, direct typing simulation
 - 🖥️ **Cross-platform support** for X11 and Wayland
 - 🔒 **Privacy-first**: no data sent to external servers
-- 🔔 **Visual notifications** for recording status
 - 📦 **Portable**: available as AppImage and Flatpak
+
+- **100% Offline** speech recognition using Whisper.cpp
+- **System tray integration** with recording status (🎤 / 💤)
+- **Key binding support** (AltGr + ,) and customizable hotkeys
+- **Automatic typing** in active window after transcription
+- **Clipboard support** for copying transcribed text
+- **WebSocket API** for external integrations (optional)
+- **Visual notifications** for statuses
+
 
 ## 🚀 Installation
 
-### AppImage (Recommended)
+### AppImage
 
 Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
@@ -36,11 +40,6 @@ flatpak install speak-to-ai-*.flatpak
 flatpak run io.github.ashbuk.speak-to-ai
 ```
 
-## ⌨️ Default Hotkeys
-
-- **AltGr + **, (comma): Start/Stop recording (Microsoft Copilot key)
-- **Alt + **, (comma): Alternative hotkey
-
 ## 🔧 Configuration
 
 Configuration file is automatically created at:
@@ -56,10 +55,6 @@ general:
   model_path: "~/.config/speak-to-ai/language-models/base.bin"
   language: "auto"  # Auto-detect or specify "en", "ru", etc.
 
-# Hotkey settings
-hotkeys:
-  start_recording: "altgr+comma"    # Microsoft Copilot key
-  alt_start_recording: "alt+comma"  # Alternative
 
 # Audio settings
 audio:
@@ -69,13 +64,20 @@ audio:
 
 # Output settings
 output:
-  default_mode: "clipboard"  # Options: "clipboard", "active_window"
+  default_mode: "active_window"  # Options: "clipboard", "active_window", "combined"
   clipboard_tool: "auto"     # Options: "auto", "wl-copy", "xclip"
+  type_tool: "auto"          # Options: "auto", "xdotool"
+
+# WebSocket server settings (for future web integration)
+web_server:
+  enabled: false  # Enable for React web app integration
+  port: 8080
+  host: "localhost"
 ```
 
 ## 🔨 Building from Source
 
-### Prerequisites
+### Prerequisites (for developers)
 
 - Go 1.21+
 - Linux development libraries:
@@ -112,23 +114,16 @@ make clean          # Clean build artifacts
 make help           # Show all available targets
 ```
 
-## 🏗️ Architecture
-
-```
-    A[Hotkey] --> B[Local Daemon (Go)]
-    B --> C[whisper.cpp Execution]
-    C --> D[Transcript (stdout)]
-    D --> E{Mode}
-    E -->|Clipboard| F1[wl-copy / xclip]
-    E -->|Simulated Input| F2[xdotool / wl-clipboard]
-```
-
-### Components
+## 🏗️ Architecture & Components
 
 - **Local Daemon**: Go application handling hotkeys, audio recording, and output
 - **Whisper Engine**: Uses `whisper.cpp` binary for speech recognition
 - **Audio Recording**: Supports `arecord` and `ffmpeg` backends
-- **Text Output**: Clipboard copy or typing simulation via system tools
+- **Text Output**: 
+  - **Active Window Mode**: Automatically types transcribed text into the currently active window
+  - **Clipboard Mode**: Copies transcribed text to system clipboard
+  - **Combined Mode**: Both typing and clipboard operations
+- **WebSocket Server**: Provides API for external applications (optional, port 8080)
 
 ## 📋 System Requirements
 
@@ -177,6 +172,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for privacy-conscious AI users**
+**Sharing with the community with ❤️, for privacy-conscious Linux users**
 
 ---

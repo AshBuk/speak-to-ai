@@ -31,7 +31,7 @@ func SetDefaultConfig(config *Config) {
 	config.Output.TypeTool = "auto"      // auto-detect
 
 	// Web server settings
-	config.WebServer.Enabled = true
+	config.WebServer.Enabled = false
 	config.WebServer.Port = 8080
 	config.WebServer.Host = "localhost"
 	config.WebServer.AuthToken = "" // No auth by default
