@@ -19,6 +19,10 @@
 # All binary files
 *.bin
 
+# Build artifacts and external dependencies
+/build/
+/build/whisper.cpp
+
 # Temporary directories and logs
 /tmp/
 /logs/

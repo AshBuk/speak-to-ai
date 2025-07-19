@@ -191,18 +191,16 @@ func (m *MockAudioRecorder) simulateAudioLevelUpdates() {
 	defer ticker.Stop()
 
 	for m.isRecording {
-		select {
-		case <-ticker.C:
-			if m.audioLevelIndex < len(m.audioLevelSequence) {
-				m.audioLevel = m.audioLevelSequence[m.audioLevelIndex]
-				m.audioLevelIndex++
-			} else {
-				m.audioLevelIndex = 0
-			}
+		<-ticker.C
+		if m.audioLevelIndex < len(m.audioLevelSequence) {
+			m.audioLevel = m.audioLevelSequence[m.audioLevelIndex]
+			m.audioLevelIndex++
+		} else {
+			m.audioLevelIndex = 0
+		}
 
-			if m.audioLevelCallback != nil {
-				m.audioLevelCallback(m.audioLevel)
-			}
+		if m.audioLevelCallback != nil {
+			m.audioLevelCallback(m.audioLevel)
 		}
 	}
 }

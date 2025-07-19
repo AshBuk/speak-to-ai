@@ -8,6 +8,11 @@ LIB_DIR := lib
 DIST_DIR := dist
 
 # CGO environment
+# These variables are necessary for CGO to find the whisper.cpp libraries.
+# They tell the Go compiler where to find the C header files (.h) and the compiled C libraries (.so, .a).
+# Because we are building whisper.cpp locally into the `lib` directory, we need to
+# explicitly tell CGO where to look. Without these, `go build` and `go test` will fail
+# because they won't be able to find the required C dependencies.
 export C_INCLUDE_PATH := $(PWD)/$(LIB_DIR)
 export LIBRARY_PATH := $(PWD)/$(LIB_DIR)
 export CGO_CFLAGS := -I$(PWD)/$(LIB_DIR)
@@ -77,9 +82,12 @@ build-systray: deps whisper-libs
 	@ls -lh $(BINARY_NAME)
 
 # Run tests
+# It is important to use `make test` instead of `go test ./...` directly.
+# This target ensures that the CGO environment variables are set correctly before running the tests.
+# It also ensures that the whisper.cpp libraries are built and available.
 test: deps whisper-libs
 	@echo "=== Running tests ==="
-	go test -v ./...
+	go test -v -cover ./...
 
 # Build AppImage
 appimage: build
