@@ -2,11 +2,13 @@ package hotkeys
 
 import (
 	"errors"
+	"sync"
 	"testing"
 )
 
 // MockFactory для тестирования dependency injection
 type MockFactory struct {
+	mu        sync.RWMutex
 	providers map[string]KeyboardEventProvider
 	createErr error
 }
@@ -20,11 +22,16 @@ func NewMockFactory() *MockFactory {
 
 // RegisterProvider регистрирует provider в factory
 func (f *MockFactory) RegisterProvider(name string, provider KeyboardEventProvider) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.providers[name] = provider
 }
 
 // CreateProvider создает provider по имени
 func (f *MockFactory) CreateProvider(name string) (KeyboardEventProvider, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	
 	if f.createErr != nil {
 		return nil, f.createErr
 	}
@@ -39,6 +46,8 @@ func (f *MockFactory) CreateProvider(name string) (KeyboardEventProvider, error)
 
 // SetCreateError устанавливает ошибку для CreateProvider
 func (f *MockFactory) SetCreateError(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.createErr = err
 }
 
