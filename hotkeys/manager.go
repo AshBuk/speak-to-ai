@@ -102,6 +102,11 @@ func (h *HotkeyManager) Start() error {
 		return fmt.Errorf("hotkey manager is already running")
 	}
 
+	// Check if provider is available
+	if h.provider == nil {
+		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
+	}
+
 	h.isListening = true
 
 	log.Println("Starting hotkey manager...")
@@ -134,7 +139,13 @@ func (h *HotkeyManager) Start() error {
 	}
 
 	// Start the provider
-	return h.provider.Start()
+	err = h.provider.Start()
+	if err != nil {
+		h.isListening = false // Reset state if provider failed to start
+		return fmt.Errorf("failed to start keyboard provider: %w", err)
+	}
+	
+	return nil
 }
 
 // Stop stops the hotkey listener
@@ -186,6 +197,8 @@ func IsModifier(keyName string) bool {
 		"super":      true,
 		"meta":       true,
 		"win":        true,
+		"altgr":      true,  // AltGr modifier for international keyboards
+		"hyper":      true,  // Hyper modifier
 		"leftctrl":   true,
 		"rightctrl":  true,
 		"leftalt":    true,
