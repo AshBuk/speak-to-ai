@@ -7,9 +7,9 @@ import (
 
 func TestParseHotkey(t *testing.T) {
 	tests := []struct {
-		name             string
-		input            string
-		expectedKey      string
+		name              string
+		input             string
+		expectedKey       string
 		expectedModifiers []string
 	}{
 		{
@@ -65,22 +65,22 @@ func TestParseHotkey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ParseHotkey(tt.input)
-			
+
 			if result.Key != tt.expectedKey {
 				t.Errorf("Expected key '%s', got '%s'", tt.expectedKey, result.Key)
 			}
-			
+
 			if len(result.Modifiers) != len(tt.expectedModifiers) {
 				t.Errorf("Expected %d modifiers, got %d", len(tt.expectedModifiers), len(result.Modifiers))
 			}
-			
+
 			for i, expectedModifier := range tt.expectedModifiers {
 				if i >= len(result.Modifiers) {
 					t.Errorf("Missing modifier at index %d", i)
 					continue
 				}
 				if result.Modifiers[i] != expectedModifier {
-					t.Errorf("Expected modifier '%s' at index %d, got '%s'", 
+					t.Errorf("Expected modifier '%s' at index %d, got '%s'",
 						expectedModifier, i, result.Modifiers[i])
 				}
 			}
@@ -155,20 +155,20 @@ func TestConvertModifierToEvdev(t *testing.T) {
 func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 	// Create a simple config adapter for testing
 	config := NewConfigAdapter("ctrl+r")
-	
+
 	// Test when provider fails to start
 	manager := NewHotkeyManager(config, EnvironmentX11)
-	
+
 	// Replace with a mock that always fails
 	mockProvider := NewMockHotkeyProvider()
 	mockProvider.SetStartError(fmt.Errorf("provider start failed"))
 	manager.provider = mockProvider
-	
+
 	err := manager.Start()
 	if err == nil {
 		t.Error("Expected error when provider fails to start")
 	}
-	
+
 	if manager.isListening {
 		t.Error("Manager should not be listening when provider fails to start")
 	}
@@ -177,7 +177,7 @@ func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 func TestHotkeyManager_StartWithNoProvider(t *testing.T) {
 	// Create a simple config adapter for testing
 	config := NewConfigAdapter("ctrl+r")
-	
+
 	// Test when no provider is available
 	manager := &HotkeyManager{
 		config:      config,
@@ -185,7 +185,7 @@ func TestHotkeyManager_StartWithNoProvider(t *testing.T) {
 		provider:    nil,
 		isListening: false,
 	}
-	
+
 	err := manager.Start()
 	if err == nil {
 		t.Error("Expected error when no provider is available")
@@ -207,15 +207,15 @@ func TestSelectKeyboardProvider(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			config := NewConfigAdapter("ctrl+r")
 			manager := NewHotkeyManager(config, tt.environment)
-			
+
 			if manager == nil {
 				t.Fatal("NewHotkeyManager returned nil")
 			}
-			
+
 			if manager.environment != tt.environment {
 				t.Errorf("Expected environment %v, got %v", tt.environment, manager.environment)
 			}
-			
+
 			if manager.provider == nil {
 				t.Error("Provider should not be nil")
 			}
@@ -226,10 +226,10 @@ func TestSelectKeyboardProvider(t *testing.T) {
 func TestHotkeyManager_StopWithoutStart(t *testing.T) {
 	config := NewConfigAdapter("ctrl+r")
 	manager := NewHotkeyManager(config, EnvironmentX11)
-	
+
 	// Stop without start should be safe
 	manager.Stop()
-	
+
 	if manager.isListening {
 		t.Error("Manager should not be listening after Stop without Start")
 	}
@@ -240,31 +240,31 @@ func TestHotkeyManager_MultipleStartStop(t *testing.T) {
 	manager := NewHotkeyManager(config, EnvironmentX11)
 	mockProvider := NewMockHotkeyProvider()
 	manager.provider = mockProvider
-	
+
 	// Start
 	err := manager.Start()
 	if err != nil {
 		t.Fatalf("First start failed: %v", err)
 	}
-	
+
 	// Start again (should fail)
 	err = manager.Start()
 	if err == nil {
 		t.Error("Second start should fail")
 	}
-	
+
 	// Stop
 	manager.Stop()
-	
+
 	// Start again (should work)
 	err = manager.Start()
 	if err != nil {
 		t.Errorf("Restart failed: %v", err)
 	}
-	
+
 	// Stop again
 	manager.Stop()
-	
+
 	if manager.isListening {
 		t.Error("Manager should not be listening after final stop")
 	}
@@ -275,10 +275,10 @@ func TestHotkeyManager_ConcurrentAccess_Extended(t *testing.T) {
 	manager := NewHotkeyManager(config, EnvironmentX11)
 	mockProvider := NewMockHotkeyProvider()
 	manager.provider = mockProvider
-	
+
 	// Test concurrent access to IsRecording
 	done := make(chan bool, 10)
-	
+
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer func() { done <- true }()
@@ -288,11 +288,11 @@ func TestHotkeyManager_ConcurrentAccess_Extended(t *testing.T) {
 			}
 		}()
 	}
-	
+
 	// Wait for all goroutines
 	for i := 0; i < 10; i++ {
 		<-done
 	}
-	
+
 	// Should not panic and should complete successfully
 }

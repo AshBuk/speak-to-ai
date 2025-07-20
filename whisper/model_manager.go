@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // ModelManager handles downloading and managing Whisper models
@@ -37,7 +38,7 @@ func (m *ModelManager) GetModelPathWithProgress(progressCallback ProgressCallbac
 	// If model path is specified directly, use it
 	if m.config.General.ModelPath != "" {
 		// Check if it's a direct file path
-		if isValidFile(m.config.General.ModelPath) {
+		if utils.IsValidFile(m.config.General.ModelPath) {
 			return m.config.General.ModelPath, nil
 		}
 	}
@@ -51,7 +52,7 @@ func (m *ModelManager) GetModelPathWithProgress(progressCallback ProgressCallbac
 	modelPath := filepath.Join(m.getModelDir(), modelFile)
 
 	// Check if model exists
-	if isValidFile(modelPath) {
+	if utils.IsValidFile(modelPath) {
 		return modelPath, nil
 	}
 
@@ -166,12 +167,12 @@ func (pr *progressReader) Read(p []byte) (int, error) {
 // ValidateModel checks if a model file is valid
 func (m *ModelManager) ValidateModel(modelPath string) error {
 	// Check file exists
-	if !isValidFile(modelPath) {
+	if !utils.IsValidFile(modelPath) {
 		return fmt.Errorf("model file not found: %s", modelPath)
 	}
 
 	// Get file size
-	size, err := getFileSize(modelPath)
+	size, err := utils.GetFileSize(modelPath)
 	if err != nil {
 		return fmt.Errorf("error checking model file: %w", err)
 	}

@@ -213,6 +213,35 @@ func (m *MockAudioRecorder) SetAudioLevel(level float64) {
 	}
 }
 
+// StartStreamingRecording simulates starting streaming recording
+func (m *MockAudioRecorder) StartStreamingRecording() (<-chan []float32, error) {
+	if !m.streaming {
+		return nil, errors.New("streaming not enabled")
+	}
+
+	// Create a channel and simulate some audio chunks
+	chunks := make(chan []float32, 5)
+	go func() {
+		defer close(chunks)
+		// Send some mock chunks
+		for i := 0; i < 3; i++ {
+			chunk := make([]float32, 1024)
+			for j := range chunk {
+				chunk[j] = float32(i) * 0.1 // Simple test data
+			}
+			chunks <- chunk
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+	return chunks, nil
+}
+
+// StopStreamingRecording simulates stopping streaming recording
+func (m *MockAudioRecorder) StopStreamingRecording() error {
+	return nil // Mock implementation, always succeeds
+}
+
 // Reset clears all mock state
 func (m *MockAudioRecorder) Reset() {
 	m.isRecording = false

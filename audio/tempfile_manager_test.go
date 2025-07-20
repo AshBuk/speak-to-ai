@@ -39,7 +39,7 @@ func TestGetTempFileManager(t *testing.T) {
 // TestTempFileManager_AddFile tests adding files to tracking
 func TestTempFileManager_AddFile(t *testing.T) {
 	manager := GetTempFileManager()
-	
+
 	// Clear any existing files for clean test
 	manager.mutex.Lock()
 	manager.tempFiles = make(map[string]time.Time)
@@ -68,7 +68,7 @@ func TestTempFileManager_AddFile(t *testing.T) {
 // TestTempFileManager_RemoveFile tests removing files from tracking
 func TestTempFileManager_RemoveFile(t *testing.T) {
 	manager := GetTempFileManager()
-	
+
 	// Clear any existing files for clean test
 	manager.mutex.Lock()
 	manager.tempFiles = make(map[string]time.Time)
@@ -83,7 +83,7 @@ func TestTempFileManager_RemoveFile(t *testing.T) {
 	manager.mutex.Lock()
 	_, exists := manager.tempFiles[testFile]
 	manager.mutex.Unlock()
-	
+
 	if !exists {
 		t.Fatal("File should exist before removal test")
 	}
@@ -104,14 +104,14 @@ func TestTempFileManager_RemoveFile(t *testing.T) {
 // TestTempFileManager_RemoveFileWithDeletion tests file deletion
 func TestTempFileManager_RemoveFileWithDeletion(t *testing.T) {
 	manager := GetTempFileManager()
-	
+
 	// Create a temporary file
 	tempFile, err := os.CreateTemp("", "temp_manager_test_*.wav")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	tempFile.Close()
-	
+
 	fileName := tempFile.Name()
 
 	// Add to manager
@@ -143,7 +143,7 @@ func TestTempFileManager_RemoveFileWithDeletion(t *testing.T) {
 // TestTempFileManager_CleanupOldFiles tests automatic cleanup
 func TestTempFileManager_CleanupOldFiles(t *testing.T) {
 	_ = GetTempFileManager()
-	
+
 	// Create a test manager instance to avoid interfering with global one
 	testManager := &TempFileManager{
 		tempFiles:      make(map[string]time.Time),
@@ -168,7 +168,7 @@ func TestTempFileManager_CleanupOldFiles(t *testing.T) {
 	// Add files with different timestamps
 	testManager.mutex.Lock()
 	testManager.tempFiles[oldFileName] = time.Now().Add(-200 * time.Millisecond) // Old file
-	testManager.tempFiles[newFileName] = time.Now()                               // New file
+	testManager.tempFiles[newFileName] = time.Now()                              // New file
 	testManager.mutex.Unlock()
 
 	// Run cleanup
@@ -205,7 +205,7 @@ func TestTempFileManager_CleanupOldFiles(t *testing.T) {
 // TestTempFileManager_ConcurrentAccess tests thread safety
 func TestTempFileManager_ConcurrentAccess(t *testing.T) {
 	manager := GetTempFileManager()
-	
+
 	// Clear existing files
 	manager.mutex.Lock()
 	manager.tempFiles = make(map[string]time.Time)
@@ -221,13 +221,13 @@ func TestTempFileManager_ConcurrentAccess(t *testing.T) {
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			
+
 			for j := 0; j < numOperations; j++ {
 				fileName := fmt.Sprintf("/tmp/concurrent_test_%d_%d.wav", id, j)
-				
+
 				// Add file
 				manager.AddFile(fileName)
-				
+
 				// Sometimes remove it
 				if j%2 == 0 {
 					manager.RemoveFile(fileName, false)
@@ -308,7 +308,7 @@ func TestTempFileManager_CleanupRoutine(t *testing.T) {
 
 	// Give routine time to start
 	time.Sleep(10 * time.Millisecond)
-	
+
 	// Verify routine is running
 	if !testManager.running {
 		t.Error("Expected cleanup routine to be running")
@@ -337,10 +337,9 @@ func TestTempFileManager_CleanupRoutine(t *testing.T) {
 // TestTempFileManager_DefaultTimeout tests the default cleanup timeout
 func TestTempFileManager_DefaultTimeout(t *testing.T) {
 	manager := GetTempFileManager()
-	
+
 	expectedTimeout := 30 * time.Minute
 	if manager.cleanupTimeout != expectedTimeout {
 		t.Errorf("Expected default timeout %v, got %v", expectedTimeout, manager.cleanupTimeout)
 	}
 }
-

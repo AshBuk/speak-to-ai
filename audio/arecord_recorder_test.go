@@ -40,16 +40,16 @@ func TestNewArecordRecorder(t *testing.T) {
 // TestArecordRecorder_buildCommandArgs tests command argument building with real scenarios
 func TestArecordRecorder_buildCommandArgs(t *testing.T) {
 	tests := []struct {
-		name           string
-		device         string
-		format         string
-		sampleRate     int
-		channels       int
-		useBuffer      bool
-		streamingMode  bool
-		expectRawMode  bool
-		expectDevice   string
-		expectFormat   string
+		name          string
+		device        string
+		format        string
+		sampleRate    int
+		channels      int
+		useBuffer     bool
+		streamingMode bool
+		expectRawMode bool
+		expectDevice  string
+		expectFormat  string
 	}{
 		{
 			name:          "basic file output",
@@ -96,7 +96,7 @@ func TestArecordRecorder_buildCommandArgs(t *testing.T) {
 			cfg.Audio.Format = tt.format
 			cfg.Audio.SampleRate = tt.sampleRate
 			cfg.Audio.Channels = tt.channels
-			
+
 			recorder := NewArecordRecorder(cfg)
 			recorder.useBuffer = tt.useBuffer
 			recorder.streamingEnabled = tt.streamingMode
@@ -155,7 +155,7 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.Channels = 1
 
 	recorder := NewArecordRecorder(cfg)
-	
+
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
 		t.Errorf("Expected empty output file initially, got %s", recorder.GetOutputFile())
@@ -176,20 +176,20 @@ func TestArecordRecorder_StreamingConfiguration(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
 	cfg.Audio.EnableStreaming = true
-	
+
 	recorder := NewArecordRecorder(cfg)
-	
+
 	// Should inherit streaming setting from config
 	if !recorder.UseStreaming() {
 		t.Error("Expected streaming to be enabled from config")
 	}
-	
+
 	// Test manual streaming toggle
 	recorder.streamingEnabled = false
 	if recorder.UseStreaming() {
 		t.Error("Expected streaming to be disabled after manual toggle")
 	}
-	
+
 	recorder.streamingEnabled = true
 	if !recorder.UseStreaming() {
 		t.Error("Expected streaming to be enabled after manual toggle")
@@ -199,7 +199,7 @@ func TestArecordRecorder_StreamingConfiguration(t *testing.T) {
 // TestArecordRecorder_InvalidConfiguration tests error handling with bad configs
 func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 	tests := []struct {
-		name       string
+		name        string
 		setupConfig func() *config.Config
 		expectError bool
 	}{
@@ -245,10 +245,10 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.setupConfig()
 			recorder := NewArecordRecorder(cfg)
-			
+
 			// Build args to see if they're reasonable
 			args := recorder.buildCommandArgs()
-			
+
 			if tt.expectError {
 				// Check for obviously problematic arguments
 				for i, arg := range args {
@@ -272,36 +272,36 @@ func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
 	recorder := NewArecordRecorder(cfg)
-	
+
 	// Test initial audio level
 	if recorder.GetAudioLevel() != 0.0 {
 		t.Errorf("Expected initial audio level 0.0, got %f", recorder.GetAudioLevel())
 	}
-	
+
 	// Test callback setting
 	var receivedLevel float64
 	var callbackCalled bool
-	
+
 	recorder.SetAudioLevelCallback(func(level float64) {
 		receivedLevel = level
 		callbackCalled = true
 	})
-	
+
 	// Test audio level update
 	testLevel := 0.75
 	recorder.updateAudioLevel(testLevel)
-	
+
 	// Give callback time to execute
 	time.Sleep(1 * time.Millisecond)
-	
+
 	if !callbackCalled {
 		t.Error("Expected audio level callback to be called")
 	}
-	
+
 	if receivedLevel != testLevel {
 		t.Errorf("Expected callback to receive level %f, got %f", testLevel, receivedLevel)
 	}
-	
+
 	if recorder.GetAudioLevel() != testLevel {
 		t.Errorf("Expected stored audio level %f, got %f", testLevel, recorder.GetAudioLevel())
 	}
@@ -311,28 +311,28 @@ func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 func TestArecordRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
 	recorder := NewArecordRecorder(cfg)
-	
+
 	// Create a temporary file to test cleanup
 	tempFile, err := os.CreateTemp("", "arecord_test_*.wav")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	tempFile.Close()
-	
+
 	fileName := tempFile.Name()
 	recorder.outputFile = fileName
-	
+
 	// Verify file exists
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		t.Fatal("Temp file should exist before cleanup")
 	}
-	
+
 	// Test cleanup
 	err = recorder.CleanupFile()
 	if err != nil {
 		t.Errorf("CleanupFile returned error: %v", err)
 	}
-	
+
 	// File should be removed
 	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
 		t.Error("File should be removed after cleanup")
@@ -345,20 +345,20 @@ func TestArecordRecorder_BufferMode(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
 	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
-	
+
 	recorder := NewArecordRecorder(cfg)
-	
+
 	// Should be using buffer mode for short, low-quality recordings
 	if !recorder.useBuffer {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
-	
+
 	// Test buffer access
 	stream, err := recorder.GetAudioStream()
 	if err != nil {
 		t.Errorf("GetAudioStream returned error: %v", err)
 	}
-	
+
 	if stream == nil {
 		t.Error("Expected audio stream to be available")
 	}
