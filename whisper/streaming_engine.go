@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 )
 
 // StreamingWhisperEngine provides real-time streaming transcription
