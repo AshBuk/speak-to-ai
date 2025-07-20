@@ -191,18 +191,16 @@ func (m *MockAudioRecorder) simulateAudioLevelUpdates() {
 	defer ticker.Stop()
 
 	for m.isRecording {
-		select {
-		case <-ticker.C:
-			if m.audioLevelIndex < len(m.audioLevelSequence) {
-				m.audioLevel = m.audioLevelSequence[m.audioLevelIndex]
-				m.audioLevelIndex++
-			} else {
-				m.audioLevelIndex = 0
-			}
+		<-ticker.C
+		if m.audioLevelIndex < len(m.audioLevelSequence) {
+			m.audioLevel = m.audioLevelSequence[m.audioLevelIndex]
+			m.audioLevelIndex++
+		} else {
+			m.audioLevelIndex = 0
+		}
 
-			if m.audioLevelCallback != nil {
-				m.audioLevelCallback(m.audioLevel)
-			}
+		if m.audioLevelCallback != nil {
+			m.audioLevelCallback(m.audioLevel)
 		}
 	}
 }
@@ -213,6 +211,35 @@ func (m *MockAudioRecorder) SetAudioLevel(level float64) {
 	if m.audioLevelCallback != nil {
 		m.audioLevelCallback(level)
 	}
+}
+
+// StartStreamingRecording simulates starting streaming recording
+func (m *MockAudioRecorder) StartStreamingRecording() (<-chan []float32, error) {
+	if !m.streaming {
+		return nil, errors.New("streaming not enabled")
+	}
+
+	// Create a channel and simulate some audio chunks
+	chunks := make(chan []float32, 5)
+	go func() {
+		defer close(chunks)
+		// Send some mock chunks
+		for i := 0; i < 3; i++ {
+			chunk := make([]float32, 1024)
+			for j := range chunk {
+				chunk[j] = float32(i) * 0.1 // Simple test data
+			}
+			chunks <- chunk
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+	return chunks, nil
+}
+
+// StopStreamingRecording simulates stopping streaming recording
+func (m *MockAudioRecorder) StopStreamingRecording() error {
+	return nil // Mock implementation, always succeeds
 }
 
 // Reset clears all mock state

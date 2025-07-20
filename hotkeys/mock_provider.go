@@ -36,6 +36,9 @@ func (m *MockHotkeyProvider) Start() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// Always record the call attempt, regardless of outcome
+	m.callHistory = append(m.callHistory, "Start")
+
 	if m.startError != nil {
 		return m.startError
 	}
@@ -45,7 +48,11 @@ func (m *MockHotkeyProvider) Start() error {
 	}
 
 	m.isStarted = true
-	m.callHistory = append(m.callHistory, "Start")
+
+	// Create new event channel if it was closed
+	if m.eventChannel == nil {
+		m.eventChannel = make(chan string, 10)
+	}
 
 	// Start event simulation if enabled
 	if m.simulateEvents {
@@ -60,18 +67,30 @@ func (m *MockHotkeyProvider) Stop() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if !m.isStarted {
+		// Already stopped, don't close channel again
+		m.callHistory = append(m.callHistory, "Stop")
+		return
+	}
+
 	m.isStarted = false
 	m.stopCalled = true
 	m.callHistory = append(m.callHistory, "Stop")
 
-	// Close event channel
-	close(m.eventChannel)
+	// Close event channel only if it's still open
+	if m.eventChannel != nil {
+		close(m.eventChannel)
+		m.eventChannel = nil
+	}
 }
 
 // RegisterHotkey simulates registering a hotkey
 func (m *MockHotkeyProvider) RegisterHotkey(hotkey string, callback func() error) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// Always record the call attempt, regardless of outcome
+	m.callHistory = append(m.callHistory, "RegisterHotkey")
 
 	if m.registerError != nil {
 		return m.registerError
@@ -86,7 +105,6 @@ func (m *MockHotkeyProvider) RegisterHotkey(hotkey string, callback func() error
 	}
 
 	m.registeredHotkeys[hotkey] = callback
-	m.callHistory = append(m.callHistory, fmt.Sprintf("RegisterHotkey:%s", hotkey))
 
 	return nil
 }
@@ -196,6 +214,11 @@ func (m *MockHotkeyProvider) GetCallHistory() []string {
 func (m *MockHotkeyProvider) Reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// Close existing channel if it's open
+	if m.eventChannel != nil && m.isStarted {
+		close(m.eventChannel)
+	}
 
 	m.isStarted = false
 	m.isSupported = true

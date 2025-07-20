@@ -1,62 +1,61 @@
 package whisper
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
+	"github.com/go-audio/wav"
 )
 
 // WhisperEngine represents an interface for working with whisper
 type WhisperEngine struct {
-	config     *config.Config
-	whisperBin string
-	modelPath  string
+	config    *config.Config
+	model     whisper.Model
+	modelPath string
 }
 
 // NewWhisperEngine creates a new instance of WhisperEngine
-func NewWhisperEngine(config *config.Config, whisperBin, modelPath string) *WhisperEngine {
-	return &WhisperEngine{
-		config:     config,
-		whisperBin: whisperBin,
-		modelPath:  modelPath,
+func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {
+	// Validate model path
+	if !utils.IsValidFile(modelPath) {
+		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
+
+	// Load the model with go-whisper bindings
+	model, err := whisper.New(modelPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load whisper model: %w", err)
+	}
+
+	return &WhisperEngine{
+		config:    config,
+		model:     model,
+		modelPath: modelPath,
+	}, nil
 }
 
-// validatePaths checks that file paths are safe and exist
-func (w *WhisperEngine) validatePaths() error {
-	// Check whisper binary
-	if !isValidExecutable(w.whisperBin) {
-		return fmt.Errorf("whisper binary not found or not executable: %s", w.whisperBin)
+// Close closes the whisper model and releases resources
+func (w *WhisperEngine) Close() error {
+	// Close the model with go-whisper bindings
+	if w.model != nil {
+		return w.model.Close()
 	}
-
-	// Check model path
-	if !isValidFile(w.modelPath) {
-		return fmt.Errorf("whisper model not found: %s", w.modelPath)
-	}
-
 	return nil
 }
 
 // Transcribe performs speech recognition from an audio file
 func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
-	// Validate paths
-	if err := w.validatePaths(); err != nil {
-		return "", err
-	}
-
 	// Validate the audio file
-	if !isValidFile(audioFile) {
+	if !utils.IsValidFile(audioFile) {
 		return "", fmt.Errorf("audio file not found or invalid: %s", audioFile)
 	}
 
 	// Check file size
-	fileSize, err := getFileSize(audioFile)
+	fileSize, err := utils.GetFileSize(audioFile)
 	if err != nil {
 		return "", fmt.Errorf("error checking audio file size: %w", err)
 	}
@@ -68,118 +67,78 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	}
 
 	// Check available disk space for output
-	if err := checkDiskSpace(audioFile); err != nil {
+	if err := utils.CheckDiskSpace(audioFile); err != nil {
 		return "", fmt.Errorf("insufficient disk space: %w", err)
 	}
 
-	// Prepare arguments for whisper
-	args := []string{
-		"-m", w.modelPath,
-		"-f", audioFile,
-		"--output-txt",
+	// Load audio data
+	audioData, err := w.loadAudioData(audioFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to load audio data: %w", err)
 	}
 
-	// If language is specified, add it
+	// Create context for transcription
+	context, err := w.model.NewContext()
+	if err != nil {
+		return "", fmt.Errorf("failed to create whisper context: %w", err)
+	}
+	// defer context.Close() // API may not have Close method
+
+	// Set language if specified
 	if lang := w.config.General.Language; lang != "" && lang != "auto" {
-		args = append(args, "-l", lang)
-	}
-
-	// Start the process
-	var outBuf, errBuf bytes.Buffer
-	cmd := exec.Command(w.whisperBin, args...)
-	cmd.Stdout = &outBuf
-	cmd.Stderr = &errBuf
-
-	err = cmd.Run()
-	if err != nil {
-		return "", fmt.Errorf("error running whisper: %w, stderr: %s", err, errBuf.String())
-	}
-
-	// Get the result
-	transcript := outBuf.String()
-	transcript = cleanTranscript(transcript)
-
-	return transcript, nil
-}
-
-// cleanTranscript cleans the result from service information
-func cleanTranscript(text string) string {
-	// Remove timestamp markers in format [00:00:00.000 --> 00:00:00.000]
-	lines := strings.Split(text, "\n")
-	result := []string{}
-
-	for _, line := range lines {
-		// Skip empty lines and lines with timestamps
-		if line == "" || strings.HasPrefix(line, "[") {
-			continue
+		if err := context.SetLanguage(lang); err != nil {
+			return "", fmt.Errorf("failed to set language: %w", err)
 		}
-		result = append(result, line)
 	}
 
-	return strings.Join(result, " ")
+	// Process audio data
+	if err := context.Process(audioData, nil, nil, nil); err != nil {
+		return "", fmt.Errorf("failed to process audio: %w", err)
+	}
+
+	// Extract transcript
+	var transcript strings.Builder
+	for {
+		segment, err := context.NextSegment()
+		if err != nil {
+			break
+		}
+		transcript.WriteString(segment.Text)
+		transcript.WriteString(" ")
+	}
+
+	result := strings.TrimSpace(transcript.String())
+	return result, nil
 }
 
-// isValidFile checks if a file exists and is accessible
-func isValidFile(path string) bool {
-	// Check for path traversal attempts
-	clean := filepath.Clean(path)
-	if clean != path {
-		return false
-	}
-
-	// Check file existence and access
-	info, err := os.Stat(path)
+// loadAudioData loads audio data from file and converts it to float32 samples
+func (w *WhisperEngine) loadAudioData(audioFile string) ([]float32, error) {
+	// Open the WAV file
+	file, err := os.Open(audioFile)
 	if err != nil {
-		return false
+		return nil, fmt.Errorf("failed to open audio file: %w", err)
+	}
+	defer file.Close()
+
+	// Create WAV decoder
+	decoder := wav.NewDecoder(file)
+	if decoder == nil {
+		return nil, fmt.Errorf("failed to create WAV decoder")
 	}
 
-	return !info.IsDir()
-}
-
-// isValidExecutable checks if a file exists and is executable
-func isValidExecutable(path string) bool {
-	if !isValidFile(path) {
-		return false
-	}
-
-	// Try to get file info to check permissions
-	info, err := os.Stat(path)
+	// Read the audio buffer
+	audioBuffer, err := decoder.FullPCMBuffer()
 	if err != nil {
-		return false
+		return nil, fmt.Errorf("failed to read audio buffer: %w", err)
 	}
 
-	// Check if file has execute permission
-	// 0100 in octal is the execute bit for user
-	return info.Mode()&0100 != 0
-}
-
-// getFileSize returns the size of a file in bytes
-func getFileSize(path string) (int64, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return 0, err
+	// Convert to float32 samples
+	// For now, convert manually from IntBuffer to float32
+	samples := make([]float32, audioBuffer.NumFrames())
+	for i := 0; i < audioBuffer.NumFrames(); i++ {
+		// Convert int to float32 normalized to [-1.0, 1.0]
+		intSample := audioBuffer.Data[i]
+		samples[i] = float32(intSample) / 32768.0
 	}
-	return info.Size(), nil
-}
-
-// checkDiskSpace ensures there's enough disk space available
-func checkDiskSpace(path string) error {
-	// Get directory stats
-	dir := filepath.Dir(path)
-	var stat syscall.Statfs_t
-	err := syscall.Statfs(dir, &stat)
-	if err != nil {
-		return err
-	}
-
-	// Calculate available space
-	available := stat.Bavail * uint64(stat.Bsize)
-
-	// Require at least 100MB free
-	const requiredSpace uint64 = 100 * 1024 * 1024
-	if available < requiredSpace {
-		return fmt.Errorf("insufficient disk space: %d bytes available, %d required", available, requiredSpace)
-	}
-
-	return nil
+	return samples, nil
 }

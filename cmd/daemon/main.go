@@ -14,7 +14,6 @@ import (
 var (
 	configFile   string
 	modelPath    string
-	whisperPath  string
 	quantizePath string
 	debug        bool
 )
@@ -23,7 +22,6 @@ func init() {
 	// Parse command-line arguments
 	flag.StringVar(&configFile, "config", "config.yaml", "Path to configuration file")
 	flag.StringVar(&modelPath, "model", "", "Path to whisper model file")
-	flag.StringVar(&whisperPath, "whisper", "sources/core/whisper", "Path to whisper binary")
 	flag.StringVar(&quantizePath, "quantize", "sources/core/quantize", "Path to quantize binary")
 	flag.BoolVar(&debug, "debug", false, "Enable debug mode")
 	flag.Parse()
@@ -35,10 +33,10 @@ func main() {
 	adjustPathsForFlatpak()
 
 	// Create application instance
-	application := app.NewApp(configFile, debug, whisperPath, modelPath, quantizePath)
+	application := app.NewApp(configFile, debug, modelPath, quantizePath)
 
 	// Initialize the application
-	if err := application.Initialize(configFile, debug, whisperPath, modelPath, quantizePath); err != nil {
+	if err := application.Initialize(configFile, debug, modelPath, quantizePath); err != nil {
 		log.Fatalf("Failed to initialize application: %v", err)
 		os.Exit(1)
 	}
@@ -79,11 +77,6 @@ func adjustPathsForAppImage() {
 	log.Printf("Running inside AppImage, base path: %s", appDir)
 
 	// Adjust paths for AppImage
-	if whisperPath == "sources/core/whisper" {
-		whisperPath = filepath.Join(appDir, "sources/core/whisper")
-		log.Printf("Adjusted whisper path: %s", whisperPath)
-	}
-
 	if quantizePath == "sources/core/quantize" {
 		quantizePath = filepath.Join(appDir, "sources/core/quantize")
 		log.Printf("Adjusted quantize path: %s", quantizePath)
@@ -111,11 +104,6 @@ func adjustPathsForFlatpak() {
 	log.Printf("Running inside Flatpak: %s", flatpakInfo)
 
 	// Adjust paths for Flatpak
-	if whisperPath == "sources/core/whisper" {
-		whisperPath = "/app/bin/whisper"
-		log.Printf("Adjusted whisper path: %s", whisperPath)
-	}
-
 	if quantizePath == "sources/core/quantize" {
 		quantizePath = "/app/bin/quantize"
 		log.Printf("Adjusted quantize path: %s", quantizePath)

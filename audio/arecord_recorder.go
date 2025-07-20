@@ -27,21 +27,6 @@ func (a *ArecordRecorder) StartRecording() error {
 	return a.ExecuteRecordingCommand("arecord", args)
 }
 
-// StopRecording stops recording and returns the path to the recorded file
-func (a *ArecordRecorder) StopRecording() (string, error) {
-	// Close streaming pipe if enabled
-	if a.streamingEnabled && a.pipeWriter != nil {
-		defer a.pipeWriter.Close()
-	}
-
-	// Stop the recording process using BaseRecorder
-	if err := a.StopProcess(); err != nil {
-		return "", err
-	}
-
-	return a.outputFile, nil
-}
-
 // buildCommandArgs builds the command arguments for arecord
 func (a *ArecordRecorder) buildCommandArgs() []string {
 	args := []string{

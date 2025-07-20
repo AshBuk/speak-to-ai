@@ -11,9 +11,17 @@
 # Compiled Go packages
 /bin/
 /pkg/
+/lib/
 
 # Whisper models (large files)
 /sources/language-models/*.bin
+
+# All binary files
+*.bin
+
+# Build artifacts and external dependencies
+/build/
+/build/whisper.cpp
 
 # Temporary directories and logs
 /tmp/
@@ -27,6 +35,7 @@
 # Editor/IDE specific files
 .vscode/
 .cursor/
+.claude/
 
 # OS generated files
 .DS_Store

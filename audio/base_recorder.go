@@ -36,6 +36,9 @@ type BaseRecorder struct {
 	pipeReader       *io.PipeReader
 	pipeWriter       *io.PipeWriter
 	stdoutPipe       io.ReadCloser
+	chunkProcessor   *ChunkProcessor
+	audioChunks      chan []float32
+	streamingActive  bool
 }
 
 // NewBaseRecorder creates a new base recorder instance
@@ -53,6 +56,8 @@ func NewBaseRecorder(config *config.Config) BaseRecorder {
 		buffer:           bytes.NewBuffer(nil),
 		tempManager:      GetTempFileManager(), // Use the global temp file manager
 		streamingEnabled: config.Audio.EnableStreaming,
+		audioChunks:      make(chan []float32, 10), // Buffer for 10 chunks
+		streamingActive:  false,
 	}
 }
 
@@ -222,6 +227,95 @@ func (b *BaseRecorder) StartProcessTemplate(cmdName string, args []string, outpu
 	}
 
 	return nil
+}
+
+// StartStreamingRecording starts streaming recording and returns audio chunks channel
+func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	if b.streamingActive {
+		return nil, fmt.Errorf("streaming recording already active")
+	}
+
+	if !b.streamingEnabled {
+		return nil, fmt.Errorf("streaming not enabled for this recorder")
+	}
+
+	// Initialize chunk processor
+	processorConfig := ChunkProcessorConfig{
+		ChunkDurationMs: 1000, // 1 second chunks
+		SampleRate:      b.config.Audio.SampleRate,
+		UseVAD:          true,
+		OnSpeech: func(chunk []float32) error {
+			select {
+			case b.audioChunks <- chunk:
+				return nil
+			default:
+				// Channel full, skip this chunk
+				return nil
+			}
+		},
+	}
+
+	b.chunkProcessor = NewChunkProcessor(processorConfig)
+	b.streamingActive = true
+
+	// Start processing audio stream
+	go func() {
+		defer func() {
+			b.mutex.Lock()
+			b.streamingActive = false
+			close(b.audioChunks)
+			b.mutex.Unlock()
+		}()
+
+		// Get audio stream
+		stream, err := b.GetAudioStream()
+		if err != nil {
+			return
+		}
+
+		// Process stream
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		b.chunkProcessor.ProcessStream(ctx, stream)
+	}()
+
+	return b.audioChunks, nil
+}
+
+// StopStreamingRecording stops streaming recording
+func (b *BaseRecorder) StopStreamingRecording() error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	if !b.streamingActive {
+		return nil // Already stopped
+	}
+
+	if b.chunkProcessor != nil {
+		b.chunkProcessor.Reset()
+	}
+
+	b.streamingActive = false
+	return nil
+}
+
+// StopRecording provides common StopRecording implementation for all recorders
+func (b *BaseRecorder) StopRecording() (string, error) {
+	// Close streaming pipe if enabled
+	if b.streamingEnabled && b.pipeWriter != nil {
+		defer b.pipeWriter.Close()
+	}
+
+	// Stop the recording process
+	if err := b.StopProcess(); err != nil {
+		return "", err
+	}
+
+	return b.outputFile, nil
 }
 
 // monitorAudioLevel reads audio data and calculates levels

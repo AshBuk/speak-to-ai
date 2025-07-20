@@ -18,7 +18,7 @@ import (
 )
 
 // Initialize initializes the application and all its components
-func (a *App) Initialize(configFile string, debug bool, whisperPath, modelPath, quantizePath string) error {
+func (a *App) Initialize(configFile string, debug bool, modelPath, quantizePath string) error {
 	// Set up initial logging
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.Println("Starting Speak-to-AI daemon...")
@@ -62,7 +62,7 @@ func (a *App) Initialize(configFile string, debug bool, whisperPath, modelPath, 
 	a.Logger = defaultLogger
 
 	// Initialize components (continue with initialization)
-	return a.initializeComponents(whisperPath, modelPath)
+	return a.initializeComponents(modelPath)
 }
 
 // ensureDirectories creates necessary directories for the application
@@ -80,7 +80,7 @@ func (a *App) ensureDirectories() {
 }
 
 // initializeComponents initializes the application components
-func (a *App) initializeComponents(whisperPath, modelPath string) error {
+func (a *App) initializeComponents(modelPath string) error {
 	var err error
 
 	// Initialize model manager
@@ -102,7 +102,10 @@ func (a *App) initializeComponents(whisperPath, modelPath string) error {
 	}
 
 	// Initialize whisper engine
-	a.WhisperEngine = whisper.NewWhisperEngine(a.Config, whisperPath, modelFilePath)
+	a.WhisperEngine, err = whisper.NewWhisperEngine(a.Config, modelFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to initialize whisper engine: %w", err)
+	}
 
 	// Initialize output manager based on environment
 	outputEnv := a.convertEnvironmentType()

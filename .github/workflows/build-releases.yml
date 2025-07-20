@@ -78,7 +78,8 @@ jobs:
           pkg-config \
           cmake \
           valgrind \
-          imagemagick
+          imagemagick \
+          make
           
     - name: Create application icon
       run: |
@@ -97,12 +98,10 @@ jobs:
           echo "✅ Icon already exists"
         fi
           
-    - name: Debug - Test Go build
+    - name: Build application
       run: |
-        echo "=== Testing Go Build with Systray ==="
-        go mod tidy
-        echo "Building application with systray support..."
-        go build -tags systray -v -o speak-to-ai cmd/daemon/main.go
+        echo "=== Building application with Makefile ==="
+        make all
         echo "Build successful, binary info:"
         ls -la speak-to-ai
         file speak-to-ai
@@ -118,31 +117,11 @@ jobs:
           echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
         fi
         
-    - name: Build Whisper.cpp if not present
-      run: |
-        if [ ! -f "sources/core/whisper" ] || [ ! -f "sources/core/quantize" ]; then
-          echo "Building Whisper.cpp with static linking..."
-          mkdir -p sources/core
-          git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
-          cd /tmp/whisper-cpp
-          # Build with static linking to avoid dynamic library dependencies
-          mkdir build
-          cmake -B build -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" -DBUILD_SHARED_LIBS=OFF
-          cmake --build build --config Release -j$(nproc)
-          echo "Whisper.cpp built, copying binaries..."
-          cp build/bin/whisper-cli ${{ github.workspace }}/sources/core/whisper
-          cp build/bin/quantize ${{ github.workspace }}/sources/core/quantize
-          echo "Binaries copied:"
-          ls -la ${{ github.workspace }}/sources/core/
-          echo "Checking dependencies:"
-          ldd ${{ github.workspace }}/sources/core/whisper || echo "Static binary (no dependencies)"
-        fi
-        
     - name: Debug - Pre-build status
       run: |
         echo "=== Pre-build Debug ==="
-        echo "Sources structure:"
-        find sources -type f -exec ls -la {} \;
+        echo "Library structure:"
+        ls -la lib/
         echo "AppImage script exists:"
         ls -la bash-scripts/build-appimage.sh
         echo "========================"
@@ -256,22 +235,9 @@ jobs:
             -O "sources/language-models/base.bin"
         fi
         
-    - name: Build Whisper.cpp if not present
+    - name: Install make for Flatpak build
       run: |
-        if [ ! -f "sources/core/whisper" ] || [ ! -f "sources/core/quantize" ]; then
-          echo "Building Whisper.cpp with static linking..."
-          mkdir -p sources/core
-          git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper-cpp
-          cd /tmp/whisper-cpp
-          # Build with static linking to avoid dynamic library dependencies
-          mkdir build
-          cmake -B build -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" -DBUILD_SHARED_LIBS=OFF
-          cmake --build build --config Release -j$(nproc)
-          cp build/bin/whisper-cli ${{ github.workspace }}/sources/core/whisper
-          cp build/bin/quantize ${{ github.workspace }}/sources/core/quantize
-          echo "Checking dependencies:"
-          ldd ${{ github.workspace }}/sources/core/whisper || echo "Static binary (no dependencies)"
-        fi
+        sudo apt-get install -y make
         
     - name: Pre-download Go modules for Flatpak
       run: |
