@@ -31,7 +31,7 @@ func (f *MockFactory) RegisterProvider(name string, provider KeyboardEventProvid
 func (f *MockFactory) CreateProvider(name string) (KeyboardEventProvider, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
-	
+
 	if f.createErr != nil {
 		return nil, f.createErr
 	}

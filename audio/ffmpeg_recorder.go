@@ -27,21 +27,6 @@ func (f *FFmpegRecorder) StartRecording() error {
 	return f.ExecuteRecordingCommand("ffmpeg", args)
 }
 
-// StopRecording stops recording and returns the path to the recorded file
-func (f *FFmpegRecorder) StopRecording() (string, error) {
-	// Close streaming pipe if enabled
-	if f.streamingEnabled && f.pipeWriter != nil {
-		defer f.pipeWriter.Close()
-	}
-
-	// Stop the recording process using BaseRecorder
-	if err := f.StopProcess(); err != nil {
-		return "", err
-	}
-
-	return f.outputFile, nil
-}
-
 // buildCommandArgs builds the command arguments for ffmpeg
 func (f *FFmpegRecorder) buildCommandArgs() []string {
 	// Basic arguments

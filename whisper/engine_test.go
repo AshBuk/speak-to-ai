@@ -5,60 +5,8 @@ import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
-
-func TestCleanTranscript(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "clean text without timestamps",
-			input:    "Hello world\nThis is a test",
-			expected: "Hello world\nThis is a test",
-		},
-		{
-			name:     "text with timestamps",
-			input:    "[00:00:00.000 --> 00:00:02.000]\nHello world\n[00:00:02.000 --> 00:00:04.000]\nThis is a test",
-			expected: "[00:00:00.000 --> 00:00:02.000]\nHello world\n[00:00:02.000 --> 00:00:04.000]\nThis is a test",
-		},
-		{
-			name:     "text with empty lines",
-			input:    "Hello world\n\nThis is a test\n\n",
-			expected: "Hello world\n\nThis is a test\n\n",
-		},
-		{
-			name:     "mixed timestamps and empty lines",
-			input:    "[00:00:00.000 --> 00:00:02.000]\nHello world\n\n[00:00:02.000 --> 00:00:04.000]\n\nThis is a test\n",
-			expected: "[00:00:00.000 --> 00:00:02.000]\nHello world\n\n[00:00:02.000 --> 00:00:04.000]\n\nThis is a test\n",
-		},
-		{
-			name:     "only timestamps",
-			input:    "[00:00:00.000 --> 00:00:02.000]\n[00:00:02.000 --> 00:00:04.000]",
-			expected: "[00:00:00.000 --> 00:00:02.000]\n[00:00:02.000 --> 00:00:04.000]",
-		},
-		{
-			name:     "empty input",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "only empty lines",
-			input:    "\n\n\n",
-			expected: "\n\n\n",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := cleanTranscript(tt.input)
-			if result != tt.expected {
-				t.Errorf("expected %q, got %q", tt.expected, result)
-			}
-		})
-	}
-}
 
 func TestNewWhisperEngine(t *testing.T) {
 	config := &config.Config{}
@@ -119,7 +67,7 @@ func TestIsValidFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isValidFile(tt.path)
+			result := utils.IsValidFile(tt.path)
 			if result != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
@@ -167,7 +115,7 @@ func TestGetFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			size, err := getFileSize(tt.path)
+			size, err := utils.GetFileSize(tt.path)
 
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
@@ -202,7 +150,7 @@ func TestCheckDiskSpace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := checkDiskSpace(tt.path)
+			err := utils.CheckDiskSpace(tt.path)
 
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")

@@ -3,13 +3,11 @@ package whisper
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
-	// "github.com/go-audio/audio"
 	"github.com/go-audio/wav"
 )
 
@@ -23,7 +21,7 @@ type WhisperEngine struct {
 // NewWhisperEngine creates a new instance of WhisperEngine
 func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {
 	// Validate model path
-	if !isValidFile(modelPath) {
+	if !utils.IsValidFile(modelPath) {
 		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
 
@@ -52,12 +50,12 @@ func (w *WhisperEngine) Close() error {
 // Transcribe performs speech recognition from an audio file
 func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	// Validate the audio file
-	if !isValidFile(audioFile) {
+	if !utils.IsValidFile(audioFile) {
 		return "", fmt.Errorf("audio file not found or invalid: %s", audioFile)
 	}
 
 	// Check file size
-	fileSize, err := getFileSize(audioFile)
+	fileSize, err := utils.GetFileSize(audioFile)
 	if err != nil {
 		return "", fmt.Errorf("error checking audio file size: %w", err)
 	}
@@ -69,7 +67,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	}
 
 	// Check available disk space for output
-	if err := checkDiskSpace(audioFile); err != nil {
+	if err := utils.CheckDiskSpace(audioFile); err != nil {
 		return "", fmt.Errorf("insufficient disk space: %w", err)
 	}
 
@@ -143,59 +141,4 @@ func (w *WhisperEngine) loadAudioData(audioFile string) ([]float32, error) {
 		samples[i] = float32(intSample) / 32768.0
 	}
 	return samples, nil
-}
-
-// isValidFile checks if a file exists and is accessible
-func isValidFile(path string) bool {
-	// Check for path traversal attempts
-	clean := filepath.Clean(path)
-	if clean != path {
-		return false
-	}
-
-	// Check file existence and access
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-
-	return !info.IsDir()
-}
-
-// cleanTranscript cleans the transcript text (legacy function for tests)
-func cleanTranscript(text string) string {
-	// Simple implementation for backward compatibility with tests
-	return text
-}
-
-
-// getFileSize returns the size of a file in bytes
-func getFileSize(path string) (int64, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return 0, err
-	}
-	return info.Size(), nil
-}
-
-// checkDiskSpace ensures there's enough disk space available
-func checkDiskSpace(path string) error {
-	// Get directory stats
-	dir := filepath.Dir(path)
-	var stat syscall.Statfs_t
-	err := syscall.Statfs(dir, &stat)
-	if err != nil {
-		return err
-	}
-
-	// Calculate available space
-	available := stat.Bavail * uint64(stat.Bsize)
-
-	// Require at least 100MB free
-	const requiredSpace uint64 = 100 * 1024 * 1024
-	if available < requiredSpace {
-		return fmt.Errorf("insufficient disk space: %d bytes available, %d required", available, requiredSpace)
-	}
-
-	return nil
 }

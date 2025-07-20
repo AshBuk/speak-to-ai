@@ -189,7 +189,7 @@ func TestUtilityExists_CommonTools(t *testing.T) {
 func TestCheckPrivileges(t *testing.T) {
 	// This test checks the current privilege level
 	hasPrivileges := CheckPrivileges()
-	
+
 	// We can't reliably test this in all environments, but we can test that it returns a boolean
 	if hasPrivileges {
 		t.Log("Running with elevated privileges (root)")
@@ -238,15 +238,15 @@ func TestEnsureDirectoryExists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := EnsureDirectoryExists(tt.path)
-			
+
 			if tt.shouldSucceed && err != nil {
 				t.Errorf("Expected directory creation to succeed, got error: %v", err)
 			}
-			
+
 			if !tt.shouldSucceed && err == nil {
 				t.Error("Expected directory creation to fail, but it succeeded")
 			}
-			
+
 			if tt.shouldSucceed {
 				// Verify directory was actually created
 				info, statErr := os.Stat(tt.path)
@@ -283,7 +283,7 @@ func TestEnsureDirectoryExists_InvalidPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := EnsureDirectoryExists(tt.path)
 			t.Logf("Path: %q, Error: %v, Description: %s", tt.path, err, tt.description)
-			
+
 			// Note: We don't assert success/failure here because behavior may vary
 			// across different operating systems and file systems
 		})
@@ -294,12 +294,12 @@ func TestEnsureDirectoryExists_InvalidPath(t *testing.T) {
 func TestEnsureDirectoryExists_Permissions(t *testing.T) {
 	// This test is platform-specific and may not work in all environments
 	// We'll test creating a directory in a location that typically requires permissions
-	
+
 	restrictedPaths := []string{
-		"/root/test_restricted_dir",  // Requires root access
-		"/sys/test_restricted_dir",   // System directory
+		"/root/test_restricted_dir", // Requires root access
+		"/sys/test_restricted_dir",  // System directory
 	}
-	
+
 	for _, path := range restrictedPaths {
 		t.Run("restricted_path_"+path, func(t *testing.T) {
 			err := EnsureDirectoryExists(path)
@@ -318,9 +318,9 @@ func TestEnsureDirectoryExists_Permissions(t *testing.T) {
 func TestEnvironmentDetection_Integration(t *testing.T) {
 	// Test the actual environment detection without modifying env vars
 	currentEnv := DetectEnvironment()
-	
+
 	t.Logf("Current environment detected as: %s", currentEnv)
-	
+
 	// Verify it's one of the valid types
 	validTypes := []EnvironmentType{EnvironmentX11, EnvironmentWayland, EnvironmentUnknown}
 	isValid := false
@@ -330,11 +330,11 @@ func TestEnvironmentDetection_Integration(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !isValid {
 		t.Errorf("Detected environment %s is not a valid EnvironmentType", currentEnv)
 	}
-	
+
 	// Log some environment information for debugging
 	t.Logf("DISPLAY env var: %q", os.Getenv("DISPLAY"))
 	t.Logf("WAYLAND_DISPLAY env var: %q", os.Getenv("WAYLAND_DISPLAY"))
@@ -347,7 +347,7 @@ func TestEnvironmentType_StringConversion(t *testing.T) {
 		EnvironmentWayland: "Wayland",
 		EnvironmentUnknown: "Unknown",
 	}
-	
+
 	for envType, expected := range envTypes {
 		if string(envType) != expected {
 			t.Errorf("Environment type %v should convert to string %q, got %q", envType, expected, string(envType))

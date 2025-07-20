@@ -84,15 +84,15 @@ func TestVerifyConfigIntegrity(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := VerifyConfigIntegrity(tempFile.Name(), tt.config)
-			
+
 			if tt.expectedError && err == nil {
 				t.Errorf("Expected error but got none: %s", tt.description)
 			}
-			
+
 			if !tt.expectedError && err != nil {
 				t.Errorf("Expected no error but got: %v (%s)", err, tt.description)
 			}
-			
+
 			if tt.expectedError && err != nil {
 				if !strings.Contains(err.Error(), "integrity check failed") {
 					t.Errorf("Expected integrity check error, got: %v", err)
@@ -237,11 +237,11 @@ func TestEnforceFileSizeLimit(t *testing.T) {
 			config.Security.MaxTempFileSize = tt.maxSize
 
 			err := EnforceFileSizeLimit(tempFile.Name(), config)
-			
+
 			if tt.expectedError && err == nil {
 				t.Errorf("Expected error but got none: %s", tt.description)
 			}
-			
+
 			if !tt.expectedError && err != nil {
 				t.Errorf("Expected no error but got: %v (%s)", err, tt.description)
 			}

@@ -144,7 +144,7 @@ func (h *HotkeyManager) Start() error {
 		h.isListening = false // Reset state if provider failed to start
 		return fmt.Errorf("failed to start keyboard provider: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -197,8 +197,8 @@ func IsModifier(keyName string) bool {
 		"super":      true,
 		"meta":       true,
 		"win":        true,
-		"altgr":      true,  // AltGr modifier for international keyboards
-		"hyper":      true,  // Hyper modifier
+		"altgr":      true, // AltGr modifier for international keyboards
+		"hyper":      true, // Hyper modifier
 		"leftctrl":   true,
 		"rightctrl":  true,
 		"leftalt":    true,
