@@ -152,3 +152,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Sharing with the community with ❤️, for privacy-conscious Linux users**
 
 ---
+
+## ❤️ Sponsors
+
+If you find Speak-to-AI useful, please consider supporting development via [GitHub Sponsors](https://github.com/sponsors/AshBuk). Your support helps improve Wayland hotkeys, real-time streaming, and security hardening.
+
