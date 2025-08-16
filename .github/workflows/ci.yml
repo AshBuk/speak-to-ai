@@ -3,7 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - "**"
+      - master
+      - main
   pull_request:
 
 permissions:
@@ -36,6 +37,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake git
 
+      - name: Format check (gofmt)
+        run: |
+          files=$(git ls-files '*.go')
+          if [ -n "$files" ]; then
+            fmt_out=$(echo "$files" | xargs -r gofmt -s -l)
+            if [ -n "$fmt_out" ]; then
+              echo "The following files are not gofmt'ed:" && echo "$fmt_out" && exit 1
+            fi
+          fi
+
       - name: Build whisper.cpp libs
         run: make whisper-libs
 
@@ -46,13 +57,6 @@ jobs:
           echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
           echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
-      - name: Format check (gofmt)
-        run: |
-          fmt_out=$(gofmt -s -l .)
-          if [ -n "$fmt_out" ]; then
-            echo "The following files are not gofmt'ed:" && echo "$fmt_out" && exit 1
-          fi
 
       - name: Go vet
         run: go vet ./...
