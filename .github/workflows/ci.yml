@@ -73,7 +73,7 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: v1.58.2
-          args: --timeout=5m
+          args: --timeout=5m --modules-download-mode=mod
 
   test:
     runs-on: ubuntu-22.04
