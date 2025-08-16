@@ -6,7 +6,6 @@ on:
       - master
       - main
   pull_request:
-
 permissions:
   contents: read
 

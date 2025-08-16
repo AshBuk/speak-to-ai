@@ -1,6 +1,8 @@
 run:
   timeout: 5m
-  modules-download-mode: vendor
+  modules-download-mode: mod
+  build-tags:
+    - systray
 
 issues:
   exclude-dirs:
