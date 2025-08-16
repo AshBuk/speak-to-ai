@@ -81,15 +81,19 @@ jobs:
           test -d vendor/github.com/godbus/dbus/v5 && ls -la vendor/github.com/godbus/dbus/v5 || true
           go list -deps ./... > /dev/null
 
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+            sh -s -- -b $(go env GOPATH)/bin v1.58.2
+
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
         env:
           GOFLAGS: -mod=vendor
           CGO_ENABLED: 1
           GOWORK: off
-        with:
-          version: v1.58.2
-          args: --timeout=5m --modules-download-mode=vendor
+        run: |
+          golangci-lint version
+          golangci-lint run --timeout=5m
 
   test:
     runs-on: ubuntu-22.04
