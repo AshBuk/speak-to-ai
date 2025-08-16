@@ -1,9 +1,9 @@
 run:
   timeout: 5m
   modules-download-mode: vendor
-  build-tags:
-    - systray
-  skip-dirs:
+
+issues:
+  exclude-dirs:
     - build
 
 linters-settings:
