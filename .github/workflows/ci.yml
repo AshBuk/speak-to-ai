@@ -88,12 +88,12 @@ jobs:
 
       - name: Run golangci-lint
         env:
-          GOFLAGS: -mod=vendor
+          GOFLAGS: -mod=vendor -tags=systray
           CGO_ENABLED: 1
           GOWORK: off
         run: |
           golangci-lint version
-          golangci-lint run --timeout=5m
+          golangci-lint run --timeout=5m --build-tags=systray
 
   test:
     runs-on: ubuntu-22.04
