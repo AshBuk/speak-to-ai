@@ -12,6 +12,7 @@
         "--socket=x11",
         "--socket=wayland",
         "--socket=pulseaudio",
+        "--socket=pipewire",
         "--device=dri",
         "--device=all",
         "--filesystem=home",
@@ -58,8 +59,22 @@
                 }
             ]
         },
-
-
+        {
+            "name": "alsa-utils",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-alsaconf",
+                "--disable-xmlto",
+                "--disable-nls"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.12.tar.bz2",
+                    "sha256": "6b3a0831dbf69362c2b0972f23d41e2fef936ea5b2c27a881e59f7fc6a5f0c64"
+                }
+            ]
+        },
         {
             "name": "xdotool",
             "buildsystem": "simple",

@@ -219,6 +219,7 @@ func ConvertModifierToEvdev(modifier string) string {
 		"super": "leftmeta",
 		"meta":  "leftmeta",
 		"win":   "leftmeta",
+		"altgr": "rightalt",
 	}
 
 	if evdevName, ok := modifierMap[strings.ToLower(modifier)]; ok {

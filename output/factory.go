@@ -1,6 +1,8 @@
 package output
 
 import (
+	"fmt"
+
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
@@ -48,12 +50,22 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 	if typeTool == "auto" {
 		switch env {
 		case EnvironmentWayland:
-			typeTool = "wl-keyboard" // Placeholder, might be custom implementation
+			// Avoid non-existent placeholder on Wayland; we do not have a wl-keyboard implementation.
+			// Keep type tool to xdotool only for X11 environments.
+			typeTool = "xdotool"
 		case EnvironmentX11:
 			typeTool = "xdotool"
 		default:
 			typeTool = "xdotool" // Default to xdotool
 		}
+	}
+
+	// Security: Validate selected tool commands against allowlist
+	if clipboardTool != "" && !f.config.IsCommandAllowed(clipboardTool) {
+		return nil, fmt.Errorf("clipboard tool not allowed: %s", clipboardTool)
+	}
+	if typeTool != "" && !f.config.IsCommandAllowed(typeTool) {
+		return nil, fmt.Errorf("type tool not allowed: %s", typeTool)
 	}
 
 	// Create appropriate outputter

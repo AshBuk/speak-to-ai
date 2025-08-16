@@ -143,7 +143,7 @@ func (p *EvdevKeyboardProvider) Start() error {
 }
 
 // handleKeyEvent processes a key event from a device
-func (p *EvdevKeyboardProvider) handleKeyEvent(deviceIndex int, event evdev.InputEvent) {
+func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event evdev.InputEvent) {
 	// Get key name
 	keyCode := int(event.Code)
 	keyName := getKeyName(keyCode)

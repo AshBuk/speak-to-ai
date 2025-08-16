@@ -148,10 +148,28 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 	// Store transcript
 	a.LastTranscript = transcript
 
-	// Automatically type the transcript to the active window
+	// Route the transcript according to configured output mode
 	if a.OutputManager != nil {
-		if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
-			a.Logger.Warning("Failed to type to active window: %v", err)
+		switch a.Config.Output.DefaultMode {
+		case "clipboard":
+			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+				a.Logger.Warning("Failed to copy to clipboard: %v", err)
+			}
+		case "active_window":
+			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+				a.Logger.Warning("Failed to type to active window: %v", err)
+			}
+		case "combined":
+			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+				a.Logger.Warning("Failed to copy to clipboard: %v", err)
+			}
+			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+				a.Logger.Warning("Failed to type to active window: %v", err)
+			}
+		default:
+			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+				a.Logger.Warning("Failed to type to active window: %v", err)
+			}
 		}
 	}
 
@@ -202,6 +220,11 @@ func (a *App) handleShowConfig() error {
 		a.Logger.Debug("Using editor from $EDITOR: %s", editor)
 	}
 
+	// Security: allowlist check on editor
+	if !a.Config.IsCommandAllowed(editor) {
+		return fmt.Errorf("command not allowed: %s", editor)
+	}
+
 	// Check if config file exists
 	if _, err := os.Stat(a.ConfigFile); os.IsNotExist(err) {
 		errMsg := fmt.Sprintf("Configuration file not found: %s", a.ConfigFile)
@@ -212,8 +235,14 @@ func (a *App) handleShowConfig() error {
 		return fmt.Errorf("config file not found: %s", a.ConfigFile)
 	}
 
+	// Sanitize args (config file path)
+	args := config.SanitizeCommandArgs([]string{a.ConfigFile})
+	if len(args) != 1 {
+		return fmt.Errorf("invalid config file path")
+	}
+
 	// Start editor in background
-	cmd := exec.Command(editor, a.ConfigFile)
+	cmd := exec.Command(editor, args[0])
 
 	// For GUI applications, detach from parent process
 	if editor == "xdg-open" {

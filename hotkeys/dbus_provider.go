@@ -128,6 +128,31 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	return nil
 }
 
+// convertHotkeyToAccelerator converts our hotkey syntax to a desktop-portal accelerator string
+// Examples:
+//
+//	"ctrl+shift+a" -> "<Ctrl><Shift>a"
+//	"altgr+comma"  -> "<AltGr>comma"
+func convertHotkeyToAccelerator(hotkey string) string {
+	combo := ParseHotkey(hotkey)
+	var prefix strings.Builder
+	for _, m := range combo.Modifiers {
+		switch strings.ToLower(m) {
+		case "ctrl", "leftctrl", "rightctrl":
+			prefix.WriteString("<Ctrl>")
+		case "alt", "leftalt":
+			prefix.WriteString("<Alt>")
+		case "rightalt", "altgr":
+			prefix.WriteString("<AltGr>")
+		case "shift", "leftshift", "rightshift":
+			prefix.WriteString("<Shift>")
+		case "super", "meta", "win", "leftmeta", "rightmeta":
+			prefix.WriteString("<Super>")
+		}
+	}
+	return prefix.String() + combo.Key
+}
+
 // registerHotkeys registers all hotkeys using the GlobalShortcuts portal
 func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
@@ -161,15 +186,18 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	p.sessionHandle = sessionHandle
 
-	// Step 2: Prepare shortcuts for binding
+	// Step 2: Prepare shortcuts for binding (include accelerator)
 	shortcuts := make([]struct {
 		ID   string
 		Data map[string]dbus.Variant
 	}, 0, len(p.callbacks))
 
 	for hotkey := range p.callbacks {
+		accel := convertHotkeyToAccelerator(hotkey)
 		shortcutData := map[string]dbus.Variant{
 			"description": dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
+			"shortcut":    dbus.MakeVariant(accel), // Some portals may expect this key
+			"accelerator": dbus.MakeVariant(accel), // Others may use this naming
 		}
 		shortcuts = append(shortcuts, struct {
 			ID   string
