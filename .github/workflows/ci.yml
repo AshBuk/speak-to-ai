@@ -32,6 +32,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Configure Go env
+        run: |
+          go env -w GOPROXY=https://proxy.golang.org,direct
+          go env -w GO111MODULE=on
+
       - name: Install build tools
         run: |
           sudo apt-get update
@@ -68,6 +73,7 @@ jobs:
         run: |
           go mod download
           go mod verify
+          go list -deps ./... > /dev/null
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
@@ -96,6 +102,11 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - name: Configure Go env
+        run: |
+          go env -w GOPROXY=https://proxy.golang.org,direct
+          go env -w GO111MODULE=on
 
       - name: Install build tools
         run: |
