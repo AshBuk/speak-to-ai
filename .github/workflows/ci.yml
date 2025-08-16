@@ -64,6 +64,11 @@ jobs:
       - name: Go build
         run: make build
 
+      - name: Download modules for linter
+        run: |
+          go mod download
+          go mod verify
+
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
