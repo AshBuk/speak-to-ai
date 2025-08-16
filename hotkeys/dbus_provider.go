@@ -152,7 +152,29 @@ func convertHotkeyToAccelerator(hotkey string) string {
 			prefix.WriteString("<Super>")
 		}
 	}
-	return prefix.String() + combo.Key
+
+	// Map special key names to standard accelerator format
+	key := combo.Key
+	switch strings.ToLower(key) {
+	case "comma":
+		key = "comma"
+	case "period":
+		key = "period"
+	case "space":
+		key = "space"
+	case "enter", "return":
+		key = "Return"
+	case "tab":
+		key = "Tab"
+	case "escape", "esc":
+		key = "Escape"
+	case "backspace":
+		key = "BackSpace"
+	case "delete", "del":
+		key = "Delete"
+	}
+
+	return prefix.String() + key
 }
 
 // registerHotkeys registers all hotkeys using the GlobalShortcuts portal
@@ -189,6 +211,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	p.sessionHandle = sessionHandle
 
 	// Step 2: Prepare shortcuts for binding (include accelerator)
+	// Format according to GlobalShortcuts portal spec: a(sa{sv})
 	shortcuts := make([]struct {
 		ID   string
 		Data map[string]dbus.Variant
@@ -196,10 +219,11 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	for hotkey := range p.callbacks {
 		accel := convertHotkeyToAccelerator(hotkey)
+		log.Printf("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
+
 		shortcutData := map[string]dbus.Variant{
-			"description": dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
-			"shortcut":    dbus.MakeVariant(accel), // Some portals may expect this key
-			"accelerator": dbus.MakeVariant(accel), // Others may use this naming
+			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
+			"preferred_trigger": dbus.MakeVariant(accel), // Standard field name per portal spec
 		}
 		shortcuts = append(shortcuts, struct {
 			ID   string
@@ -212,11 +236,15 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	// Step 3: Bind shortcuts to the session
 	bindOptions := map[string]dbus.Variant{}
+	log.Printf("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
+
 	call = obj.Call("org.freedesktop.portal.GlobalShortcuts.BindShortcuts", 0,
 		dbus.ObjectPath(sessionHandle), shortcuts, "", bindOptions)
 	if call.Err != nil {
 		return fmt.Errorf("failed to bind shortcuts: %w", call.Err)
 	}
+
+	log.Printf("DBus: Successfully bound shortcuts")
 
 	// Step 4: Start listening for shortcut activations
 	go p.listenForShortcuts()

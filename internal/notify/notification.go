@@ -3,17 +3,21 @@ package notify
 import (
 	"fmt"
 	"os/exec"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // NotificationManager handles desktop notifications
 type NotificationManager struct {
 	appName string
+	config  *config.Config
 }
 
 // NewNotificationManager creates a new notification manager
-func NewNotificationManager(appName string) *NotificationManager {
+func NewNotificationManager(appName string, cfg *config.Config) *NotificationManager {
 	return &NotificationManager{
 		appName: appName,
+		config:  cfg,
 	}
 }
 
@@ -44,10 +48,20 @@ func (nm *NotificationManager) ShowNotification(summary, body string) error {
 
 // sendNotification sends a notification with the given parameters
 func (nm *NotificationManager) sendNotification(summary, body, icon string) error {
-	cmd := exec.Command("notify-send",
+	// Security: validate command before execution
+	if !nm.config.IsCommandAllowed("notify-send") {
+		return fmt.Errorf("notify-send command not allowed")
+	}
+
+	args := []string{
 		"--app-name", nm.appName,
 		"--icon", icon,
-		summary, body)
+		summary, body,
+	}
+
+	// Security: sanitize arguments
+	safeArgs := config.SanitizeCommandArgs(args)
+	cmd := exec.Command("notify-send", safeArgs...)
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to send notification: %w", err)

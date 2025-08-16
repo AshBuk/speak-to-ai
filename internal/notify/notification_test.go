@@ -4,11 +4,21 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
+
+// Helper function to create test config
+func createTestConfig() *config.Config {
+	cfg := &config.Config{}
+	config.SetDefaultConfig(cfg)
+	return cfg
+}
 
 func TestNewNotificationManager(t *testing.T) {
 	appName := "TestApp"
-	nm := NewNotificationManager(appName)
+	cfg := createTestConfig()
+	nm := NewNotificationManager(appName, cfg)
 
 	if nm == nil {
 		t.Fatal("NewNotificationManager returned nil")
@@ -20,7 +30,7 @@ func TestNewNotificationManager(t *testing.T) {
 }
 
 func TestNotificationManager_NotifyStartRecording(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	// Mock notify-send command to avoid actual notifications during testing
 	if !commandExists("notify-send") {
@@ -37,7 +47,7 @@ func TestNotificationManager_NotifyStartRecording(t *testing.T) {
 }
 
 func TestNotificationManager_NotifyStopRecording(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -51,7 +61,7 @@ func TestNotificationManager_NotifyStopRecording(t *testing.T) {
 }
 
 func TestNotificationManager_NotifyTranscriptionComplete(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -65,7 +75,7 @@ func TestNotificationManager_NotifyTranscriptionComplete(t *testing.T) {
 }
 
 func TestNotificationManager_NotifyError(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -80,7 +90,7 @@ func TestNotificationManager_NotifyError(t *testing.T) {
 }
 
 func TestNotificationManager_ShowNotification(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -96,7 +106,7 @@ func TestNotificationManager_ShowNotification(t *testing.T) {
 }
 
 func TestNotificationManager_IsAvailable(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	result := nm.IsAvailable()
 
@@ -109,7 +119,7 @@ func TestNotificationManager_IsAvailable(t *testing.T) {
 }
 
 func TestNotificationManager_SendNotification_ValidCommand(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -125,7 +135,7 @@ func TestNotificationManager_SendNotification_ValidCommand(t *testing.T) {
 }
 
 func TestNotificationManager_SendNotification_EmptyParameters(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -165,7 +175,7 @@ func TestNotificationManager_AppName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nm := NewNotificationManager(tt.appName)
+			nm := NewNotificationManager(tt.appName, createTestConfig())
 
 			if nm.appName != tt.appName {
 				t.Errorf("Expected appName %q, got %q", tt.appName, nm.appName)
@@ -175,7 +185,7 @@ func TestNotificationManager_AppName(t *testing.T) {
 }
 
 func TestNotificationManager_NotificationTypes(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -213,7 +223,7 @@ func TestNotificationManager_NotificationTypes(t *testing.T) {
 }
 
 func TestNotificationManager_ErrorNotification(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -253,7 +263,7 @@ func TestNotificationManager_ErrorNotification(t *testing.T) {
 }
 
 func TestNotificationManager_ShowNotification_Variations(t *testing.T) {
-	nm := NewNotificationManager("TestApp")
+	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
@@ -331,7 +341,7 @@ func TestNotificationManager_Integration(t *testing.T) {
 		t.Skip("notify-send not available, skipping integration test")
 	}
 
-	nm := NewNotificationManager("Integration Test")
+	nm := NewNotificationManager("Integration Test", createTestConfig())
 
 	// Test a sequence of notifications
 	err := nm.NotifyStartRecording()

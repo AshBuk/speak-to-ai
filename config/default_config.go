@@ -41,7 +41,7 @@ func SetDefaultConfig(config *Config) {
 	config.WebServer.MaxClients = 10
 
 	// Security settings
-	config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wl-copy", "xclip", "notify-send", "xdg-open"}
+	config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wtype", "ydotool", "wl-copy", "wl-paste", "xclip", "notify-send", "xdg-open"}
 	config.Security.CheckIntegrity = false
 	config.Security.ConfigHash = ""
 	config.Security.MaxTempFileSize = 50 * 1024 * 1024 // 50MB by default

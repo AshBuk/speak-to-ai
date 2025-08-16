@@ -121,7 +121,7 @@ func (a *App) initializeComponents(modelPath string) error {
 	a.WebSocketServer = websocket.NewWebSocketServer(a.Config, a.Recorder, a.WhisperEngine, a.Logger)
 
 	// Initialize notification manager
-	a.NotifyManager = notify.NewNotificationManager("Speak-to-AI")
+	a.NotifyManager = notify.NewNotificationManager("Speak-to-AI", a.Config)
 
 	// Initialize system tray
 	a.initializeTrayManager()

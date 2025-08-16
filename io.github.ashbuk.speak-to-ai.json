@@ -91,6 +91,28 @@
             ]
         },
         {
+            "name": "wl-clipboard",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/bugaevc/wl-clipboard/archive/v2.2.1.tar.gz",
+                    "sha256": "6eb8081207fb5581d1d82c4bcd9587205a31a3d47bea3ebeb7f41aa1143783eb"
+                }
+            ]
+        },
+        {
+            "name": "wtype",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive", 
+                    "url": "https://github.com/atx/wtype/archive/v0.4.tar.gz",
+                    "sha256": "ef5efe553ce80a51362032a17b520c4e0d55c7e24df8d6bf45254c8b62d69e0a"
+                }
+            ]
+        },
+        {
             "name": "speak-to-ai",
             "buildsystem": "simple",
             "build-commands": [

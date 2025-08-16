@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // ClipboardOutputter implements Outputter for clipboard operations
 type ClipboardOutputter struct {
 	clipboardTool string
+	config        *config.Config
 }
 
 // NewClipboardOutputter creates a new clipboard outputter
-func NewClipboardOutputter(clipboardTool string) (Outputter, error) {
+func NewClipboardOutputter(clipboardTool string, cfg *config.Config) (Outputter, error) {
 	// Verify tool exists
 	if _, err := exec.LookPath(clipboardTool); err != nil {
 		return nil, fmt.Errorf("clipboard tool not found: %s", clipboardTool)
@@ -20,21 +23,32 @@ func NewClipboardOutputter(clipboardTool string) (Outputter, error) {
 
 	return &ClipboardOutputter{
 		clipboardTool: clipboardTool,
+		config:        cfg,
 	}, nil
 }
 
 // CopyToClipboard copies text to the system clipboard
 func (o *ClipboardOutputter) CopyToClipboard(text string) error {
+	// Security: validate command before execution
+	if !o.config.IsCommandAllowed(o.clipboardTool) {
+		return fmt.Errorf("clipboard tool not allowed: %s", o.clipboardTool)
+	}
+
 	var cmd *exec.Cmd
+	var args []string
 
 	switch o.clipboardTool {
 	case "xclip":
-		cmd = exec.Command("xclip", "-selection", "clipboard")
+		args = []string{"-selection", "clipboard"}
 	case "wl-copy":
-		cmd = exec.Command("wl-copy")
+		args = []string{} // wl-copy takes no additional args for basic operation
 	default:
 		return fmt.Errorf("unsupported clipboard tool: %s", o.clipboardTool)
 	}
+
+	// Security: sanitize arguments
+	safeArgs := config.SanitizeCommandArgs(args)
+	cmd = exec.Command(o.clipboardTool, safeArgs...)
 
 	// Pipe text to the command
 	cmd.Stdin = strings.NewReader(text)
