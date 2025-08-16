@@ -69,17 +69,20 @@ jobs:
       - name: Go build
         run: make build
 
-      - name: Download modules for linter
+      - name: Prepare modules for linter (vendor)
         run: |
           go mod download
           go mod verify
+          go mod vendor
           go list -deps ./... > /dev/null
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
+        env:
+          GOFLAGS: -mod=vendor
         with:
           version: v1.58.2
-          args: --timeout=5m --modules-download-mode=mod
+          args: --timeout=5m
 
   test:
     runs-on: ubuntu-22.04
