@@ -63,6 +63,8 @@ jobs:
           echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
           echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "GOWORK=off" >> $GITHUB_ENV
 
       - name: Go vet
         run: go vet ./...
@@ -75,15 +77,19 @@ jobs:
           go mod download
           go mod verify
           go mod vendor
+          test -d vendor/gopkg.in/yaml.v2 && ls -la vendor/gopkg.in/yaml.v2 || true
+          test -d vendor/github.com/godbus/dbus/v5 && ls -la vendor/github.com/godbus/dbus/v5 || true
           go list -deps ./... > /dev/null
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         env:
           GOFLAGS: -mod=vendor
+          CGO_ENABLED: 1
+          GOWORK: off
         with:
           version: v1.58.2
-          args: --timeout=5m
+          args: --timeout=5m --modules-download-mode=vendor
 
   test:
     runs-on: ubuntu-22.04
