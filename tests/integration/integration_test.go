@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package main
+package integration
 
 import (
 	"os"
@@ -12,7 +12,7 @@ import (
 )
 
 // Integration tests for complete user scenarios
-// Run with: go test -tags=integration
+// Run with: go test -tags=integration ./tests/integration/...
 
 func TestApplicationInitialization(t *testing.T) {
 	if testing.Short() {
@@ -240,3 +240,5 @@ output:
 		}
 	}
 }
+
+

@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package main
+package integration
 
 import (
 	"os"
@@ -233,3 +233,5 @@ func TestFlatpakCompatibility(t *testing.T) {
 		}
 	})
 }
+
+

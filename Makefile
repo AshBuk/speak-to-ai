@@ -132,6 +132,15 @@ clean:
 	go clean -cache
 	@echo "Clean completed"
 
+# -----------------------------------------------------------------------------
+# Test targets
+# -----------------------------------------------------------------------------
+
+.PHONY: test-integration
+test-integration: deps whisper-libs
+	@echo "=== Running integration tests (build tag: integration) ==="
+	go test -tags=integration ./tests/integration/...
+
 # Check if required tools are available
 check-tools:
 	@echo "=== Checking required tools ==="
