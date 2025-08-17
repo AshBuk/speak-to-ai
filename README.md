@@ -2,6 +2,15 @@
 
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
+[![Downloads](https://img.shields.io/github/downloads/AshBuk/speak-to-ai/total.svg)](https://github.com/AshBuk/speak-to-ai/releases)
+
+[![Go Version](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)](https://go.dev/)
+[![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
+[![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
+[![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
+[![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
+[![Flatpak](https://img.shields.io/badge/Flatpak-available-4a90e2?logo=flatpak)](https://github.com/AshBuk/speak-to-ai/releases)
 
 A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
 
@@ -22,6 +31,11 @@ A minimalist, privacy-focused desktop application that enables voice input (spee
 
 ## ✦ Installation
 
+Get prebuilt packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
+
+- AppImage: portable binary for most Linux distributions
+- Flatpak: sandboxed install
+
 ### AppImage
 
 Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
@@ -40,7 +54,7 @@ flatpak install speak-to-ai-*.flatpak
 flatpak run io.github.ashbuk.speak-to-ai
 ```
 
-## Configuration
+## ✦ Configuration
 
 Configuration file is automatically created at:
 - **AppImage**: `~/.config/speak-to-ai/config.yaml`
@@ -57,49 +71,12 @@ flatpak override --user --device=input io.github.ashbuk.speak-to-ai
 
 Then restart the app. This is optional and only needed on DEs without GlobalShortcuts portal.
 
-### Example Configuration
-
-```yaml
-# General settings
-general:
-  debug: false
-  model_path: "~/.config/speak-to-ai/language-models/base.bin"
-  language: "auto"  # Auto-detect or specify "en", "ru", etc.
-
-
-# Audio settings
-audio:
-  device: "default"
-  sample_rate: 16000
-  recording_method: "arecord"  # Options: "arecord", "ffmpeg"
-
-# Output settings
-output:
-  default_mode: "active_window"  # Options: "clipboard", "active_window", "combined"
-  clipboard_tool: "auto"     # Options: "auto", "wl-copy", "xclip"
-  type_tool: "auto"          # Options: "auto", "xdotool"
-
-# WebSocket server settings (for future web integration)
-web_server:
-  enabled: false  # Enable for React web app integration
-  port: 8080
-  host: "localhost"
-```
-
-## Project Status
+## ✦ Project Status
 
 Stable builds are available. The app works offline with local Whisper models, supports X11/Wayland, and provides clipboard/typing output modes. Planned improvements: streaming API integration, model download UX, and additional language models.
 
-## Downloads
 
-Get prebuilt packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
-
-- AppImage: portable binary for most Linux distributions
-- Flatpak: sandboxed install
-
-Follow the steps in the Installation section above.
-
-## For Developers
+## ✦ For Developers
 
 Developer documentation has moved to:
 
@@ -117,7 +94,7 @@ Developer documentation has moved to:
   - **Combined Mode**: Both typing and clipboard operations
 - **WebSocket Server**: Provides API for external applications (optional, port 8080)
 
-## System Requirements
+## ✦ System Requirements
 
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
