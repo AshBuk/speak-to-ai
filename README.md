@@ -4,7 +4,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
 [![Downloads](https://img.shields.io/github/downloads/AshBuk/speak-to-ai/total.svg)](https://github.com/AshBuk/speak-to-ai/releases)
-
 [![Go Version](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)](https://go.dev/)
 [![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
 [![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
@@ -77,7 +76,7 @@ For DEs without GlobalShortcuts portal support (XFCE, MATE, i3, etc.):
 flatpak override --user --device=input io.github.ashbuk.speak-to-ai
 ```
 
-Then restart the app. AppImage version has no sandboxing limitations.
+Then restart the app. This is optional and only needed on DEs without GlobalShortcuts portal.
 
 ## ✦ Project Status
 
