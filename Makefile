@@ -37,8 +37,8 @@ help:
 	@echo "  flatpak      - Build Flatpak"
 	@echo ""
 	@echo "Docker targets:"
-	@echo "  docker-up    - Start development services (docker-compose up -d)"
-	@echo "  docker-down  - Stop all services (docker-compose down)"
+	@echo "  docker-up    - Start development services (docker compose up -d)"
+	@echo "  docker-down  - Stop all services (docker compose down)"
 	@echo "  docker-dev   - Start and enter development environment"
 	@echo "  docker-help  - Show Docker-specific help"
 
@@ -130,109 +130,109 @@ check-tools:
 # Docker build commands
 docker-build:
 	@echo "=== Building all Docker images ==="
-	docker-compose build
+	docker compose build
 
 docker-build-dev:
 	@echo "=== Building development Docker image ==="
-	docker-compose build dev
+	docker compose build dev
 
 docker-build-lint:
 	@echo "=== Building lint Docker image ==="
-	docker-compose build lint
+	docker compose build lint
 
 # Docker development environment
 docker-up:
 	@echo "=== Starting Docker development services ==="
-	docker-compose --profile dev up -d
+	docker compose --profile dev up -d
 
 docker-dev:
 	@echo "=== Starting Docker development environment ==="
-	docker-compose --profile dev up -d dev
+	docker compose --profile dev up -d dev
 	@echo "=== Entering development container ==="
-	docker-compose exec dev bash
+	docker compose exec dev bash
 
 docker-dev-stop:
 	@echo "=== Stopping Docker development environment ==="
-	docker-compose --profile dev down
+	docker compose --profile dev down
 
 docker-down:
 	@echo "=== Stopping all Docker services ==="
-	docker-compose down
+	docker compose down
 
 # Docker whisper.cpp setup
 docker-whisper:
 	@echo "=== Building whisper.cpp libraries in Docker ==="
-	docker-compose --profile init up whisper-builder
+	docker compose --profile init up whisper-builder
 
 # Docker linting and testing
 docker-lint:
 	@echo "=== Running linter in Docker ==="
-	docker-compose --profile lint run --rm lint
+	docker compose --profile lint run --rm lint
 
 docker-test:
 	@echo "=== Running tests in Docker ==="
-	docker-compose --profile test run --rm test
+	docker compose --profile test run --rm test
 
 docker-fmt:
 	@echo "=== Running go fmt in Docker ==="
-	docker-compose --profile dev run --rm dev go fmt ./...
+	docker compose --profile dev run --rm dev go fmt ./...
 
 docker-vet:
 	@echo "=== Running go vet in Docker ==="
-	docker-compose --profile dev run --rm dev bash -c "source bash-scripts/dev-env.sh && go vet ./..."
+	docker compose --profile dev run --rm dev bash -c "source bash-scripts/dev-env.sh && go vet ./..."
 
 # Docker building packages
 docker-appimage:
 	@echo "=== Building AppImage in Docker ==="
-	docker-compose --profile appimage run --rm build-appimage
+	docker compose --profile appimage run --rm build-appimage
 
 docker-flatpak:
 	@echo "=== Building Flatpak in Docker ==="
-	docker-compose --profile flatpak run --rm build-flatpak
+	docker compose --profile flatpak run --rm build-flatpak
 
 docker-build-all:
 	@echo "=== Building all packages in Docker ==="
-	docker-compose --profile build up build-appimage build-flatpak
+	docker compose --profile build up build-appimage build-flatpak
 
 # Docker CI pipeline
 docker-ci:
 	@echo "=== Running full CI pipeline in Docker ==="
-	docker-compose --profile init up whisper-builder
-	docker-compose --profile ci run --rm lint
-	docker-compose --profile ci run --rm test
+	docker compose --profile init up whisper-builder
+	docker compose --profile ci run --rm lint
+	docker compose --profile ci run --rm test
 	@echo "=== CI pipeline completed successfully ==="
 
 # Docker cleanup
 docker-clean:
 	@echo "=== Cleaning Docker resources ==="
-	docker-compose down --volumes --remove-orphans
+	docker compose down --volumes --remove-orphans
 	docker system prune -f
 
 docker-clean-all:
 	@echo "=== Cleaning all Docker resources including images ==="
-	docker-compose down --volumes --remove-orphans --rmi all
+	docker compose down --volumes --remove-orphans --rmi all
 	docker system prune -af
 
 # Docker utility commands
 docker-logs:
 	@echo "=== Showing Docker logs ==="
-	docker-compose logs -f
+	docker compose logs -f
 
 docker-ps:
 	@echo "=== Showing Docker containers ==="
-	docker-compose ps
+	docker compose ps
 
 docker-shell:
 	@echo "=== Opening shell in development container ==="
-	docker-compose --profile dev run --rm dev bash
+	docker compose --profile dev run --rm dev bash
 
 # Help for Docker commands
 docker-help:
 	@echo "Available Docker targets:"
 	@echo ""
 	@echo "Quick commands:"
-	@echo "  docker-up         - Start development services (docker-compose up -d)"
-	@echo "  docker-down       - Stop all services (docker-compose down)"
+	@echo "  docker-up         - Start development services (docker compose up -d)"
+	@echo "  docker-down       - Stop all services (docker compose down)"
 	@echo "  docker-dev        - Start and enter development environment"
 	@echo ""
 	@echo "Build commands:"

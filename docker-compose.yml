@@ -44,7 +44,7 @@ services:
       dockerfile: docker/Dockerfile.dev
     container_name: speak-to-ai-test
     volumes:
-      - .:/app:ro
+      - .:/app
       - go-cache:/go/pkg/mod
       - whisper-libs:/app/lib
       - build-cache:/app/build
@@ -57,7 +57,7 @@ services:
       - CGO_LDFLAGS=-L/app/lib -lwhisper -lggml-cpu -lggml
       - LD_LIBRARY_PATH=/app/lib
       - PKG_CONFIG_PATH=/app/lib
-    command: ["make", "test"]
+    command: ["bash", "-c", "source bash-scripts/dev-env.sh && make test"]
     profiles: ["test", "ci"]
 
   # AppImage builder

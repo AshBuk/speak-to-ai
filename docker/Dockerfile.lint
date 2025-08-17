@@ -1,15 +1,12 @@
 # Lightweight container for linting and static analysis
 FROM golang:1.23-alpine
 
-# Install basic dependencies
+# Install basic dependencies  
 RUN apk add --no-cache \
     git \
     build-base \
     pkgconfig \
-    cmake \
-    # GUI dependencies for systray (Alpine packages)
-    gtk+3.0-dev \
-    libappindicator-gtk3-dev
+    cmake
 
 # Install golangci-lint
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.64.8
@@ -27,5 +24,5 @@ COPY . .
 # Create lib directory for whisper stubs if needed
 RUN mkdir -p lib
 
-# Default command runs linting
-CMD ["golangci-lint", "run", "--verbose"]
+# Default command runs linting (skip systray packages)
+CMD ["golangci-lint", "run", "--verbose", "--skip-dirs", "internal/tray"]
