@@ -63,8 +63,7 @@
                 "--disable-alsaconf",
                 "--disable-xmlto",
                 "--disable-nls",
-                "--disable-udev",
-                "--without-udev"
+                "--with-udev-rules-dir=/app/share/udev/rules.d"
             ],
             "sources": [
                 {
