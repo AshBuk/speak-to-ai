@@ -4,7 +4,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
 [![Downloads](https://img.shields.io/github/downloads/AshBuk/speak-to-ai/total.svg)](https://github.com/AshBuk/speak-to-ai/releases)
-
 [![Go Version](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)](https://go.dev/)
 [![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
 [![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
@@ -12,11 +11,12 @@
 [![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
 [![Flatpak](https://img.shields.io/badge/Flatpak-available-4a90e2?logo=flatpak)](https://github.com/AshBuk/speak-to-ai/releases)
 
-A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
+A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition. Written in Go, an optimized desktop application for Linux.
 
 ## Features
 
 - **Cross-platform support** for X11 and Wayland
+- **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: no data sent to external servers
 - **Portable**: available as AppImage and Flatpak
 
@@ -60,10 +60,17 @@ Configuration file is automatically created at:
 - **AppImage**: `~/.config/speak-to-ai/config.yaml`
 - **Flatpak**: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
 
-### Hotkeys in Flatpak
+### Desktop Environment Compatibility
 
-- On GNOME/KDE, global hotkeys use the `org.freedesktop.portal.GlobalShortcuts` portal and work out of the box (no extra permissions needed).
-- On other desktop environments where the portal is not available, hotkeys may be limited by sandboxing. You can opt-in to input device access:
+#### GNOME & KDE (Recommended)
+Global hotkeys work seamlessly using the `org.freedesktop.portal.GlobalShortcuts` portal:
+- **GNOME**: Full native support, no additional configuration needed
+- **KDE Plasma**: Full native support, no additional configuration needed
+
+#### Other Desktop Environments
+For DEs without GlobalShortcuts portal support (XFCE, MATE, i3, etc.):
+- Hotkeys may be limited by Flatpak sandboxing
+- Optional: Grant input device access for better hotkey support:
 
 ```bash
 flatpak override --user --device=input io.github.ashbuk.speak-to-ai
