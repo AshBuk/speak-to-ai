@@ -336,8 +336,8 @@ func TestApp_HandleShowConfig_Success(t *testing.T) {
 
 	app.ConfigFile = configFile
 
-	// Set EDITOR environment variable
-	os.Setenv("EDITOR", "echo")
+	// Set EDITOR environment variable to allowed command
+	os.Setenv("EDITOR", "xdg-open")
 	defer os.Unsetenv("EDITOR")
 	err = app.handleShowConfig()
 	if err != nil {

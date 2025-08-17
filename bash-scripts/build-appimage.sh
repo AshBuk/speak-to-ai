@@ -66,8 +66,11 @@ copy_if_exists() {
 copy_if_exists "xclip"
 copy_if_exists "wl-copy"
 copy_if_exists "wl-paste"
+copy_if_exists "wtype"
+copy_if_exists "ydotool"
 copy_if_exists "notify-send"
 copy_if_exists "arecord"
+copy_if_exists "xdotool"
 
 # Note: linuxdeploy will automatically handle library dependencies
 # Manual library copying is only needed as fallback

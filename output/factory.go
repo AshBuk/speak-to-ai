@@ -1,6 +1,9 @@
 package output
 
 import (
+	"fmt"
+	"os/exec"
+
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
@@ -48,24 +51,49 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 	if typeTool == "auto" {
 		switch env {
 		case EnvironmentWayland:
-			typeTool = "wl-keyboard" // Placeholder, might be custom implementation
+			// Try Wayland-compatible tools in order of preference
+			if f.isToolAvailable("wtype") {
+				typeTool = "wtype"
+			} else if f.isToolAvailable("ydotool") {
+				typeTool = "ydotool"
+			} else {
+				// Fallback: try xdotool (might work with XWayland)
+				typeTool = "xdotool"
+			}
 		case EnvironmentX11:
 			typeTool = "xdotool"
 		default:
-			typeTool = "xdotool" // Default to xdotool
+			// Auto-detect best available tool
+			if f.isToolAvailable("xdotool") {
+				typeTool = "xdotool"
+			} else if f.isToolAvailable("wtype") {
+				typeTool = "wtype"
+			} else if f.isToolAvailable("ydotool") {
+				typeTool = "ydotool"
+			} else {
+				typeTool = "xdotool" // Default fallback
+			}
 		}
+	}
+
+	// Security: Validate selected tool commands against allowlist
+	if clipboardTool != "" && !f.config.IsCommandAllowed(clipboardTool) {
+		return nil, fmt.Errorf("clipboard tool not allowed: %s", clipboardTool)
+	}
+	if typeTool != "" && !f.config.IsCommandAllowed(typeTool) {
+		return nil, fmt.Errorf("type tool not allowed: %s", typeTool)
 	}
 
 	// Create appropriate outputter
 	switch f.config.Output.DefaultMode {
 	case "clipboard":
-		return NewClipboardOutputter(clipboardTool)
+		return NewClipboardOutputter(clipboardTool, f.config)
 	case "active_window":
-		return NewTypeOutputter(typeTool)
+		return NewTypeOutputter(typeTool, f.config)
 	case "combined":
-		return NewCombinedOutputter(clipboardTool, typeTool)
+		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	default:
-		return NewCombinedOutputter(clipboardTool, typeTool)
+		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	}
 }
 
@@ -73,4 +101,10 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 func GetOutputterFromConfig(config *config.Config, env EnvironmentType) (Outputter, error) {
 	factory := NewFactory(config)
 	return factory.GetOutputter(env)
+}
+
+// isToolAvailable checks if a command-line tool is available in PATH
+func (f *Factory) isToolAvailable(toolName string) bool {
+	_, err := exec.LookPath(toolName)
+	return err == nil
 }

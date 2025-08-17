@@ -2,6 +2,8 @@ package output
 
 import (
 	"fmt"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // CombinedOutputter implements Outputter for both clipboard and typing
@@ -11,13 +13,13 @@ type CombinedOutputter struct {
 }
 
 // NewCombinedOutputter creates a new combined outputter
-func NewCombinedOutputter(clipboardTool, typeTool string) (Outputter, error) {
-	clipboard, err := NewClipboardOutputter(clipboardTool)
+func NewCombinedOutputter(clipboardTool, typeTool string, cfg *config.Config) (Outputter, error) {
+	clipboard, err := NewClipboardOutputter(clipboardTool, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create clipboard outputter: %w", err)
 	}
 
-	typer, err := NewTypeOutputter(typeTool)
+	typer, err := NewTypeOutputter(typeTool, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create type outputter: %w", err)
 	}

@@ -1,3 +1,5 @@
+//go:build linux
+
 package hotkeys
 
 import (
@@ -7,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/godbus/dbus/v5"
+	dbus "github.com/godbus/dbus/v5"
 )
 
 // DbusKeyboardProvider implements KeyboardEventProvider using D-Bus portal
@@ -128,6 +130,53 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	return nil
 }
 
+// convertHotkeyToAccelerator converts our hotkey syntax to a desktop-portal accelerator string
+// Examples:
+//
+//	"ctrl+shift+a" -> "<Ctrl><Shift>a"
+//	"altgr+comma"  -> "<AltGr>comma"
+func convertHotkeyToAccelerator(hotkey string) string {
+	combo := ParseHotkey(hotkey)
+	var prefix strings.Builder
+	for _, m := range combo.Modifiers {
+		switch strings.ToLower(m) {
+		case "ctrl", "leftctrl", "rightctrl":
+			prefix.WriteString("<Ctrl>")
+		case "alt", "leftalt":
+			prefix.WriteString("<Alt>")
+		case "rightalt", "altgr":
+			prefix.WriteString("<AltGr>")
+		case "shift", "leftshift", "rightshift":
+			prefix.WriteString("<Shift>")
+		case "super", "meta", "win", "leftmeta", "rightmeta":
+			prefix.WriteString("<Super>")
+		}
+	}
+
+	// Map special key names to standard accelerator format
+	key := combo.Key
+	switch strings.ToLower(key) {
+	case "comma":
+		key = "comma"
+	case "period":
+		key = "period"
+	case "space":
+		key = "space"
+	case "enter", "return":
+		key = "Return"
+	case "tab":
+		key = "Tab"
+	case "escape", "esc":
+		key = "Escape"
+	case "backspace":
+		key = "BackSpace"
+	case "delete", "del":
+		key = "Delete"
+	}
+
+	return prefix.String() + key
+}
+
 // registerHotkeys registers all hotkeys using the GlobalShortcuts portal
 func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
@@ -161,15 +210,20 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	p.sessionHandle = sessionHandle
 
-	// Step 2: Prepare shortcuts for binding
+	// Step 2: Prepare shortcuts for binding (include accelerator)
+	// Format according to GlobalShortcuts portal spec: a(sa{sv})
 	shortcuts := make([]struct {
 		ID   string
 		Data map[string]dbus.Variant
 	}, 0, len(p.callbacks))
 
 	for hotkey := range p.callbacks {
+		accel := convertHotkeyToAccelerator(hotkey)
+		log.Printf("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
+
 		shortcutData := map[string]dbus.Variant{
-			"description": dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
+			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
+			"preferred_trigger": dbus.MakeVariant(accel), // Standard field name per portal spec
 		}
 		shortcuts = append(shortcuts, struct {
 			ID   string
@@ -182,11 +236,15 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	// Step 3: Bind shortcuts to the session
 	bindOptions := map[string]dbus.Variant{}
+	log.Printf("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
+
 	call = obj.Call("org.freedesktop.portal.GlobalShortcuts.BindShortcuts", 0,
 		dbus.ObjectPath(sessionHandle), shortcuts, "", bindOptions)
 	if call.Err != nil {
 		return fmt.Errorf("failed to bind shortcuts: %w", call.Err)
 	}
+
+	log.Printf("DBus: Successfully bound shortcuts")
 
 	// Step 4: Start listening for shortcut activations
 	go p.listenForShortcuts()

@@ -1,0 +1,68 @@
+# Container for building AppImage packages
+FROM ubuntu:22.04
+
+# Avoid timezone interaction
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies for AppImage building
+RUN apt-get update && apt-get install -y \
+    # Go
+    curl \
+    wget \
+    git \
+    # Build tools
+    build-essential \
+    cmake \
+    pkg-config \
+    # GUI dependencies for systray
+    libayatana-appindicator3-dev \
+    libgtk-3-dev \
+    libglib2.0-dev \
+    # Audio and input tools
+    alsa-utils \
+    # AppImage tools dependencies
+    file \
+    desktop-file-utils \
+    fuse \
+    libfuse2 \
+    # Tools for copying system dependencies
+    xclip \
+    wl-clipboard \
+    ydotool \
+    xdotool \
+    libnotify-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go
+ENV GO_VERSION=1.23.5
+RUN curl -L "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf -
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p lib sources build dist
+
+# Build script for AppImage
+COPY docker/scripts/build-appimage.sh /usr/local/bin/build-appimage.sh
+RUN chmod +x /usr/local/bin/build-appimage.sh
+
+# Set environment variables for CGO
+ENV CGO_ENABLED=1
+ENV C_INCLUDE_PATH="/app/lib"
+ENV LIBRARY_PATH="/app/lib"
+ENV CGO_CFLAGS="-I/app/lib"
+ENV CGO_LDFLAGS="-L/app/lib -lwhisper -lggml-cpu -lggml"
+ENV LD_LIBRARY_PATH="/app/lib"
+ENV PKG_CONFIG_PATH="/app/lib"
+
+# Default command builds AppImage
+CMD ["/usr/local/bin/build-appimage.sh"]

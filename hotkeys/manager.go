@@ -33,38 +33,12 @@ func NewHotkeyManager(config HotkeyConfig, environment EnvironmentType) *HotkeyM
 	}
 
 	// Initialize the appropriate keyboard provider based on environment and privileges
-	manager.provider = manager.selectKeyboardProvider()
+	manager.provider = selectProviderForEnvironment(manager.config, manager.environment)
 
 	return manager
 }
 
-// selectKeyboardProvider chooses the most appropriate keyboard provider based on
-// environment and availability
-func (h *HotkeyManager) selectKeyboardProvider() KeyboardEventProvider {
-	// Try D-Bus provider first (works without root permissions on modern DEs)
-	dbusProvider := NewDbusKeyboardProvider(h.config, h.environment)
-	if dbusProvider.IsSupported() {
-		log.Println("Using D-Bus keyboard provider (GNOME/KDE)")
-		return dbusProvider
-	}
-	log.Println("D-Bus GlobalShortcuts portal not available, trying evdev...")
-
-	// Fallback to evdev provider (requires root permissions but works everywhere)
-	evdevProvider := NewEvdevKeyboardProvider(h.config, h.environment)
-	if evdevProvider.IsSupported() {
-		log.Println("Using evdev keyboard provider (requires root permissions)")
-		return evdevProvider
-	}
-	log.Println("evdev not available, hotkeys will be disabled")
-
-	// Final fallback to dummy provider with helpful instructions
-	log.Println("Warning: No supported keyboard provider available.")
-	log.Println("For hotkeys to work:")
-	log.Println("  - On GNOME/KDE: Ensure D-Bus session is running")
-	log.Println("  - On other DEs: Run with sudo or add user to 'input' group")
-	log.Println("  - Alternative: Use system-wide hotkey tools like sxhkd")
-	return NewDummyKeyboardProvider()
-}
+// selectProviderForEnvironment is defined per-OS (see manager_linux.go and manager_stub.go)
 
 // RegisterCallbacks registers callback functions for hotkey actions
 func (h *HotkeyManager) RegisterCallbacks(
@@ -219,6 +193,7 @@ func ConvertModifierToEvdev(modifier string) string {
 		"super": "leftmeta",
 		"meta":  "leftmeta",
 		"win":   "leftmeta",
+		"altgr": "rightalt",
 	}
 
 	if evdevName, ok := modifierMap[strings.ToLower(modifier)]; ok {

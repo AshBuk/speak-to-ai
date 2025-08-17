@@ -12,6 +12,7 @@
         "--socket=x11",
         "--socket=wayland",
         "--socket=pulseaudio",
+        "--socket=pipewire",
         "--device=dri",
         "--device=all",
         "--filesystem=home",
@@ -58,8 +59,22 @@
                 }
             ]
         },
-
-
+        {
+            "name": "alsa-utils",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-alsaconf",
+                "--disable-xmlto",
+                "--disable-nls"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.12.tar.bz2",
+                    "sha256": "6b3a0831dbf69362c2b0972f23d41e2fef936ea5b2c27a881e59f7fc6a5f0c64"
+                }
+            ]
+        },
         {
             "name": "xdotool",
             "buildsystem": "simple",
@@ -72,6 +87,28 @@
                     "type": "archive",
                     "url": "https://github.com/jordansissel/xdotool/archive/refs/tags/v3.20211022.1.tar.gz",
                     "sha256": "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847"
+                }
+            ]
+        },
+        {
+            "name": "wl-clipboard",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/bugaevc/wl-clipboard/archive/v2.2.1.tar.gz",
+                    "sha256": "6eb8081207fb5581d1d82c4bcd9587205a31a3d47bea3ebeb7f41aa1143783eb"
+                }
+            ]
+        },
+        {
+            "name": "wtype",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive", 
+                    "url": "https://github.com/atx/wtype/archive/v0.4.tar.gz",
+                    "sha256": "ef5efe553ce80a51362032a17b520c4e0d55c7e24df8d6bf45254c8b62d69e0a"
                 }
             ]
         },

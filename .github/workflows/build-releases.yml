@@ -344,12 +344,12 @@ jobs:
           ## Speak-to-AI Release ${{ github.ref_name }}
           
           ### Features:
-          - 🎤 Offline speech-to-text using Whisper.cpp
-          - 🔧 System tray integration with recording status
-          - ⌨️ Microsoft Copilot key support (AltGr + ,)
-          - 📋 Multiple output modes: clipboard, direct typing
-          - 🖥️ Cross-platform support for X11 and Wayland
-          - 🔒 Privacy-first: no data sent to external servers
+          -  Offline speech-to-text using Whisper.cpp
+          -  System tray integration with recording status
+          -  Microsoft Copilot key support (AltGr + ,)
+          -  Multiple output modes: clipboard, direct typing
+          -  Cross-platform support for X11 and Wayland
+          -  Privacy-first: no data sent to external servers
           
           ### Installation:
           

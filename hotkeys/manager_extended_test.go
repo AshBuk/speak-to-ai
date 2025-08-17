@@ -1,3 +1,5 @@
+//go:build linux
+
 package hotkeys
 
 import (
@@ -135,6 +137,8 @@ func TestConvertModifierToEvdev(t *testing.T) {
 		{"super", "super", "leftmeta"},
 		{"meta", "meta", "leftmeta"},
 		{"win", "win", "leftmeta"},
+		{"altgr", "altgr", "rightalt"},
+		{"AltGr", "AltGr", "rightalt"}, // Test case insensitive
 		{"unknown modifier", "unknown", "unknown"},
 		{"empty string", "", ""},
 		{"regular key", "r", "r"},

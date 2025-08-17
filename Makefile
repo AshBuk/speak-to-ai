@@ -1,7 +1,7 @@
-.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help
+.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint docker-% docker-build docker-dev docker-lint docker-clean
 
 # Variables
-GO_VERSION := 1.22
+GO_VERSION := 1.24
 BINARY_NAME := speak-to-ai
 BUILD_DIR := build
 LIB_DIR := lib
@@ -22,6 +22,15 @@ export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 
 # Default target
 all: deps whisper-libs build
+# Format source code (local)
+fmt:
+	@echo "=== Formatting Go sources (gofmt -s -w) ==="
+	@files=$$(git ls-files '*.go'); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
+	@echo "Format completed"
+
+# Lint alias (Docker)
+lint: docker-lint
+
 
 # Help target
 help:
@@ -35,6 +44,12 @@ help:
 	@echo "  whisper-libs - Build whisper.cpp libraries"
 	@echo "  appimage     - Build AppImage"
 	@echo "  flatpak      - Build Flatpak"
+	@echo ""
+	@echo "Docker targets:"
+	@echo "  docker-up    - Start development services (docker compose up -d)"
+	@echo "  docker-down  - Stop all services (docker compose down)"
+	@echo "  docker-dev   - Start and enter development environment"
+	@echo "  docker-help  - Show Docker-specific help"
 
 # Download Go dependencies
 deps:
@@ -116,3 +131,132 @@ check-tools:
 	@command -v cmake >/dev/null 2>&1 || { echo "CMake is required but not installed"; exit 1; }
 	@command -v git >/dev/null 2>&1 || { echo "Git is required but not installed"; exit 1; }
 	@echo "All required tools are available"
+
+# ============================================================================
+# Docker Development Commands
+# ============================================================================
+
+# Docker build commands
+docker-build:
+	@echo "=== Building all Docker images ==="
+	docker compose build
+
+docker-build-dev:
+	@echo "=== Building development Docker image ==="
+	docker compose build dev
+
+docker-build-lint:
+	@echo "=== Skipping build: using official golangci-lint image ==="
+	@true
+
+# Docker development environment
+docker-up:
+	@echo "=== Starting Docker development services ==="
+	docker compose --profile dev up -d
+
+docker-dev:
+	@echo "=== Starting Docker development environment ==="
+	docker compose --profile dev up -d dev
+	@echo "=== Entering development container ==="
+	docker compose exec dev bash
+
+docker-dev-stop:
+	@echo "=== Stopping Docker development environment ==="
+	docker compose --profile dev down
+
+docker-down:
+	@echo "=== Stopping all Docker services ==="
+	docker compose down
+
+# Docker whisper.cpp setup
+docker-whisper:
+	@echo "=== Building whisper.cpp libraries in Docker ==="
+	docker compose --profile init up whisper-builder
+
+# Docker linting
+docker-lint:
+	@echo "=== Running linter in Docker ==="
+	docker compose --profile lint run --rm lint
+
+docker-fmt:
+	@echo "=== Running go fmt in Docker ==="
+	docker compose --profile dev run --rm dev go fmt ./...
+
+docker-vet:
+	@echo "=== Running go vet in Docker ==="
+	docker compose --profile dev run --rm dev bash -c "source bash-scripts/dev-env.sh && go vet ./..."
+
+# Docker building packages
+docker-appimage:
+	@echo "=== Building AppImage in Docker ==="
+	docker compose --profile appimage run --rm build-appimage
+
+docker-flatpak:
+	@echo "=== Building Flatpak in Docker ==="
+	docker compose --profile flatpak run --rm build-flatpak
+
+docker-build-all:
+	@echo "=== Building all packages in Docker ==="
+	docker compose --profile build up build-appimage build-flatpak
+
+# Docker CI pipeline
+docker-ci:
+	@echo "=== Running full CI pipeline in Docker ==="
+	docker compose --profile init up whisper-builder
+	docker compose --profile ci run --rm lint
+	$(MAKE) test
+	@echo "=== CI pipeline completed successfully ==="
+
+# Docker cleanup
+docker-clean:
+	@echo "=== Cleaning Docker resources ==="
+	docker compose down --volumes --remove-orphans
+	docker system prune -f
+
+docker-clean-all:
+	@echo "=== Cleaning all Docker resources including images ==="
+	docker compose down --volumes --remove-orphans --rmi all
+	docker system prune -af
+
+# Docker utility commands
+docker-logs:
+	@echo "=== Showing Docker logs ==="
+	docker compose logs -f
+
+docker-ps:
+	@echo "=== Showing Docker containers ==="
+	docker compose ps
+
+docker-shell:
+	@echo "=== Opening shell in development container ==="
+	docker compose --profile dev run --rm dev bash
+
+# Help for Docker commands
+docker-help:
+	@echo "Available Docker targets:"
+	@echo ""
+	@echo "Quick commands:"
+	@echo "  docker-up         - Start development services (docker compose up -d)"
+	@echo "  docker-down       - Stop all services (docker compose down)"
+	@echo "  docker-dev        - Start and enter development environment"
+	@echo ""
+	@echo "Build commands:"
+	@echo "  docker-build      - Build all Docker images"
+	@echo "  docker-whisper    - Build whisper.cpp in Docker"
+	@echo ""
+	@echo "Development commands:"
+	@echo "  docker-lint       - Run linter in Docker"
+	@echo "  docker-fmt        - Run go fmt in Docker"
+	@echo "  docker-vet        - Run go vet in Docker"
+	@echo "  docker-shell      - Open shell in dev container"
+	@echo ""
+	@echo "Package building:"
+	@echo "  docker-appimage   - Build AppImage in Docker"
+	@echo "  docker-flatpak    - Build Flatpak in Docker"
+	@echo ""
+	@echo "CI/CD:"
+	@echo "  docker-ci         - Run full CI pipeline"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  docker-clean      - Clean Docker resources"
+	@echo "  docker-clean-all  - Clean everything including images"

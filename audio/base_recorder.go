@@ -204,8 +204,14 @@ func (b *BaseRecorder) StartProcessTemplate(cmdName string, args []string, outpu
 		}
 	}
 
+	// Security: validate command and sanitize args before execution
+	if !b.config.IsCommandAllowed(cmdName) {
+		return fmt.Errorf("command not allowed: %s", cmdName)
+	}
+	safeArgs := config.SanitizeCommandArgs(args)
+
 	// Create command with context
-	b.cmd = exec.CommandContext(b.ctx, cmdName, args...)
+	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
 
 	// Set up output redirection and audio level monitoring
 	if b.useBuffer && outputPipe {
@@ -439,8 +445,14 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		}
 	}
 
+	// Security: validate command and sanitize args before execution
+	if !b.config.IsCommandAllowed(cmdName) {
+		return fmt.Errorf("command not allowed: %s", cmdName)
+	}
+	safeArgs := config.SanitizeCommandArgs(args)
+
 	// Create command with context
-	b.cmd = exec.CommandContext(b.ctx, cmdName, args...)
+	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
 
 	// Handle streaming mode
 	if b.streamingEnabled {

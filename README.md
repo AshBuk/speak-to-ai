@@ -1,15 +1,15 @@
-# 🎤 Speak-to-AI
+# Speak-to-AI
 
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
 
-## ✨ Features
+## Features
 
-- 🖥️ **Cross-platform support** for X11 and Wayland
-- 🔒 **Privacy-first**: no data sent to external servers
-- 📦 **Portable**: available as AppImage and Flatpak
+- **Cross-platform support** for X11 and Wayland
+- **Privacy-first**: no data sent to external servers
+- **Portable**: available as AppImage and Flatpak
 
 - **100% Offline** speech recognition using Whisper.cpp
 - **System tray integration** with recording status (🎤 / 💤)
@@ -20,7 +20,7 @@ A minimalist, privacy-focused desktop application that enables voice input (spee
 - **Visual notifications** for statuses
 
 
-## 🚀 Installation
+## ✦ Installation
 
 ### AppImage
 
@@ -40,7 +40,7 @@ flatpak install speak-to-ai-*.flatpak
 flatpak run io.github.ashbuk.speak-to-ai
 ```
 
-## 🔧 Configuration
+## Configuration
 
 Configuration file is automatically created at:
 - **AppImage**: `~/.config/speak-to-ai/config.yaml`
@@ -75,50 +75,27 @@ web_server:
   host: "localhost"
 ```
 
-## 🔨 Building from Source
+## Project Status
 
+Stable builds are available. The app works offline with local Whisper models, supports X11/Wayland, and provides clipboard/typing output modes. Planned improvements: streaming API integration, model download UX, and additional language models.
 
-_________________________________________________________________________________________________________
-## For developers:
+## Downloads
 
-### Prerequisites 
+Get prebuilt packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
 
-- Go 1.21+
-- Linux development libraries:
-  ```bash
-  # Ubuntu/Debian
-  sudo apt install libasound2-dev libx11-dev libxext-dev libxi-dev libxrandr-dev
-  
-  # Fedora
-  sudo dnf install alsa-lib-devel libX11-devel libXext-devel libXi-devel libXrandr-devel
-  ```
+- AppImage: portable binary for most Linux distributions
+- Flatpak: sandboxed install
 
-### Build Commands
+Follow the steps in the Installation section above.
 
-```bash
-# Clone repository
-git clone https://github.com/AshBuk/speak-to-ai.git
-cd speak-to-ai
+## For Developers
 
-# Build everything (recommended)
-make all
+Developer documentation has moved to:
 
-# Or build individual components
-make build           # Build executable only
-make build-systray   # Build with system tray support
-make whisper-libs    # Build whisper.cpp libraries only
-make test           # Run tests
+- DEVELOPMENT.md — development workflow and build instructions
+- docker/README.md — Docker-based development
 
-# Build packages
-make appimage       # Build AppImage
-make flatpak        # Build Flatpak (requires flatpak-builder)
-
-# Other commands
-make clean          # Clean build artifacts
-make help           # Show all available targets
-```
-
-## 🏗️ Architecture & Components
+## ✦ Architecture & Components
 
 - **Local Daemon**: Go application handling hotkeys, audio recording, and output
 - **Whisper Engine**: Uses `whisper.cpp` binary for speech recognition
@@ -129,7 +106,7 @@ make help           # Show all available targets
   - **Combined Mode**: Both typing and clipboard operations
 - **WebSocket Server**: Provides API for external applications (optional, port 8080)
 
-## 📋 System Requirements
+## System Requirements
 
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
@@ -137,11 +114,7 @@ make help           # Show all available targets
 - **Storage**: ~200MB for model and dependencies
 - **Memory**: ~500MB RAM during operation
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+## ✦ Acknowledgments
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
 - [getlantern/systray](https://github.com/getlantern/systray) for cross-platform system tray support
@@ -149,7 +122,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Sharing with the community with ❤️, for privacy-conscious Linux users**
+Sharing with the community for privacy-conscious Linux users
 
 ---
 
@@ -157,3 +130,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you find Speak-to-AI useful, please consider supporting development via [GitHub Sponsors](https://github.com/sponsors/AshBuk). Your support helps improve Wayland hotkeys, real-time streaming, and security hardening.
 
+✦ License
+MIT — see LICENSE.
