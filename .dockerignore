@@ -1,0 +1,45 @@
+# Build artifacts
+build/
+dist/
+tools/
+lib/
+sources/
+coverage.out
+*.test
+speak-to-ai
+
+# Go artifacts
+*.mod.sum
+vendor/
+
+# Docker artifacts
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.cursor/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+
+# Documentation
+README.md
+LICENSE
+DEVELOPMENT.md
+
+# Flatpak specific
+*.flatpak
+*.AppImage

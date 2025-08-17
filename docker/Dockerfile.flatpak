@@ -1,0 +1,63 @@
+# Container for building Flatpak packages
+FROM fedora:39
+
+# Install Flatpak build dependencies
+RUN dnf install -y \
+    # Flatpak tools
+    flatpak \
+    flatpak-builder \
+    # Go
+    golang \
+    # Build tools
+    git \
+    cmake \
+    gcc \
+    gcc-c++ \
+    make \
+    pkg-config \
+    # GUI dependencies for systray
+    libayatana-appindicator-gtk3-devel \
+    gtk3-devel \
+    glib2-devel \
+    # Audio and input tools
+    alsa-utils \
+    # Other tools
+    wget \
+    curl \
+    && dnf clean all
+
+# Add Flathub repository
+RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Install required Flatpak runtimes
+RUN flatpak install -y flathub org.freedesktop.Platform//23.08 \
+    org.freedesktop.Sdk//23.08
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p lib sources build
+
+# Build script for Flatpak
+COPY docker/scripts/build-flatpak.sh /usr/local/bin/build-flatpak.sh
+RUN chmod +x /usr/local/bin/build-flatpak.sh
+
+# Set environment variables for CGO
+ENV CGO_ENABLED=1
+ENV C_INCLUDE_PATH="/app/lib"
+ENV LIBRARY_PATH="/app/lib"
+ENV CGO_CFLAGS="-I/app/lib"
+ENV CGO_LDFLAGS="-L/app/lib -lwhisper -lggml-cpu -lggml"
+ENV LD_LIBRARY_PATH="/app/lib"
+ENV PKG_CONFIG_PATH="/app/lib"
+
+# Default command builds Flatpak
+CMD ["/usr/local/bin/build-flatpak.sh"]
