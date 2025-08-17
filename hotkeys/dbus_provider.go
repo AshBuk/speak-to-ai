@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/godbus/dbus/v5"
+	dbus "github.com/godbus/dbus/v5"
 )
 
 // DbusKeyboardProvider implements KeyboardEventProvider using D-Bus portal
