@@ -233,5 +233,3 @@ func TestFlatpakCompatibility(t *testing.T) {
 		}
 	})
 }
-
-
