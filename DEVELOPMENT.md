@@ -44,3 +44,31 @@ make clean          # clean artifacts
 - CI uses `golangci/golangci-lint-action@v6` for linting; whisper libs are built in the test job.
 
 
+### Example Configuration
+
+```yaml
+# General settings
+general:
+  debug: false
+  model_path: "~/.config/speak-to-ai/language-models/base.bin"
+  language: "auto"  # Auto-detect or specify "en", "ru", etc.
+
+
+# Audio settings
+audio:
+  device: "default"
+  sample_rate: 16000
+  recording_method: "arecord"  # Options: "arecord", "ffmpeg"
+
+# Output settings
+output:
+  default_mode: "active_window"  # Options: "clipboard", "active_window", "combined"
+  clipboard_tool: "auto"     # Options: "auto", "wl-copy", "xclip"
+  type_tool: "auto"          # Options: "auto", "xdotool"
+
+# WebSocket server settings (for future web integration)
+web_server:
+  enabled: false  # Enable for React web app integration
+  port: 8080
+  host: "localhost"
+```
