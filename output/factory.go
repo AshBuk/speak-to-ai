@@ -86,11 +86,11 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 
 	// Create appropriate outputter
 	switch f.config.Output.DefaultMode {
-	case "clipboard":
+	case config.OutputModeClipboard:
 		return NewClipboardOutputter(clipboardTool, f.config)
-	case "active_window":
+	case config.OutputModeActiveWindow:
 		return NewTypeOutputter(typeTool, f.config)
-	case "combined":
+	case config.OutputModeCombined:
 		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	default:
 		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
