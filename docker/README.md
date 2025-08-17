@@ -131,6 +131,13 @@ LD_LIBRARY_PATH=/app/lib
 PKG_CONFIG_PATH=/app/lib
 ```
 
+Additional:
+
+```bash
+# Pin whisper.cpp to a specific tag/commit for reproducible builds (optional but recommended in CI)
+WHISPER_CPP_REF=<git-ref>
+```
+
 ## Benefits
 
 1. **No System Dependencies**: No need to install GUI libraries on host

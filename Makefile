@@ -6,6 +6,9 @@ BINARY_NAME := speak-to-ai
 BUILD_DIR := build
 LIB_DIR := lib
 DIST_DIR := dist
+# Optional: set to a tag or commit hash to pin whisper.cpp version for reproducible builds
+# Example (CI recommended): make WHISPER_CPP_REF=v1.6.0
+WHISPER_CPP_REF ?=
 
 # CGO environment
 # These variables are necessary for CGO to find the whisper.cpp libraries.
@@ -70,6 +73,11 @@ $(LIB_DIR)/whisper.h:
 		git clone https://github.com/ggerganov/whisper.cpp.git; \
 	fi
 	cd $(BUILD_DIR)/whisper.cpp && \
+		if [ -n "$(WHISPER_CPP_REF)" ]; then \
+			echo "Checking out whisper.cpp ref $(WHISPER_CPP_REF)"; \
+			git fetch --tags; \
+			git checkout $(WHISPER_CPP_REF); \
+		fi; \
 		rm -rf build && \
 		cmake -B build && \
 		cmake --build build --config Release

@@ -26,7 +26,7 @@ func SetDefaultConfig(config *Config) {
 	config.Audio.MaxRecordingTime = 300 // 5 minutes max by default
 
 	// Output settings
-	config.Output.DefaultMode = "active_window"
+	config.Output.DefaultMode = OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto" // auto-detect
 	config.Output.TypeTool = "auto"      // auto-detect
 

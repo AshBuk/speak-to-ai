@@ -46,6 +46,17 @@ Configuration file is automatically created at:
 - **AppImage**: `~/.config/speak-to-ai/config.yaml`
 - **Flatpak**: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
 
+### Hotkeys in Flatpak
+
+- On GNOME/KDE, global hotkeys use the `org.freedesktop.portal.GlobalShortcuts` portal and work out of the box (no extra permissions needed).
+- On other desktop environments where the portal is not available, hotkeys may be limited by sandboxing. You can opt-in to input device access:
+
+```bash
+flatpak override --user --device=input io.github.ashbuk.speak-to-ai
+```
+
+Then restart the app. This is optional and only needed on DEs without GlobalShortcuts portal.
+
 ### Example Configuration
 
 ```yaml

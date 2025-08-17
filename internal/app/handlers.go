@@ -151,15 +151,15 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 	// Route the transcript according to configured output mode
 	if a.OutputManager != nil {
 		switch a.Config.Output.DefaultMode {
-		case "clipboard":
+		case config.OutputModeClipboard:
 			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
-		case "active_window":
+		case config.OutputModeActiveWindow:
 			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 			}
-		case "combined":
+		case config.OutputModeCombined:
 			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
