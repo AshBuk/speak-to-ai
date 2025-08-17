@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package main
@@ -8,8 +9,8 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys"
-	"github.com/AshBuk/speak-to-ai/output"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
+	"github.com/AshBuk/speak-to-ai/output"
 )
 
 // Platform-specific integration tests
@@ -26,7 +27,7 @@ func TestWaylandCompatibility(t *testing.T) {
 	t.Run("wayland_output_tools", func(t *testing.T) {
 		// Test that Wayland output tools are properly configured
 		factory := output.NewFactory(cfg)
-		
+
 		// Test clipboard on Wayland
 		_, err := factory.GetOutputter(output.EnvironmentWayland)
 		if err != nil {
@@ -40,7 +41,7 @@ func TestWaylandCompatibility(t *testing.T) {
 		// Test DBus hotkey provider
 		hotkeyConfig := hotkeys.NewConfigAdapter("altgr+comma")
 		provider := hotkeys.NewDbusKeyboardProvider(hotkeyConfig, hotkeys.EnvironmentWayland)
-		
+
 		if provider.IsSupported() {
 			t.Log("DBus GlobalShortcuts portal is available")
 		} else {
@@ -52,7 +53,7 @@ func TestWaylandCompatibility(t *testing.T) {
 		// Test environment detection logic
 		env := platform.DetectEnvironment()
 		t.Logf("Detected environment: %s", env)
-		
+
 		// Environment detection should not crash
 		if env == "" {
 			t.Error("Environment detection returned empty string")
@@ -72,7 +73,7 @@ func TestX11Compatibility(t *testing.T) {
 	t.Run("x11_output_tools", func(t *testing.T) {
 		// Test that X11 output tools are properly configured
 		factory := output.NewFactory(cfg)
-		
+
 		// Test clipboard on X11
 		_, err := factory.GetOutputter(output.EnvironmentX11)
 		if err != nil {
@@ -86,7 +87,7 @@ func TestX11Compatibility(t *testing.T) {
 		// Test evdev hotkey provider
 		hotkeyConfig := hotkeys.NewConfigAdapter("altgr+comma")
 		provider := hotkeys.NewEvdevKeyboardProvider(hotkeyConfig, hotkeys.EnvironmentX11)
-		
+
 		if provider.IsSupported() {
 			t.Log("Evdev input devices are available")
 		} else {
@@ -99,7 +100,7 @@ func TestCrossplatformToolFallbacks(t *testing.T) {
 	// Test that tool fallback logic works correctly
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-	
+
 	factory := output.NewFactory(cfg)
 
 	environments := []output.EnvironmentType{
@@ -149,7 +150,7 @@ func TestSecurityValidation(t *testing.T) {
 		"--flag",
 		"/path/to/file",
 	}
-	
+
 	sanitized := config.SanitizeCommandArgs(testArgs)
 	if len(sanitized) != len(testArgs) {
 		t.Log("Some arguments were filtered (expected for security)")
@@ -162,7 +163,7 @@ func TestSecurityValidation(t *testing.T) {
 		"arg|dangerous",
 		"../../../etc/passwd",
 	}
-	
+
 	sanitizedDangerous := config.SanitizeCommandArgs(dangerousArgs)
 	if len(sanitizedDangerous) > 0 {
 		t.Log("Some dangerous arguments were not filtered - review security policy")
@@ -174,7 +175,7 @@ func TestModelAvailability(t *testing.T) {
 	t.Run("default_model_path", func(t *testing.T) {
 		cfg := &config.Config{}
 		config.SetDefaultConfig(cfg)
-		
+
 		// Check if default model path exists
 		if _, err := os.Stat(cfg.General.ModelPath); err != nil {
 			t.Logf("Default model not found at %s (expected for fresh install)", cfg.General.ModelPath)
@@ -187,7 +188,7 @@ func TestModelAvailability(t *testing.T) {
 		// Test that the model download location is accessible
 		cfg := &config.Config{}
 		config.SetDefaultConfig(cfg)
-		
+
 		modelDir := "sources/language-models"
 		if info, err := os.Stat(modelDir); err != nil {
 			t.Logf("Model directory %s not found (expected for fresh repo)", modelDir)
@@ -205,7 +206,7 @@ func TestFlatpakCompatibility(t *testing.T) {
 		// Check if we're running in Flatpak environment
 		if os.Getenv("FLATPAK_ID") != "" {
 			t.Log("Running in Flatpak environment")
-			
+
 			// Test Flatpak-specific paths
 			flatpakConfigDir := os.Getenv("XDG_CONFIG_HOME")
 			if flatpakConfigDir == "" {
@@ -222,7 +223,7 @@ func TestFlatpakCompatibility(t *testing.T) {
 		// Test that sandboxed tools are available
 		// These would be built as modules in Flatpak
 		tools := []string{"arecord", "xdotool", "wl-copy", "wtype"}
-		
+
 		for _, tool := range tools {
 			t.Run(tool, func(t *testing.T) {
 				// In Flatpak, tools should be available in /app/bin
