@@ -1,5 +1,5 @@
 # Development environment with GUI dependencies
-FROM golang:1.23-bullseye
+FROM golang:1.24-bullseye
 
 # Install GUI and system dependencies for systray
 RUN apt-get update && apt-get install -y \
@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install golangci-lint
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
+# Install golangci-lint (optional in dev)
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.64.8
 
 # Set working directory
 WORKDIR /app

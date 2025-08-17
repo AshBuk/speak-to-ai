@@ -2,20 +2,17 @@
 
 This directory contains Docker infrastructure for the speak-to-ai project, providing isolated development and build environments.
 
-## Quick Start
+## Quick Start (no fluff)
 
 ```bash
-# Build Docker images
-make docker-build
-
-# Start development environment
+# Dev shell
 make docker-dev
 
-# Run linter
-make docker-lint
+# Lint (Docker)
+make lint
 
-# Run tests
-make docker-test
+# Tests (local)
+make test
 
 # Build packages
 make docker-appimage
@@ -30,10 +27,9 @@ make docker-flatpak
 - **Includes**: Go, golangci-lint, GUI libraries for systray
 - **Usage**: `make docker-dev`
 
-### `lint` - Linting Service  
-- **Image**: `docker/Dockerfile.lint`
-- **Purpose**: Lightweight linting and static analysis
-- **Usage**: `make docker-lint`
+### `lint` - Linting (Docker)
+- **Image**: `golang:1.24-alpine` (runtime installs golangci-lint)
+- **Usage**: `make lint`
 
 ### `test` - Testing Service
 - **Image**: `docker/Dockerfile.dev` (reused)
@@ -84,14 +80,11 @@ Services are organized into profiles for efficient resource usage:
 
 ### Development
 ```bash
-# Start development environment
 make docker-dev
-
-# Inside container:
+# Inside container
 source bash-scripts/dev-env.sh
 make build-systray
 make test
-golangci-lint run
 ```
 
 ### CI Pipeline

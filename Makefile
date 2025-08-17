@@ -1,7 +1,7 @@
-.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help docker-% docker-build docker-dev docker-lint docker-test docker-clean
+.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint docker-% docker-build docker-dev docker-lint docker-clean
 
 # Variables
-GO_VERSION := 1.22
+GO_VERSION := 1.24
 BINARY_NAME := speak-to-ai
 BUILD_DIR := build
 LIB_DIR := lib
@@ -22,6 +22,15 @@ export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 
 # Default target
 all: deps whisper-libs build
+# Format source code (local)
+fmt:
+	@echo "=== Formatting Go sources (gofmt -s -w) ==="
+	@files=$$(git ls-files '*.go'); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
+	@echo "Format completed"
+
+# Lint alias (Docker)
+lint: docker-lint
+
 
 # Help target
 help:
@@ -137,8 +146,8 @@ docker-build-dev:
 	docker compose build dev
 
 docker-build-lint:
-	@echo "=== Building lint Docker image ==="
-	docker compose build lint
+	@echo "=== Skipping build: using official golangci-lint image ==="
+	@true
 
 # Docker development environment
 docker-up:
@@ -164,14 +173,10 @@ docker-whisper:
 	@echo "=== Building whisper.cpp libraries in Docker ==="
 	docker compose --profile init up whisper-builder
 
-# Docker linting and testing
+# Docker linting
 docker-lint:
 	@echo "=== Running linter in Docker ==="
 	docker compose --profile lint run --rm lint
-
-docker-test:
-	@echo "=== Running tests in Docker ==="
-	docker compose --profile test run --rm test
 
 docker-fmt:
 	@echo "=== Running go fmt in Docker ==="
@@ -199,7 +204,7 @@ docker-ci:
 	@echo "=== Running full CI pipeline in Docker ==="
 	docker compose --profile init up whisper-builder
 	docker compose --profile ci run --rm lint
-	docker compose --profile ci run --rm test
+	$(MAKE) test
 	@echo "=== CI pipeline completed successfully ==="
 
 # Docker cleanup
@@ -241,7 +246,6 @@ docker-help:
 	@echo ""
 	@echo "Development commands:"
 	@echo "  docker-lint       - Run linter in Docker"
-	@echo "  docker-test       - Run tests in Docker"
 	@echo "  docker-fmt        - Run go fmt in Docker"
 	@echo "  docker-vet        - Run go vet in Docker"
 	@echo "  docker-shell      - Open shell in dev container"

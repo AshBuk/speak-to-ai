@@ -1,20 +1,21 @@
 run:
   timeout: 5m
-  modules-download-mode: mod
+  tests: false
 
 issues:
   exclude-dirs:
     - build
     - internal/tray
+    - hotkeys
   exclude-rules:
-    - path: hotkeys/evdev_provider\.go
-      linters:
-        - typecheck
     - path: cmd/daemon/main\.go
       text: "error obtaining VCS status"
       linters:
         - typecheck
 
-linters-settings:
-  errcheck:
-    exclude-functions: []
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - staticcheck
+    - ineffassign

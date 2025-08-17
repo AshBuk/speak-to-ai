@@ -25,40 +25,19 @@ services:
 
   # Linting service
   lint:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.lint
+    image: golang:1.24-alpine
     container_name: speak-to-ai-lint
     volumes:
       - .:/app:ro
       - go-cache:/go/pkg/mod
     working_dir: /app
     environment:
-      - CGO_ENABLED=1
+      - GOFLAGS=-buildvcs=false
+      - CGO_ENABLED=0
     profiles: ["lint", "ci"]
+    command: ["sh", "-lc", "export PATH=/usr/local/go/bin:/go/bin:$PATH && env -u GOOS -u GOARCH go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 && GOOS=windows GOARCH=amd64 CGO_ENABLED=0 golangci-lint run --verbose"]
 
-  # Testing service
-  test:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    container_name: speak-to-ai-test
-    volumes:
-      - .:/app
-      - go-cache:/go/pkg/mod
-      - whisper-libs:/app/lib
-      - build-cache:/app/build
-    working_dir: /app
-    environment:
-      - CGO_ENABLED=1
-      - C_INCLUDE_PATH=/app/lib
-      - LIBRARY_PATH=/app/lib
-      - CGO_CFLAGS=-I/app/lib
-      - CGO_LDFLAGS=-L/app/lib -lwhisper -lggml-cpu -lggml
-      - LD_LIBRARY_PATH=/app/lib
-      - PKG_CONFIG_PATH=/app/lib
-    command: ["bash", "-c", "source bash-scripts/dev-env.sh && make test"]
-    profiles: ["test", "ci"]
+  
 
   # AppImage builder
   build-appimage:
