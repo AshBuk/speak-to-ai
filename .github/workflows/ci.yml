@@ -6,6 +6,7 @@ on:
       - master
       - main
   pull_request:
+
 permissions:
   contents: read
 
@@ -15,6 +16,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.x'
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -31,11 +37,80 @@ jobs:
           go env -w GOPROXY=https://proxy.golang.org,direct
           go env -w GO111MODULE=on
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64.8
-          args: --timeout=5m
+      - name: Install build tools and systray deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git pkg-config \
+            libayatana-appindicator3-dev libgtk-3-dev libglib2.0-dev
+
+      - name: Format check (gofmt)
+        run: |
+          files=$(git ls-files '*.go')
+          if [ -n "$files" ]; then
+            fmt_out=$(echo "$files" | xargs -r gofmt -s -l)
+            if [ -n "$fmt_out" ]; then
+              echo "The following files are not gofmt'ed:" && echo "$fmt_out" && exit 1
+            fi
+          fi
+
+      - name: Build whisper.cpp libs
+        run: make whisper-libs
+
+      - name: Export CGO environment
+        run: |
+          echo "C_INCLUDE_PATH=$PWD/lib" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
+          echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "GOWORK=off" >> $GITHUB_ENV
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go build
+        run: make build
+
+      - name: Prepare modules for linter (vendor)
+        run: |
+          go mod download
+          go mod verify
+          go mod vendor
+          go list -deps ./... > /dev/null
+
+      - name: Prebuild go-whisper binding export data
+        run: |
+          go build -v github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+            sh -s -- -b $(go env GOPATH)/bin v1.64.8
+
+      - name: Diagnostics before golangci-lint
+        env:
+          GOFLAGS: -mod=vendor -tags=systray
+          CGO_ENABLED: 1
+          GOWORK: off
+        run: |
+          echo "=== go env ===" && go env
+          echo "=== go list -m all (filter yaml/dbus) ===" && go list -m all | grep -E "yaml|dbus" || true
+          echo "=== vendor tree (yaml/dbus) ===" && \
+            ls -la vendor/gopkg.in || true; \
+            ls -la vendor/gopkg.in/yaml.v2 || true; \
+            ls -la vendor/github.com/godbus || true; \
+            ls -la vendor/github.com/godbus/dbus || true; \
+            ls -la vendor/github.com/godbus/dbus/v5 || true
+
+      - name: Run golangci-lint (verbose)
+        env:
+          GOFLAGS: -mod=vendor -tags=systray
+          CGO_ENABLED: 1
+          GOWORK: off
+        run: |
+          golangci-lint version
+          golangci-lint run -v --build-tags=systray --timeout=5m
 
   test:
     runs-on: ubuntu-22.04
