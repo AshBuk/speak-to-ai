@@ -49,7 +49,11 @@ chmod +x speak-to-ai-*.AppImage
 Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
 ```bash
-flatpak install speak-to-ai-*.flatpak
+# Download the file, then:
+flatpak install --user io.github.ashbuk.speak-to-ai.flatpak
+# Grant input device permissions (recommended)
+flatpak override --user --device=input io.github.ashbuk.speak-to-ai
+# Run the application
 flatpak run io.github.ashbuk.speak-to-ai
 ```
 

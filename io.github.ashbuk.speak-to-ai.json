@@ -1,5 +1,6 @@
 {
     "app-id": "io.github.ashbuk.speak-to-ai",
+    "version": "0.1.0",
     "runtime": "org.freedesktop.Platform",
     "runtime-version": "23.08",
     "sdk": "org.freedesktop.Sdk",
