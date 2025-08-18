@@ -102,6 +102,9 @@
         {
             "name": "wl-clipboard",
             "buildsystem": "meson",
+            "config-opts": [
+                "-Dfishcompletiondir=/app/share/fish/completions"
+            ],
             "sources": [
                 {
                     "type": "archive",
