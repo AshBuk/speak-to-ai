@@ -12,7 +12,6 @@
         "--socket=x11",
         "--socket=wayland",
         "--socket=pulseaudio",
-        "--socket=pipewire",
         "--device=dri",
         "--filesystem=xdg-config/speak-to-ai:create",
         "--talk-name=org.freedesktop.Notifications",
@@ -62,7 +61,8 @@
             "config-opts": [
                 "--disable-alsaconf",
                 "--disable-xmlto",
-                "--disable-nls"
+                "--disable-nls",
+                "--with-udev-rules-dir=/app/share/udev/rules.d"
             ],
             "sources": [
                 {
@@ -88,8 +88,22 @@
             ]
         },
         {
+            "name": "wayland-protocols",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.36/downloads/wayland-protocols-1.36.tar.xz",
+                    "sha256": "71fd4de05e79f9a1ca559fac30c1f8365fa10346422f9fe795f74d77b9ef7e92"
+                }
+            ]
+        },
+        {
             "name": "wl-clipboard",
             "buildsystem": "meson",
+            "config-opts": [
+                "-Dfishcompletiondir=/app/share/fish/completions"
+            ],
             "sources": [
                 {
                     "type": "archive",
@@ -105,7 +119,7 @@
                 {
                     "type": "archive", 
                     "url": "https://github.com/atx/wtype/archive/v0.4.tar.gz",
-                    "sha256": "ef5efe553ce80a51362032a17b520c4e0d55c7e24df8d6bf45254c8b62d69e0a"
+                    "sha256": "da91786d828b6a6e29b884bc510473939eda052658ebef87d7bdeafa6a8746f9"
                 }
             ]
         },

@@ -249,7 +249,7 @@ jobs:
       run: |
         echo "Verifying manifest checksums are correct..."
         grep -q "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847" io.github.ashbuk.speak-to-ai.json && echo "✅ xdotool SHA256 correct" || echo "❌ xdotool SHA256 incorrect"
-        grep -q "bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38" io.github.ashbuk.speak-to-ai.json && echo "✅ ayatana-ido SHA256 correct" || echo "❌ ayatana-ido SHA256 incorrect"
+        grep -q "da91786d828b6a6e29b884bc510473939eda052658ebef87d7bdeafa6a8746f9" io.github.ashbuk.speak-to-ai.json && echo "✅ wtype SHA256 correct" || echo "❌ wtype SHA256 incorrect"
         
     - name: Build Flatpak package
       run: |
