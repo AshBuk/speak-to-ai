@@ -40,7 +40,9 @@ Get prebuilt packages on the [Releases](https://github.com/AshBuk/speak-to-ai/re
 Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
 ```bash
+# Download the file, then:
 chmod +x speak-to-ai-*.AppImage
+# Open:
 ./speak-to-ai-*.AppImage
 ```
 
@@ -51,8 +53,6 @@ Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak
 ```bash
 # Download the file, then:
 flatpak install --user io.github.ashbuk.speak-to-ai.flatpak
-# Grant input device permissions (recommended)
-flatpak override --user --device=input io.github.ashbuk.speak-to-ai
 # Run the application
 flatpak run io.github.ashbuk.speak-to-ai
 ```
