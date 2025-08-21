@@ -38,7 +38,8 @@
         "append-path": "/usr/lib/sdk/golang/bin",
         "env": {
             "GOBIN": "/app/bin",
-            "GOROOT": "/usr/lib/sdk/golang"
+            "GOROOT": "/usr/lib/sdk/golang",
+            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
         },
         "build-args": [
             "--share=network"
@@ -53,6 +54,41 @@
                     "type": "archive",
                     "url": "https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz",
                     "sha256": "67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd"
+                }
+            ]
+        },
+        {
+            "name": "libdbusmenu",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF",
+                "-DENABLE_VALA=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
+                    "branch": "master"
+                }
+            ]
+        },
+        {
+            "name": "ayatana-appindicator",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/ayatana-application-indicator.git",
+                    "branch": "master"
                 }
             ]
         },
