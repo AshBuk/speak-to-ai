@@ -2,47 +2,64 @@
 
 Concise commands for local development and CI-compatible builds.
 
-## One-time setup
+## Build Architecture
+
+```
+Makefile → bash-scripts/ → docker/ → CI/CD
+   ↑           ↑            ↑        ↑
+simple     orchestration containers production
+command    dependencies
+```
+
+### 1. Makefile - Simple Commands
+Entry point for developers with proper CGO environment setup:
+```bash
+make build          # Build binary with whisper.cpp integration
+make build-systray  # Build with system tray support
+make test           # Run tests with CGO dependencies
+make deps           # Download Go dependencies
+make whisper-libs   # Build whisper.cpp libraries into ./lib
+make appimage       # Build AppImage package
+make flatpak        # Build Flatpak package
+make clean          # Clean build artifacts
+make fmt            # Format Go code
+make lint           # Run linter (via Docker)
+```
+
+### 2. Bash Scripts - Orchestration & Dependencies  
+Handle complex build logic and dependency management:
+```bash
+bash-scripts/build-appimage.sh     # AppImage creation with linuxdeploy fallbacks
+bash-scripts/build-flatpak.sh      # Flatpak validation (CI builds actual package)
+bash-scripts/dev-env.sh           # CGO environment configuration
+bash-scripts/flatpak-runtime.sh   # Flatpak runtime wrapper
+```
+
+### 3. Docker - Containers
+Reproducible builds across different environments:
+```bash
+make docker-build      # Build all Docker images
+make docker-dev        # Enter development container
+make docker-appimage   # Build AppImage in container
+make docker-flatpak    # Build Flatpak in container
+make docker-lint       # Run linter in container
+make docker-clean      # Clean Docker resources
+```
+
+### 4. CI/CD - Production
+GitHub Actions handle complex builds, releases, and distribution.
+
+## Quick Start
 
 ```bash
-# Install base tools
+# One-time setup
 sudo apt-get update && sudo apt-get install -y build-essential cmake git pkg-config
+make deps whisper-libs
 
-# Go modules
-make deps
-
-# Build local whisper headers/libs into ./lib
-make whisper-libs
-```
-
-## Dev session
-
-```bash
-# 1) Configure CGO env to use ./lib (whisper headers/libs)
+# Development session
 source bash-scripts/dev-env.sh
-
-# 2) Build / test
-make build
-make test
+make build test
 ```
-
-Under the hood, `dev-env.sh` sets `CGO_ENABLED=1`, `CGO_CFLAGS`, `CGO_LDFLAGS`, `LD_LIBRARY_PATH` so the compiler and runtime can locate `whisper.h` and `libwhisper.so` (+ ggml).
-
-## Make targets
-
-```bash
-make build          # deps + whisper-libs + build binary
-make build-systray  # build with systray tag
-make test           # run tests (CGO env pre-configured)
-make fmt            # format code (gofmt)
-make lint           # run linter (Docker)
-make clean          # clean artifacts
-```
-
-## Notes
-- If whisper.cpp changes, re-run `make whisper-libs`.
-- CI uses `golangci/golangci-lint-action@v6` for linting; whisper libs are built in the test job.
-
 
 ### Example Configuration
 
