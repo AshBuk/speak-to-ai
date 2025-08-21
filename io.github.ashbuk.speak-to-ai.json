@@ -70,13 +70,12 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
-                    "branch": "master"
+                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git"
                 }
             ]
         },
         {
-            "name": "ayatana-appindicator",
+            "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
             "builddir": true,
             "config-opts": [
@@ -87,8 +86,7 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://github.com/AyatanaIndicators/ayatana-application-indicator.git",
-                    "branch": "master"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator.git"
                 }
             ]
         },
