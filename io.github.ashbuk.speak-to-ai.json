@@ -59,18 +59,17 @@
         },
         {
             "name": "libdbusmenu",
-            "buildsystem": "cmake-ninja",
-            "builddir": true,
+            "buildsystem": "autotools",
             "config-opts": [
-                "-DENABLE_TESTS=OFF",
-                "-DENABLE_GTK_DOC=OFF",
-                "-DENABLE_INTROSPECTION=OFF",
-                "-DENABLE_VALA=OFF"
+                "--disable-tests",
+                "--disable-gtk-doc",
+                "--disable-introspection",
+                "--disable-vala"
             ],
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git"
+                    "url": "https://git.launchpad.net/libdbusmenu"
                 }
             ]
         },
