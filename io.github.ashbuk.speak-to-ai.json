@@ -65,6 +65,7 @@
                 "--disable-tests",
                 "--disable-gtk-doc",
                 "--disable-introspection",
+                "--disable-vala",
                 "--disable-dumper",
                 "--with-gtk=3"
             ],
