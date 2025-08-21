@@ -85,7 +85,8 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator.git"
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator.git",
+                    "branch": "main"
                 }
             ]
         },
