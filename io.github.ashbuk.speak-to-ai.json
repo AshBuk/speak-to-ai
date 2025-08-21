@@ -57,13 +57,15 @@
             ]
         },
         {
-            "name": "libdbusmenu",
+            "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
             "config-opts": [
                 "--disable-tests",
-                "--disable-gtk-doc",
+                "--disable-gtk-doc", 
                 "--disable-introspection",
-                "--disable-vala"
+                "--disable-vala",
+                "--with-gtk=3",
+                "--disable-dumper"
             ],
             "sources": [
                 {
