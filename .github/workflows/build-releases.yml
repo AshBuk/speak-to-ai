@@ -128,6 +128,8 @@ jobs:
         echo "========================"
         
     - name: Build AppImage
+      env:
+        APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
         chmod +x bash-scripts/build-appimage.sh
         bash -x bash-scripts/build-appimage.sh
@@ -154,7 +156,7 @@ jobs:
       with:
         name: speak-to-ai-appimage-${{ matrix.os }}
         path: |
-          dist/*.AppImage
+          dist/speak-to-ai-*.AppImage
           !dist/tools/
         
   build-flatpak:
@@ -278,29 +280,32 @@ jobs:
           io.github.ashbuk.speak-to-ai.json
           
     - name: Create flatpak bundle
+      env:
+        APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
+        OUT_NAME="speak-to-ai-${APP_VERSION}.flatpak"
         flatpak build-bundle \
           --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
           dist/flatpak/repo \
-          dist/io.github.ashbuk.speak-to-ai.flatpak \
+          "dist/${OUT_NAME}" \
           io.github.ashbuk.speak-to-ai
           
     - name: Verify Flatpak
       run: |
         # Check flatpak file size and structure
         echo "Checking Flatpak artifact..."
-        ls -lh dist/io.github.ashbuk.speak-to-ai.flatpak
-        file dist/io.github.ashbuk.speak-to-ai.flatpak
+        ls -lh dist/*.flatpak
+        file dist/*.flatpak
         
         # Verify it's a valid flatpak bundle
-        if file dist/io.github.ashbuk.speak-to-ai.flatpak | grep -q "Squashfs filesystem"; then
+        if file dist/*.flatpak | grep -q "Squashfs filesystem"; then
           echo "✅ Valid Flatpak bundle structure"
         else
           echo "⚠️ Flatpak bundle validation failed"
         fi
         
         # Check file size (should be reasonable, not too small or huge)
-        SIZE=$(stat -c%s dist/io.github.ashbuk.speak-to-ai.flatpak)
+        SIZE=$(stat -c%s dist/*.flatpak | head -n1 | awk '{print $1}')
         if [ $SIZE -gt 10485760 ] && [ $SIZE -lt 524288000 ]; then  # 10MB < size < 500MB
           echo "✅ Flatpak size is reasonable: $(numfmt --to=iec $SIZE)"
         else
@@ -311,7 +316,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: speak-to-ai-flatpak-${{ matrix.os }}
-        path: dist/io.github.ashbuk.speak-to-ai.flatpak
+        path: dist/*.flatpak
         
   create-release:
     needs: [build-appimage, build-flatpak]
