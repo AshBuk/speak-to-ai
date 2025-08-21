@@ -248,6 +248,14 @@ jobs:
         echo "Pre-downloading Go modules..."
         go mod download
         go mod verify
+    
+    - name: Configure git for authenticated GitHub clones
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Configuring git to use token for https://github.com clones"
+        git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf "x-access-token:%s" "$GH_TOKEN" | base64 -w0)"
+        git config --global url."https://github.com/".insteadof "git@github.com:"
         
     - name: Verify manifest checksums
       run: |
