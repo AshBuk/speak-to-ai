@@ -34,11 +34,12 @@
         "--talk-name=org.freedesktop.portal.Desktop"
     ],
     "build-options": {
-        "append-path": "/usr/lib/sdk/golang/bin",
+        "append-path": "/app/bin:/usr/lib/sdk/golang/bin",
         "env": {
             "GOBIN": "/app/bin",
             "GOROOT": "/usr/lib/sdk/golang",
-            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
+            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig",
+            "ACLOCAL_PATH": "/app/share/aclocal:/usr/share/aclocal"
         },
         "build-args": [
             "--share=network"
@@ -53,7 +54,7 @@
                 {
                     "type": "archive",
                     "url": "https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz",
-                    "sha256": "12e517cac2b57a0121cda351570f1e63c5210620ee1fe3a7f84fdc64d0d3c469"
+                    "sha256": "67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd"
                 }
             ]
         },
@@ -63,6 +64,7 @@
             "config-opts": [
                 "--disable-tests",
                 "--disable-gtk-doc",
+                "--disable-introspection",
                 "--with-gtk=3"
             ],
             "sources": [
