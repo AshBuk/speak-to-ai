@@ -46,19 +46,30 @@
     },
     "modules": [
         {
+            "name": "intltool",
+            "buildsystem": "autotools",
+            "cleanup": ["/share/man", "/share/doc", "/share/gtk-doc"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz",
+                    "sha256": "12e517cac2b57a0121cda351570f1e63c5210620ee1fe3a7f84fdc64d0d3c469"
+                }
+            ]
+        },
+        {
             "name": "libdbusmenu-gtk3",
-            "buildsystem": "cmake-ninja",
-            "builddir": true,
+            "buildsystem": "autotools",
             "config-opts": [
-                "-DENABLE_TESTS=OFF",
-                "-DENABLE_GTK_DOC=OFF",
-                "-DENABLE_INTROSPECTION=OFF"
+                "--disable-tests",
+                "--disable-gtk-doc",
+                "--with-gtk=3"
             ],
             "sources": [
                 {
-                    "type": "git",
-                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
-                    "branch": "master"
+                    "type": "archive",
+                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
+                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
                 }
             ]
         },
