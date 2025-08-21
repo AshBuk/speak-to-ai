@@ -252,6 +252,13 @@ echo "Running linuxdeploy to prepare AppDir with dependencies..."
 if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     --appdir "${APP_NAME}.AppDir" \
     --executable "${APP_NAME}.AppDir/usr/bin/${APP_NAME}" \
+    --executable "${APP_NAME}.AppDir/usr/bin/xdotool" \
+    --executable "${APP_NAME}.AppDir/usr/bin/wtype" \
+    --executable "${APP_NAME}.AppDir/usr/bin/ydotool" \
+    --executable "${APP_NAME}.AppDir/usr/bin/wl-copy" \
+    --executable "${APP_NAME}.AppDir/usr/bin/xclip" \
+    --executable "${APP_NAME}.AppDir/usr/bin/arecord" \
+    --executable "${APP_NAME}.AppDir/usr/bin/notify-send" \
     --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
     --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
     --output appimage; then

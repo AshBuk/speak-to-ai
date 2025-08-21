@@ -91,9 +91,17 @@ func (a *App) initializeComponents(modelPath string) error {
 		a.Config.General.ModelPath = modelPath
 	}
 
-	// Get model path from config (no blocking download)
-	modelFilePath := a.Config.General.ModelPath
-	a.Logger.Info("Model path configured: %s", modelFilePath)
+	// Ensure model is available before initializing whisper engine
+	if err := a.ensureModelAvailable(); err != nil {
+		return fmt.Errorf("failed to ensure model availability: %w", err)
+	}
+
+	// Resolve concrete model file path (after ensure/download)
+	modelFilePath, err := a.ModelManager.GetModelPath()
+	if err != nil {
+		return fmt.Errorf("failed to resolve model path: %w", err)
+	}
+	a.Logger.Info("Model path resolved: %s", modelFilePath)
 
 	// Initialize audio recorder
 	a.Recorder, err = audio.GetRecorder(a.Config)

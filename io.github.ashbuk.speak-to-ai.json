@@ -46,18 +46,20 @@
     },
     "modules": [
         {
-            "name": "libdbusmenu-glib",
+            "name": "libdbusmenu-gtk3",
             "buildsystem": "cmake-ninja",
             "builddir": true,
             "config-opts": [
                 "-DENABLE_TESTS=OFF",
-                "-DENABLE_GTK_DOC=OFF"
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF",
+                "-DENABLE_VALGRIND=OFF"
             ],
             "sources": [
                 {
-                    "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/trunk/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libdbusmenu.git",
+                    "branch": "main"
                 }
             ]
         },
