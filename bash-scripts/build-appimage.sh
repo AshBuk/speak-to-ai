@@ -13,6 +13,18 @@ OUTPUT_DIR="dist"
 
 echo "=== Starting AppImage build for ${APP_NAME} v${APP_VERSION} ==="
 
+# Ensure whisper.cpp libraries are built and CGO is configured
+echo "Preparing whisper.cpp libraries..."
+# Try to source local dev env (non-fatal) to set CGO vars if available
+if [ -f "bash-scripts/dev-env.sh" ]; then
+    # shellcheck source=/dev/null
+    source bash-scripts/dev-env.sh || true
+fi
+# Build libs only if headers not present (idempotent)
+if [ ! -f "lib/whisper.h" ]; then
+    make whisper-libs
+fi
+
 # Create necessary directories
 echo "Creating AppDir structure..."
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin"
@@ -31,6 +43,20 @@ fi
 echo "Copying main application..."
 cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
+
+# Bundle required shared libraries for whisper.cpp runtime
+echo "Bundling whisper shared libraries..."
+LIB_DST="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
+mkdir -p "$LIB_DST"
+# Preserve symlinks (e.g., libwhisper.so -> libwhisper.so.1)
+if compgen -G "lib/libwhisper.so*" > /dev/null; then
+    cp -a lib/libwhisper.so* "$LIB_DST/" || true
+fi
+if compgen -G "lib/libggml*.so*" > /dev/null; then
+    cp -a lib/libggml*.so* "$LIB_DST/" || true
+fi
+echo "Bundled libs:"
+ls -la "$LIB_DST" || true
 
 # Copy core sources if they exist
 if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
