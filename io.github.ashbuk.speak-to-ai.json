@@ -69,7 +69,7 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://git.launchpad.net/libdbusmenu"
+                    "url": "https://salsa.debian.org/ayatana-team/libdbusmenu.git"
                 }
             ]
         },
