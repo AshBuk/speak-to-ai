@@ -73,6 +73,11 @@
         {
             "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
+            "build-options": {
+                "env": {
+                    "CFLAGS": "-Wno-error=deprecated-declarations"
+                }
+            },
             "post-install": [
                 "true"
             ],
