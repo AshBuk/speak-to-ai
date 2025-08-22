@@ -75,7 +75,8 @@
             "buildsystem": "autotools",
             "build-options": {
                 "env": {
-                    "CFLAGS": "-Wno-error=deprecated-declarations"
+                    "CFLAGS": "-Wno-error -Wno-error=deprecated-declarations",
+                    "CPPFLAGS": "-Wno-error -Wno-error=deprecated-declarations"
                 }
             },
             "post-install": [
