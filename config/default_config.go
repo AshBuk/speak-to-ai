@@ -4,16 +4,29 @@ package config
 func SetDefaultConfig(config *Config) {
 	// General settings
 	config.General.Debug = false
-	config.General.ModelPath = "sources/language-models/base.bin"
+	config.General.ModelPath = "sources/language-models/base.bin" // Backward compatibility
 	config.General.TempAudioPath = "/tmp"
 	config.General.ModelType = "base"
 	config.General.ModelPrecision = "f16"
 	config.General.Language = "auto" // Auto-detect language
 	config.General.LogFile = ""      // No log file by default
 
+	// Multiple models support
+	config.General.Models = []string{
+		"sources/language-models/base.bin",
+		"sources/language-models/small.bin",
+		"sources/language-models/tiny.bin",
+	}
+	config.General.ActiveModel = "sources/language-models/base.bin" // Default to base model
+
 	// Hotkey settings (defaults)
-	config.Hotkeys.StartRecording = "altgr+comma" // AltGr + , (comma) - Microsoft Copilot key
-	config.Hotkeys.StopRecording = "altgr+comma"  // Same combination for start/stop
+	config.Hotkeys.StartRecording = "altgr+comma"    // AltGr + , (comma) - Microsoft Copilot key
+	config.Hotkeys.StopRecording = "altgr+comma"     // Same combination for start/stop
+	config.Hotkeys.ToggleStreaming = "altgr+shift+s" // AltGr + Shift + S
+	config.Hotkeys.SwitchModel = "altgr+shift+m"     // AltGr + Shift + M
+	config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
+	config.Hotkeys.ShowConfig = "altgr+shift+c"      // AltGr + Shift + C
+	config.Hotkeys.ReloadConfig = "altgr+shift+r"    // AltGr + Shift + R
 
 	// Audio settings
 	config.Audio.Device = "default"
@@ -23,7 +36,11 @@ func SetDefaultConfig(config *Config) {
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0 // No expected duration by default
 	config.Audio.EnableStreaming = false
-	config.Audio.MaxRecordingTime = 300 // 5 minutes max by default
+	config.Audio.MaxRecordingTime = 300    // 5 minutes max by default
+	config.Audio.EnableVAD = false         // VAD disabled by default for compatibility
+	config.Audio.VADSensitivity = "medium" // Balanced VAD sensitivity
+	config.Audio.AutoStartStop = false     // Manual control by default
+	config.Audio.StreamingBufferMs = 1000  // 1 second streaming buffer
 
 	// Output settings
 	config.Output.DefaultMode = OutputModeActiveWindow

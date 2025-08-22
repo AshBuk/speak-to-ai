@@ -14,16 +14,18 @@ command    dependencies
 ### 1. Makefile - Simple Commands
 Entry point for developers with proper CGO environment setup:
 ```bash
-make build          # Build binary with whisper.cpp integration
-make build-systray  # Build with system tray support
-make test           # Run tests with CGO dependencies
-make deps           # Download Go dependencies
-make whisper-libs   # Build whisper.cpp libraries into ./lib
-make appimage       # Build AppImage package
-make flatpak        # Build Flatpak package
-make clean          # Clean build artifacts
-make fmt            # Format Go code
-make lint           # Run linter (via Docker)
+make build               # Build binary with whisper.cpp integration
+make build-systray       # Build with system tray support
+make test                # Run unit tests with CGO dependencies
+make test-integration    # Run integration tests (fast mode, no CGO)
+make test-integration-full # Run full integration tests (with audio/CGO)
+make deps                # Download Go dependencies
+make whisper-libs        # Build whisper.cpp libraries into ./lib
+make appimage            # Build AppImage package
+make flatpak             # Build Flatpak package
+make clean               # Clean build artifacts
+make fmt                 # Format Go code
+make lint                # Run linter (via Docker)
 ```
 
 ### 2. Bash Scripts - Orchestration & Dependencies  
@@ -49,6 +51,23 @@ make docker-clean      # Clean Docker resources
 ### 4. CI/CD - Production
 GitHub Actions handle complex builds, releases, and distribution.
 
+### Test Types & Current Coverage 
+
+| Test Type | Command | Duration | Dependencies | Use Case |
+|-----------|---------|----------|--------------|----------|
+| **Unit Tests** | `make test` | ~2-5s | CGO, whisper.cpp | Core functionality |
+| **Integration Fast** | `make test-integration` | ~0.3s | None | Development, CI |
+| **Integration Full** | `make test-integration-full` | ~5-15s | Audio devices, CGO | QA, Production |
+
+
+| Module | Coverage | Test Files | Integration Tests |
+|--------|----------|------------|-------------------|
+| **audio** | 57.1% | `*_test.go` | Audio devices, streaming |
+| **output** | 68.3% | `*_test.go` | Clipboard, typing tools |
+| **hotkeys** | 57.4% | `*_test.go` | D-Bus, evdev providers |
+| **config** | 84.9% | `*_test.go` | File loading, validation |
+| **internal/** | 87.5%+ | `*_test.go` | Platform detection |
+
 ## Quick Start
 
 ```bash
@@ -58,7 +77,7 @@ make deps whisper-libs
 
 # Development session
 source bash-scripts/dev-env.sh
-make build test
+make build test-integration
 ```
 
 ### Example Configuration

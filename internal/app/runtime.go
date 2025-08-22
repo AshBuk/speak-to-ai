@@ -58,10 +58,16 @@ func (a *App) Shutdown() error {
 		}
 	}
 
-	// Close whisper engine to free resources
+	// Close whisper engines to free resources
 	if a.WhisperEngine != nil {
 		if err := a.WhisperEngine.Close(); err != nil {
 			a.Logger.Warning("Failed to close whisper engine: %v", err)
+		}
+	}
+
+	if a.StreamingEngine != nil {
+		if err := a.StreamingEngine.Close(); err != nil {
+			a.Logger.Warning("Failed to close streaming engine: %v", err)
 		}
 	}
 

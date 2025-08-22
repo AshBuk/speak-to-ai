@@ -16,18 +16,59 @@ type VAD struct {
 	frameCounter    int
 }
 
-// NewVAD creates a new VAD instance
-func NewVAD() *VAD {
-	return &VAD{
-		threshold:       0.001, // Adaptive threshold
-		windowSize:      1024,  // 64ms at 16kHz
-		historySize:     10,    // Keep last 10 energy values
-		silenceDuration: 8,     // ~500ms of silence to end speech
-		speechDuration:  3,     // ~200ms of speech to start
-		energyHistory:   make([]float64, 0, 10),
-		currentState:    false,
-		frameCounter:    0,
+// VADSensitivity represents different VAD sensitivity levels
+type VADSensitivity string
+
+const (
+	VADLow    VADSensitivity = "low"
+	VADMedium VADSensitivity = "medium"
+	VADHigh   VADSensitivity = "high"
+)
+
+// ParseVADSensitivity converts string to VADSensitivity enum
+func ParseVADSensitivity(sensitivity string) VADSensitivity {
+	switch sensitivity {
+	case "low":
+		return VADLow
+	case "high":
+		return VADHigh
+	default:
+		return VADMedium
 	}
+}
+
+// NewVAD creates a new VAD instance with default sensitivity
+func NewVAD() *VAD {
+	return NewVADWithSensitivity(VADMedium)
+}
+
+// NewVADWithSensitivity creates a new VAD instance with specified sensitivity
+func NewVADWithSensitivity(sensitivity VADSensitivity) *VAD {
+	vad := &VAD{
+		windowSize:    1024, // 64ms at 16kHz
+		historySize:   10,   // Keep last 10 energy values
+		energyHistory: make([]float64, 0, 10),
+		currentState:  false,
+		frameCounter:  0,
+	}
+
+	// Configure sensitivity-specific parameters
+	switch sensitivity {
+	case VADLow:
+		vad.threshold = 0.002    // Higher threshold - less sensitive
+		vad.silenceDuration = 12 // ~750ms of silence to end speech
+		vad.speechDuration = 5   // ~300ms of speech to start
+	case VADHigh:
+		vad.threshold = 0.0005  // Lower threshold - more sensitive
+		vad.silenceDuration = 5 // ~300ms of silence to end speech
+		vad.speechDuration = 2  // ~125ms of speech to start
+	default: // VADMedium
+		vad.threshold = 0.001   // Balanced threshold
+		vad.silenceDuration = 8 // ~500ms of silence to end speech
+		vad.speechDuration = 3  // ~200ms of speech to start
+	}
+
+	return vad
 }
 
 // IsSpeechActive analyzes audio chunk and returns if speech is detected

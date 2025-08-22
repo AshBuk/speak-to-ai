@@ -7,6 +7,9 @@ import (
 	"sync"
 )
 
+// HotkeyAction represents a hotkey action callback
+type HotkeyAction func() error
+
 // HotkeyManager handles keyboard shortcuts
 type HotkeyManager struct {
 	config           HotkeyConfig
@@ -15,6 +18,7 @@ type HotkeyManager struct {
 	stopListening    chan bool
 	recordingStarted func() error
 	recordingStopped func() error
+	hotkeyActions    map[string]HotkeyAction // Additional hotkey actions
 	hotkeysMutex     sync.Mutex
 	environment      EnvironmentType
 	provider         KeyboardEventProvider
@@ -30,6 +34,7 @@ func NewHotkeyManager(config HotkeyConfig, environment EnvironmentType) *HotkeyM
 		stopListening: make(chan bool),
 		environment:   environment,
 		modifierState: make(map[string]bool),
+		hotkeyActions: make(map[string]HotkeyAction),
 	}
 
 	// Initialize the appropriate keyboard provider based on environment and privileges
@@ -47,6 +52,37 @@ func (h *HotkeyManager) RegisterCallbacks(
 ) {
 	h.recordingStarted = recordingStarted
 	h.recordingStopped = recordingStopped
+}
+
+// RegisterHotkeyAction registers a custom hotkey action
+func (h *HotkeyManager) RegisterHotkeyAction(hotkey string, action HotkeyAction) {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
+	h.hotkeyActions[hotkey] = action
+}
+
+// UnregisterHotkeyAction removes a hotkey action
+func (h *HotkeyManager) UnregisterHotkeyAction(hotkey string) {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
+	delete(h.hotkeyActions, hotkey)
+}
+
+// GetRegisteredHotkeys returns all registered hotkeys
+func (h *HotkeyManager) GetRegisteredHotkeys() []string {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
+
+	var hotkeys []string
+	// Add recording hotkeys
+	hotkeys = append(hotkeys, h.config.GetStartRecordingHotkey())
+
+	// Add custom hotkeys
+	for hotkey := range h.hotkeyActions {
+		hotkeys = append(hotkeys, hotkey)
+	}
+
+	return hotkeys
 }
 
 // ParseHotkey converts string representation to KeyCombination
@@ -111,6 +147,27 @@ func (h *HotkeyManager) Start() error {
 	if err != nil {
 		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
 	}
+
+	// Register additional hotkeys
+	h.hotkeysMutex.Lock()
+	for hotkey, action := range h.hotkeyActions {
+		hotkeyToRegister := hotkey
+		actionToExecute := action
+
+		err := h.provider.RegisterHotkey(hotkeyToRegister, func() error {
+			log.Printf("Custom hotkey detected: %s", hotkeyToRegister)
+			if err := actionToExecute(); err != nil {
+				log.Printf("Error executing hotkey action for %s: %v", hotkeyToRegister, err)
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			h.hotkeysMutex.Unlock()
+			return fmt.Errorf("failed to register hotkey %s: %w", hotkeyToRegister, err)
+		}
+	}
+	h.hotkeysMutex.Unlock()
 
 	// Start the provider
 	err = h.provider.Start()

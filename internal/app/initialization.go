@@ -86,6 +86,11 @@ func (a *App) initializeComponents(modelPath string) error {
 	// Initialize model manager
 	a.ModelManager = whisper.NewModelManager(a.Config)
 
+	// Initialize the model manager to load model information
+	if err := a.ModelManager.Initialize(); err != nil {
+		a.Logger.Warning("Failed to initialize model manager: %v", err)
+	}
+
 	// Override model path if provided via command line
 	if modelPath != "" {
 		a.Config.General.ModelPath = modelPath
@@ -113,6 +118,17 @@ func (a *App) initializeComponents(modelPath string) error {
 	a.WhisperEngine, err = whisper.NewWhisperEngine(a.Config, modelFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to initialize whisper engine: %w", err)
+	}
+
+	// Initialize streaming engine if enabled
+	if a.Config.Audio.EnableStreaming {
+		a.StreamingEngine, err = whisper.NewStreamingWhisperEngine(a.Config, modelFilePath)
+		if err != nil {
+			a.Logger.Warning("Failed to initialize streaming engine: %v", err)
+			a.StreamingEngine = nil
+		} else {
+			a.Logger.Info("Streaming transcription enabled")
+		}
 	}
 
 	// Initialize output manager based on environment
@@ -259,6 +275,23 @@ func (a *App) registerCallbacks() {
 		// Record stop and transcribe callback
 		a.handleStopRecordingAndTranscribe,
 	)
+
+	// Register additional hotkeys
+	if a.Config.Hotkeys.ToggleStreaming != "" {
+		a.HotkeyManager.RegisterHotkeyAction(a.Config.Hotkeys.ToggleStreaming, a.handleToggleStreaming)
+	}
+	if a.Config.Hotkeys.SwitchModel != "" {
+		a.HotkeyManager.RegisterHotkeyAction(a.Config.Hotkeys.SwitchModel, a.handleSwitchModel)
+	}
+	if a.Config.Hotkeys.ToggleVAD != "" {
+		a.HotkeyManager.RegisterHotkeyAction(a.Config.Hotkeys.ToggleVAD, a.handleToggleVAD)
+	}
+	if a.Config.Hotkeys.ShowConfig != "" {
+		a.HotkeyManager.RegisterHotkeyAction(a.Config.Hotkeys.ShowConfig, a.handleShowConfig)
+	}
+	if a.Config.Hotkeys.ReloadConfig != "" {
+		a.HotkeyManager.RegisterHotkeyAction(a.Config.Hotkeys.ReloadConfig, a.handleReloadConfig)
+	}
 }
 
 // ensureModelAvailable ensures the model is available, downloading if necessary
