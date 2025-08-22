@@ -62,7 +62,6 @@
             "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
             "config-opts": [
-                "--disable-tests",
                 "--disable-gtk-doc",
                 "--disable-introspection",
                 "--disable-vala",
@@ -73,8 +72,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
-                    "sha256": "b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a"
+                    "url": "https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/libdbusmenu/16.04.1+18.10.20180917-0ubuntu8/libdbusmenu_16.04.1+18.10.20180917.orig.tar.gz",
+                    "sha256": "9be5dc0f2657a9eb76b02d2cdfafa4490652c70bcdfafba5574c505afd2bbe79"
                 }
             ]
         },
