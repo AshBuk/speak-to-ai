@@ -66,7 +66,7 @@
                 {
                     "type": "archive",
                     "url": "https://download.gnome.org/sources/gnome-common/3.18/gnome-common-3.18.0.tar.xz",
-                    "sha256": "7e6f6a3e35f07f8b41c8331762ad1d8bc2c3db894dbbd14774b483a3b39a6f5e"
+                    "sha256": "22569e370ae755e04527b76328befc4c73b62bfd4a572499fde116b8318af8cf"
                 }
             ]
         },
