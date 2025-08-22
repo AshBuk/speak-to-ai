@@ -99,6 +99,21 @@
             ]
         },
         {
+            "name": "libayatana-indicator",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-indicator.git",
+                    "branch": "main"
+                }
+            ]
+        },
+        {
             "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
             "builddir": true,
