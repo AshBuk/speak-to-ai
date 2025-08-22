@@ -34,7 +34,7 @@
         "--talk-name=org.freedesktop.portal.Desktop"
     ],
     "build-options": {
-        "append-path": "/app/bin:/usr/lib/sdk/golang/bin",
+        "append-path": "/app/share/gnome-common:/app/bin:/usr/lib/sdk/golang/bin",
         "env": {
             "GOBIN": "/app/bin",
             "GOROOT": "/usr/lib/sdk/golang",
@@ -61,6 +61,10 @@
         {
             "name": "libdbusmenu-gtk3",
             "buildsystem": "autotools",
+            "no-autogen": true,
+            "post-install": [
+                "true"
+            ],
             "config-opts": [
                 "--disable-gtk-doc",
                 "--disable-introspection",
