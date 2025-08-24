@@ -28,7 +28,7 @@ all: deps whisper-libs build
 # Format source code (local)
 fmt:
 	@echo "=== Formatting Go sources (gofmt -s -w) ==="
-	@files=$$(git ls-files '*.go'); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
+	@files=$$(find . -name '*.go' -type f | grep -v vendor/); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
 	@echo "Format completed"
 
 # Lint alias (Docker)
@@ -38,15 +38,17 @@ lint: docker-lint
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  all          - Build everything (deps + whisper + binary)"
-	@echo "  build        - Build Go binary only"
-	@echo "  build-systray- Build with systray support"
-	@echo "  test         - Run tests"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  deps         - Download Go dependencies"
-	@echo "  whisper-libs - Build whisper.cpp libraries"
-	@echo "  appimage     - Build AppImage"
-	@echo "  flatpak      - Build Flatpak"
+	@echo "  all               - Build everything (deps + whisper + binary)"
+	@echo "  build             - Build Go binary only"
+	@echo "  build-systray     - Build with systray support"
+	@echo "  test              - Run unit tests"
+	@echo "  test-integration  - Run integration tests (fast mode)"
+	@echo "  test-integration-full - Run full integration tests (with CGO)"
+	@echo "  clean             - Clean build artifacts"
+	@echo "  deps              - Download Go dependencies"
+	@echo "  whisper-libs      - Build whisper.cpp libraries"
+	@echo "  appimage          - Build AppImage"
+	@echo "  flatpak           - Build Flatpak"
 	@echo ""
 	@echo "Docker targets:"
 	@echo "  docker-up    - Start development services (docker compose up -d)"
@@ -136,10 +138,16 @@ clean:
 # Test targets
 # -----------------------------------------------------------------------------
 
-.PHONY: test-integration
-test-integration: deps whisper-libs
-	@echo "=== Running integration tests (build tag: integration) ==="
-	go test -tags=integration ./tests/integration/...
+.PHONY: test-integration test-integration-full test-integration-fast
+test-integration: test-integration-fast
+
+test-integration-fast: deps
+	@echo "=== Running integration tests (fast mode, no CGO dependencies) ==="
+	go test -tags=integration ./tests/integration/... -short -v
+
+test-integration-full: deps whisper-libs
+	@echo "=== Running full integration tests (build tag: integration) ==="
+	go test -tags=integration ./tests/integration/... -v
 
 # Check if required tools are available
 check-tools:

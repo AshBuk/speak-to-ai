@@ -11,31 +11,42 @@ import (
 type Config struct {
 	// General settings
 	General struct {
-		Debug          bool   `yaml:"debug"`
-		ModelPath      string `yaml:"model_path"`
-		TempAudioPath  string `yaml:"temp_audio_path"`
-		ModelType      string `yaml:"model_type"`      // 'tiny', 'base', 'small', 'medium', 'large'
-		ModelPrecision string `yaml:"model_precision"` // 'f16', 'q4_0', etc.
-		Language       string `yaml:"language"`        // Language for recognition (en, ..., etc.)
-		LogFile        string `yaml:"log_file"`        // Path to log file
+		Debug          bool     `yaml:"debug"`
+		ModelPath      string   `yaml:"model_path"` // Primary model path (for backward compatibility)
+		TempAudioPath  string   `yaml:"temp_audio_path"`
+		ModelType      string   `yaml:"model_type"`      // 'tiny', 'base', 'small', 'medium', 'large'
+		ModelPrecision string   `yaml:"model_precision"` // 'f16', 'q4_0', etc.
+		Language       string   `yaml:"language"`        // Language for recognition (en, ..., etc.)
+		LogFile        string   `yaml:"log_file"`        // Path to log file
+		Models         []string `yaml:"models"`          // Array of available model paths
+		ActiveModel    string   `yaml:"active_model"`    // Currently active model
 	} `yaml:"general"`
 
 	// Hotkey settings
 	Hotkeys struct {
-		StartRecording string `yaml:"start_recording"`
-		StopRecording  string `yaml:"stop_recording"`
+		StartRecording  string `yaml:"start_recording"`
+		StopRecording   string `yaml:"stop_recording"`
+		ToggleStreaming string `yaml:"toggle_streaming"`
+		SwitchModel     string `yaml:"switch_model"`
+		ToggleVAD       string `yaml:"toggle_vad"`
+		ShowConfig      string `yaml:"show_config"`
+		ReloadConfig    string `yaml:"reload_config"`
 	} `yaml:"hotkeys"`
 
 	// Audio recording settings
 	Audio struct {
-		Device           string `yaml:"device"`
-		SampleRate       int    `yaml:"sample_rate"`
-		Format           string `yaml:"format"`
-		Channels         int    `yaml:"channels"`
-		RecordingMethod  string `yaml:"recording_method"`   // 'arecord', 'ffmpeg', 'go-native'
-		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds
-		EnableStreaming  bool   `yaml:"enable_streaming"`   // Whether to enable audio streaming
-		MaxRecordingTime int    `yaml:"max_recording_time"` // Max recording time in seconds
+		Device            string `yaml:"device"`
+		SampleRate        int    `yaml:"sample_rate"`
+		Format            string `yaml:"format"`
+		Channels          int    `yaml:"channels"`
+		RecordingMethod   string `yaml:"recording_method"`    // 'arecord', 'ffmpeg', 'go-native'
+		ExpectedDuration  int    `yaml:"expected_duration"`   // Expected recording duration in seconds
+		EnableStreaming   bool   `yaml:"enable_streaming"`    // Whether to enable streaming transcription
+		MaxRecordingTime  int    `yaml:"max_recording_time"`  // Max recording time in seconds
+		EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
+		VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
+		AutoStartStop     bool   `yaml:"auto_start_stop"`     // Auto start/stop recording based on VAD
+		StreamingBufferMs int    `yaml:"streaming_buffer_ms"` // Streaming buffer size in milliseconds
 	} `yaml:"audio"`
 
 	// Text output settings

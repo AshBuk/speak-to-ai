@@ -27,6 +27,7 @@ type ChunkProcessorConfig struct {
 	OnChunk         func([]float32) error // Called for every chunk
 	OnSpeech        func([]float32) error // Called only for speech chunks
 	UseVAD          bool                  // Enable voice activity detection
+	VADSensitivity  VADSensitivity        // VAD sensitivity level
 }
 
 // NewChunkProcessor creates a new chunk processor
@@ -43,7 +44,7 @@ func NewChunkProcessor(config ChunkProcessorConfig) *ChunkProcessor {
 	}
 
 	if config.UseVAD {
-		processor.vad = NewVAD()
+		processor.vad = NewVADWithSensitivity(config.VADSensitivity)
 	}
 
 	return processor

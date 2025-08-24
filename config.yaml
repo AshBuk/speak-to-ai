@@ -3,16 +3,28 @@
 # General settings
 general:
   debug: false
-  model_path: "sources/language-models/base.bin"
+  model_path: "sources/language-models/base.bin"  # Backward compatibility
   temp_audio_path: "/tmp"
   model_precision: "base"
   language: "auto"  # Auto-detect language, or specify "en", etc.
   log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable file logging)
+  
+  # Multiple models configuration
+  models:
+    - "sources/language-models/base.bin"     # Standard quality, balanced speed/accuracy
+    - "sources/language-models/small.bin"    # Better quality, slower
+    - "sources/language-models/tiny.bin"     # Fastest, lower quality
+  active_model: "sources/language-models/base.bin"  # Currently active model
 
 # Hotkey settings
 hotkeys:
-  start_recording: "altgr+comma"    # AltGr+, (comma) - Microsoft Copilot key
-  stop_recording: "altgr+comma"     # Same combination for start/stop
+  start_recording: "altgr+comma"       # AltGr+, (comma) - Microsoft Copilot key
+  stop_recording: "altgr+comma"        # Same combination for start/stop
+  toggle_streaming: "altgr+shift+s"    # Toggle streaming transcription
+  switch_model: "altgr+shift+m"        # Switch between models
+  toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
+  show_config: "altgr+shift+c"         # Open configuration file
+  reload_config: "altgr+shift+r"       # Reload configuration
 
 # Audio recording settings
 audio:
@@ -21,6 +33,11 @@ audio:
   format: "s16le"
   channels: 1
   recording_method: "arecord"  # Options: "arecord", "ffmpeg"
+  enable_vad: false           # Enable Voice Activity Detection
+  vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
+  auto_start_stop: false      # Auto start/stop recording based on VAD
+  enable_streaming: false     # Enable streaming transcription
+  streaming_buffer_ms: 1000   # Streaming buffer size in milliseconds
 
 # Text output settings
 output:

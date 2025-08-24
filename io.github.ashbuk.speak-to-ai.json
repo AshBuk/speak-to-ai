@@ -1,11 +1,11 @@
 {
     "app-id": "io.github.ashbuk.speak-to-ai",
-    "version": "0.1.0",
-    "runtime": "org.freedesktop.Platform",
-    "runtime-version": "23.08",
-    "sdk": "org.freedesktop.Sdk",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "45",
+    "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
-        "org.freedesktop.Sdk.Extension.golang"
+        "org.freedesktop.Sdk.Extension.golang",
+        "org.freedesktop.Sdk.Extension.vala"
     ],
     "command": "flatpak-runtime.sh",
     "finish-args": [
@@ -35,10 +35,13 @@
         "--talk-name=org.freedesktop.portal.Desktop"
     ],
     "build-options": {
-        "append-path": "/usr/lib/sdk/golang/bin",
+        "append-path": "/app/share/gnome-common:/app/bin:/usr/lib/sdk/golang/bin:/usr/lib/sdk/vala/bin",
         "env": {
             "GOBIN": "/app/bin",
-            "GOROOT": "/usr/lib/sdk/golang"
+            "GOROOT": "/usr/lib/sdk/golang",
+            "VALA": "/usr/lib/sdk/vala/bin/valac",
+            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig",
+            "ACLOCAL_PATH": "/app/share/aclocal:/usr/share/aclocal"
         },
         "build-args": [
             "--share=network"
@@ -48,11 +51,127 @@
         {
             "name": "intltool",
             "buildsystem": "autotools",
+            "cleanup": ["/share/man", "/share/doc", "/share/gtk-doc"],
             "sources": [
                 {
                     "type": "archive",
                     "url": "https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz",
                     "sha256": "67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd"
+                }
+            ]
+        },
+        {
+            "name": "gnome-common",
+            "buildsystem": "autotools",
+            "cleanup": ["/share/man", "/share/doc", "/share/gtk-doc"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://download.gnome.org/sources/gnome-common/3.18/gnome-common-3.18.0.tar.xz",
+                    "sha256": "22569e370ae755e04527b76328befc4c73b62bfd4a572499fde116b8318af8cf"
+                }
+            ]
+        },
+        {
+            "name": "libdbusmenu-gtk3",
+            "buildsystem": "autotools",
+            "build-options": {
+                "env": {
+                    "CFLAGS": "-Wno-error -Wno-error=deprecated-declarations",
+                    "CPPFLAGS": "-Wno-error -Wno-error=deprecated-declarations"
+                }
+            },
+            "post-install": [
+                "true"
+            ],
+            "config-opts": [
+                "--disable-gtk-doc",
+                "--disable-introspection",
+                "--disable-vala",
+                "--disable-valgrind",
+                "--disable-dumper",
+                "--with-gtk=3"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/libdbusmenu/16.04.1+18.10.20180917-0ubuntu8/libdbusmenu_16.04.1+18.10.20180917.orig.tar.gz",
+                    "sha256": "9be5dc0f2657a9eb76b02d2cdfafa4490652c70bcdfafba5574c505afd2bbe79"
+                }
+            ]
+        },
+        {
+            "name": "ayatana-ido",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/ayatana-ido.git",
+                    "tag": "0.9.3"
+                }
+            ]
+        },
+        {
+            "name": "libayatana-indicator",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-indicator.git",
+                    "branch": "main"
+                }
+            ]
+        },
+        {
+            "name": "libayatana-appindicator",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "post-extract": [
+                "sed -i 's/^\\s*add_subdirectory(\\s*docs\\s*)/## disabled docs by flatpak manifest/' CMakeLists.txt",
+                "sed -i 's/^\\s*add_subdirectory(\\s*doc\\s*)/## disabled docs by flatpak manifest/' CMakeLists.txt"
+            ],
+            "build-options": {
+                "env": {
+                    "LDFLAGS": "-L/app/lib",
+                    "LD_LIBRARY_PATH": "/app/lib:$LD_LIBRARY_PATH",
+                    "LIBRARY_PATH": "/app/lib:$LIBRARY_PATH",
+                    "CMAKE_LIBRARY_PATH": "/app/lib:$CMAKE_LIBRARY_PATH"
+                }
+            },
+            "config-opts": [
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF",
+                "-DENABLE_BINDINGS=OFF",
+                "-DENABLE_BINDINGS_MONO=OFF",
+                "-DGTK_DOC=OFF",
+                "-DWITH_GTK_DOC=OFF",
+                "-DENABLE_DOC=OFF",
+                "-DGTK_DOC_USE_LIBTOOL=OFF",
+                "-DCMAKE_EXE_LINKER_FLAGS=-L/app/lib",
+                "-DCMAKE_SHARED_LINKER_FLAGS=-L/app/lib",
+                "-DCMAKE_PREFIX_PATH=/app",
+                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDoc=ON",
+                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDOC=ON",
+                "-DBUILD_DOC=OFF",
+                "-DBUILD_DOCUMENTATION=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/libayatana-appindicator.git",
+                    "branch": "main"
                 }
             ]
         },
@@ -63,7 +182,8 @@
                 "--disable-alsaconf",
                 "--disable-xmlto",
                 "--disable-nls",
-                "--with-udev-rules-dir=/app/share/udev/rules.d"
+                "--with-udev-rules-dir=/app/share/udev/rules.d",
+                "--with-systemdsystemunitdir=/app/lib/systemd/system"
             ],
             "sources": [
                 {
@@ -132,16 +252,18 @@
                 "if [ ! -f sources/language-models/base.bin ]; then echo 'Downloading base model...'; mkdir -p sources/language-models; cd sources/language-models; wget -q https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -O base.bin || curl -L https://huggingface.co/ggml-org/whisper.cpp/resolve/main/ggml-base.bin -o base.bin; cd ../..; fi",
                 "# Enable Go SDK and build with Makefile",
                 ". /usr/lib/sdk/golang/enable.sh; export GOPROXY=https://proxy.golang.org,direct; export GOSUMDB=sum.golang.org",
-                ". /usr/lib/sdk/golang/enable.sh; make all",
+                ". /usr/lib/sdk/golang/enable.sh; make build-systray",
                 "# Install binaries",
                 "install -Dm755 speak-to-ai /app/bin/speak-to-ai",
                 "install -Dm755 bash-scripts/flatpak-runtime.sh /app/bin/flatpak-runtime.sh",
-                "# Install whisper.cpp binary from our build",
-                "if [ -f build/whisper.cpp/build/bin/whisper-cli ]; then install -Dm755 build/whisper.cpp/build/bin/whisper-cli /app/bin/whisper; fi",
-                "if [ -f build/whisper.cpp/build/bin/quantize ]; then install -Dm755 build/whisper.cpp/build/bin/quantize /app/bin/quantize; fi",
+                "# Install whisper.cpp binaries from sources/core",
+                "if [ -f sources/core/whisper ]; then install -Dm755 sources/core/whisper /app/bin/whisper; fi",
+                "if [ -f sources/core/quantize ]; then install -Dm755 sources/core/quantize /app/bin/quantize; fi",
                 "# Install whisper libraries",
                 "# Install whisper and ggml shared libraries (cover all variants)",
                 "for f in lib/libwhisper.so* lib/libggml*.so*; do if [ -f \"$f\" ]; then install -Dm755 \"$f\" \"/app/lib/$(basename \"$f\")\"; fi; done",
+                "# Create proper symlink chain for libwhisper to avoid ldconfig warnings",
+                "if ls /app/lib/libwhisper.so.*.* >/dev/null 2>&1; then real=$(ls /app/lib/libwhisper.so.*.* | sort -V | tail -n1); rm -f /app/lib/libwhisper.so.1 /app/lib/libwhisper.so; ln -s \"$(basename \"$real\")\" /app/lib/libwhisper.so.1; ln -s libwhisper.so.1 /app/lib/libwhisper.so; fi",
                 "# Install configuration and resources",
                 "install -Dm644 config.yaml /app/share/speak-to-ai/config.yaml",
                 "install -Dm644 sources/language-models/base.bin /app/share/speak-to-ai/models/base.bin",

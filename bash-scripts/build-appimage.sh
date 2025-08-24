@@ -7,7 +7,8 @@ set -x  # Show commands being executed
 
 # Configuration
 APP_NAME="speak-to-ai"
-APP_VERSION="0.2.5"
+# Prefer explicit env var, then CI tag (GITHUB_REF_NAME), then latest git tag, else date
+APP_VERSION="${APP_VERSION:-${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0 2>/dev/null || date +%Y%m%d)}}"
 ARCH="x86_64"
 OUTPUT_DIR="dist"
 
@@ -36,9 +37,8 @@ mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
 mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
 
 echo "Building ${APP_NAME} with systray support..."
-if [ ! -f "${APP_NAME}" ]; then
-    go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
-fi
+# Always rebuild to ensure correct tags and versioned metadata
+go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
 
 echo "Copying main application..."
 cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
@@ -252,6 +252,13 @@ echo "Running linuxdeploy to prepare AppDir with dependencies..."
 if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     --appdir "${APP_NAME}.AppDir" \
     --executable "${APP_NAME}.AppDir/usr/bin/${APP_NAME}" \
+    --executable "${APP_NAME}.AppDir/usr/bin/xdotool" \
+    --executable "${APP_NAME}.AppDir/usr/bin/wtype" \
+    --executable "${APP_NAME}.AppDir/usr/bin/ydotool" \
+    --executable "${APP_NAME}.AppDir/usr/bin/wl-copy" \
+    --executable "${APP_NAME}.AppDir/usr/bin/xclip" \
+    --executable "${APP_NAME}.AppDir/usr/bin/arecord" \
+    --executable "${APP_NAME}.AppDir/usr/bin/notify-send" \
     --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
     --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
     --output appimage; then
@@ -261,8 +268,11 @@ if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     
     if [ -n "$APPIMAGE_FILE" ]; then
         chmod +x "$APPIMAGE_FILE"
-        echo "AppImage created successfully with linuxdeploy: $APPIMAGE_FILE"
-        ls -lh "$APPIMAGE_FILE"
+        # Rename to include version for clarity and distribution (unified naming)
+        TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+        mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+        echo "AppImage created successfully with linuxdeploy: $TARGET_NAME"
+        ls -lh "$TARGET_NAME"
         echo "=== AppImage build completed successfully! ==="
         exit 0
     else
@@ -279,8 +289,10 @@ if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-
     
     if [ -n "$APPIMAGE_FILE" ]; then
         chmod +x "$APPIMAGE_FILE"
-        echo "AppImage created successfully: $APPIMAGE_FILE"
-        ls -lh "$APPIMAGE_FILE"
+        TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+        mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+        echo "AppImage created successfully: $TARGET_NAME"
+        ls -lh "$TARGET_NAME"
         echo "=== AppImage build completed successfully! ==="
         exit 0
     else
@@ -304,8 +316,10 @@ else
         
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            echo "AppImage created successfully: $APPIMAGE_FILE"
-            ls -lh "$APPIMAGE_FILE"
+            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+            echo "AppImage created successfully: $TARGET_NAME"
+            ls -lh "$TARGET_NAME"
             echo "=== AppImage build completed successfully! ==="
             exit 0
         else

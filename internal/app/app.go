@@ -27,6 +27,7 @@ type App struct {
 	ModelManager    *whisper.ModelManager
 	Recorder        audio.AudioRecorder
 	WhisperEngine   *whisper.WhisperEngine
+	StreamingEngine *whisper.StreamingWhisperEngine
 	OutputManager   output.Outputter
 	HotkeyManager   *hotkeys.HotkeyManager
 	WebSocketServer *websocket.WebSocketServer

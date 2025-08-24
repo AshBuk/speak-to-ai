@@ -128,6 +128,8 @@ jobs:
         echo "========================"
         
     - name: Build AppImage
+      env:
+        APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
         chmod +x bash-scripts/build-appimage.sh
         bash -x bash-scripts/build-appimage.sh
@@ -225,8 +227,9 @@ jobs:
           valac
         # Use user remote instead of system remote
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak install --user -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+        flatpak install --user -y flathub org.gnome.Platform//45 org.gnome.Sdk//45
         flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.vala//23.08
         
     - name: Download Whisper model if not present
       run: |
@@ -246,6 +249,14 @@ jobs:
         echo "Pre-downloading Go modules..."
         go mod download
         go mod verify
+    
+    - name: Configure git for authenticated GitHub clones
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Configuring git to use token for https://github.com clones"
+        git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf "x-access-token:%s" "$GH_TOKEN" | base64 -w0)"
+        git config --global url."https://github.com/".insteadof "git@github.com:"
         
     - name: Verify manifest checksums
       run: |
@@ -278,29 +289,32 @@ jobs:
           io.github.ashbuk.speak-to-ai.json
           
     - name: Create flatpak bundle
+      env:
+        APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
+        OUT_NAME="speak-to-ai-${APP_VERSION}.flatpak"
         flatpak build-bundle \
           --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
           dist/flatpak/repo \
-          dist/io.github.ashbuk.speak-to-ai.flatpak \
+          "dist/${OUT_NAME}" \
           io.github.ashbuk.speak-to-ai
           
     - name: Verify Flatpak
       run: |
         # Check flatpak file size and structure
         echo "Checking Flatpak artifact..."
-        ls -lh dist/io.github.ashbuk.speak-to-ai.flatpak
-        file dist/io.github.ashbuk.speak-to-ai.flatpak
+        ls -lh dist/*.flatpak
+        file dist/*.flatpak
         
         # Verify it's a valid flatpak bundle
-        if file dist/io.github.ashbuk.speak-to-ai.flatpak | grep -q "Squashfs filesystem"; then
+        if file dist/*.flatpak | grep -q "Squashfs filesystem"; then
           echo "✅ Valid Flatpak bundle structure"
         else
           echo "⚠️ Flatpak bundle validation failed"
         fi
         
         # Check file size (should be reasonable, not too small or huge)
-        SIZE=$(stat -c%s dist/io.github.ashbuk.speak-to-ai.flatpak)
+        SIZE=$(stat -c%s dist/*.flatpak | head -n1 | awk '{print $1}')
         if [ $SIZE -gt 10485760 ] && [ $SIZE -lt 524288000 ]; then  # 10MB < size < 500MB
           echo "✅ Flatpak size is reasonable: $(numfmt --to=iec $SIZE)"
         else
@@ -311,7 +325,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: speak-to-ai-flatpak-${{ matrix.os }}
-        path: dist/io.github.ashbuk.speak-to-ai.flatpak
+        path: dist/*.flatpak
         
   create-release:
     needs: [build-appimage, build-flatpak]
