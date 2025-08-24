@@ -140,7 +140,9 @@
             "config-opts": [
                 "-DENABLE_TESTS=OFF",
                 "-DENABLE_GTK_DOC=OFF",
-                "-DENABLE_INTROSPECTION=OFF"
+                "-DENABLE_INTROSPECTION=OFF",
+                "-DENABLE_BINDINGS=OFF",
+                "-DENABLE_BINDINGS_MONO=OFF"
             ],
             "sources": [
                 {
