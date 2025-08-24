@@ -140,7 +140,10 @@
             "build-options": {
                 "env": {
                     "LDFLAGS": "-L/app/lib",
-                    "LD_LIBRARY_PATH": "/app/lib:$LD_LIBRARY_PATH"
+                    "LD_LIBRARY_PATH": "/app/lib:$LD_LIBRARY_PATH",
+                    "LIBRARY_PATH": "/app/lib:$LIBRARY_PATH",
+                    "CMAKE_LIBRARY_PATH": "/app/lib:$CMAKE_LIBRARY_PATH",
+                    "PKG_CONFIG_LIBDIR": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
                 }
             },
             "config-opts": [
@@ -157,7 +160,9 @@
                 "-DCMAKE_SHARED_LINKER_FLAGS=-L/app/lib",
                 "-DCMAKE_PREFIX_PATH=/app",
                 "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDoc=ON",
-                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDOC=ON"
+                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDOC=ON",
+                "-DBUILD_DOC=OFF",
+                "-DBUILD_DOCUMENTATION=OFF"
             ],
             "sources": [
                 {
