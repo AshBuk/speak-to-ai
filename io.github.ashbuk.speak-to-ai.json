@@ -182,7 +182,8 @@
                 "--disable-alsaconf",
                 "--disable-xmlto",
                 "--disable-nls",
-                "--with-udev-rules-dir=/app/share/udev/rules.d"
+                "--with-udev-rules-dir=/app/share/udev/rules.d",
+                "--with-systemdsystemunitdir=/app/lib/systemd/system"
             ],
             "sources": [
                 {
