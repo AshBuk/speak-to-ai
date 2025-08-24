@@ -1,8 +1,8 @@
 {
     "app-id": "io.github.ashbuk.speak-to-ai",
-    "runtime": "org.freedesktop.Platform",
-    "runtime-version": "23.08",
-    "sdk": "org.freedesktop.Sdk",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "45",
+    "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.golang",
         "org.freedesktop.Sdk.Extension.vala"
@@ -137,13 +137,16 @@
             "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
             "builddir": true,
+            "post-extract": [
+                "sed -i 's/^\\s*add_subdirectory(\\s*docs\\s*)/## disabled docs by flatpak manifest/' CMakeLists.txt",
+                "sed -i 's/^\\s*add_subdirectory(\\s*doc\\s*)/## disabled docs by flatpak manifest/' CMakeLists.txt"
+            ],
             "build-options": {
                 "env": {
                     "LDFLAGS": "-L/app/lib",
                     "LD_LIBRARY_PATH": "/app/lib:$LD_LIBRARY_PATH",
                     "LIBRARY_PATH": "/app/lib:$LIBRARY_PATH",
-                    "CMAKE_LIBRARY_PATH": "/app/lib:$CMAKE_LIBRARY_PATH",
-                    "PKG_CONFIG_LIBDIR": "/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
+                    "CMAKE_LIBRARY_PATH": "/app/lib:$CMAKE_LIBRARY_PATH"
                 }
             },
             "config-opts": [
