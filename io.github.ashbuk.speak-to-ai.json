@@ -137,12 +137,22 @@
             "name": "libayatana-appindicator",
             "buildsystem": "cmake-ninja",
             "builddir": true,
+            "build-options": {
+                "env": {
+                    "LDFLAGS": "-L/app/lib",
+                    "LD_LIBRARY_PATH": "/app/lib:$LD_LIBRARY_PATH"
+                }
+            },
             "config-opts": [
                 "-DENABLE_TESTS=OFF",
                 "-DENABLE_GTK_DOC=OFF",
                 "-DENABLE_INTROSPECTION=OFF",
                 "-DENABLE_BINDINGS=OFF",
-                "-DENABLE_BINDINGS_MONO=OFF"
+                "-DENABLE_BINDINGS_MONO=OFF",
+                "-DGTK_DOC=OFF",
+                "-DWITH_GTK_DOC=OFF",
+                "-DENABLE_DOC=OFF",
+                "-DGTK_DOC_USE_LIBTOOL=OFF"
             ],
             "sources": [
                 {
