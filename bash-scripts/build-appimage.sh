@@ -289,8 +289,10 @@ if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-
     
     if [ -n "$APPIMAGE_FILE" ]; then
         chmod +x "$APPIMAGE_FILE"
-        echo "AppImage created successfully: $APPIMAGE_FILE"
-        ls -lh "$APPIMAGE_FILE"
+        TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+        mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+        echo "AppImage created successfully: $TARGET_NAME"
+        ls -lh "$TARGET_NAME"
         echo "=== AppImage build completed successfully! ==="
         exit 0
     else
@@ -314,8 +316,10 @@ else
         
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            echo "AppImage created successfully: $APPIMAGE_FILE"
-            ls -lh "$APPIMAGE_FILE"
+            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+            echo "AppImage created successfully: $TARGET_NAME"
+            ls -lh "$TARGET_NAME"
             echo "=== AppImage build completed successfully! ==="
             exit 0
         else

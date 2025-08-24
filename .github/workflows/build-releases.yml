@@ -156,7 +156,7 @@ jobs:
       with:
         name: speak-to-ai-appimage-${{ matrix.os }}
         path: |
-          dist/speak-to-ai-*.AppImage
+          dist/*.AppImage
           !dist/tools/
         
   build-flatpak:
