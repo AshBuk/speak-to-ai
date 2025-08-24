@@ -152,7 +152,12 @@
                 "-DGTK_DOC=OFF",
                 "-DWITH_GTK_DOC=OFF",
                 "-DENABLE_DOC=OFF",
-                "-DGTK_DOC_USE_LIBTOOL=OFF"
+                "-DGTK_DOC_USE_LIBTOOL=OFF",
+                "-DCMAKE_EXE_LINKER_FLAGS=-L/app/lib",
+                "-DCMAKE_SHARED_LINKER_FLAGS=-L/app/lib",
+                "-DCMAKE_PREFIX_PATH=/app",
+                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDoc=ON",
+                "-DCMAKE_DISABLE_FIND_PACKAGE_GTKDOC=ON"
             ],
             "sources": [
                 {
