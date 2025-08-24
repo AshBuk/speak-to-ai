@@ -99,6 +99,24 @@
             ]
         },
         {
+            "name": "ayatana-ido",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_GTK_DOC=OFF",
+                "-DENABLE_INTROSPECTION=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/AyatanaIndicators/ayatana-ido.git",
+                    "tag": "0.9.3"
+                }
+            ]
+        },
+        {
             "name": "libayatana-indicator",
             "buildsystem": "cmake-ninja",
             "builddir": true,
