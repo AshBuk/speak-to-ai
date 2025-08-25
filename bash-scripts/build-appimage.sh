@@ -264,6 +264,14 @@ if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
     chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
 fi
 
+# Optionally download linuxdeploy GTK plugin to help capture GTK/AppIndicator stacks
+if [ ! -f "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" ]; then
+    echo "Downloading linuxdeploy-plugin-gtk..."
+    wget -q "https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-${ARCH}.AppImage" \
+        -O "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" || true
+    chmod +x "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" 2>/dev/null || true
+fi
+
 # Verify AppDir setup
 echo "Verifying AppDir structure..."
 echo "Root files:"
@@ -281,6 +289,23 @@ export VERSION="${APP_VERSION}"
 
 echo "Running linuxdeploy to prepare AppDir with dependencies..."
 
+# Force-bundle libs that are often dlopened at runtime (linuxdeploy may miss them)
+LIB_ARGS=""
+for lib in \
+  libayatana-appindicator3.so \
+  libayatana-indicator3.so \
+  libdbusmenu-gtk3.so \
+  libdbusmenu-glib.so; do
+  for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+    cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1)
+    if [ -n "$cand" ]; then
+      echo "Will bundle library: $cand"
+      LIB_ARGS="$LIB_ARGS --library $cand"
+      break
+    fi
+  done
+done
+
 # Use linuxdeploy to automatically copy libraries and dependencies
 if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     --appdir "${APP_NAME}.AppDir" \
@@ -295,6 +320,7 @@ if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     ${LIB_ARGS} \
     --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
     --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
+    --plugin gtk \
     --output appimage; then
     
     # Find the AppImage that was created
