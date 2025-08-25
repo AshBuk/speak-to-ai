@@ -307,16 +307,17 @@ func (m *ModelManager) createModelInfo(modelPath string) *ModelInfo {
 	}
 
 	// Determine model type from filename
-	modelType := "base" // default
-	if contains(name, "tiny") {
+	var modelType string
+	switch {
+	case contains(name, "tiny"):
 		modelType = "tiny"
-	} else if contains(name, "small") {
+	case contains(name, "small"):
 		modelType = "small"
-	} else if contains(name, "medium") {
+	case contains(name, "medium"):
 		modelType = "medium"
-	} else if contains(name, "large") {
+	case contains(name, "large"):
 		modelType = "large"
-	} else if contains(name, "base") {
+	default:
 		modelType = "base"
 	}
 
