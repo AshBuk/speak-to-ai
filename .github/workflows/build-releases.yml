@@ -68,6 +68,11 @@ jobs:
           libxcursor-dev \
           libxinerama-dev \
           libayatana-appindicator3-dev \
+          libayatana-appindicator3-1 \
+          libayatana-indicator3-7 \
+          libayatana-ido3-0.4-0 \
+          libdbusmenu-gtk3-4 \
+          libdbusmenu-glib4 \
           libgtk-3-dev \
           libglib2.0-dev \
           libdbus-1-dev \

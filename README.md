@@ -1,4 +1,10 @@
-# Speak-to-AI
+<div align="center">
+
+# <img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="32" height="32" alt="Speak to AI"/> Speak to AI
+
+> \*\*Native Linux voice-to-text app
+
+</div>
 
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

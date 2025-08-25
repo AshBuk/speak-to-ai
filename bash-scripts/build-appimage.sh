@@ -58,6 +58,39 @@ fi
 echo "Bundled libs:"
 ls -la "$LIB_DST" || true
 
+# Bundle system tray related libraries explicitly (for AppImage runtime)
+echo "Bundling system tray libraries..."
+LIB_ARGS=""
+find_syslib() {
+    local name="$1"
+    for p in \
+        /usr/lib/x86_64-linux-gnu \
+        /lib/x86_64-linux-gnu \
+        /usr/lib64 \
+        /usr/lib; do
+        if compgen -G "${p}/${name}" > /dev/null; then
+            echo "${p}/${name}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+add_lib() {
+    local pattern="$1"
+    local found
+    found=$(find_syslib "$pattern") || { echo "Warning: not found: $pattern"; return 0; }
+    echo "Including $(basename "$found") from $(dirname "$found")"
+    cp -a "$found" "$LIB_DST/" || true
+    LIB_ARGS+=" --library \"$found\""
+}
+
+# Primary tray libs (exact soversion names typical on Ubuntu)
+add_lib "libayatana-appindicator3.so*"
+add_lib "libayatana-indicator3.so*"
+add_lib "libdbusmenu-gtk3.so*"
+add_lib "libdbusmenu-glib.so*"
+
 # Copy core sources if they exist
 if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
     echo "Copying whisper binaries..."
@@ -259,6 +292,7 @@ if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
     --executable "${APP_NAME}.AppDir/usr/bin/xclip" \
     --executable "${APP_NAME}.AppDir/usr/bin/arecord" \
     --executable "${APP_NAME}.AppDir/usr/bin/notify-send" \
+    ${LIB_ARGS} \
     --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
     --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
     --output appimage; then
