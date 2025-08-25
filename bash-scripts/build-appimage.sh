@@ -58,6 +58,26 @@ fi
 echo "Bundled libs:"
 ls -la "$LIB_DST" || true
 
+# Force-bundle AppIndicator/Dbusmenu libraries (often dlopened at runtime)
+echo "Bundling AppIndicator/Dbusmenu libraries..."
+copy_lib_if_exists() {
+    local pattern="$1"
+    for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+        if compgen -G "$d/${pattern}" > /dev/null; then
+            for f in $d/${pattern}; do
+                echo "Including $f"
+                cp -a "$f" "$LIB_DST/" || true
+            done
+            break
+        fi
+    done
+}
+
+copy_lib_if_exists "libayatana-appindicator3.so*"
+copy_lib_if_exists "libayatana-indicator3.so*"
+copy_lib_if_exists "libdbusmenu-gtk3.so*"
+copy_lib_if_exists "libdbusmenu-glib.so*"
+
 # Bundle system tray related libraries explicitly (for AppImage runtime)
 echo "Bundling system tray libraries..."
 LIB_ARGS=""
