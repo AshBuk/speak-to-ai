@@ -63,26 +63,53 @@ echo "Bundling system tray libraries..."
 LIB_ARGS=""
 find_syslib() {
     local name="$1"
+    # Search in common system library paths
     for p in \
         /usr/lib/x86_64-linux-gnu \
         /lib/x86_64-linux-gnu \
         /usr/lib64 \
-        /usr/lib; do
-        if compgen -G "${p}/${name}" > /dev/null; then
+        /usr/lib \
+        /usr/local/lib \
+        /lib64 \
+        /lib; do
+        if [ -d "$p" ] && compgen -G "${p}/${name}" > /dev/null 2>&1; then
             echo "${p}/${name}"
             return 0
         fi
     done
+    # Also try pkg-config approach
+    local lib_base=$(echo "$name" | sed 's/\.so.*//')
+    if command -v pkg-config >/dev/null 2>&1; then
+        local pc_name=$(echo "$lib_base" | sed 's/^lib//')
+        local pc_path=$(pkg-config --variable=libdir "$pc_name" 2>/dev/null)
+        if [ -n "$pc_path" ] && compgen -G "${pc_path}/${name}" > /dev/null 2>&1; then
+            echo "${pc_path}/${name}"
+            return 0
+        fi
+    fi
     return 1
 }
 
 add_lib() {
     local pattern="$1"
     local found
-    found=$(find_syslib "$pattern") || { echo "Warning: not found: $pattern"; return 0; }
-    echo "Including $(basename "$found") from $(dirname "$found")"
-    cp -a "$found" "$LIB_DST/" || true
-    LIB_ARGS+=" --library \"$found\""
+    echo "Searching for: $pattern"
+    if found=$(find_syslib "$pattern"); then
+        echo "✓ Found: $(basename "$found") at $(dirname "$found")"
+        cp -a $found "$LIB_DST/" || echo "Failed to copy $found"
+        LIB_ARGS+=" --library \"$found\""
+    else
+        echo "✗ Warning: Library not found: $pattern"
+        # Try alternative search with ldconfig
+        if command -v ldconfig >/dev/null 2>&1; then
+            local ldconfig_result=$(ldconfig -p 2>/dev/null | grep "$pattern" | head -1 | awk '{print $NF}')
+            if [ -n "$ldconfig_result" ] && [ -f "$ldconfig_result" ]; then
+                echo "✓ Found via ldconfig: $ldconfig_result"
+                cp -a "$ldconfig_result" "$LIB_DST/" || echo "Failed to copy $ldconfig_result"
+                LIB_ARGS+=" --library \"$ldconfig_result\""
+            fi
+        fi
+    fi
 }
 
 # Primary tray libs (exact soversion names typical on Ubuntu)
