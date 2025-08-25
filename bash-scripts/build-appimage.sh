@@ -96,7 +96,14 @@ add_lib() {
     echo "Searching for: $pattern"
     if found=$(find_syslib "$pattern"); then
         echo "✓ Found: $(basename "$found") at $(dirname "$found")"
-        cp -a $found "$LIB_DST/" || echo "Failed to copy $found"
+        cp -a "$found" "$LIB_DST/" || echo "Failed to copy $found"
+        # If the found entry is a symlink, also copy its resolved target to avoid broken links inside AppImage
+        if [ -L "$found" ]; then
+            resolved_target=$(readlink -f "$found" || true)
+            if [ -n "$resolved_target" ] && [ -f "$resolved_target" ]; then
+                cp -a "$resolved_target" "$LIB_DST/" || echo "Failed to copy $resolved_target"
+            fi
+        fi
         LIB_ARGS+=" --library \"$found\""
     else
         echo "✗ Warning: Library not found: $pattern"
@@ -112,11 +119,11 @@ add_lib() {
     fi
 }
 
-# Primary tray libs (exact soversion names typical on Ubuntu)
-add_lib "libayatana-appindicator3.so*"
-add_lib "libayatana-indicator3.so*"
-add_lib "libdbusmenu-gtk3.so*"
-add_lib "libdbusmenu-glib.so*"
+# Primary tray libs: prefer versioned .so.* to avoid copying only dev symlinks
+add_lib "libayatana-appindicator3.so.*"
+add_lib "libayatana-indicator3.so.*"
+add_lib "libdbusmenu-gtk3.so.*"
+add_lib "libdbusmenu-glib.so.*"
 
 # Copy core sources if they exist
 if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
