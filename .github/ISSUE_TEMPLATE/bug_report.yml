@@ -1,0 +1,126 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out the information below to help us understand and fix the issue.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I searched existing issues and didn't find a duplicate
+          required: true
+        - label: I'm using the latest version from [Releases](https://github.com/AshBuk/speak-to-ai/releases)
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened vs what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Tell us how to reproduce this behavior
+      placeholder: |
+        1. Open the application
+        2. Press hotkey (AltGr + ,)
+        3. Speak into microphone
+        4. Observe the error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Speak-to-AI Version
+      description: What version are you using? (Check About dialog or filename)
+      placeholder: e.g., v1.2.3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation Method
+      description: How did you install Speak-to-AI?
+      options:
+        - AppImage
+        - Flatpak
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS and version are you running?
+      placeholder: e.g., Ubuntu 22.04, Fedora 39, Arch Linux
+    validations:
+      required: true
+
+  - type: dropdown
+    id: desktop
+    attributes:
+      label: Desktop Environment
+      description: What desktop environment are you using?
+      options:
+        - GNOME
+        - KDE Plasma
+        - XFCE
+        - MATE
+        - i3/sway
+        - Cinnamon
+        - Other (specify in additional context)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: display
+    attributes:
+      label: Display Server
+      description: Are you using X11 or Wayland?
+      options:
+        - X11
+        - Wayland
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: |
+        If applicable, add logs to help explain your problem.
+        You can run the application from terminal to see debug output:
+        - AppImage: `./speak-to-ai-*.AppImage --debug`
+        - Flatpak: `flatpak run --env=DEBUG=1 io.github.ashbuk.speak-to-ai`
+      render: shell
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: |
+        Share your config.yaml file (remove any sensitive information):
+        - AppImage: `~/.config/speak-to-ai/config.yaml`
+        - Flatpak: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
+      render: yaml
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information about the problem here
