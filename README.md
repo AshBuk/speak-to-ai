@@ -15,7 +15,7 @@
 [![Go Version](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)](https://go.dev/)
 
 [![Lines of Code](https://tokei.rs/b1/github/AshBuk/speak-to-ai?category=code)](https://github.com/AshBuk/speak-to-ai)
-[![Go Report Card](https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai)](https://goreportcard.com/report/github.com/AshBuk/speak-to-ai)
+[![Maintainability](https://api.codeclimate.com/v1/badges/github/AshBuk/speak-to-ai/maintainability)](https://codeclimate.com/github/AshBuk/speak-to-ai/maintainability)
 [![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
 [![Dependencies](https://img.shields.io/librariesio/github/AshBuk/speak-to-ai)](https://libraries.io/github/AshBuk/speak-to-ai)
 
