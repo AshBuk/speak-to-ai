@@ -1,0 +1,93 @@
+name: 💡 Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I searched existing issues and feature requests
+          required: true
+        - label: I checked the [roadmap](https://github.com/AshBuk/speak-to-ai/projects) (if available)
+          required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: What problem does this feature solve? What's the current limitation?
+      placeholder: "I'm frustrated when... / It would be helpful if... / Currently there's no way to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your ideal solution or feature
+      placeholder: "I would like to see... / The feature should work like..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative approaches or workarounds?
+      placeholder: "I've also thought about... / A simpler alternative could be..."
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low (nice to have)
+        - Medium (would improve my workflow)
+        - High (essential for my use case)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area does this feature relate to?
+      options:
+        - Audio/Recording
+        - Speech Recognition/Whisper
+        - Text Output/Typing
+        - Hotkeys/Shortcuts
+        - User Interface
+        - Configuration/Settings
+        - Performance/Optimization
+        - Integration/API
+        - Packaging/Distribution
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use Case Example
+      description: Provide a concrete example of how you would use this feature
+      placeholder: |
+        Example workflow:
+        1. I would open...
+        2. Then I would...
+        3. The feature would help by...
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, screenshots, or references that might help explain your request

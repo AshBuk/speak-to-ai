@@ -1,0 +1,141 @@
+# GitHub Labels Configuration
+# Apply with: gh label sync --file .github/labels.yml
+
+# Type Labels
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+
+# Priority Labels
+- name: "priority: low"
+  color: "d4edda"
+  description: "Low priority issue"
+
+- name: "priority: medium"
+  color: "fff3cd"
+  description: "Medium priority issue"
+
+- name: "priority: high"
+  color: "f8d7da"
+  description: "High priority issue"
+
+- name: "priority: critical"
+  color: "721c24"
+  description: "Critical issue that needs immediate attention"
+
+# Community Labels
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "hacktoberfest"
+  color: "ff7518"
+  description: "Hacktoberfest eligible issue"
+
+# Status Labels
+- name: "triage"
+  color: "fef2c0"
+  description: "Needs to be triaged"
+
+- name: "blocked"
+  color: "b60205"
+  description: "Blocked by another issue or external dependency"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "This will not be worked on"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or pull request already exists"
+
+- name: "invalid"
+  color: "e4e669"
+  description: "This doesn't seem right"
+
+# Category Labels
+- name: "area: audio"
+  color: "1f77b4"
+  description: "Audio recording and processing"
+
+- name: "area: speech-recognition"
+  color: "ff7f0e"
+  description: "Whisper integration and speech recognition"
+
+- name: "area: output"
+  color: "2ca02c"
+  description: "Text output and typing functionality"
+
+- name: "area: hotkeys"
+  color: "d62728"
+  description: "Keyboard shortcuts and hotkey handling"
+
+- name: "area: ui"
+  color: "9467bd"
+  description: "User interface and system tray"
+
+- name: "area: config"
+  color: "8c564b"
+  description: "Configuration and settings"
+
+- name: "area: packaging"
+  color: "e377c2"
+  description: "AppImage, Flatpak, and distribution"
+
+- name: "area: ci-cd"
+  color: "7f7f7f"
+  description: "Continuous integration and deployment"
+
+- name: "area: performance"
+  color: "bcbd22"
+  description: "Performance improvements and optimization"
+
+- name: "area: api"
+  color: "17becf"
+  description: "WebSocket API and integrations"
+
+# Platform Labels
+- name: "platform: linux"
+  color: "0e4b99"
+  description: "Linux-specific issue"
+
+- name: "platform: x11"
+  color: "fbca04"
+  description: "X11 display server specific"
+
+- name: "platform: wayland"
+  color: "c5def5"
+  description: "Wayland display server specific"
+
+- name: "de: gnome"
+  color: "4d4d4d"
+  description: "GNOME desktop environment"
+
+- name: "de: kde"
+  color: "1f77b4"
+  description: "KDE Plasma desktop environment"
+
+# Pull Request Labels
+- name: "breaking change"
+  color: "b60205"
+  description: "Changes that break backward compatibility"
+
+- name: "needs review"
+  color: "fbca04"
+  description: "Pull request needs review"
+
+- name: "work in progress"
+  color: "ededed"
+  description: "Pull request is not ready for review"
