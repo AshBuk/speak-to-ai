@@ -16,7 +16,7 @@
 [![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
 [![Flatpak](https://img.shields.io/badge/Flatpak-available-4a90e2?logo=flatpak)](https://github.com/AshBuk/speak-to-ai/releases)
 
-A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition. Written in Go, an optimized desktop application for Linux.
+ **A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition. Written in Go, an optimized desktop application for Linux.**
 
 ## Features
 
@@ -97,6 +97,7 @@ Functionality and Go code are ready. Currently improving UI/UX as for now it's m
 Developer documentation has moved to:
 
 - DEVELOPMENT.md — development workflow and build instructions
+- CONTRIBUTING.md — contribution guidelines and how to help improve the project
 - docker/README.md — Docker-based development
 
 ## ✦ Architecture & Components
