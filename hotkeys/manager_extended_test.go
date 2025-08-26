@@ -1,5 +1,8 @@
 //go:build linux
 
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 package hotkeys
 
 import (

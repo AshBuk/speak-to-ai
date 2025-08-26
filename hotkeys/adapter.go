@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 package hotkeys
 
 // HotkeyConfig defines the interface that a configuration must implement
