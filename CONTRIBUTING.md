@@ -1,6 +1,6 @@
 # Contributing to Speak-to-AI
 
-Thank you for your interest in contributing to Speak-to-AI! This document provides guidelines for contributing to the project.
+Thank you for your interest to Speak-to-AI! This document provides guidelines for contributing to the project.
 
 ## 🤝 Code of Conduct
 
