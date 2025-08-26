@@ -44,6 +44,9 @@ jobs:
             fi
           fi
 
+      - name: License header check
+        run: ./scripts/check-license-headers.sh
+
       - name: Build whisper.cpp libs
         run: make whisper-libs
 
