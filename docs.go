@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 // Package speaktoai provides a high-level overview of the Speak-to-AI project.
 //
 // Speak-to-AI is a minimalist, privacy-focused desktop daemon written in Go

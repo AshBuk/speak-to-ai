@@ -1,6 +1,9 @@
 //go:build integration
 // +build integration
 
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 package integration
 
 import (

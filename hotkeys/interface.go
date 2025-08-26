@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 package hotkeys
 
 // KeyboardEventProvider defines an interface for keyboard event sources
