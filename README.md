@@ -89,7 +89,7 @@ Then restart the app. This is optional and only needed on DEs without GlobalShor
 
 ## ✦ Project Status
 
-Stable builds are available. The app works offline with local Whisper models, supports X11/Wayland, and provides clipboard/typing output modes. Planned improvements: streaming API integration, model download UX, and additional language models.
+Functionality and Go code are ready. Currently improving UI/UX as for now it's more geek-friendly than user-friendly. Working on quality AppImage and Flatpak builds.
 
 
 ## ✦ For Developers
@@ -129,10 +129,13 @@ Developer documentation has moved to:
 Sharing with the community for privacy-conscious Linux users
 
 ---
+## ✦ License
 
-## ❤️ Sponsors
+MIT — see `LICENSE`.
 
-If you find Speak-to-AI useful, please consider supporting development via [GitHub Sponsors](https://github.com/sponsors/AshBuk). Your support helps improve Wayland hotkeys, real-time streaming, and security hardening.
+## Sponsor
 
-✦ License
-MIT — see LICENSE.
+[![Sponsor](https://img.shields.io/badge/Sponsor-💖-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/AshBuk) [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R3HZH8DX7SCJG)
+
+If you find Speak-to-AI useful, please consider supporting development. Your support helps improve the app, real-time streaming, and security hardening.
+
