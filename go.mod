@@ -3,9 +3,8 @@ module github.com/AshBuk/speak-to-ai
 go 1.24
 
 require (
-	github.com/getlantern/systray v1.2.1
+	github.com/getlantern/systray v1.2.2
 	github.com/gorilla/websocket v1.5.3
-	github.com/gvalkov/golang-evdev v0.0.0-20220815104727-7e27d6ce89b6
 	// github.com/robotn/gohook v0.42.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -13,9 +12,10 @@ require (
 // require github.com/vcaesar/keycode v0.10.1 // indirect
 
 require (
-	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250714121344-032697b9a850
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250824163423-7745fcf32846
 	github.com/go-audio/wav v1.1.0
 	github.com/godbus/dbus/v5 v5.1.0
+	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
 )
 
 require (
