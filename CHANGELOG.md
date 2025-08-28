@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 > Added
 - Stable AppImage build with full dependencies
-- Whisper model + system libraries (216MB compressed) + go binary (11MB)
+- Whisper model (142MB) + system libraries (~66MB) + go binary (7.8MB) = 216MB total
 - Automatic first-launch setup and model copying to user config
 
 ---

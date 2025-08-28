@@ -104,8 +104,9 @@ Functionality and Go code are ready. Currently improving UI/UX as for now it's m
 
 ## ✦ For Developers
 
-Developer documentation has moved to:
+Start onboarding with:
 
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system architecture and component design
 - [DEVELOPMENT.md](DEVELOPMENT.md) — development workflow and build instructions
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guidelines and how to help improve the project
 - [docker/README.md](docker/README.md) — Docker-based development
