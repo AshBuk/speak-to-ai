@@ -12,10 +12,7 @@ import (
 )
 
 // WhisperEngine is a no-cgo stub that fails gracefully when CGO is disabled.
-type WhisperEngine struct {
-	config    *config.Config
-	modelPath string
-}
+type WhisperEngine struct{}
 
 // NewWhisperEngine returns an error indicating that CGO is required.
 func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {

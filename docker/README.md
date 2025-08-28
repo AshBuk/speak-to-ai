@@ -14,7 +14,7 @@ make lint
 # Tests (local)
 make test
 
-# Build packages
+# Build packages (multi-stage docker build)
 make docker-appimage
 make docker-flatpak
 ```
@@ -89,7 +89,7 @@ make test
 
 ### CI Pipeline
 ```bash
-# Run full CI pipeline
+# Run full CI pipeline (includes lint, tests, and package builds)
 make docker-ci
 ```
 

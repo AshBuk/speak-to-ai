@@ -1,8 +1,10 @@
 <div align="center">
 
-# <img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="32" height="32" alt="Speak to AI"/> Speak to AI
+<img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="180" height="180" alt="Speak to AI"/>
 
-> \*\*Native Linux voice-to-text app
+# Speak to AI
+
+> Native Linux voice-to-text app 🗣️ 
 
 </div>
 

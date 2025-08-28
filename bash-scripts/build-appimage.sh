@@ -7,164 +7,100 @@ set -x  # Show commands being executed
 
 # Configuration
 APP_NAME="speak-to-ai"
-# Prefer explicit env var, then CI tag (GITHUB_REF_NAME), then latest git tag, else date
 APP_VERSION="${APP_VERSION:-${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0 2>/dev/null || date +%Y%m%d)}}"
 ARCH="x86_64"
 OUTPUT_DIR="dist"
 
 echo "=== Starting AppImage build for ${APP_NAME} v${APP_VERSION} ==="
 
-# Ensure whisper.cpp libraries are built and CGO is configured
-echo "Preparing whisper.cpp libraries..."
-# Try to source local dev env (non-fatal) to set CGO vars if available
-if [ -f "bash-scripts/dev-env.sh" ]; then
-    # shellcheck source=/dev/null
-    source bash-scripts/dev-env.sh || true
-fi
-# Build libs only if headers not present (idempotent)
-if [ ! -f "lib/whisper.h" ]; then
-    make whisper-libs
-fi
+# Functions
+prepare_environment() {
+    echo "Preparing environment..."
+    if [ -f "bash-scripts/dev-env.sh" ]; then
+        source bash-scripts/dev-env.sh || true
+    fi
+    if [ ! -f "lib/whisper.h" ]; then
+        make whisper-libs
+    fi
+}
 
-# Create necessary directories
-echo "Creating AppDir structure..."
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
-mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
+download_model() {
+    if [ ! -f "sources/language-models/base.bin" ]; then
+        echo "Downloading Whisper base model..."
+        mkdir -p sources/language-models
+        curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
+            echo "❌ Failed to download base model"; exit 1;
+        }
+        mv ggml-base.bin "sources/language-models/base.bin"
+        echo "Model downloaded: $(ls -lh sources/language-models/base.bin)"
+    fi
+}
 
-echo "Building ${APP_NAME} with systray support..."
-# Always rebuild to ensure correct tags and versioned metadata
-go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
+create_appdir_structure() {
+    echo "Creating AppDir structure..."
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models"
+    mkdir -p "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core"
+}
 
-echo "Copying main application..."
-cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
-cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
+build_application() {
+    echo "Building ${APP_NAME} with systray support..."
+    go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
+    cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+    cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
+}
 
-# Bundle required shared libraries for whisper.cpp runtime
-echo "Bundling whisper shared libraries..."
-LIB_DST="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
-mkdir -p "$LIB_DST"
-# Preserve symlinks (e.g., libwhisper.so -> libwhisper.so.1)
-if compgen -G "lib/libwhisper.so*" > /dev/null; then
-    cp -a lib/libwhisper.so* "$LIB_DST/" || true
-fi
-if compgen -G "lib/libggml*.so*" > /dev/null; then
-    cp -a lib/libggml*.so* "$LIB_DST/" || true
-fi
-echo "Bundled libs:"
-ls -la "$LIB_DST" || true
+copy_libraries() {
+    echo "Bundling libraries..."
+    LIB_DST="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
+    mkdir -p "$LIB_DST"
+    
+    # Copy whisper libraries
+    if compgen -G "lib/libwhisper.so*" > /dev/null; then
+        cp -a lib/libwhisper.so* "$LIB_DST/" || true
+    fi
+    if compgen -G "lib/libggml*.so*" > /dev/null; then
+        cp -a lib/libggml*.so* "$LIB_DST/" || true
+    fi
+    
+    # Copy system tray libraries
+    copy_system_lib "libayatana-appindicator3.so*"
+    copy_system_lib "libayatana-indicator3.so*"
+    copy_system_lib "libdbusmenu-gtk3.so*"
+    copy_system_lib "libdbusmenu-glib.so*"
+}
 
-# Force-bundle AppIndicator/Dbusmenu libraries (often dlopened at runtime)
-echo "Bundling AppIndicator/Dbusmenu libraries..."
-copy_lib_if_exists() {
+copy_system_lib() {
     local pattern="$1"
     for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
         if compgen -G "$d/${pattern}" > /dev/null; then
             for f in $d/${pattern}; do
                 echo "Including $f"
-                cp -a "$f" "$LIB_DST/" || true
+                cp -a "$f" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib/" || true
             done
             break
         fi
     done
 }
 
-copy_lib_if_exists "libayatana-appindicator3.so*"
-copy_lib_if_exists "libayatana-indicator3.so*"
-copy_lib_if_exists "libdbusmenu-gtk3.so*"
-copy_lib_if_exists "libdbusmenu-glib.so*"
-
-# Bundle system tray related libraries explicitly (for AppImage runtime)
-echo "Bundling system tray libraries..."
-LIB_ARGS=""
-find_syslib() {
-    local name="$1"
-    # Search in common system library paths
-    for p in \
-        /usr/lib/x86_64-linux-gnu \
-        /lib/x86_64-linux-gnu \
-        /usr/lib64 \
-        /usr/lib \
-        /usr/local/lib \
-        /lib64 \
-        /lib; do
-        if [ -d "$p" ] && compgen -G "${p}/${name}" > /dev/null 2>&1; then
-            echo "${p}/${name}"
-            return 0
-        fi
-    done
-    # Also try pkg-config approach
-    local lib_base=$(echo "$name" | sed 's/\.so.*//')
-    if command -v pkg-config >/dev/null 2>&1; then
-        local pc_name=$(echo "$lib_base" | sed 's/^lib//')
-        local pc_path=$(pkg-config --variable=libdir "$pc_name" 2>/dev/null)
-        if [ -n "$pc_path" ] && compgen -G "${pc_path}/${name}" > /dev/null 2>&1; then
-            echo "${pc_path}/${name}"
-            return 0
-        fi
-    fi
-    return 1
+copy_binaries() {
+    echo "Copying system dependencies..."
+    copy_binary_if_exists "xclip"
+    copy_binary_if_exists "wl-copy"
+    copy_binary_if_exists "wl-paste"
+    copy_binary_if_exists "wtype"
+    copy_binary_if_exists "ydotool"
+    copy_binary_if_exists "notify-send"
+    copy_binary_if_exists "arecord"
+    copy_binary_if_exists "xdotool"
+    copy_binary_if_exists "ffmpeg"
 }
 
-add_lib() {
-    local pattern="$1"
-    local found
-    echo "Searching for: $pattern"
-    if found=$(find_syslib "$pattern"); then
-        echo "✓ Found: $(basename "$found") at $(dirname "$found")"
-        cp -a "$found" "$LIB_DST/" || echo "Failed to copy $found"
-        # If the found entry is a symlink, also copy its resolved target to avoid broken links inside AppImage
-        if [ -L "$found" ]; then
-            resolved_target=$(readlink -f "$found" || true)
-            if [ -n "$resolved_target" ] && [ -f "$resolved_target" ]; then
-                cp -a "$resolved_target" "$LIB_DST/" || echo "Failed to copy $resolved_target"
-            fi
-        fi
-        LIB_ARGS+=" --library \"$found\""
-    else
-        echo "✗ Warning: Library not found: $pattern"
-        # Try alternative search with ldconfig
-        if command -v ldconfig >/dev/null 2>&1; then
-            local ldconfig_result=$(ldconfig -p 2>/dev/null | grep "$pattern" | head -1 | awk '{print $NF}')
-            if [ -n "$ldconfig_result" ] && [ -f "$ldconfig_result" ]; then
-                echo "✓ Found via ldconfig: $ldconfig_result"
-                cp -a "$ldconfig_result" "$LIB_DST/" || echo "Failed to copy $ldconfig_result"
-                LIB_ARGS+=" --library \"$ldconfig_result\""
-            fi
-        fi
-    fi
-}
-
-# Primary tray libs: prefer versioned .so.* to avoid copying only dev symlinks
-add_lib "libayatana-appindicator3.so.*"
-add_lib "libayatana-indicator3.so.*"
-add_lib "libdbusmenu-gtk3.so.*"
-add_lib "libdbusmenu-glib.so.*"
-
-# Copy core sources if they exist
-if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
-    echo "Copying whisper binaries..."
-    cp sources/core/whisper "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/"
-    cp sources/core/quantize "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/" || true
-else
-    echo "Warning: Whisper binaries not found in sources/core"
-fi
-
-# Include the pre-downloaded Whisper model
-if [ -f "sources/language-models/base.bin" ]; then
-    echo "Including pre-downloaded Whisper model..."
-    cp sources/language-models/base.bin "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models/"
-else
-    echo "Warning: Whisper model not found at sources/language-models/base.bin"
-fi
-
-# Copy system dependencies
-echo "Copying system dependencies..."
-copy_if_exists() {
+copy_binary_if_exists() {
     local binary_name="$1"
     local binary_path=$(which "$binary_name" 2>/dev/null || echo "")
     
@@ -176,22 +112,26 @@ copy_if_exists() {
     fi
 }
 
-copy_if_exists "xclip"
-copy_if_exists "wl-copy"
-copy_if_exists "wl-paste"
-copy_if_exists "wtype"
-copy_if_exists "ydotool"
-copy_if_exists "notify-send"
-copy_if_exists "arecord"
-copy_if_exists "xdotool"
+copy_sources() {
+    if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
+        echo "Copying whisper binaries..."
+        cp sources/core/whisper "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/"
+        cp sources/core/quantize "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/" || true
+    else
+        echo "Warning: Whisper binaries not found in sources/core"
+    fi
 
-# Note: linuxdeploy will automatically handle library dependencies
-# Manual library copying is only needed as fallback
-echo "Libraries will be handled by linuxdeploy automatically..."
+    if [ -f "sources/language-models/base.bin" ]; then
+        echo "Including pre-downloaded Whisper model..."
+        cp sources/language-models/base.bin "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models/"
+    else
+        echo "Warning: Whisper model not found at sources/language-models/base.bin"
+    fi
+}
 
-# Create AppRun script with first-launch behavior
-echo "Creating AppRun script..."
-cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
+create_apprun() {
+    echo "Creating AppRun script..."
+    cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
 #!/bin/bash
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
@@ -207,8 +147,6 @@ mkdir -p "${CONFIG_DIR}/language-models"
 if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
     echo "First launch detected: Setting up configuration..."
     cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
-    
-    # Update the config to point to the correct model path
     sed -i "s|sources/language-models/base.bin|${CONFIG_DIR}/language-models/base.bin|g" "${CONFIG_DIR}/config.yaml"
 fi
 
@@ -233,16 +171,63 @@ if [ ! -r /dev/input/event0 ] 2>/dev/null; then
     echo ""
 fi
 
+# Auto-integrate with desktop menu
+integrate_with_desktop() {
+    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
+    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
+    
+    # Create .desktop file if not exists
+    if [ ! -f "$desktop_file" ]; then
+        echo "Creating desktop menu integration..."
+        mkdir -p "$(dirname "$desktop_file")"
+        cat > "$desktop_file" << EOF
+[Desktop Entry]
+Name=Speak-to-AI
+Comment=Offline speech-to-text for AI assistants
+Exec="${SELF}" %U
+Icon=speak-to-ai
+Type=Application
+Categories=Utility;Audio;Accessibility;
+Terminal=false
+StartupNotify=true
+EOF
+        chmod +x "$desktop_file"
+        echo "✅ Desktop menu integration created"
+    fi
+    
+    # Copy icon if not exists
+    if [ ! -f "$icon_file" ]; then
+        mkdir -p "$(dirname "$icon_file")"
+        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "${HOME}/.local/share/applications"
+    fi
+}
+
+# Check for AppImageLauncher integration
+if command -v appimaged >/dev/null 2>&1; then
+    echo "AppImageLauncher detected - will handle desktop integration"
+elif command -v appimageupdatetool >/dev/null 2>&1; then
+    echo "AppImageUpdateTool detected - will handle desktop integration"
+else
+    echo "No AppImageLauncher found - creating manual menu integration..."
+    integrate_with_desktop
+fi
+
 # Run the application with user config
 cd "${HERE}"
 exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
 EOF
-chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
+    chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
+}
 
-# Create desktop file
-echo "Creating desktop file..."
-DESKTOP_FILE="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications/${APP_NAME}.desktop"
-cat > "$DESKTOP_FILE" << EOF
+create_desktop_file() {
+    echo "Creating desktop file..."
+    DESKTOP_FILE="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/applications/${APP_NAME}.desktop"
+    cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=Speak-to-AI
 Comment=Offline speech-to-text for AI assistants
@@ -256,14 +241,12 @@ X-AppImage-Name=Speak-to-AI
 X-AppImage-Version=${APP_VERSION}
 X-AppImage-Arch=${ARCH}
 EOF
+    ln -sf "./usr/share/applications/${APP_NAME}.desktop" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.desktop"
+}
 
-# Create symlink for the desktop file
-echo "Creating desktop file symlink..."
-ln -sf "./usr/share/applications/${APP_NAME}.desktop" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.desktop"
-
-# Create AppStream metadata
-echo "Creating AppStream metadata..."
-cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.xml" << EOF
+create_appstream_metadata() {
+    echo "Creating AppStream metadata..."
+    cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>io.github.ashbuk.speak-to-ai</id>
@@ -284,148 +267,155 @@ cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/metainfo/${APP_NAME}.appdata.x
     <binary>speak-to-ai</binary>
   </provides>
   <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Utility</category>
+    <category>Audio</category>
+    <category>Accessibility</category>
+  </categories>
 </component>
 EOF
+}
 
-# Copy real application icon
-echo "Copying application icon..."
-if [ -f "icons/io.github.ashbuk.speak-to-ai.png" ]; then
-    cp "icons/io.github.ashbuk.speak-to-ai.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
-    echo "Real icon copied successfully"
-else
-    echo "Warning: Real icon not found, creating placeholder..."
-    # Create a minimal PNG icon as fallback
-    echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=" | base64 -d > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+create_appimagelauncher_integration() {
+    echo "Creating AppImageLauncher integration..."
+    cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/speak-to-ai.wrapper" << 'EOF'
+#!/bin/bash
+# Wrapper script for AppImageLauncher integration
+SELF=$(readlink -f "$0")
+HERE=${SELF%/*}
+export PATH="${HERE}:${PATH}"
+export LD_LIBRARY_PATH="${HERE}/../lib:${LD_LIBRARY_PATH}"
+
+# Create user config directory
+CONFIG_DIR="${HOME}/.config/speak-to-ai"
+mkdir -p "${CONFIG_DIR}"
+mkdir -p "${CONFIG_DIR}/models"
+
+# First launch setup
+if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
+    cp "${HERE}/../share/speak-to-ai/config.yaml" "${CONFIG_DIR}/config.yaml"
+    sed -i "s|sources/language-models/base.bin|${CONFIG_DIR}/models/base.bin|g" "${CONFIG_DIR}/config.yaml"
 fi
 
-# Link the icon to the root directory as required by AppImage
-echo "Creating icon symlink..."
-ln -sf "./usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.png"
-
-# Download AppImage tools if not present (to a separate tools directory)
-TOOLS_DIR="$(pwd)/tools"
-mkdir -p "${TOOLS_DIR}"
-
-if [ ! -f "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" ]; then
-    echo "Downloading linuxdeploy..."
-    wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage" -O "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
-    chmod +x "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
-fi
-
-if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
-    echo "Downloading appimagetool..."
-    wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" -O "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
-    chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
-fi
-
-# Optionally download linuxdeploy GTK plugin to help capture GTK/AppIndicator stacks
-if [ ! -f "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" ]; then
-    echo "Downloading linuxdeploy-plugin-gtk..."
-    wget -q "https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-${ARCH}.AppImage" \
-        -O "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" || true
-    chmod +x "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" 2>/dev/null || true
-fi
-
-# Verify AppDir setup
-echo "Verifying AppDir structure..."
-echo "Root files:"
-ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
-echo "Binary files:"
-ls -la "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
-
-# Use linuxdeploy to automatically include dependencies
-echo "Using linuxdeploy to gather dependencies..."
-cd "${OUTPUT_DIR}"
-
-# Set environment variables
-export ARCH="${ARCH}"
-export VERSION="${APP_VERSION}"
-
-echo "Running linuxdeploy to prepare AppDir with dependencies..."
-
-# Force-bundle libs that are often dlopened at runtime (linuxdeploy may miss them)
-LIB_ARGS=""
-for lib in \
-  libayatana-appindicator3.so \
-  libayatana-indicator3.so \
-  libdbusmenu-gtk3.so \
-  libdbusmenu-glib.so; do
-  for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
-    cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1)
-    if [ -n "$cand" ]; then
-      echo "Will bundle library: $cand"
-      LIB_ARGS="$LIB_ARGS --library $cand"
-      break
+# Copy model if needed
+if [ ! -f "${CONFIG_DIR}/models/base.bin" ]; then
+    if [ -f "${HERE}/../share/speak-to-ai/models/base.bin" ]; then
+        cp "${HERE}/../share/speak-to-ai/models/base.bin" "${CONFIG_DIR}/models/base.bin"
     fi
-  done
-done
+fi
 
-# Use linuxdeploy to automatically copy libraries and dependencies
-if "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" --appimage-extract-and-run \
-    --appdir "${APP_NAME}.AppDir" \
-    --executable "${APP_NAME}.AppDir/usr/bin/${APP_NAME}" \
-    --executable "${APP_NAME}.AppDir/usr/bin/xdotool" \
-    --executable "${APP_NAME}.AppDir/usr/bin/wtype" \
-    --executable "${APP_NAME}.AppDir/usr/bin/ydotool" \
-    --executable "${APP_NAME}.AppDir/usr/bin/wl-copy" \
-    --executable "${APP_NAME}.AppDir/usr/bin/xclip" \
-    --executable "${APP_NAME}.AppDir/usr/bin/arecord" \
-    --executable "${APP_NAME}.AppDir/usr/bin/notify-send" \
-    ${LIB_ARGS} \
-    --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
-    --icon-file "${APP_NAME}.AppDir/${APP_NAME}.png" \
-    --plugin gtk \
-    --output appimage; then
-    
-    # Find the AppImage that was created
-    APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "*tool*" -type f -print | head -n 1)
-    
-    if [ -n "$APPIMAGE_FILE" ]; then
-        chmod +x "$APPIMAGE_FILE"
-        # Rename to include version for clarity and distribution (unified naming)
-        TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
-        mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
-        echo "AppImage created successfully with linuxdeploy: $TARGET_NAME"
-        ls -lh "$TARGET_NAME"
-        echo "=== AppImage build completed successfully! ==="
-        exit 0
+# Run the application
+exec "${HERE}/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+EOF
+    chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/speak-to-ai.wrapper"
+    sed -i 's|Exec=speak-to-ai|Exec=speak-to-ai.wrapper|g' "$DESKTOP_FILE"
+}
+
+copy_icon() {
+    echo "Copying application icon..."
+    if [ -f "icons/io.github.ashbuk.speak-to-ai.png" ]; then
+        cp "icons/io.github.ashbuk.speak-to-ai.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+        echo "Real icon copied successfully"
     else
-        echo "Warning: linuxdeploy completed but AppImage not found, trying manual approach..."
+        echo "Warning: Real icon not found, creating placeholder..."
+        echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////AAAAVcLTfgAAAAF0Uk5TAEDm2GYAAAAqSURBVHja7cEBAQAAAIIg/69uSEABAAAAAAAAAAAAAAAAAAAAAAAAAHwZJsAAARqZF58AAAAASUVORK5CYII=" | base64 -d > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
     fi
-fi
+    ln -sf "./usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${OUTPUT_DIR}/${APP_NAME}.AppDir/${APP_NAME}.png"
+}
 
-echo "Linuxdeploy failed or didn't produce AppImage, falling back to manual appimagetool..."
+download_appimage_tools() {
+    TOOLS_DIR="$(pwd)/tools"
+    mkdir -p "${TOOLS_DIR}"
 
-# Try to build AppImage directly (with FUSE workaround for CI)
-if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
-    # Find the AppImage that was created
-    APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
-    
-    if [ -n "$APPIMAGE_FILE" ]; then
-        chmod +x "$APPIMAGE_FILE"
-        TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
-        mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
-        echo "AppImage created successfully: $TARGET_NAME"
-        ls -lh "$TARGET_NAME"
-        echo "=== AppImage build completed successfully! ==="
-        exit 0
-    else
-        echo "Error: AppImage was built but could not be found."
-        ls -la
-        exit 1
+    if [ ! -f "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" ]; then
+        echo "Downloading linuxdeploy..."
+        wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage" -O "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
+        chmod +x "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
     fi
-else
-    echo "Primary method failed, trying alternative approach..."
-    # Alternative: extract appimagetool and run directly
-    if [ ! -d "appimagetool-extracted" ]; then
-        echo "Extracting appimagetool..."
-        "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract
-        mv squashfs-root appimagetool-extracted
+
+    if [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ]; then
+        echo "Downloading appimagetool..."
+        wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" -O "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
+        chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
     fi
+
+    if [ ! -f "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" ]; then
+        echo "Downloading linuxdeploy-plugin-gtk..."
+        wget -q "https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-${ARCH}.AppImage" \
+            -O "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" || true
+        chmod +x "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" 2>/dev/null || true
+    fi
+}
+
+build_appimage() {
+    echo "Using linuxdeploy to gather dependencies..."
+    cd "${OUTPUT_DIR}"
+
+    export ARCH="${ARCH}"
+    export VERSION="${APP_VERSION}"
+
+    # Build list of executables dynamically
+    EXEC_ARGS=""
+    for exe in \
+      "usr/bin/${APP_NAME}" \
+      "usr/bin/xdotool" \
+      "usr/bin/wtype" \
+      "usr/bin/ydotool" \
+      "usr/bin/wl-copy" \
+      "usr/bin/wl-paste" \
+      "usr/bin/xclip" \
+      "usr/bin/arecord" \
+      "usr/bin/notify-send"; do
+      if [ -f "${APP_NAME}.AppDir/${exe}" ]; then
+        EXEC_ARGS="$EXEC_ARGS --executable \"${APP_NAME}.AppDir/${exe}\""
+      fi
+    done
+
+    # Force-bundle libs that are often dlopened at runtime
+    LIB_ARGS=""
+    for lib in \
+      libayatana-appindicator3.so \
+      libayatana-indicator3.so \
+      libdbusmenu-gtk3.so \
+      libdbusmenu-glib.so; do
+      for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1)
+        if [ -n "$cand" ]; then
+          echo "Will bundle library: $cand"
+          LIB_ARGS="$LIB_ARGS --library $cand"
+          break
+        fi
+      done
+    done
+
+    # Use linuxdeploy to automatically copy libraries and dependencies
+    if eval "\"${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage\" --appimage-extract-and-run \
+        --appdir \"${APP_NAME}.AppDir\" \
+        ${EXEC_ARGS} \
+        ${LIB_ARGS} \
+        --desktop-file \"${APP_NAME}.AppDir/${APP_NAME}.desktop\" \
+        --icon-file \"${APP_NAME}.AppDir/${APP_NAME}.png\" \
+        --plugin gtk \
+        --output appimage"; then
+        
+        APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "*tool*" -type f -print | head -n 1)
+        
+        if [ -n "$APPIMAGE_FILE" ]; then
+            chmod +x "$APPIMAGE_FILE"
+            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
+            echo "AppImage created successfully with linuxdeploy: $TARGET_NAME"
+            ls -lh "$TARGET_NAME"
+            echo "=== AppImage build completed successfully! ==="
+            exit 0
+        else
+            echo "Warning: linuxdeploy completed but AppImage not found, trying manual approach..."
+        fi
+    fi
+
+    echo "Linuxdeploy failed or didn't produce AppImage, falling back to manual appimagetool..."
     
-    echo "Using extracted appimagetool..."
-    if ./appimagetool-extracted/AppRun --no-appstream "${APP_NAME}.AppDir"; then
-        # Find the AppImage that was created
+    if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
         APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
         
         if [ -n "$APPIMAGE_FILE" ]; then
@@ -445,4 +435,25 @@ else
         echo "Error: All AppImage creation methods failed."
         exit 1
     fi
-fi 
+}
+
+# Main execution
+main() {
+    prepare_environment
+    download_model
+    create_appdir_structure
+    build_application
+    copy_libraries
+    copy_binaries
+    copy_sources
+    create_apprun
+    create_desktop_file
+    create_appstream_metadata
+    create_appimagelauncher_integration
+    copy_icon
+    download_appimage_tools
+    build_appimage
+}
+
+# Run main function
+main "$@" 

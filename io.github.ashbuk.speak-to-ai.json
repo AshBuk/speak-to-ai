@@ -176,6 +176,36 @@
             ]
         },
         {
+            "name": "xclip",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-man"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/astrand/xclip/archive/refs/tags/0.13.tar.gz",
+                    "sha256": "ca5b8804e3c910a66423a882d79bf3c9450b875ac8528791fb60ec9de667f758"
+                }
+            ]
+        },
+        {
+            "name": "ffmpeg",
+            "buildsystem": "simple",
+            "build-commands": [
+                "./configure --prefix=/app --disable-doc --disable-static --enable-shared --disable-everything --enable-avdevice --enable-avformat --enable-avcodec --enable-swresample --enable-demuxer=alsa --enable-protocol=file",
+                "make -j ${FLATPAK_BUILDER_N_JOBS:-1}",
+                "make install"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://ffmpeg.org/releases/ffmpeg-8.0.tar.bz2",
+                    "sha256": "3e74acc48ddb9f5f70b6747d3f439d51e7cc5497f097d58e5975c84488f4d186"
+                }
+            ]
+        },
+        {
             "name": "alsa-utils",
             "buildsystem": "autotools",
             "config-opts": [
@@ -241,6 +271,20 @@
                     "type": "archive", 
                     "url": "https://github.com/atx/wtype/archive/v0.4.tar.gz",
                     "sha256": "da91786d828b6a6e29b884bc510473939eda052658ebef87d7bdeafa6a8746f9"
+                }
+            ]
+        },
+        {
+            "name": "ydotool",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/ReimuNotMoe/ydotool/archive/refs/tags/1.0.4.tar.gz",
+                    "sha256": "ba075a43aa6ead51940e892ecffa4d0b8b40c241e4e2bc4bd9bd26b61fde23bd"
                 }
             ]
         },

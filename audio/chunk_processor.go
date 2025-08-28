@@ -131,7 +131,10 @@ func (cp *ChunkProcessor) processChunk(chunk []float32) {
 		}
 	} else if cp.onSpeech != nil {
 		// If no VAD, treat all chunks as speech
-		cp.onSpeech(chunk)
+		if err := cp.onSpeech(chunk); err != nil {
+			// Log error but continue processing
+			return
+		}
 	}
 }
 

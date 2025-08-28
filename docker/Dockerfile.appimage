@@ -1,45 +1,35 @@
 # Container for building AppImage packages
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS builder
 
 # Avoid timezone interaction
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies for AppImage building
 RUN apt-get update && apt-get install -y \
-    # Go
-    curl \
-    wget \
-    git \
-    # Build tools
     build-essential \
     cmake \
     pkg-config \
-    # GUI dependencies for systray (dev + runtime to ensure .so.1 present)
+    git \
+    curl \
+    wget \
     libayatana-appindicator3-dev \
-    libayatana-appindicator3-1 \
-    libayatana-indicator3-7 \
-    libdbusmenu-gtk3-4 \
-    libdbusmenu-glib4 \
     libgtk-3-dev \
-    libgtk-3-0 \
     libglib2.0-dev \
-    libglib2.0-0 \
-    # Audio and input tools
+    libdbus-1-dev \
+    ffmpeg \
     alsa-utils \
-    # AppImage tools dependencies
     file \
     desktop-file-utils \
     fuse \
     libfuse2 \
-    # Tools for copying system dependencies
     xclip \
     wl-clipboard \
-    ydotool \
     xdotool \
+    ydotool \
     libnotify-bin \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Go - matches CI version
+# Install Go
 ENV GO_VERSION=1.24.1
 RUN curl -L "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf -
 ENV PATH="/usr/local/go/bin:${PATH}"
@@ -47,18 +37,16 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files first for better layer caching
+# Copy project sources (better cache on go.mod/go.sum first)
 COPY go.mod go.sum ./
 RUN go mod download
-
-# Copy source code
 COPY . .
 
 # Create necessary directories
 RUN mkdir -p lib sources build dist
 
-# Build script for AppImage
-COPY docker/scripts/build-appimage.sh /usr/local/bin/build-appimage.sh
+# Build script for AppImage (use unified script from bash-scripts)
+COPY bash-scripts/build-appimage.sh /usr/local/bin/build-appimage.sh
 RUN chmod +x /usr/local/bin/build-appimage.sh
 
 # Set environment variables for CGO
@@ -70,5 +58,17 @@ ENV CGO_LDFLAGS="-L/app/lib -lwhisper -lggml-cpu -lggml"
 ENV LD_LIBRARY_PATH="/app/lib"
 ENV PKG_CONFIG_PATH="/app/lib"
 
-# Default command builds AppImage
-CMD ["/usr/local/bin/build-appimage.sh"]
+# Optional version from build-arg
+ARG APP_VERSION
+ENV APP_VERSION=${APP_VERSION}
+
+# Whisper.cpp version pin for reproducible builds
+ARG WHISPER_CPP_REF=v1.7.6
+ENV WHISPER_CPP_REF=${WHISPER_CPP_REF}
+
+# Build AppImage at image build time so docker build can produce artifacts
+RUN /usr/local/bin/build-appimage.sh
+
+# Export artifacts stage
+FROM scratch AS artifacts
+COPY --from=builder /app/dist/ /

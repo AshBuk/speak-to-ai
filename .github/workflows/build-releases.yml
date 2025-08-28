@@ -29,7 +29,16 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24'
+        go-version: '1.24.1'
+        
+    - name: Export CGO environment  
+      run: |
+        echo "=== Setting up CGO environment ==="
+        echo "CGO_ENABLED=1" >> $GITHUB_ENV
+        echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
+        echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$PWD/lib" >> $GITHUB_ENV
         
     # Temporarily disable Go modules cache due to tar extraction issues
     # - name: Cache Go modules  
@@ -57,33 +66,25 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          xclip \
-          wl-clipboard \
-          libnotify-bin \
-          libasound2-dev \
-          libx11-dev \
-          libxext-dev \
-          libxi-dev \
-          libxrandr-dev \
-          libxcursor-dev \
-          libxinerama-dev \
+          build-essential \
+          cmake \
+          pkg-config \
+          git \
+          curl \
+          wget \
           libayatana-appindicator3-dev \
-          libayatana-appindicator3-1 \
-          libayatana-indicator3-7 \
-          libayatana-ido3-0.4-0 \
-          libdbusmenu-gtk3-4 \
-          libdbusmenu-glib4 \
           libgtk-3-dev \
           libglib2.0-dev \
           libdbus-1-dev \
-          libdbus-glib-1-dev \
           ffmpeg \
           alsa-utils \
-          wget \
-          build-essential \
-          pkg-config \
-          cmake \
-          valgrind \
+          file \
+          desktop-file-utils \
+          xclip \
+          wl-clipboard \
+          xdotool \
+          ydotool \
+          libnotify-bin \
           imagemagick \
           make
           
@@ -118,10 +119,14 @@ jobs:
         if [ ! -f "sources/language-models/base.bin" ]; then
           echo "Downloading Whisper base model..."
           mkdir -p sources/language-models
-          wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
-            -O "sources/language-models/base.bin"
+          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
+            echo "❌ Failed to download base model"; exit 1;
+          }
+          mv ggml-base.bin "sources/language-models/base.bin"
           echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
         fi
+
+
         
     - name: Debug - Pre-build status
       run: |
@@ -177,7 +182,16 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24'
+        go-version: '1.24.1'
+        
+    - name: Export CGO environment for Flatpak
+      run: |
+        echo "=== Setting up CGO environment for Flatpak ==="
+        echo "CGO_ENABLED=1" >> $GITHUB_ENV
+        echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
+        echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$PWD/lib" >> $GITHUB_ENV
         
     # Temporarily disable Go modules cache due to tar extraction issues
     # - name: Cache Go modules  
@@ -232,17 +246,20 @@ jobs:
           valac
         # Use user remote instead of system remote
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak install --user -y flathub org.gnome.Platform//45 org.gnome.Sdk//45
-        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//23.08
-        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.vala//23.08
+        flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
+        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//24.08
+        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.vala//24.08
         
     - name: Download Whisper model if not present
       run: |
         if [ ! -f "sources/language-models/base.bin" ]; then
           echo "Downloading Whisper base model..."
           mkdir -p sources/language-models
-          wget -q "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
-            -O "sources/language-models/base.bin"
+          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
+            echo "❌ Failed to download base model"; exit 1;
+          }
+          mv ggml-base.bin "sources/language-models/base.bin"
+          echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
         fi
         
     - name: Install make for Flatpak build

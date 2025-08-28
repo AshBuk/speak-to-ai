@@ -1,6 +1,6 @@
 module github.com/AshBuk/speak-to-ai
 
-go 1.24
+go 1.24.1
 
 require (
 	github.com/getlantern/systray v1.2.2

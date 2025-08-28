@@ -132,14 +132,14 @@ func (m *ModelManager) downloadModelWithProgress(modelType, precision string, pr
 	if err != nil {
 		return "", fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to download model: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check server response
 	if resp.StatusCode != http.StatusOK {

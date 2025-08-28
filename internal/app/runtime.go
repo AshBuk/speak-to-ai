@@ -7,7 +7,11 @@ package app
 func (a *App) RunAndWait() error {
 	// Start WebSocket server if enabled
 	if a.Config.WebServer.Enabled {
-		go a.WebSocketServer.Start()
+		go func() {
+			if err := a.WebSocketServer.Start(); err != nil {
+				a.Logger.Error("WebSocket server failed to start: %v", err)
+			}
+		}()
 	}
 
 	// Start the tray manager if available

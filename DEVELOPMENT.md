@@ -14,6 +14,7 @@ command    dependencies
 ### 1. Makefile - Simple Commands
 Entry point for developers with proper CGO environment setup:
 ```bash
+make all                 # Build everything (deps + whisper + binary)
 make build               # Build binary with whisper.cpp integration
 make build-systray       # Build with system tray support
 make test                # Run unit tests with CGO dependencies
@@ -21,6 +22,7 @@ make test-integration    # Run integration tests (fast mode, no CGO)
 make test-integration-full # Run full integration tests (with audio/CGO)
 make deps                # Download Go dependencies
 make whisper-libs        # Build whisper.cpp libraries into ./lib
+make check-tools         # Verify required tools
 make appimage            # Build AppImage package
 make flatpak             # Build Flatpak package
 make clean               # Clean build artifacts
@@ -40,12 +42,14 @@ bash-scripts/flatpak-runtime.sh   # Flatpak runtime wrapper
 ### 3. Docker - Containers
 Reproducible builds across different environments:
 ```bash
-make docker-build      # Build all Docker images
+make docker-up         # Start development services
 make docker-dev        # Enter development container
+make docker-down       # Stop all services
+make docker-build      # Build all Docker images
 make docker-appimage   # Build AppImage in container
 make docker-flatpak    # Build Flatpak in container
-make docker-lint       # Run linter in container
 make docker-clean      # Clean Docker resources
+make docker-clean-all  # Clean everything including images
 ```
 
 ### 4. CI/CD - Production
@@ -67,18 +71,6 @@ GitHub Actions handle complex builds, releases, and distribution.
 | **hotkeys** | 57.4% | `*_test.go` | D-Bus, evdev providers |
 | **config** | 84.9% | `*_test.go` | File loading, validation |
 | **internal/** | 87.5%+ | `*_test.go` | Platform detection |
-
-## Quick Start
-
-```bash
-# One-time setup
-sudo apt-get update && sudo apt-get install -y build-essential cmake git pkg-config
-make deps whisper-libs
-
-# Development session
-source bash-scripts/dev-env.sh
-make build test-integration
-```
 
 ### Example Configuration
 

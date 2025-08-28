@@ -92,7 +92,9 @@ func (s *WebSocketServer) Start() error {
 	// Add a health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
+			s.logger.Debug("health write error: %v", err)
+		}
 	})
 
 	// Create HTTP server with timeouts
@@ -129,7 +131,7 @@ func (s *WebSocketServer) Stop() {
 		// Close all client connections
 		s.clientsLock.Lock()
 		for client := range s.clients {
-			client.Close()
+			_ = client.Close()
 		}
 		s.clients = make(map[*websocket.Conn]bool)
 		s.clientsLock.Unlock()
@@ -174,10 +176,11 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 
 	// Configure connection
 	conn.SetReadLimit(1024 * 1024) // 1MB message size limit
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		s.logger.Debug("SetReadDeadline error: %v", err)
+	}
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
+		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	})
 
 	// Register new client
@@ -186,7 +189,9 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	s.clientsLock.Unlock()
 
 	defer func() {
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			s.logger.Debug("conn close error: %v", err)
+		}
 		s.clientsLock.Lock()
 		delete(s.clients, conn)
 		delete(s.retryCount, conn)
@@ -211,13 +216,10 @@ func (s *WebSocketServer) pingClient(conn *websocket.Conn) {
 	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second)); err != nil {
-				s.logger.Debug("Ping error: %v", err)
-				return
-			}
+	for range ticker.C {
+		if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second)); err != nil {
+			s.logger.Debug("Ping error: %v", err)
+			return
 		}
 	}
 }
@@ -249,7 +251,9 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 	}
 
 	// Send message
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		s.logger.Error("SetWriteDeadline error: %v", err)
+	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		s.logger.Error("Error sending message: %v", err)
 	}

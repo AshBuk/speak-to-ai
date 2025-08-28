@@ -212,7 +212,9 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		// Stop current recording if active
 		if a.HotkeyManager != nil && a.HotkeyManager.IsRecording() {
 			a.Logger.Warning("Stopping active recording for audio reconfiguration")
-			a.HotkeyManager.SimulateHotkeyPress("stop_recording")
+			if err := a.HotkeyManager.SimulateHotkeyPress("stop_recording"); err != nil {
+				a.Logger.Warning("Failed to simulate hotkey press: %v", err)
+			}
 		}
 
 		// Reinitialize audio recorder
@@ -256,7 +258,11 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 
 		// Start new server if enabled
 		if a.Config.WebServer.Enabled {
-			go a.WebSocketServer.Start()
+			go func() {
+				if err := a.WebSocketServer.Start(); err != nil {
+					a.Logger.Error("WebSocket server failed to start: %v", err)
+				}
+			}()
 		}
 		a.Logger.Info("WebSocket server reinitialized successfully")
 	}
@@ -309,7 +315,9 @@ func (a *App) ensureModelAvailable() error {
 
 	// Show notification about download starting
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first use...")
+		if err := a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first use..."); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
 	}
 
 	// Create progress callback
@@ -341,7 +349,9 @@ func (a *App) ensureModelAvailable() error {
 
 	// Show completion notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Speak-to-AI", "Model downloaded successfully!")
+		if err := a.NotifyManager.ShowNotification("Speak-to-AI", "Model downloaded successfully!"); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
 	}
 
 	// Reset tray tooltip

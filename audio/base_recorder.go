@@ -289,7 +289,9 @@ func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		b.chunkProcessor.ProcessStream(ctx, stream)
+		if err := b.chunkProcessor.ProcessStream(ctx, stream); err != nil {
+			log.Printf("Error processing audio stream: %v", err)
+		}
 	}()
 
 	return b.audioChunks, nil
@@ -316,7 +318,11 @@ func (b *BaseRecorder) StopStreamingRecording() error {
 func (b *BaseRecorder) StopRecording() (string, error) {
 	// Close streaming pipe if enabled
 	if b.streamingEnabled && b.pipeWriter != nil {
-		defer b.pipeWriter.Close()
+		defer func() {
+			if err := b.pipeWriter.Close(); err != nil {
+				log.Printf("failed to close pipe writer: %v", err)
+			}
+		}()
 	}
 
 	// Stop the recording process
@@ -473,12 +479,19 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 
 		// Setup goroutine to copy from stdout pipe to our pipe writer
 		go func() {
-			defer b.pipeWriter.Close()
+			defer func() {
+				if err := b.pipeWriter.Close(); err != nil {
+					log.Printf("failed to close pipe writer in goroutine: %v", err)
+				}
+			}()
 			buf := make([]byte, 4096)
 			for {
 				n, err := b.stdoutPipe.Read(buf)
 				if n > 0 {
-					b.pipeWriter.Write(buf[:n])
+					if _, err := b.pipeWriter.Write(buf[:n]); err != nil {
+						log.Printf("audio stream pipe write error: %v", err)
+						break
+					}
 				}
 				if err != nil {
 					break

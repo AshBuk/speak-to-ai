@@ -34,7 +34,9 @@ func (a *App) handleStartVADRecording() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("VAD Recording", "Listening for speech. Speak to start recording.")
+		if err := a.NotifyManager.ShowNotification("VAD Recording", "Listening for speech. Speak to start recording."); err != nil {
+			a.Logger.Warning("failed to show notification: %v", err)
+		}
 	}
 
 	// Start VAD processing in background
@@ -79,7 +81,9 @@ func (a *App) processVADStream(audioStream <-chan []float32) {
 						a.TrayManager.SetTooltip("🎤 Recording speech...")
 					}
 					if a.NotifyManager != nil {
-						a.NotifyManager.NotifyStartRecording()
+						if err := a.NotifyManager.NotifyStartRecording(); err != nil {
+							a.Logger.Warning("failed to show start recording notification: %v", err)
+						}
 					}
 				}
 				// Add chunk to speech buffer
