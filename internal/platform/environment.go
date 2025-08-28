@@ -36,6 +36,76 @@ func DetectEnvironment() EnvironmentType {
 	return EnvironmentUnknown
 }
 
+// DetectDesktopEnvironment detects the current desktop environment
+func DetectDesktopEnvironment() string {
+	// Check XDG_CURRENT_DESKTOP first (most reliable)
+	if de := os.Getenv("XDG_CURRENT_DESKTOP"); de != "" {
+		return de
+	}
+
+	// Fallback to legacy variables
+	if de := os.Getenv("DESKTOP_SESSION"); de != "" {
+		return de
+	}
+
+	return "Unknown"
+}
+
+// IsGNOMEWithWayland checks if running GNOME with Wayland
+func IsGNOMEWithWayland() bool {
+	de := DetectDesktopEnvironment()
+	env := DetectEnvironment()
+
+	return (de == "GNOME" || de == "ubuntu:GNOME") && env == EnvironmentWayland
+}
+
+// CheckAppIndicatorExtension checks if GNOME AppIndicator extension is available
+func CheckAppIndicatorExtension() bool {
+	// Check if gnome-extensions command is available
+	if !UtilityExists("gnome-extensions") {
+		return false
+	}
+
+	// Check if appindicator extension is installed and enabled
+	cmd := exec.Command("gnome-extensions", "list", "--enabled")
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+
+	// Look for common appindicator extension IDs
+	extensions := []string{
+		"appindicatorsupport@rgcjonas.gmail.com",
+		"ubuntu-appindicators@ubuntu.com",
+		"appindicator@ubuntu.com",
+	}
+
+	outputStr := string(output)
+	for _, ext := range extensions {
+		if contains(outputStr, ext) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// contains is a simple substring check helper
+func contains(s, substr string) bool {
+	if len(substr) == 0 {
+		return true
+	}
+	if len(s) < len(substr) {
+		return false
+	}
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 // UtilityExists checks if a specified command/utility exists in PATH
 func UtilityExists(name string) bool {
 	_, err := exec.LookPath(name)
