@@ -47,7 +47,9 @@ func (p *EvdevKeyboardProvider) IsSupported() bool {
 
 	// Close devices since we're just testing
 	for _, dev := range devices {
-		dev.Close()
+		if err := dev.Close(); err != nil {
+			log.Printf("Failed to close evdev device: %v", err)
+		}
 	}
 
 	return true
@@ -77,7 +79,9 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 			hasKeyEvents(dev) {
 			devices = append(devices, dev)
 		} else {
-			dev.Close()
+			if err := dev.Close(); err != nil {
+				log.Printf("Failed to close evdev device: %v", err)
+			}
 		}
 	}
 
@@ -186,7 +190,11 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 
 			// If all conditions met, trigger the callback
 			if allModifiersPressed {
-				go callback()
+				go func() {
+					if err := callback(); err != nil {
+						log.Printf("Hotkey callback error: %v", err)
+					}
+				}()
 			}
 		}
 	}
@@ -307,7 +315,9 @@ func (p *EvdevKeyboardProvider) Stop() {
 
 	// Close all devices
 	for _, dev := range p.devices {
-		dev.Close()
+		if err := dev.Close(); err != nil {
+			log.Printf("Failed to close evdev device: %v", err)
+		}
 	}
 
 	p.devices = nil

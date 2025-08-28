@@ -129,6 +129,42 @@ copy_sources() {
     fi
 }
 
+# Auto-integrate with desktop menu function
+integrate_with_desktop() {
+    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
+    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
+    
+    # Create .desktop file if not exists
+    if [ ! -f "$desktop_file" ]; then
+        echo "Creating desktop menu integration..."
+        mkdir -p "$(dirname "$desktop_file")"
+        cat > "$desktop_file" << EOF
+[Desktop Entry]
+Name=Speak-to-AI
+Comment=Offline speech-to-text for AI assistants
+Exec="${SELF}" %U
+Icon=speak-to-ai
+Type=Application
+Categories=Utility;Audio;Accessibility;
+Terminal=false
+StartupNotify=true
+EOF
+        chmod +x "$desktop_file"
+        echo "✅ Desktop menu integration created"
+    fi
+    
+    # Copy icon if not exists
+    if [ ! -f "$icon_file" ]; then
+        mkdir -p "$(dirname "$icon_file")"
+        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "${HOME}/.local/share/applications"
+    fi
+}
+
 create_apprun() {
     echo "Creating AppRun script..."
     cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
@@ -171,47 +207,11 @@ if [ ! -r /dev/input/event0 ] 2>/dev/null; then
     echo ""
 fi
 
-# Auto-integrate with desktop menu
-integrate_with_desktop() {
-    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
-    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
-    
-    # Create .desktop file if not exists
-    if [ ! -f "$desktop_file" ]; then
-        echo "Creating desktop menu integration..."
-        mkdir -p "$(dirname "$desktop_file")"
-        cat > "$desktop_file" << EOF
-[Desktop Entry]
-Name=Speak-to-AI
-Comment=Offline speech-to-text for AI assistants
-Exec="${SELF}" %U
-Icon=speak-to-ai
-Type=Application
-Categories=Utility;Audio;Accessibility;
-Terminal=false
-StartupNotify=true
-EOF
-        chmod +x "$desktop_file"
-        echo "✅ Desktop menu integration created"
-    fi
-    
-    # Copy icon if not exists
-    if [ ! -f "$icon_file" ]; then
-        mkdir -p "$(dirname "$icon_file")"
-        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
-    fi
-    
-    # Update desktop database
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "${HOME}/.local/share/applications"
-    fi
-}
-
-# Check for AppImageLauncher integration
+# Check for AppImageLauncher integration  
 if command -v appimaged >/dev/null 2>&1; then
     echo "AppImageLauncher detected - will handle desktop integration"
 elif command -v appimageupdatetool >/dev/null 2>&1; then
-    echo "AppImageUpdateTool detected - will handle desktop integration"
+    echo "AppImageUpdateTool detected - will handle desktop integration"  
 else
     echo "No AppImageLauncher found - creating manual menu integration..."
     integrate_with_desktop
@@ -276,40 +276,6 @@ create_appstream_metadata() {
 EOF
 }
 
-create_appimagelauncher_integration() {
-    echo "Creating AppImageLauncher integration..."
-    cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/speak-to-ai.wrapper" << 'EOF'
-#!/bin/bash
-# Wrapper script for AppImageLauncher integration
-SELF=$(readlink -f "$0")
-HERE=${SELF%/*}
-export PATH="${HERE}:${PATH}"
-export LD_LIBRARY_PATH="${HERE}/../lib:${LD_LIBRARY_PATH}"
-
-# Create user config directory
-CONFIG_DIR="${HOME}/.config/speak-to-ai"
-mkdir -p "${CONFIG_DIR}"
-mkdir -p "${CONFIG_DIR}/models"
-
-# First launch setup
-if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
-    cp "${HERE}/../share/speak-to-ai/config.yaml" "${CONFIG_DIR}/config.yaml"
-    sed -i "s|sources/language-models/base.bin|${CONFIG_DIR}/models/base.bin|g" "${CONFIG_DIR}/config.yaml"
-fi
-
-# Copy model if needed
-if [ ! -f "${CONFIG_DIR}/models/base.bin" ]; then
-    if [ -f "${HERE}/../share/speak-to-ai/models/base.bin" ]; then
-        cp "${HERE}/../share/speak-to-ai/models/base.bin" "${CONFIG_DIR}/models/base.bin"
-    fi
-fi
-
-# Run the application
-exec "${HERE}/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
-EOF
-    chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/speak-to-ai.wrapper"
-    sed -i 's|Exec=speak-to-ai|Exec=speak-to-ai.wrapper|g' "$DESKTOP_FILE"
-}
 
 copy_icon() {
     echo "Copying application icon..."
@@ -449,7 +415,6 @@ main() {
     create_apprun
     create_desktop_file
     create_appstream_metadata
-    create_appimagelauncher_integration
     copy_icon
     download_appimage_tools
     build_appimage

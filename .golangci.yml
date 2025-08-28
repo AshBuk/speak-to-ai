@@ -7,8 +7,6 @@ run:
 issues:
   exclude-dirs:
     - build
-    - internal/tray
-    - hotkeys
   exclude-rules:
     - path: cmd/daemon/main\.go
       text: "error obtaining VCS status"
@@ -21,3 +19,4 @@ linters:
     - govet
     - staticcheck
     - ineffassign
+    - errcheck
