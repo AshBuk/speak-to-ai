@@ -129,42 +129,6 @@ copy_sources() {
     fi
 }
 
-# Auto-integrate with desktop menu function
-integrate_with_desktop() {
-    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
-    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
-    
-    # Create .desktop file if not exists
-    if [ ! -f "$desktop_file" ]; then
-        echo "Creating desktop menu integration..."
-        mkdir -p "$(dirname "$desktop_file")"
-        cat > "$desktop_file" << EOF
-[Desktop Entry]
-Name=Speak-to-AI
-Comment=Offline speech-to-text for AI assistants
-Exec="${SELF}" %U
-Icon=speak-to-ai
-Type=Application
-Categories=Utility;Audio;Accessibility;
-Terminal=false
-StartupNotify=true
-EOF
-        chmod +x "$desktop_file"
-        echo "✅ Desktop menu integration created"
-    fi
-    
-    # Copy icon if not exists
-    if [ ! -f "$icon_file" ]; then
-        mkdir -p "$(dirname "$icon_file")"
-        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
-    fi
-    
-    # Update desktop database
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "${HOME}/.local/share/applications"
-    fi
-}
-
 create_apprun() {
     echo "Creating AppRun script..."
     cat > "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun" << 'EOF'
@@ -206,6 +170,42 @@ if [ ! -r /dev/input/event0 ] 2>/dev/null; then
     echo "Then log out and log back in."
     echo ""
 fi
+
+# Auto-integrate with desktop menu function
+integrate_with_desktop() {
+    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
+    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
+    
+    # Create .desktop file if not exists
+    if [ ! -f "$desktop_file" ]; then
+        echo "Creating desktop menu integration..."
+        mkdir -p "$(dirname "$desktop_file")"
+        cat > "$desktop_file" << DESKTOP_EOF
+[Desktop Entry]
+Name=Speak-to-AI
+Comment=Offline speech-to-text for AI assistants
+Exec="${SELF}" %U
+Icon=speak-to-ai
+Type=Application
+Categories=Utility;Audio;Accessibility;
+Terminal=false
+StartupNotify=true
+DESKTOP_EOF
+        chmod +x "$desktop_file"
+        echo "✅ Desktop menu integration created"
+    fi
+    
+    # Copy icon if not exists
+    if [ ! -f "$icon_file" ]; then
+        mkdir -p "$(dirname "$icon_file")"
+        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "${HOME}/.local/share/applications"
+    fi
+}
 
 # Check for AppImageLauncher integration  
 if command -v appimaged >/dev/null 2>&1; then
