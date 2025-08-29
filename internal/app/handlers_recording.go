@@ -74,7 +74,9 @@ func (a *App) handleStartRecording() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.NotifyStartRecording()
+		if err := a.NotifyManager.NotifyStartRecording(); err != nil {
+			a.Logger.Warning("failed to show start recording notification: %v", err)
+		}
 	}
 
 	return nil
@@ -98,7 +100,9 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.NotifyStopRecording()
+		if err := a.NotifyManager.NotifyStopRecording(); err != nil {
+			a.Logger.Warning("failed to show stop recording notification: %v", err)
+		}
 	}
 
 	// Start asynchronous transcription
@@ -149,7 +153,9 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 
 		// Show error notification
 		if a.NotifyManager != nil {
-			a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Transcription failed: %v", err))
+			if err := a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Transcription failed: %v", err)); err != nil {
+				a.Logger.Warning("failed to show notification: %v", err)
+			}
 		}
 
 		a.Logger.Error("Failed to transcribe audio: %v", err)
@@ -191,7 +197,9 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 
 	// Show completion notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.NotifyTranscriptionComplete()
+		if err := a.NotifyManager.NotifyTranscriptionComplete(); err != nil {
+			a.Logger.Warning("failed to show transcription complete notification: %v", err)
+		}
 	}
 
 	a.Logger.Info("Transcription completed: %s", transcript)
@@ -208,6 +216,8 @@ func (a *App) handleTranscriptionCancellation(err error) {
 
 	// Show cancellation notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Cancelled", "Transcription was cancelled")
+		if err := a.NotifyManager.ShowNotification("Cancelled", "Transcription was cancelled"); err != nil {
+			a.Logger.Warning("failed to show notification: %v", err)
+		}
 	}
 }

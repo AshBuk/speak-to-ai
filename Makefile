@@ -1,14 +1,14 @@
 .PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint docker-% docker-build docker-dev docker-lint docker-clean
 
 # Variables
-GO_VERSION := 1.24
+GO_VERSION := 1.24.1
 BINARY_NAME := speak-to-ai
 BUILD_DIR := build
 LIB_DIR := lib
 DIST_DIR := dist
 # Optional: set to a tag or commit hash to pin whisper.cpp version for reproducible builds
-# Example (CI recommended): make WHISPER_CPP_REF=v1.6.0
-WHISPER_CPP_REF ?=
+# Example (CI recommended): make WHISPER_CPP_REF=v1.7.6
+WHISPER_CPP_REF ?= v1.7.6
 
 # CGO environment
 # These variables are necessary for CGO to find the whisper.cpp libraries.
@@ -23,8 +23,8 @@ export CGO_LDFLAGS := -L$(PWD)/$(LIB_DIR) -lwhisper -lggml-cpu -lggml
 export LD_LIBRARY_PATH := $(PWD)/$(LIB_DIR):$(LD_LIBRARY_PATH)
 export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 
-# Default target
-all: deps whisper-libs build
+# Default target (with systray support for desktop usage)
+all: deps whisper-libs build-systray
 # Format source code (local)
 fmt:
 	@echo "=== Formatting Go sources (gofmt -s -w) ==="
@@ -72,7 +72,7 @@ $(LIB_DIR)/whisper.h:
 	cd $(BUILD_DIR) && \
 	if [ ! -d "whisper.cpp" ]; then \
 		echo "Cloning whisper.cpp..."; \
-		git clone https://github.com/ggerganov/whisper.cpp.git; \
+		git clone https://github.com/ggml-org/whisper.cpp.git; \
 	fi
 	cd $(BUILD_DIR)/whisper.cpp && \
 		if [ -n "$(WHISPER_CPP_REF)" ]; then \
@@ -213,16 +213,17 @@ docker-vet:
 
 # Docker building packages
 docker-appimage:
-	@echo "=== Building AppImage in Docker ==="
-	docker compose --profile appimage run --rm build-appimage
+	@echo "=== Building AppImage via docker build (multi-stage) ==="
+	docker build -f docker/Dockerfile.appimage --target artifacts --output type=local,dest=$(DIST_DIR)/appimage .
 
 docker-flatpak:
-	@echo "=== Building Flatpak in Docker ==="
-	docker compose --profile flatpak run --rm build-flatpak
+	@echo "=== Building Flatpak via docker build (multi-stage) ==="
+	docker build -f docker/Dockerfile.flatpak --target artifacts --output type=local,dest=$(DIST_DIR)/flatpak .
 
 docker-build-all:
-	@echo "=== Building all packages in Docker ==="
-	docker compose --profile build up build-appimage build-flatpak
+	@echo "=== Building all packages in Docker (multi-stage) ==="
+	$(MAKE) docker-appimage
+	$(MAKE) docker-flatpak
 
 # Docker CI pipeline
 docker-ci:
@@ -230,6 +231,8 @@ docker-ci:
 	docker compose --profile init up whisper-builder
 	docker compose --profile ci run --rm lint
 	$(MAKE) test
+	$(MAKE) docker-appimage
+	$(MAKE) docker-flatpak
 	@echo "=== CI pipeline completed successfully ==="
 
 # Docker cleanup

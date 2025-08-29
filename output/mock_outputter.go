@@ -10,16 +10,14 @@ import (
 
 // MockOutputter implements Outputter interface for testing
 type MockOutputter struct {
-	clipboardContent      string
-	typedContent          string
-	clipboardError        error
-	typeError             error
-	clipboardCallCount    int
-	typeCallCount         int
-	clipboardCallHistory  []string
-	typeCallHistory       []string
-	simulateSlowOperation bool
-	operationDelay        int // milliseconds
+	clipboardContent     string
+	typedContent         string
+	clipboardError       error
+	typeError            error
+	clipboardCallCount   int
+	typeCallCount        int
+	clipboardCallHistory []string
+	typeCallHistory      []string
 }
 
 // NewMockOutputter creates a new mock outputter

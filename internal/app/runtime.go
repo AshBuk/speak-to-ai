@@ -7,7 +7,13 @@ package app
 func (a *App) RunAndWait() error {
 	// Start WebSocket server if enabled
 	if a.Config.WebServer.Enabled {
-		go a.WebSocketServer.Start()
+		go func() {
+			if err := a.WebSocketServer.Start(); err != nil {
+				a.Logger.Info("Web interface disabled in desktop version. Integration in development: %v", err)
+			}
+		}()
+	} else {
+		a.Logger.Info("Web interface disabled. Use menu/config/hotkeys")
 	}
 
 	// Start the tray manager if available

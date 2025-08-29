@@ -43,7 +43,11 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 		log.Printf("D-Bus session bus not available: %v", err)
 		return false
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("Failed to close D-Bus connection: %v", err)
+		}
+	}()
 
 	// Check if GlobalShortcuts portal is available
 	obj := conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
@@ -92,7 +96,9 @@ func (p *DbusKeyboardProvider) Start() error {
 
 	// Register hotkeys using GlobalShortcuts portal
 	if err := p.registerHotkeys(); err != nil {
-		p.conn.Close()
+		if closeErr := p.conn.Close(); closeErr != nil {
+			log.Printf("Failed to close D-Bus connection: %v", closeErr)
+		}
 		return fmt.Errorf("failed to register hotkeys (GlobalShortcuts portal unavailable): %w", err)
 	}
 
@@ -111,7 +117,9 @@ func (p *DbusKeyboardProvider) Stop() {
 	}
 
 	if p.conn != nil {
-		p.conn.Close()
+		if err := p.conn.Close(); err != nil {
+			log.Printf("Failed to close D-Bus connection: %v", err)
+		}
 		p.conn = nil
 	}
 

@@ -11,7 +11,7 @@ import "github.com/AshBuk/speak-to-ai/config"
 // based on available dependencies
 func CreateDefaultTrayManager(onExit func(), onToggle func() error, onShowConfig func() error, onReloadConfig func() error) TrayManagerInterface {
 	// Use the mock implementation as fallback when systray is not available
-	return NewMockTrayManager(onExit, onToggle, onShowConfig, onReloadConfig)
+	return CreateMockTrayManager(onExit, onToggle, onShowConfig, onReloadConfig)
 }
 
 // CreateTrayManagerWithConfig creates tray manager with initial configuration

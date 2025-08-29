@@ -41,12 +41,12 @@ audio:
 
 # Text output settings
 output:
-  default_mode: "active_window"  # Options: "clipboard", "active_window", "web"
+  default_mode: "active_window"  # Options: "clipboard", "active_window", "web" - Fixed: was clipboard
   clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xclip"
   type_tool: "auto"  # Options: "auto", "xdotool", "wl-clipboard", "dbus"
 
 # Web server settings
 web_server:
-  enabled: false
+  enabled: false  # Disabled by default - enable only if needed
   port: 8080
   host: "localhost" 

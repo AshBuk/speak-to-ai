@@ -6,6 +6,8 @@ package platform
 import (
 	"os"
 	"os/exec"
+
+	"github.com/godbus/dbus/v5"
 )
 
 // EnvironmentType represents the display server type
@@ -34,6 +36,55 @@ func DetectEnvironment() EnvironmentType {
 
 	// If neither is detected, assume unknown
 	return EnvironmentUnknown
+}
+
+// DetectDesktopEnvironment detects the current desktop environment
+func DetectDesktopEnvironment() string {
+	// Check XDG_CURRENT_DESKTOP first (most reliable)
+	if de := os.Getenv("XDG_CURRENT_DESKTOP"); de != "" {
+		return de
+	}
+
+	// Fallback to legacy variables
+	if de := os.Getenv("DESKTOP_SESSION"); de != "" {
+		return de
+	}
+
+	return "Unknown"
+}
+
+// IsGNOMEWithWayland checks if running GNOME with Wayland
+func IsGNOMEWithWayland() bool {
+	de := DetectDesktopEnvironment()
+	env := DetectEnvironment()
+
+	return (de == "GNOME" || de == "ubuntu:GNOME") && env == EnvironmentWayland
+}
+
+// HasStatusNotifierWatcher checks if a StatusNotifier watcher is present on the session D-Bus
+func HasStatusNotifierWatcher() bool {
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		return false
+	}
+
+	names := []string{
+		"org.kde.StatusNotifierWatcher",
+		"org.freedesktop.StatusNotifierWatcher",
+	}
+
+	// Query the bus for name ownership
+	busObj := conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus")
+	for _, name := range names {
+		var hasOwner bool
+		call := busObj.Call("org.freedesktop.DBus.NameHasOwner", 0, name)
+		if call.Err == nil {
+			if err := call.Store(&hasOwner); err == nil && hasOwner {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // UtilityExists checks if a specified command/utility exists in PATH

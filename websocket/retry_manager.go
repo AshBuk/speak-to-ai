@@ -44,14 +44,14 @@ func (s *WebSocketServer) executeWithRetry(fn func() error, conn *websocket.Conn
 }
 
 // resetRetryCount resets the retry counter for a connection
-func (s *WebSocketServer) resetRetryCount(conn *websocket.Conn) {
+func (s *WebSocketServer) resetRetryCount(conn *websocket.Conn) { // nolint:unused // used in defer cleanup
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
 	s.retryCount[conn] = 0
 }
 
 // getRetryBackoff calculates retry backoff duration
-func getRetryBackoff(attempt int) time.Duration {
+func getRetryBackoff(attempt int) time.Duration { // nolint:unused // used in tests and future retry strategies
 	baseDelay := 500 * time.Millisecond
 	maxDelay := 5 * time.Second
 

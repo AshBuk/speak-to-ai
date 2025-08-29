@@ -136,7 +136,9 @@ func (s *WebSocketServer) sendError(conn *websocket.Conn, errorType string, erro
 	}
 
 	// Send message
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		s.logger.Error("SetWriteDeadline error: %v", err)
+	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		s.logger.Error("Error sending error message: %v", err)
 	}

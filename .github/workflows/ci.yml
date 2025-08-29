@@ -20,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24.x'
+          go-version: '1.24.1'
           cache: true
 
       - name: Configure Go env
@@ -80,7 +80,7 @@ jobs:
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-            sh -s -- -b $(go env GOPATH)/bin v1.64.8
+            sh -s -- -b $(go env GOPATH)/bin v2.4.0
 
       - name: Diagnostics before golangci-lint
         env:
@@ -116,7 +116,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24.x'
+          go-version: '1.24.1'
           cache: true
 
       - name: Configure Go env

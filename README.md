@@ -1,8 +1,10 @@
 <div align="center">
 
-# <img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="32" height="32" alt="Speak to AI"/> Speak to AI
+<img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="180" height="180" alt="Speak to AI"/>
 
-> \*\*Native Linux voice-to-text app
+# Speak to AI
+
+> Native Linux voice-to-text app 🗣️ 
 
 </div>
 
@@ -102,8 +104,9 @@ Functionality and Go code are ready. Currently improving UI/UX as for now it's m
 
 ## ✦ For Developers
 
-Developer documentation has moved to:
+Start onboarding with:
 
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system architecture and component design
 - [DEVELOPMENT.md](DEVELOPMENT.md) — development workflow and build instructions
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guidelines and how to help improve the project
 - [docker/README.md](docker/README.md) — Docker-based development

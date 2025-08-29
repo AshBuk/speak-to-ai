@@ -21,7 +21,9 @@ func (a *App) handleToggleStreaming() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Streaming Mode", fmt.Sprintf("Streaming transcription %s", status))
+		if err := a.NotifyManager.ShowNotification("Streaming Mode", fmt.Sprintf("Streaming transcription %s", status)); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
 	}
 
 	// Update tray tooltip
@@ -45,7 +47,9 @@ func (a *App) handleSwitchModel() error {
 	availableModels := a.ModelManager.GetAvailableModels()
 	if len(availableModels) <= 1 {
 		if a.NotifyManager != nil {
-			a.NotifyManager.ShowNotification("Model Switch", "Only one model available")
+			if err := a.NotifyManager.ShowNotification("Model Switch", "Only one model available"); err != nil {
+				a.Logger.Warning("Failed to show notification: %v", err)
+			}
 		}
 		return nil
 	}
@@ -86,7 +90,9 @@ func (a *App) handleSwitchModel() error {
 	if err := a.ModelManager.SwitchModel(nextModel); err != nil {
 		a.Logger.Error("Failed to switch model: %v", err)
 		if a.NotifyManager != nil {
-			a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Failed to switch model: %v", err))
+			if err := a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Failed to switch model: %v", err)); err != nil {
+				a.Logger.Warning("Failed to show notification: %v", err)
+			}
 		}
 		return err
 	}
@@ -96,7 +102,9 @@ func (a *App) handleSwitchModel() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Model Switched", fmt.Sprintf("Now using: %s", modelInfo.Description))
+		if err := a.NotifyManager.ShowNotification("Model Switched", fmt.Sprintf("Now using: %s", modelInfo.Description)); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
 	}
 
 	// Update tray tooltip
@@ -122,7 +130,9 @@ func (a *App) handleToggleVAD() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		a.NotifyManager.ShowNotification("Voice Activity Detection", fmt.Sprintf("VAD %s", status))
+		if err := a.NotifyManager.ShowNotification("Voice Activity Detection", fmt.Sprintf("VAD %s", status)); err != nil {
+			a.Logger.Warning("Failed to show notification: %v", err)
+		}
 	}
 
 	// Update tray tooltip

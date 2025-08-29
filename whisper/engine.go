@@ -7,6 +7,7 @@ package whisper
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -123,7 +124,11 @@ func (w *WhisperEngine) loadAudioData(audioFile string) ([]float32, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audio file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Failed to close audio file: %v", err)
+		}
+	}()
 
 	// Create WAV decoder
 	decoder := wav.NewDecoder(file)

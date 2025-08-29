@@ -1,63 +1,82 @@
-# Container for building Flatpak packages
-FROM fedora:39
+# Lean Flatpak builder - downloads runtimes at build time, not in image
+FROM ubuntu:22.04 AS builder
 
-# Install Flatpak build dependencies
-RUN dnf install -y \
-    # Flatpak tools
+# Avoid timezone interaction
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install minimal system dependencies in one layer
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    wget \
+    git \
+    build-essential \
+    cmake \
+    pkg-config \
     flatpak \
     flatpak-builder \
-    # Go
-    golang \
-    # Build tools
-    git \
-    cmake \
-    gcc \
-    gcc-c++ \
-    make \
-    pkg-config \
-    # GUI dependencies for systray
-    libayatana-appindicator-gtk3-devel \
-    gtk3-devel \
-    glib2-devel \
-    # Audio and input tools
-    alsa-utils \
-    # Other tools
-    wget \
-    curl \
-    && dnf clean all
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Add Flathub repository
+# Install additional GUI and system libraries
+RUN apt-get update && apt-get install -y \
+    libayatana-appindicator3-dev \
+    libgtk-3-dev \
+    libglib2.0-dev \
+    libdbus-1-dev \
+    ffmpeg \
+    alsa-utils \
+    file \
+    desktop-file-utils \
+    xclip \
+    wl-clipboard \
+    xdotool \
+    ydotool \
+    libnotify-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install Go efficiently
+ENV GO_VERSION=1.24.1
+RUN curl -fsSL "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" | \
+    tar -C /usr/local -xzf -
+ENV PATH="/usr/local/go/bin:$PATH"
+
+# Add Flathub repository (but don't install runtimes yet)
 RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-# Install required Flatpak runtimes
-RUN flatpak install -y flathub org.freedesktop.Platform//23.08 \
-    org.freedesktop.Sdk//23.08
+# Whisper.cpp version pin for reproducible builds
+ARG WHISPER_CPP_REF=v1.7.6
+ENV WHISPER_CPP_REF=${WHISPER_CPP_REF}
 
-# Set working directory
+# Set working directory and create structure
 WORKDIR /app
+RUN mkdir -p lib sources build dist/flatpak
 
-# Copy go mod files first for better layer caching
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source code
+# Copy project sources
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p lib sources build
-
-# Build script for Flatpak
-COPY docker/scripts/build-flatpak.sh /usr/local/bin/build-flatpak.sh
+# Copy build script
+COPY bash-scripts/build-flatpak.sh /usr/local/bin/build-flatpak.sh
 RUN chmod +x /usr/local/bin/build-flatpak.sh
 
 # Set environment variables for CGO
-ENV CGO_ENABLED=1
-ENV C_INCLUDE_PATH="/app/lib"
-ENV LIBRARY_PATH="/app/lib"
-ENV CGO_CFLAGS="-I/app/lib"
-ENV CGO_LDFLAGS="-L/app/lib -lwhisper -lggml-cpu -lggml"
-ENV LD_LIBRARY_PATH="/app/lib"
-ENV PKG_CONFIG_PATH="/app/lib"
+ENV CGO_ENABLED=1 \
+    C_INCLUDE_PATH="/app/lib" \
+    LIBRARY_PATH="/app/lib" \
+    CGO_CFLAGS="-I/app/lib" \
+    CGO_LDFLAGS="-L/app/lib -lwhisper -lggml-cpu -lggml" \
+    LD_LIBRARY_PATH="/app/lib" \
+    PKG_CONFIG_PATH="/app/lib"
 
-# Default command builds Flatpak
-CMD ["/usr/local/bin/build-flatpak.sh"]
+# Pre-install Flatpak runtimes/extensions required by manifest
+RUN flatpak install -y flathub org.gnome.Platform//47 org.gnome.Sdk//47 \
+ && flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//24.08 \
+ && flatpak install -y flathub org.freedesktop.Sdk.Extension.vala//24.08
+
+# Build Flatpak bundle at image build time (script installs deps and bundles)
+RUN /usr/local/bin/build-flatpak.sh --build
+
+# Export artifacts stage
+FROM scratch AS artifacts
+COPY --from=builder /app/dist /dist

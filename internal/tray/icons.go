@@ -8,6 +8,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"io"
+	"log"
 )
 
 // GetIconMicOff returns the binary data for the microphone-off icon
@@ -31,7 +32,11 @@ func mustDecodeIcon(encoded string) []byte {
 	if err != nil {
 		panic("Failed to create gzip reader: " + err.Error())
 	}
-	defer gzipReader.Close()
+	defer func() {
+		if err := gzipReader.Close(); err != nil {
+			log.Printf("Warning: failed to close gzip reader for icon: %v", err)
+		}
+	}()
 
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, gzipReader); err != nil {

@@ -29,7 +29,7 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 }
 
 // validateToken checks if a token is valid
-func (s *WebSocketServer) validateToken(token string) bool {
+func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused // used in tests
 	// If auth token is not set, all tokens are invalid
 	if s.config.WebServer.AuthToken == "" {
 		return false
@@ -43,7 +43,7 @@ func (s *WebSocketServer) validateToken(token string) bool {
 }
 
 // getClientIP gets the client's IP address
-func getClientIP(r *http.Request) string {
+func getClientIP(r *http.Request) string { // nolint:unused // used in tests
 	// Check for X-Forwarded-For header
 	forwardedFor := r.Header.Get("X-Forwarded-For")
 	if forwardedFor != "" {

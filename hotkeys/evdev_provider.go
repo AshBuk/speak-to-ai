@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	evdev "github.com/gvalkov/golang-evdev"
+	evdev "github.com/holoplot/go-evdev"
 )
 
 // EvdevKeyboardProvider implements KeyboardEventProvider using Linux evdev
@@ -47,7 +47,9 @@ func (p *EvdevKeyboardProvider) IsSupported() bool {
 
 	// Close devices since we're just testing
 	for _, dev := range devices {
-		dev.File.Close()
+		if err := dev.Close(); err != nil {
+			log.Printf("Failed to close evdev device: %v", err)
+		}
 	}
 
 	return true
@@ -72,11 +74,14 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 		}
 
 		// Check if this device is a keyboard
-		if strings.Contains(strings.ToLower(dev.Name), "keyboard") ||
+		devName, _ := dev.Name()
+		if strings.Contains(strings.ToLower(devName), "keyboard") ||
 			hasKeyEvents(dev) {
 			devices = append(devices, dev)
 		} else {
-			dev.File.Close()
+			if err := dev.Close(); err != nil {
+				log.Printf("Failed to close evdev device: %v", err)
+			}
 		}
 	}
 
@@ -86,10 +91,12 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 // hasKeyEvents checks if a device has key events
 func hasKeyEvents(dev *evdev.InputDevice) bool {
 	// Check if the device supports key events (EV_KEY)
-	for evType := range dev.Capabilities {
-		// EV_KEY is evdev type 1, but we need to compare by proper type
-		if evType.Type == 1 { // EV_KEY
-			return len(dev.Capabilities[evType]) > 0
+	types := dev.CapableTypes()
+	for _, evType := range types {
+		if evType == evdev.EV_KEY {
+			// Check if it has key events
+			events := dev.CapableEvents(evdev.EV_KEY)
+			return len(events) > 0
 		}
 	}
 	return false
@@ -127,18 +134,15 @@ func (p *EvdevKeyboardProvider) Start() error {
 					// Continue with the event processing
 				}
 
-				// Read events with a timeout
-				events, err := p.devices[deviceIndex].Read()
+				// Read single event
+				event, err := p.devices[deviceIndex].ReadOne()
 				if err != nil {
 					continue
 				}
 
-				// Process events
-				for _, event := range events {
-					// Only process key events (type 1)
-					if event.Type == 1 {
-						p.handleKeyEvent(deviceIndex, event)
-					}
+				// Only process key events
+				if event.Type == evdev.EV_KEY {
+					p.handleKeyEvent(deviceIndex, event)
 				}
 			}
 		}()
@@ -148,7 +152,7 @@ func (p *EvdevKeyboardProvider) Start() error {
 }
 
 // handleKeyEvent processes a key event from a device
-func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event evdev.InputEvent) {
+func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	// Get key name
 	keyCode := int(event.Code)
 	keyName := getKeyName(keyCode)
@@ -186,7 +190,11 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event evdev.InputEvent) {
 
 			// If all conditions met, trigger the callback
 			if allModifiersPressed {
-				go callback()
+				go func() {
+					if err := callback(); err != nil {
+						log.Printf("Hotkey callback error: %v", err)
+					}
+				}()
 			}
 		}
 	}
@@ -307,7 +315,9 @@ func (p *EvdevKeyboardProvider) Stop() {
 
 	// Close all devices
 	for _, dev := range p.devices {
-		dev.File.Close()
+		if err := dev.Close(); err != nil {
+			log.Printf("Failed to close evdev device: %v", err)
+		}
 	}
 
 	p.devices = nil

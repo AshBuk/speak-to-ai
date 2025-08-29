@@ -136,7 +136,7 @@ jobs:
 4. **Share progress** - Regular updates keep the community engaged
 5. **Ask for help** - Use "help wanted" labels when you need community support
 
-## ✅ Next Steps Checklist
+## Next Steps Checklist
 
 After setting up these files, complete these tasks:
 
@@ -146,5 +146,3 @@ After setting up these files, complete these tasks:
 - [ ] Announce the new community features in a GitHub release
 - [ ] Update CONTRIBUTING.md to reference the new issue templates
 - [ ] Consider setting up GitHub Projects for roadmap planning
-
-Your project now has professional community management tools! 🎉
