@@ -160,13 +160,18 @@ if [ ! -f "${CONFIG_DIR}/language-models/base.bin" ]; then
     fi
 fi
 
-# Check for input device permissions
-if [ ! -r /dev/input/event0 ] 2>/dev/null; then
-    echo "Warning: No access to input devices. Hotkeys may not work."
-    echo "To enable hotkeys, please run:"
-    echo "  sudo usermod -a -G input \$USER"
-    echo "  sudo udevadm control --reload-rules"
-    echo "  sudo udevadm trigger"
+# Check hotkey support (prioritize D-Bus over input devices)
+if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; then
+    # D-Bus session available - hotkeys should work on modern DEs
+    echo "D-Bus session available - hotkeys supported"
+elif [ -r /dev/input/event0 ] 2>/dev/null; then
+    # evdev available - hotkeys should work
+    echo "Input devices accessible - hotkeys supported"  
+else
+    # No hotkey support detected
+    echo "Warning: Hotkeys may not work without additional setup."
+    echo "For hotkeys on GNOME/KDE: Ensure D-Bus session is running"
+    echo "For hotkeys on other DEs: sudo usermod -a -G input \$USER"
     echo "Then log out and log back in."
     echo ""
 fi

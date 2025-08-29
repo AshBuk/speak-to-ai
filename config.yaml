@@ -47,6 +47,6 @@ output:
 
 # Web server settings
 web_server:
-  enabled: true
+  enabled: false  # Disabled by default - enable only if needed
   port: 8080
   host: "localhost" 

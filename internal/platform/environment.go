@@ -6,6 +6,8 @@ package platform
 import (
 	"os"
 	"os/exec"
+
+	"github.com/godbus/dbus/v5"
 )
 
 // EnvironmentType represents the display server type
@@ -59,48 +61,27 @@ func IsGNOMEWithWayland() bool {
 	return (de == "GNOME" || de == "ubuntu:GNOME") && env == EnvironmentWayland
 }
 
-// CheckAppIndicatorExtension checks if GNOME AppIndicator extension is available
-func CheckAppIndicatorExtension() bool {
-	// Check if gnome-extensions command is available
-	if !UtilityExists("gnome-extensions") {
-		return false
-	}
-
-	// Check if appindicator extension is installed and enabled
-	cmd := exec.Command("gnome-extensions", "list", "--enabled")
-	output, err := cmd.Output()
+// HasStatusNotifierWatcher checks if a StatusNotifier watcher is present on the session D-Bus
+func HasStatusNotifierWatcher() bool {
+	conn, err := dbus.SessionBus()
 	if err != nil {
 		return false
 	}
 
-	// Look for common appindicator extension IDs
-	extensions := []string{
-		"appindicatorsupport@rgcjonas.gmail.com",
-		"ubuntu-appindicators@ubuntu.com",
-		"appindicator@ubuntu.com",
+	names := []string{
+		"org.kde.StatusNotifierWatcher",
+		"org.freedesktop.StatusNotifierWatcher",
 	}
 
-	outputStr := string(output)
-	for _, ext := range extensions {
-		if contains(outputStr, ext) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// contains is a simple substring check helper
-func contains(s, substr string) bool {
-	if len(substr) == 0 {
-		return true
-	}
-	if len(s) < len(substr) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
+	// Query the bus for name ownership
+	busObj := conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus")
+	for _, name := range names {
+		var hasOwner bool
+		call := busObj.Call("org.freedesktop.DBus.NameHasOwner", 0, name)
+		if call.Err == nil {
+			if err := call.Store(&hasOwner); err == nil && hasOwner {
+				return true
+			}
 		}
 	}
 	return false

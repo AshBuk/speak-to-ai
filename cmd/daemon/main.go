@@ -5,12 +5,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/internal/app"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Command-line flags
@@ -34,6 +36,30 @@ func main() {
 	// Adjust paths for AppImage and Flatpak environments
 	adjustPathsForAppImage()
 	adjustPathsForFlatpak()
+
+	// Single-instance protection
+	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
+
+	// Check if another instance is already running
+	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
+		log.Printf("Warning: Failed to check existing instance: %v", err)
+	} else if isRunning {
+		fmt.Fprintf(os.Stderr, "Another instance of speak-to-ai is already running (PID: %d)\n", pid)
+		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
+		os.Exit(1)
+	}
+
+	// Try to acquire the lock
+	if err := lockFile.TryLock(); err != nil {
+		log.Fatalf("Failed to acquire application lock: %v", err)
+	}
+
+	// Ensure lock is released on exit
+	defer func() {
+		if err := lockFile.Unlock(); err != nil {
+			log.Printf("Warning: Failed to release lock: %v", err)
+		}
+	}()
 
 	// Create application instance
 	application := app.NewApp(configFile, debug, modelPath, quantizePath)

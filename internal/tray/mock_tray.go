@@ -1,5 +1,3 @@
-//go:build !systray
-
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
@@ -20,8 +18,8 @@ type MockTrayManager struct {
 	onReloadConfig func() error
 }
 
-// NewMockTrayManager creates a new mock tray manager instance
-func NewMockTrayManager(onExit func(), onToggle func() error, onShowConfig func() error, onReloadConfig func() error) TrayManagerInterface {
+// CreateMockTrayManager creates a mock tray manager that doesn't use systray
+func CreateMockTrayManager(onExit func(), onToggle func() error, onShowConfig func() error, onReloadConfig func() error) TrayManagerInterface {
 	return &MockTrayManager{
 		isRecording:    false,
 		onExit:         onExit,
@@ -33,30 +31,26 @@ func NewMockTrayManager(onExit func(), onToggle func() error, onShowConfig func(
 
 // Start initializes and starts the mock system tray (no-op)
 func (tm *MockTrayManager) Start() {
-	log.Println("Mock tray manager started (no actual system tray is shown)")
+	log.Println("Mock tray started (no actual system tray is shown)")
 }
 
-// SetRecordingState updates the mock tray state
 func (tm *MockTrayManager) SetRecordingState(isRecording bool) {
 	tm.isRecording = isRecording
 	if isRecording {
-		log.Println("Tray icon: Recording ON")
+		log.Println("Mock tray: Recording ON")
 	} else {
-		log.Println("Tray icon: Recording OFF")
+		log.Println("Mock tray: Recording OFF")
 	}
 }
 
-// SetTooltip sets the tooltip text (mock implementation)
 func (tm *MockTrayManager) SetTooltip(tooltip string) {
-	log.Printf("Tray tooltip: %s", tooltip)
+	log.Printf("Mock tray tooltip: %s", tooltip)
 }
 
-// UpdateSettings updates the settings display (mock implementation)
 func (tm *MockTrayManager) UpdateSettings(config *config.Config) {
-	log.Printf("Mock tray: Settings updated with config")
+	log.Println("Mock tray: Settings updated")
 }
 
-// Stop stops the mock tray manager (no-op)
 func (tm *MockTrayManager) Stop() {
-	log.Println("Mock tray manager stopped")
+	log.Println("Mock tray stopped")
 }

@@ -195,7 +195,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		if a.Config.WebServer.Enabled {
 			go func() {
 				if err := a.WebSocketServer.Start(); err != nil {
-					a.Logger.Error("WebSocket server failed to start: %v", err)
+					a.Logger.Info("Web interface disabled in desktop version. Integration in development: %v", err)
 				}
 			}()
 		}

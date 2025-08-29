@@ -72,49 +72,36 @@ func (a *App) ensureModelAvailable() error {
 
 // initializeTrayManager initializes the system tray manager
 func (a *App) initializeTrayManager() {
-	// Check if GNOME+Wayland without AppIndicator extension
-	if platform.IsGNOMEWithWayland() && !platform.CheckAppIndicatorExtension() {
-		a.Logger.Info("GNOME with Wayland detected without AppIndicator extension")
-
-		// Show helpful notification to user
-		if a.NotifyManager != nil {
-			message := "System tray requires extension. Install with:\nsudo dnf install gnome-shell-extension-appindicator\n\nThen enable in Extensions app or run:\ngnome-extensions enable appindicatorsupport@rgcjonas.gmail.com"
-			if err := a.NotifyManager.ShowNotification("ℹ️ Speak-to-AI Setup", message); err != nil {
-				a.Logger.Warning("Failed to show setup notification: %v", err)
-			}
-		}
-
-		// Also log instructions
-		a.Logger.Info("To enable system tray icon:")
-		a.Logger.Info("1. Install: sudo dnf install gnome-shell-extension-appindicator")
-		a.Logger.Info("2. Enable: gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com")
-		a.Logger.Info("3. Or use GNOME Extensions app")
-		a.Logger.Info("Using hotkeys for now: %s to toggle recording", a.Config.Hotkeys.StartRecording)
+	// Define shared functions for tray manager
+	exitFunc := func() {
+		a.Cancel() // Trigger application shutdown
 	}
-
-	// Create a toggle function for the tray
 	toggleFunc := func() error {
 		if a.HotkeyManager.IsRecording() {
 			return a.HotkeyManager.SimulateHotkeyPress("stop_recording")
 		}
 		return a.HotkeyManager.SimulateHotkeyPress("start_recording")
 	}
-
-	// Create exit function
-	exitFunc := func() {
-		a.Cancel() // Trigger application shutdown
-	}
-
-	// Create show config function
 	showConfigFunc := func() error {
 		return a.handleShowConfig()
 	}
-
-	// Create reload config function
 	reloadConfigFunc := func() error {
 		return a.handleReloadConfig()
 	}
 
-	// Create the appropriate tray manager with configuration
+	// Fallback to mock tray if StatusNotifier watcher is not available
+	if !platform.HasStatusNotifierWatcher() {
+		a.Logger.Info("StatusNotifier watcher not found; using mock tray")
+		if a.NotifyManager != nil {
+			msg := "System tray support is not available. On GNOME, install and enable the AppIndicator extension."
+			if err := a.NotifyManager.ShowNotification("ℹ️ Speak-to-AI", msg); err != nil {
+				a.Logger.Warning("Failed to show notification: %v", err)
+			}
+		}
+		a.TrayManager = tray.CreateMockTrayManager(exitFunc, toggleFunc, showConfigFunc, reloadConfigFunc)
+		return
+	}
+
+	// Create the tray manager with configuration
 	a.TrayManager = tray.CreateTrayManagerWithConfig(a.Config, exitFunc, toggleFunc, showConfigFunc, reloadConfigFunc)
 }
