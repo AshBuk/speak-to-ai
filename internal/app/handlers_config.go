@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/AshBuk/speak-to-ai/config"
 )
@@ -49,8 +50,12 @@ func (a *App) handleShowConfig() error {
 		return fmt.Errorf("config file not found: %s", a.ConfigFile)
 	}
 
-	// Sanitize args (config file path)
-	args := config.SanitizeCommandArgs([]string{a.ConfigFile})
+	// Resolve absolute path and sanitize args (config file path)
+	absPath := a.ConfigFile
+	if p, err := filepath.Abs(a.ConfigFile); err == nil {
+		absPath = p
+	}
+	args := config.SanitizeCommandArgs([]string{absPath})
 	if len(args) != 1 {
 		return fmt.Errorf("invalid config file path")
 	}

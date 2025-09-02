@@ -119,6 +119,15 @@ func adjustPathsForAppImage() {
 			log.Printf("Using built-in model: %s", modelPath)
 		}
 	}
+
+	// If default config path is used, prefer bundled config if present
+	if configFile == "config.yaml" {
+		bundledConfig := filepath.Join(appDir, "config.yaml")
+		if _, err := os.Stat(bundledConfig); err == nil {
+			configFile = bundledConfig
+			log.Printf("Using AppImage bundled config: %s", configFile)
+		}
+	}
 }
 
 // adjustPathsForFlatpak detects if running inside a Flatpak and adjusts paths accordingly
