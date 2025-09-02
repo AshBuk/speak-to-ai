@@ -87,7 +87,7 @@ func (a *App) handleReloadConfig() error {
 
 	// Show notification about config reload
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Configuration", "Reloading configuration..."); err != nil {
+		if err := a.NotifyManager.ShowNotification("Configuration", "Reloading..."); err != nil {
 			a.Logger.Warning("failed to show notification: %v", err)
 		}
 	}
@@ -126,7 +126,7 @@ func (a *App) handleReloadConfig() error {
 
 	// Success notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Configuration", "Configuration reloaded successfully!"); err != nil {
+		if err := a.NotifyManager.ShowNotification("Configuration", "Reloaded successfully!"); err != nil {
 			a.Logger.Warning("failed to show notification: %v", err)
 		}
 	}

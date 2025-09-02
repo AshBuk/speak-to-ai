@@ -43,7 +43,8 @@ func (a *ArecordRecorder) buildCommandArgs() []string {
 		// Output to stdout for buffer/streaming mode
 		args = append(args, "-t", "raw")
 	} else {
-		// Output to file
+		// Output to file with WAV header so decoder can read PCM
+		args = append(args, "-t", "wav")
 		args = append(args, a.outputFile)
 	}
 

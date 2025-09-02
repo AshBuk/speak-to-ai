@@ -183,6 +183,11 @@ func (b *BaseRecorder) createTempFile() error {
 	timestamp := time.Now().Format("20060102-150405")
 	b.outputFile = filepath.Join(tempDir, fmt.Sprintf("audio_%s.wav", timestamp))
 
+	// Precreate the file so existence checks during stop won't fail even if recorder exited early
+	if f, err := os.Create(b.outputFile); err == nil {
+		_ = f.Close()
+	}
+
 	// Register with temp file manager
 	b.tempManager.AddFile(b.outputFile)
 

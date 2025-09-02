@@ -23,8 +23,8 @@ func SetDefaultConfig(config *Config) {
 	config.General.ActiveModel = "sources/language-models/base.bin" // Default to base model
 
 	// Hotkey settings (defaults)
-	config.Hotkeys.StartRecording = "altgr+comma"    // AltGr + , (comma) - Microsoft Copilot key
-	config.Hotkeys.StopRecording = "altgr+comma"     // Same combination for start/stop
+	config.Hotkeys.StartRecording = "ctrl+alt+r"     // Universal default
+	config.Hotkeys.StopRecording = "ctrl+alt+r"      // Same combination for start/stop
 	config.Hotkeys.ToggleStreaming = "altgr+shift+s" // AltGr + Shift + S
 	config.Hotkeys.SwitchModel = "altgr+shift+m"     // AltGr + Shift + M
 	config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
