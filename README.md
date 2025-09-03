@@ -32,22 +32,11 @@
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: no data sent to external servers
 - **Portable**: available as AppImage and Flatpak
-
-- **100% Offline** speech recognition using Whisper.cpp
-- **System tray integration** with recording status (🎤 / 💤)
-- **Key binding support** (AltGr + ,) and customizable hotkeys
-- **Automatic typing** in active window after transcription
-- **Clipboard support** for copying transcribed text
-- **WebSocket API** for external integrations (optional)
-- **Visual notifications** for statuses
-
+- **100% Offline, Key binding support, Automatic typing, Clipboard support, WebSocket API (optional, for external integrations), Visual notifications**
 
 ## ✦ Installation
 
-Get prebuilt packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
-
-- AppImage: portable binary for most Linux distributions
-- Flatpak: sandboxed install
+Get prebuilt Flatpak or AppImage packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
 
 ### AppImage
 
@@ -56,6 +45,9 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 ```bash
 # Download the file, then:
 chmod +x speak-to-ai-*.AppImage
+# For hotkeys to work, add user to input group:
+sudo usermod -a -G input $USER
+# Then reboot or log out/in
 # Open:
 ./speak-to-ai-*.AppImage
 ```
@@ -77,23 +69,11 @@ Configuration file is automatically created at:
 - **AppImage**: `~/.config/speak-to-ai/config.yaml`
 - **Flatpak**: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
 
-### Desktop Environment Compatibility
+## Desktop Environment Compatibility
 
-#### GNOME & KDE (Recommended)
-Global hotkeys work seamlessly using the `org.freedesktop.portal.GlobalShortcuts` portal:
-- **GNOME**: Full native support, no additional configuration needed
-- **KDE Plasma**: Full native support, no additional configuration needed
+GNOME (Wayland/X11) and KDE Plasma (Wayland/X11) have native support. Help us test different desktop environments:
 
-#### Other Desktop Environments
-For DEs without GlobalShortcuts portal support (XFCE, MATE, i3, etc.):
-- Hotkeys may be limited by Flatpak sandboxing
-- Optional: Grant input device access for better hotkey support:
-
-```bash
-flatpak override --user --device=input io.github.ashbuk.speak-to-ai
-```
-
-Then restart the app. This is optional and only needed on DEs without GlobalShortcuts portal.
+📋 **[Desktop Environment Support Guide](Desktop_Environment_Support.md)**
 
 ## ✦ Project Status
 
@@ -109,16 +89,6 @@ Start onboarding with:
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guidelines and how to help improve the project
 - [docker/README.md](docker/README.md) — Docker-based development
 
-## ✦ Architecture & Components
-
-- **Local Daemon**: Go application handling hotkeys, audio recording, and output
-- **Whisper Engine**: Uses `whisper.cpp` binary for speech recognition
-- **Audio Recording**: Supports `arecord` and `ffmpeg` backends
-- **Text Output**: 
-  - **Active Window Mode**: Automatically types transcribed text into the currently active window
-  - **Clipboard Mode**: Copies transcribed text to system clipboard
-  - **Combined Mode**: Both typing and clipboard operations
-- **WebSocket Server**: Provides API for external applications (optional, port 8080)
 
 ## ✦ System Requirements
 
