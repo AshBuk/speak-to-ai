@@ -38,6 +38,7 @@ coverage.out
 .vscode/
 .cursor/
 .claude/
+CLAUDE.md
 
 # OS generated files
 .DS_Store

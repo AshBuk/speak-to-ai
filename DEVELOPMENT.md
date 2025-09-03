@@ -68,9 +68,34 @@ GitHub Actions handle complex builds, releases, and distribution.
 |--------|----------|------------|-------------------|
 | **audio** | 57.1% | `*_test.go` | Audio devices, streaming |
 | **output** | 68.3% | `*_test.go` | Clipboard, typing tools |
-| **hotkeys** | 57.4% | `*_test.go` | D-Bus, evdev providers |
+| **hotkeys** | 57.4% | `*_test.go` | D-Bus, evdev fallback providers |
 | **config** | 84.9% | `*_test.go` | File loading, validation |
 | **internal/** | 87.5%+ | `*_test.go` | Platform detection |
+
+## Hotkeys Architecture
+
+### Provider Chain & Fallback System
+```
+DBus GlobalShortcuts (GNOME/KDE) → Evdev (i3/XFCE/MATE)
+      ↑                                  ↑
+   preferred                        fallback
+   (portal)                       (direct input)
+```
+
+**Fallback Logic:**
+- **GNOME/KDE**: No fallback, surface portal issues
+- **Other DEs**: Auto-fallback to evdev on D-Bus failure
+- Extracted to `hotkeys/provider_fallback.go`
+
+### Module Structure
+```
+hotkeys/
+├── manager.go           # Orchestrator (simplified)
+├── provider_fallback.go # Fallback logic & registration
+├── dbus_provider.go     # GlobalShortcuts portal
+├── evdev_provider.go    # Direct input devices
+└── interface.go         # Provider contracts
+```
 
 ### Example Configuration
 
@@ -81,6 +106,10 @@ general:
   model_path: "~/.config/speak-to-ai/language-models/base.bin"
   language: "auto"  # Auto-detect or specify "en", "ru", etc.
 
+# Hotkeys settings
+hotkeys:
+  start_recording: "Alt+R"  # Main recording hotkey
+  # Additional custom hotkeys can be registered programmatically
 
 # Audio settings
 audio:

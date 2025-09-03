@@ -4,10 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [bump_version_to_x.x.x]
-
----
-
 ## [0.1.3] - 2025-08-28
 
 > Added
@@ -15,6 +11,13 @@ All notable changes to this project will be documented in this file.
 - Whisper model (142MB) + system libraries (~66MB) + go binary (7.8MB) = 216MB total
 - Automatic first-launch setup and model copying to user config
 
+> Fixed
+- Hotkey fallback system: D-Bus to evdev failover for non-GNOME/KDE environments
+- AppImage bundled config support: prefer APPDIR/config.yaml when available
+
+> Changed
+- Refactored hotkey manager: extracted fallback logic to provider_fallback.go
+- Simplified HotkeyManager.Start() method
 ---
 
 ## [0.1.2] - 2025-08-26
