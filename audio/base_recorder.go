@@ -428,8 +428,16 @@ func (b *BaseRecorder) StopProcess() error {
 
 	// If we're using a file, verify it was created
 	if !b.useBuffer {
-		if _, err := os.Stat(b.outputFile); os.IsNotExist(err) {
-			return fmt.Errorf("audio file was not created")
+		info, err := os.Stat(b.outputFile)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("audio file was not created")
+			}
+			return fmt.Errorf("failed to stat audio file: %w", err)
+		}
+		// Minimal valid WAV header is 44 bytes
+		if info.Size() <= 44 {
+			return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
 		}
 	}
 

@@ -34,10 +34,12 @@ func (f *FFmpegRecorder) StartRecording() error {
 func (f *FFmpegRecorder) buildCommandArgs() []string {
 	// Basic arguments
 	args := []string{
+		"-y", // overwrite if temp file pre-created
 		"-f", "alsa",
 		"-i", f.config.Audio.Device,
 		"-ar", fmt.Sprintf("%d", f.config.Audio.SampleRate),
 		"-ac", fmt.Sprintf("%d", f.config.Audio.Channels),
+		"-acodec", "pcm_s16le", // ensure 16-bit PCM output
 	}
 
 	// Add quality settings
@@ -49,7 +51,7 @@ func (f *FFmpegRecorder) buildCommandArgs() []string {
 		args = append(args, "-f", "wav", "-")
 	} else {
 		// Output to file
-		args = append(args, f.outputFile)
+		args = append(args, "-f", "wav", f.outputFile)
 	}
 
 	return args

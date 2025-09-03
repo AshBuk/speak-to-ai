@@ -23,15 +23,9 @@ func (a *App) handleShowConfig() error {
 		}
 	}
 
-	// Get editor from environment variable
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		// Fallback to xdg-open
-		editor = "xdg-open"
-		a.Logger.Debug("$EDITOR not set, using xdg-open as fallback")
-	} else {
-		a.Logger.Debug("Using editor from $EDITOR: %s", editor)
-	}
+	// Prefer xdg-open for better compatibility and security
+	editor := "xdg-open"
+	a.Logger.Debug("Using xdg-open to open config file")
 
 	// Security: allowlist check on editor
 	if !a.Config.IsCommandAllowed(editor) {
@@ -52,7 +46,20 @@ func (a *App) handleShowConfig() error {
 
 	// Resolve absolute path and sanitize args (config file path)
 	absPath := a.ConfigFile
-	if p, err := filepath.Abs(a.ConfigFile); err == nil {
+	if _, statErr := os.Stat(absPath); os.IsNotExist(statErr) {
+		// Try XDG config path ~/.config/speak-to-ai/config.yaml
+		xdg := os.Getenv("XDG_CONFIG_HOME")
+		if xdg == "" {
+			if home, herr := os.UserHomeDir(); herr == nil {
+				xdg = filepath.Join(home, ".config")
+			}
+		}
+		candidate := filepath.Join(xdg, "speak-to-ai", "config.yaml")
+		if _, cerr := os.Stat(candidate); cerr == nil {
+			absPath = candidate
+		}
+	}
+	if p, err := filepath.Abs(absPath); err == nil {
 		absPath = p
 	}
 	args := config.SanitizeCommandArgs([]string{absPath})
