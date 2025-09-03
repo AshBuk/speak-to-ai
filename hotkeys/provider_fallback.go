@@ -59,16 +59,21 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider KeyboardEventProvider) err
 }
 
 // startFallbackAfterRegistration attempts to switch to a fallback provider (evdev)
-// only on desktops that lack GlobalShortcuts (not GNOME/KDE). It assumes hotkeys
-// are already registered on the current provider and will re-register on fallback.
+// Allows fallback on GNOME/KDE when running in AppImage due to portal sandboxing issues.
 func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 	log.Printf("Primary keyboard provider failed to start: %v", startErr)
 
-	// Do not fallback on GNOME/KDE where GlobalShortcuts should work; surface the error
+	// Check if running in AppImage - allow fallback even on GNOME/KDE
 	de := strings.ToLower(os.Getenv("XDG_CURRENT_DESKTOP"))
-	if strings.Contains(de, "gnome") || strings.Contains(de, "kde") {
+	isAppImage := os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != ""
+
+	if (strings.Contains(de, "gnome") || strings.Contains(de, "kde")) && !isAppImage {
 		log.Println("Skipping evdev fallback on GNOME/KDE; please check portal permissions")
 		return fmt.Errorf("failed to start keyboard provider: %w", startErr)
+	}
+
+	if isAppImage {
+		log.Println("AppImage detected - allowing evdev fallback for better hotkey compatibility")
 	}
 
 	// Only fallback when current provider is DBus and evdev is supported

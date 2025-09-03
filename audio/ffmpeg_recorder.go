@@ -34,8 +34,8 @@ func (f *FFmpegRecorder) StartRecording() error {
 func (f *FFmpegRecorder) buildCommandArgs() []string {
 	// Basic arguments
 	args := []string{
-		"-y", // overwrite if temp file pre-created
-		"-f", "alsa",
+		"-y",          // overwrite if temp file pre-created
+		"-f", "pulse", // Use pulse for better pipewire compatibility
 		"-i", f.config.Audio.Device,
 		"-ar", fmt.Sprintf("%d", f.config.Audio.SampleRate),
 		"-ac", fmt.Sprintf("%d", f.config.Audio.Channels),
