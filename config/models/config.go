@@ -64,8 +64,8 @@ type Config struct {
 		Enabled     bool   `yaml:"enabled"`
 		Port        int    `yaml:"port"`
 		Host        string `yaml:"host"`
-		AuthToken   string   `yaml:"auth_token"`   // Optional auth token
-		APIVersion  string   `yaml:"api_version"`  // API version
+		AuthToken   string `yaml:"auth_token"`   // Optional auth token
+		APIVersion  string `yaml:"api_version"`  // API version
 		LogRequests bool   `yaml:"log_requests"` // Whether to log requests
 		CORSOrigins string `yaml:"cors_origins"` // Allowed origins for CORS
 		MaxClients  int    `yaml:"max_clients"`  // Maximum number of clients

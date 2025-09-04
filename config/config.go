@@ -6,7 +6,7 @@
 //
 // Subpackages:
 //   - models: Configuration data structures and types
-//   - loaders: Configuration loader implementations (YAML)  
+//   - loaders: Configuration loader implementations (YAML)
 //   - validators: Configuration validation implementations
 //   - security: Security utilities and integrity checks
 package config
