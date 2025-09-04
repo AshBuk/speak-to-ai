@@ -3,11 +3,16 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package manager
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
+	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 )
 
 func TestParseHotkey(t *testing.T) {
@@ -69,7 +74,7 @@ func TestParseHotkey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ParseHotkey(tt.input)
+			result := utils.ParseHotkey(tt.input)
 
 			if result.Key != tt.expectedKey {
 				t.Errorf("Expected key '%s', got '%s'", tt.expectedKey, result.Key)
@@ -120,9 +125,9 @@ func TestIsModifier(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := IsModifier(tt.input)
+			result := utils.IsModifier(tt.input)
 			if result != tt.expected {
-				t.Errorf("IsModifier('%s') = %v, expected %v", tt.input, result, tt.expected)
+				t.Errorf("utils.IsModifier('%s') = %v, expected %v", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -151,9 +156,9 @@ func TestConvertModifierToEvdev(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ConvertModifierToEvdev(tt.input)
+			result := utils.ConvertModifierToEvdev(tt.input)
 			if result != tt.expected {
-				t.Errorf("ConvertModifierToEvdev('%s') = %s, expected %s", tt.input, result, tt.expected)
+				t.Errorf("utils.ConvertModifierToEvdev('%s') = %s, expected %s", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -161,13 +166,13 @@ func TestConvertModifierToEvdev(t *testing.T) {
 
 func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 	// Create a simple config adapter for testing
-	config := NewConfigAdapter("ctrl+r")
+	config := adapters.NewConfigAdapter("ctrl+r")
 
 	// Test when provider fails to start
-	manager := NewHotkeyManager(config, EnvironmentX11)
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
 	// Replace with a mock that always fails
-	mockProvider := NewMockHotkeyProvider()
+	mockProvider := mocks.NewMockHotkeyProvider()
 	mockProvider.SetStartError(fmt.Errorf("provider start failed"))
 	manager.provider = mockProvider
 
@@ -183,12 +188,12 @@ func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 
 func TestHotkeyManager_StartWithNoProvider(t *testing.T) {
 	// Create a simple config adapter for testing
-	config := NewConfigAdapter("ctrl+r")
+	config := adapters.NewConfigAdapter("ctrl+r")
 
 	// Test when no provider is available
 	manager := &HotkeyManager{
 		config:      config,
-		environment: EnvironmentUnknown,
+		environment: interfaces.EnvironmentUnknown,
 		provider:    nil,
 		isListening: false,
 	}
@@ -203,16 +208,16 @@ func TestSelectKeyboardProvider(t *testing.T) {
 	// This tests the selectKeyboardProvider function indirectly through NewHotkeyManager
 	tests := []struct {
 		name        string
-		environment EnvironmentType
+		environment interfaces.EnvironmentType
 	}{
-		{"X11 environment", EnvironmentX11},
-		{"Wayland environment", EnvironmentWayland},
-		{"Unknown environment", EnvironmentUnknown},
+		{"X11 environment", interfaces.EnvironmentX11},
+		{"Wayland environment", interfaces.EnvironmentWayland},
+		{"Unknown environment", interfaces.EnvironmentUnknown},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := NewConfigAdapter("ctrl+r")
+			config := adapters.NewConfigAdapter("ctrl+r")
 			manager := NewHotkeyManager(config, tt.environment)
 
 			if manager == nil {
@@ -231,8 +236,8 @@ func TestSelectKeyboardProvider(t *testing.T) {
 }
 
 func TestHotkeyManager_StopWithoutStart(t *testing.T) {
-	config := NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, EnvironmentX11)
+	config := adapters.NewConfigAdapter("ctrl+r")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
 	// Stop without start should be safe
 	manager.Stop()
@@ -243,9 +248,9 @@ func TestHotkeyManager_StopWithoutStart(t *testing.T) {
 }
 
 func TestHotkeyManager_MultipleStartStop(t *testing.T) {
-	config := NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, EnvironmentX11)
-	mockProvider := NewMockHotkeyProvider()
+	config := adapters.NewConfigAdapter("ctrl+r")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 
 	// Start
@@ -278,9 +283,9 @@ func TestHotkeyManager_MultipleStartStop(t *testing.T) {
 }
 
 func TestHotkeyManager_ConcurrentAccess_Extended(t *testing.T) {
-	config := NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, EnvironmentX11)
-	mockProvider := NewMockHotkeyProvider()
+	config := adapters.NewConfigAdapter("ctrl+r")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 
 	// Test concurrent access to IsRecording

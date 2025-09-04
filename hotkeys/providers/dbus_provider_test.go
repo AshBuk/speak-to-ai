@@ -1,15 +1,18 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package providers
 
 import (
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 )
 
 func TestNewDbusKeyboardProvider(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	env := EnvironmentWayland
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	env := interfaces.EnvironmentWayland
 
 	provider := NewDbusKeyboardProvider(config, env)
 
@@ -32,8 +35,8 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Test IsSupported - this will likely return false in test environment
 	supported := provider.IsSupported()
@@ -48,8 +51,8 @@ func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	callbackCalled := false
 	callback := func() error {
@@ -86,8 +89,8 @@ func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	callback := func() error { return nil }
 
@@ -108,8 +111,8 @@ func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Set isListening to true to simulate already started
 	provider.isListening = true
@@ -124,8 +127,8 @@ func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Stop should not panic even if not started
 	provider.Stop()
@@ -137,8 +140,8 @@ func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_Stop_WhenStarted(t *testing.T) {
-	config := NewConfigAdapter("ctrl+shift+r")
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Simulate started state
 	provider.isListening = true

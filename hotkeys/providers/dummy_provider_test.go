@@ -1,10 +1,12 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package providers
 
 import (
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 )
 
 func TestNewDummyKeyboardProvider(t *testing.T) {
@@ -23,7 +25,7 @@ func TestNewDummyKeyboardProvider(t *testing.T) {
 	}
 
 	// Test that it implements the interface
-	var _ KeyboardEventProvider = provider
+	var _ interfaces.KeyboardEventProvider = provider
 }
 
 func TestDummyKeyboardProvider_IsSupported(t *testing.T) {

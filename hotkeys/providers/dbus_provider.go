@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package providers
 
 import (
 	"fmt"
@@ -12,13 +12,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	dbus "github.com/godbus/dbus/v5"
 )
 
 // DbusKeyboardProvider implements KeyboardEventProvider using D-Bus portal
 type DbusKeyboardProvider struct {
-	config        HotkeyConfig
-	environment   EnvironmentType
+	config        adapters.HotkeyConfig
+	environment   interfaces.EnvironmentType
 	callbacks     map[string]func() error
 	conn          *dbus.Conn
 	sessionHandle string
@@ -27,7 +30,7 @@ type DbusKeyboardProvider struct {
 }
 
 // NewDbusKeyboardProvider creates a new D-Bus keyboard provider
-func NewDbusKeyboardProvider(config HotkeyConfig, environment EnvironmentType) *DbusKeyboardProvider {
+func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
 		config:      config,
 		environment: environment,
@@ -147,7 +150,7 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 //	"ctrl+shift+a" -> "<Ctrl><Shift>a"
 //	"altgr+comma"  -> "<AltGr>comma"
 func convertHotkeyToAccelerator(hotkey string) string {
-	combo := ParseHotkey(hotkey)
+	combo := utils.ParseHotkey(hotkey)
 	var prefix strings.Builder
 	for _, m := range combo.Modifiers {
 		switch strings.ToLower(m) {

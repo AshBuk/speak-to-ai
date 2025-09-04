@@ -1,37 +1,40 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package manager
 
 import (
 	"errors"
 	"sync"
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
 )
 
 // MockFactory для тестирования dependency injection
 type MockFactory struct {
 	mu        sync.RWMutex
-	providers map[string]KeyboardEventProvider
+	providers map[string]interfaces.KeyboardEventProvider
 	createErr error
 }
 
 // NewMockFactory создает новую mock factory
 func NewMockFactory() *MockFactory {
 	return &MockFactory{
-		providers: make(map[string]KeyboardEventProvider),
+		providers: make(map[string]interfaces.KeyboardEventProvider),
 	}
 }
 
 // RegisterProvider регистрирует provider в factory
-func (f *MockFactory) RegisterProvider(name string, provider KeyboardEventProvider) {
+func (f *MockFactory) RegisterProvider(name string, provider interfaces.KeyboardEventProvider) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.providers[name] = provider
 }
 
 // CreateProvider создает provider по имени
-func (f *MockFactory) CreateProvider(name string) (KeyboardEventProvider, error) {
+func (f *MockFactory) CreateProvider(name string) (interfaces.KeyboardEventProvider, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -58,7 +61,7 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 	factory := NewMockFactory()
 
 	t.Run("RegisterAndCreateProvider", func(t *testing.T) {
-		mockProvider := NewMockHotkeyProvider()
+		mockProvider := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("mock", mockProvider)
 
 		provider, err := factory.CreateProvider("mock")
@@ -82,8 +85,8 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 	})
 
 	t.Run("MultipleProviders", func(t *testing.T) {
-		mock1 := NewMockHotkeyProvider()
-		mock2 := NewMockHotkeyProvider()
+		mock1 := mocks.NewMockHotkeyProvider()
+		mock2 := mocks.NewMockHotkeyProvider()
 
 		factory.RegisterProvider("provider1", mock1)
 		factory.RegisterProvider("provider2", mock2)
@@ -104,8 +107,8 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 	})
 
 	t.Run("OverrideProvider", func(t *testing.T) {
-		mock1 := NewMockHotkeyProvider()
-		mock2 := NewMockHotkeyProvider()
+		mock1 := mocks.NewMockHotkeyProvider()
+		mock2 := mocks.NewMockHotkeyProvider()
 
 		factory.RegisterProvider("override", mock1)
 		factory.RegisterProvider("override", mock2)
@@ -158,7 +161,7 @@ func TestHotkeyFactory_InterfaceCompliance(t *testing.T) {
 	factory := NewMockFactory()
 
 	t.Run("MockProviderCompliance", func(t *testing.T) {
-		mockProvider := NewMockHotkeyProvider()
+		mockProvider := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("mock", mockProvider)
 
 		provider, err := factory.CreateProvider("mock")
@@ -167,7 +170,7 @@ func TestHotkeyFactory_InterfaceCompliance(t *testing.T) {
 		}
 
 		// Verify interface compliance
-		var _ KeyboardEventProvider = provider
+		var _ interfaces.KeyboardEventProvider = provider
 
 		// Test interface methods
 		if !provider.IsSupported() {
@@ -188,7 +191,7 @@ func TestHotkeyFactory_InterfaceCompliance(t *testing.T) {
 	})
 
 	t.Run("ErrorProviderCompliance", func(t *testing.T) {
-		errorProvider := NewMockHotkeyProviderWithErrors()
+		errorProvider := mocks.NewMockHotkeyProviderWithErrors()
 		factory.RegisterProvider("error", errorProvider)
 
 		provider, err := factory.CreateProvider("error")
@@ -197,7 +200,7 @@ func TestHotkeyFactory_InterfaceCompliance(t *testing.T) {
 		}
 
 		// Verify interface compliance
-		var _ KeyboardEventProvider = provider
+		var _ interfaces.KeyboardEventProvider = provider
 
 		// Test error scenarios
 		errorProvider.SimulateUnsupportedEnvironment()
@@ -216,7 +219,7 @@ func TestHotkeyFactory_LifecycleManagement(t *testing.T) {
 	factory := NewMockFactory()
 
 	t.Run("ProviderLifecycle", func(t *testing.T) {
-		mockProvider := NewMockHotkeyProvider()
+		mockProvider := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("lifecycle", mockProvider)
 
 		provider, err := factory.CreateProvider("lifecycle")
@@ -242,9 +245,9 @@ func TestHotkeyFactory_LifecycleManagement(t *testing.T) {
 	})
 
 	t.Run("MultipleProviderLifecycles", func(t *testing.T) {
-		providers := make([]KeyboardEventProvider, 3)
+		providers := make([]interfaces.KeyboardEventProvider, 3)
 		for i := range providers {
-			mock := NewMockHotkeyProvider()
+			mock := mocks.NewMockHotkeyProvider()
 			providers[i] = mock
 			factory.RegisterProvider(string(rune('a'+i)), mock)
 		}
@@ -264,7 +267,7 @@ func TestHotkeyFactory_LifecycleManagement(t *testing.T) {
 
 		// Verify all are started
 		for i, provider := range providers {
-			if mock, ok := provider.(*MockHotkeyProvider); ok {
+			if mock, ok := provider.(*mocks.MockHotkeyProvider); ok {
 				if !mock.IsStarted() {
 					t.Errorf("expected provider %d to be started", i)
 				}
@@ -279,7 +282,7 @@ func TestHotkeyFactory_LifecycleManagement(t *testing.T) {
 
 		// Verify all are stopped
 		for i, provider := range providers {
-			if mock, ok := provider.(*MockHotkeyProvider); ok {
+			if mock, ok := provider.(*mocks.MockHotkeyProvider); ok {
 				if !mock.WasStopCalled() {
 					t.Errorf("expected provider %d to be stopped", i)
 				}
@@ -299,7 +302,7 @@ func TestHotkeyFactory_ConcurrentAccess(t *testing.T) {
 			go func(index int) {
 				defer func() { done <- true }()
 
-				mock := NewMockHotkeyProvider()
+				mock := mocks.NewMockHotkeyProvider()
 				factory.RegisterProvider(string(rune('a'+index)), mock)
 			}(i)
 		}
@@ -322,7 +325,7 @@ func TestHotkeyFactory_ConcurrentAccess(t *testing.T) {
 	})
 
 	t.Run("ConcurrentCreation", func(t *testing.T) {
-		mock := NewMockHotkeyProvider()
+		mock := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("concurrent", mock)
 
 		done := make(chan bool)
@@ -362,7 +365,7 @@ func TestHotkeyFactory_EdgeCases(t *testing.T) {
 	factory := NewMockFactory()
 
 	t.Run("EmptyProviderName", func(t *testing.T) {
-		mock := NewMockHotkeyProvider()
+		mock := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("", mock)
 
 		provider, err := factory.CreateProvider("")
@@ -378,7 +381,7 @@ func TestHotkeyFactory_EdgeCases(t *testing.T) {
 		names := []string{"test-provider", "test_provider", "test.provider", "test@provider"}
 
 		for _, name := range names {
-			mock := NewMockHotkeyProvider()
+			mock := mocks.NewMockHotkeyProvider()
 			factory.RegisterProvider(name, mock)
 
 			provider, err := factory.CreateProvider(name)
@@ -395,7 +398,7 @@ func TestHotkeyFactory_EdgeCases(t *testing.T) {
 		names := []string{"тест", "测试", "テスト", "🎹"}
 
 		for _, name := range names {
-			mock := NewMockHotkeyProvider()
+			mock := mocks.NewMockHotkeyProvider()
 			factory.RegisterProvider(name, mock)
 
 			provider, err := factory.CreateProvider(name)
@@ -414,7 +417,7 @@ func TestHotkeyFactory_EdgeCases(t *testing.T) {
 			longName += "a"
 		}
 
-		mock := NewMockHotkeyProvider()
+		mock := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider(longName, mock)
 
 		provider, err := factory.CreateProvider(longName)

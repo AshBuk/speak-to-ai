@@ -9,7 +9,9 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
@@ -254,21 +256,21 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 // initializeHotkeyManager initializes the hotkey manager component
 func (a *App) initializeHotkeyManager() {
 	// Convert platform.EnvironmentType to hotkeys.EnvironmentType
-	var hotkeyEnv hotkeys.EnvironmentType
+	var hotkeyEnv interfaces.EnvironmentType
 	switch a.Environment {
 	case platform.EnvironmentX11:
-		hotkeyEnv = hotkeys.EnvironmentX11
+		hotkeyEnv = interfaces.EnvironmentX11
 	case platform.EnvironmentWayland:
-		hotkeyEnv = hotkeys.EnvironmentWayland
+		hotkeyEnv = interfaces.EnvironmentWayland
 	default:
-		hotkeyEnv = hotkeys.EnvironmentUnknown
+		hotkeyEnv = interfaces.EnvironmentUnknown
 	}
 
 	// Create hotkey config adapter
-	hotkeyConfig := hotkeys.NewConfigAdapter(
+	hotkeyConfig := adapters.NewConfigAdapter(
 		a.Config.Hotkeys.StartRecording,
 	)
 
 	// Initialize hotkey manager with environment information
-	a.HotkeyManager = hotkeys.NewHotkeyManager(hotkeyConfig, hotkeyEnv)
+	a.HotkeyManager = manager.NewHotkeyManager(hotkeyConfig, hotkeyEnv)
 }

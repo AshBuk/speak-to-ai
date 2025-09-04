@@ -3,10 +3,13 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package providers
 
 import (
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 )
 
 func TestConvertHotkeyToAccelerator(t *testing.T) {
@@ -59,9 +62,9 @@ func TestConvertHotkeyToAccelerator(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
-	config := NewConfigAdapter("altgr+comma")
+	config := adapters.NewConfigAdapter("altgr+comma")
 
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Test that IsSupported doesn't panic
 	// The result depends on system environment, so we just check it doesn't crash
@@ -70,9 +73,9 @@ func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestDbusProvider_RegisterHotkey(t *testing.T) {
-	config := NewConfigAdapter("altgr+comma")
+	config := adapters.NewConfigAdapter("altgr+comma")
 
-	provider := NewDbusKeyboardProvider(config, EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
 	// Test callback registration
 	callback := func() error {

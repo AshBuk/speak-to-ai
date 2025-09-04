@@ -1,17 +1,20 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package manager
 
 import (
 	"fmt"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
 )
 
 // registerAllHotkeysOn registers recording and custom hotkeys on the given provider
-func (h *HotkeyManager) registerAllHotkeysOn(provider KeyboardEventProvider) error {
+func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventProvider) error {
 	// Register start/stop recording hotkey
 	if err := provider.RegisterHotkey(h.config.GetStartRecordingHotkey(), func() error {
 		h.hotkeysMutex.Lock()
@@ -78,8 +81,8 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 
 	// Only fallback when current provider is DBus and evdev is supported
 	switch h.provider.(type) {
-	case *DbusKeyboardProvider:
-		fallback := NewEvdevKeyboardProvider(h.config, h.environment)
+	case *providers.DbusKeyboardProvider:
+		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment)
 		if fallback != nil && fallback.IsSupported() {
 			log.Println("Falling back to evdev keyboard provider")
 			// Swap provider

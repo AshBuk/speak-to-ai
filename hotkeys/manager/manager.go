@@ -1,13 +1,15 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package manager
 
 import (
 	"fmt"
 	"log"
-	"strings"
 	"sync"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 )
 
 // HotkeyAction represents a hotkey action callback
@@ -15,7 +17,7 @@ type HotkeyAction func() error
 
 // HotkeyManager handles keyboard shortcuts
 type HotkeyManager struct {
-	config           HotkeyConfig
+	config           adapters.HotkeyConfig
 	isListening      bool
 	isRecording      bool
 	stopListening    chan bool
@@ -23,13 +25,13 @@ type HotkeyManager struct {
 	recordingStopped func() error
 	hotkeyActions    map[string]HotkeyAction // Additional hotkey actions
 	hotkeysMutex     sync.Mutex
-	environment      EnvironmentType
-	provider         KeyboardEventProvider
+	environment      interfaces.EnvironmentType
+	provider         interfaces.KeyboardEventProvider
 	modifierState    map[string]bool // Track state of modifier keys
 }
 
 // NewHotkeyManager creates a new instance of HotkeyManager
-func NewHotkeyManager(config HotkeyConfig, environment EnvironmentType) *HotkeyManager {
+func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *HotkeyManager {
 	manager := &HotkeyManager{
 		config:        config,
 		isListening:   false,
@@ -86,27 +88,6 @@ func (h *HotkeyManager) GetRegisteredHotkeys() []string {
 	}
 
 	return hotkeys
-}
-
-// ParseHotkey converts string representation to KeyCombination
-func ParseHotkey(hotkeyStr string) KeyCombination {
-	combo := KeyCombination{}
-	parts := strings.Split(hotkeyStr, "+")
-
-	// If there's only one part, it's just a key
-	if len(parts) == 1 {
-		combo.Key = strings.TrimSpace(parts[0])
-		return combo
-	}
-
-	// Last part is the key, the rest are modifiers
-	combo.Key = strings.TrimSpace(parts[len(parts)-1])
-	for i := 0; i < len(parts)-1; i++ {
-		modifier := strings.ToLower(strings.TrimSpace(parts[i]))
-		combo.Modifiers = append(combo.Modifiers, modifier)
-	}
-
-	return combo
 }
 
 // Start begins listening for hotkeys
@@ -186,45 +167,4 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	}
 
 	return nil
-}
-
-// IsModifier returns true if the key name is a modifier key
-func IsModifier(keyName string) bool {
-	modifiers := map[string]bool{
-		"ctrl":       true,
-		"alt":        true,
-		"shift":      true,
-		"super":      true,
-		"meta":       true,
-		"win":        true,
-		"altgr":      true, // AltGr modifier for international keyboards
-		"hyper":      true, // Hyper modifier
-		"leftctrl":   true,
-		"rightctrl":  true,
-		"leftalt":    true,
-		"rightalt":   true,
-		"leftshift":  true,
-		"rightshift": true,
-	}
-
-	return modifiers[strings.ToLower(keyName)]
-}
-
-// ConvertModifierToEvdev converts common modifier names to evdev key names
-func ConvertModifierToEvdev(modifier string) string {
-	modifierMap := map[string]string{
-		"ctrl":  "leftctrl",
-		"alt":   "leftalt",
-		"shift": "leftshift",
-		"super": "leftmeta",
-		"meta":  "leftmeta",
-		"win":   "leftmeta",
-		"altgr": "rightalt",
-	}
-
-	if evdevName, ok := modifierMap[strings.ToLower(modifier)]; ok {
-		return evdevName
-	}
-
-	return strings.ToLower(modifier)
 }

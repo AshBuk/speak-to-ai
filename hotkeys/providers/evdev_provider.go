@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package hotkeys
+package providers
 
 import (
 	"fmt"
@@ -11,13 +11,16 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	evdev "github.com/holoplot/go-evdev"
 )
 
 // EvdevKeyboardProvider implements KeyboardEventProvider using Linux evdev
 type EvdevKeyboardProvider struct {
-	config        HotkeyConfig
-	environment   EnvironmentType
+	config        adapters.HotkeyConfig
+	environment   interfaces.EnvironmentType
 	devices       []*evdev.InputDevice
 	callbacks     map[string]func() error
 	stopListening chan bool
@@ -26,7 +29,7 @@ type EvdevKeyboardProvider struct {
 }
 
 // NewEvdevKeyboardProvider creates a new EvdevKeyboardProvider instance
-func NewEvdevKeyboardProvider(config HotkeyConfig, environment EnvironmentType) *EvdevKeyboardProvider {
+func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *EvdevKeyboardProvider {
 	return &EvdevKeyboardProvider{
 		config:        config,
 		environment:   environment,
@@ -161,7 +164,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	}
 
 	// Track modifier key state
-	if IsModifier(keyName) {
+	if utils.IsModifier(keyName) {
 		// Value 1 = key down, 0 = key up
 		p.modifierState[strings.ToLower(keyName)] = (event.Value == 1)
 	}
@@ -173,7 +176,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 
 	// Check for registered hotkeys
 	for hotkeyStr, callback := range p.callbacks {
-		hotkey := ParseHotkey(hotkeyStr)
+		hotkey := utils.ParseHotkey(hotkeyStr)
 
 		// Check if the pressed key matches the hotkey's main key
 		if strings.EqualFold(hotkey.Key, keyName) {
@@ -181,7 +184,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 			allModifiersPressed := true
 			for _, mod := range hotkey.Modifiers {
 				// Convert general modifier names to specific ones
-				evdevModifier := ConvertModifierToEvdev(mod)
+				evdevModifier := utils.ConvertModifierToEvdev(mod)
 				if !p.modifierState[evdevModifier] {
 					allModifiersPressed = false
 					break
