@@ -4,6 +4,7 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -61,18 +62,14 @@ func Configure(config Config) (*DefaultLogger, error) {
 		// Create directory if it doesn't exist
 		dir := filepath.Dir(config.File)
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			// If directory creation fails, fall back to stdout logging
-			log.Printf("[WARNING] Failed to create log directory %s: %v, using stdout", dir, err)
-		} else {
-			// Try to open the log file
-			f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				// If file creation fails, fall back to stdout logging
-				log.Printf("[WARNING] Failed to open log file %s: %v, using stdout", config.File, err)
-			} else {
-				log.SetOutput(f)
-			}
+			return nil, fmt.Errorf("failed to create log directory %s: %w", dir, err)
 		}
+		// Try to open the log file
+		f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open log file %s: %w", config.File, err)
+		}
+		log.SetOutput(f)
 	}
 
 	return logger, nil
