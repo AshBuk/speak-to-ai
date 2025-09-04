@@ -136,7 +136,7 @@ func TestSecurityValidation(t *testing.T) {
 	// Test allowed commands
 	allowedCommands := []string{"xdotool", "wtype", "wl-copy", "arecord"}
 	for _, cmd := range allowedCommands {
-		if !cfg.IsCommandAllowed(cmd) {
+		if !config.IsCommandAllowed(cfg, cmd) {
 			t.Errorf("Command %s should be allowed but isn't", cmd)
 		}
 	}
@@ -144,7 +144,7 @@ func TestSecurityValidation(t *testing.T) {
 	// Test disallowed commands
 	disallowedCommands := []string{"rm", "curl", "wget", "sh", "bash"}
 	for _, cmd := range disallowedCommands {
-		if cfg.IsCommandAllowed(cmd) {
+		if config.IsCommandAllowed(cfg, cmd) {
 			t.Errorf("Command %s should not be allowed but is", cmd)
 		}
 	}

@@ -1,10 +1,49 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package loaders
+
+import (
+	"log"
+	"os"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/speak-to-ai/config/validators"
+	yaml "gopkg.in/yaml.v2"
+)
+
+// LoadConfig loads configuration from file
+func LoadConfig(filename string) (*models.Config, error) {
+	var config models.Config
+
+	// Set default values
+	SetDefaultConfig(&config)
+
+	// Read configuration file
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		log.Printf("Warning: could not read config file: %v", err)
+		log.Println("Using default configuration")
+		return &config, nil
+	}
+
+	// Parse YAML
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate configuration
+	if err := validators.ValidateConfig(&config); err != nil {
+		log.Printf("Configuration validation error: %v", err)
+		log.Println("Using validated configuration with corrections")
+	}
+
+	return &config, nil
+}
 
 // SetDefaultConfig sets default values
-func SetDefaultConfig(config *Config) {
+func SetDefaultConfig(config *models.Config) {
 	// General settings
 	config.General.Debug = false
 	config.General.ModelPath = "sources/language-models/base.bin" // Backward compatibility
@@ -46,7 +85,7 @@ func SetDefaultConfig(config *Config) {
 	config.Audio.StreamingBufferMs = 1000  // 1 second streaming buffer
 
 	// Output settings
-	config.Output.DefaultMode = OutputModeActiveWindow
+	config.Output.DefaultMode = models.OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto" // auto-detect
 	config.Output.TypeTool = "auto"      // auto-detect
 

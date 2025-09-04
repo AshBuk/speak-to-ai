@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package security
 
 import (
 	"crypto/sha256"
@@ -10,10 +10,43 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
 )
 
+// IsCommandAllowed checks if a command is in the allowed list
+func IsCommandAllowed(config *models.Config, command string) bool {
+	// Extract base command name
+	base := filepath.Base(command)
+
+	// Check if it's in allowed list
+	for _, cmd := range config.Security.AllowedCommands {
+		if cmd == base {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SanitizeCommandArgs removes potentially dangerous arguments
+func SanitizeCommandArgs(args []string) []string {
+	sanitized := make([]string, 0, len(args))
+
+	for _, arg := range args {
+		// Filter out shell metacharacters and other dangerous constructs
+		if !strings.ContainsAny(arg, "&|;$<>(){}[]") && !strings.Contains(arg, "..") {
+			sanitized = append(sanitized, arg)
+		}
+	}
+
+	return sanitized
+}
+
 // VerifyConfigIntegrity checks if the config file has been tampered with
-func VerifyConfigIntegrity(filename string, config *Config) error {
+func VerifyConfigIntegrity(filename string, config *models.Config) error {
 	// Skip check if not enabled
 	if !config.Security.CheckIntegrity {
 		return nil
@@ -25,7 +58,7 @@ func VerifyConfigIntegrity(filename string, config *Config) error {
 	}
 
 	// Calculate hash of the config file
-	hash, err := calculateFileHash(filename)
+	hash, err := CalculateFileHash(filename)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
@@ -39,9 +72,9 @@ func VerifyConfigIntegrity(filename string, config *Config) error {
 }
 
 // UpdateConfigHash updates the hash in the config
-func UpdateConfigHash(filename string, config *Config) error {
+func UpdateConfigHash(filename string, config *models.Config) error {
 	// Calculate hash
-	hash, err := calculateFileHash(filename)
+	hash, err := CalculateFileHash(filename)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
@@ -51,8 +84,8 @@ func UpdateConfigHash(filename string, config *Config) error {
 	return nil
 }
 
-// calculateFileHash calculates SHA-256 hash of a file
-func calculateFileHash(filename string) (string, error) {
+// CalculateFileHash calculates SHA-256 hash of a file
+func CalculateFileHash(filename string) (string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
@@ -72,7 +105,7 @@ func calculateFileHash(filename string) (string, error) {
 }
 
 // EnforceFileSizeLimit checks if a file exceeds the maximum allowed size
-func EnforceFileSizeLimit(filename string, config *Config) error {
+func EnforceFileSizeLimit(filename string, config *models.Config) error {
 	info, err := os.Stat(filename)
 	if err != nil {
 		return fmt.Errorf("failed to stat file: %w", err)

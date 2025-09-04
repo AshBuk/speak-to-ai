@@ -33,7 +33,7 @@ func NewTypeOutputter(typeTool string, cfg *config.Config) (interfaces.Outputter
 // TypeToActiveWindow simulates typing in the currently active window
 func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	// Security: validate command before execution
-	if !o.config.IsCommandAllowed(o.typeTool) {
+	if !config.IsCommandAllowed(o.config, o.typeTool) {
 		return fmt.Errorf("typing tool not allowed: %s", o.typeTool)
 	}
 

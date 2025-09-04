@@ -76,7 +76,7 @@ func TestSecurityAllowedCommands(t *testing.T) {
 	waylandTools := []string{"wtype", "ydotool"}
 
 	for _, tool := range waylandTools {
-		if !cfg.IsCommandAllowed(tool) {
+		if !config.IsCommandAllowed(cfg, tool) {
 			t.Errorf("Wayland tool %s should be in allowed commands list", tool)
 		}
 	}
@@ -85,7 +85,7 @@ func TestSecurityAllowedCommands(t *testing.T) {
 	traditionalTools := []string{"xdotool", "xclip", "wl-copy"}
 
 	for _, tool := range traditionalTools {
-		if !cfg.IsCommandAllowed(tool) {
+		if !config.IsCommandAllowed(cfg, tool) {
 			t.Errorf("Traditional tool %s should be in allowed commands list", tool)
 		}
 	}

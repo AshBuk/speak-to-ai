@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package security
 
 import (
 	"crypto/sha256"
@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
 )
 
 // TestVerifyConfigIntegrity tests config integrity verification
@@ -27,21 +29,21 @@ func TestVerifyConfigIntegrity(t *testing.T) {
 	tempFile.Close()
 
 	// Calculate correct hash
-	correctHash, err := calculateFileHash(tempFile.Name())
+	correctHash, err := CalculateFileHash(tempFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to calculate hash: %v", err)
 	}
 
 	tests := []struct {
 		name          string
-		config        *Config
+		config        *models.Config
 		expectedError bool
 		description   string
 	}{
 		{
 			name: "integrity check disabled",
-			config: func() *Config {
-				c := &Config{}
+			config: func() *models.Config {
+				c := &models.Config{}
 				c.Security.CheckIntegrity = false
 				c.Security.ConfigHash = "any_hash"
 				return c
@@ -51,8 +53,8 @@ func TestVerifyConfigIntegrity(t *testing.T) {
 		},
 		{
 			name: "no hash set",
-			config: func() *Config {
-				c := &Config{}
+			config: func() *models.Config {
+				c := &models.Config{}
 				c.Security.CheckIntegrity = true
 				c.Security.ConfigHash = ""
 				return c
@@ -62,8 +64,8 @@ func TestVerifyConfigIntegrity(t *testing.T) {
 		},
 		{
 			name: "correct hash",
-			config: func() *Config {
-				c := &Config{}
+			config: func() *models.Config {
+				c := &models.Config{}
 				c.Security.CheckIntegrity = true
 				c.Security.ConfigHash = correctHash
 				return c
@@ -73,8 +75,8 @@ func TestVerifyConfigIntegrity(t *testing.T) {
 		},
 		{
 			name: "incorrect hash",
-			config: func() *Config {
-				c := &Config{}
+			config: func() *models.Config {
+				c := &models.Config{}
 				c.Security.CheckIntegrity = true
 				c.Security.ConfigHash = "incorrect_hash"
 				return c
@@ -120,7 +122,7 @@ func TestUpdateConfigHash(t *testing.T) {
 	}
 	tempFile.Close()
 
-	config := &Config{}
+	config := &models.Config{}
 	config.Security.CheckIntegrity = true
 	config.Security.ConfigHash = ""
 
@@ -136,7 +138,7 @@ func TestUpdateConfigHash(t *testing.T) {
 	}
 
 	// Verify hash is correct
-	expectedHash, err := calculateFileHash(tempFile.Name())
+	expectedHash, err := CalculateFileHash(tempFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to calculate expected hash: %v", err)
 	}
@@ -168,7 +170,7 @@ func TestCalculateFileHash(t *testing.T) {
 	tempFile.Close()
 
 	// Calculate hash
-	hash, err := calculateFileHash(tempFile.Name())
+	hash, err := CalculateFileHash(tempFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to calculate hash: %v", err)
 	}
@@ -236,7 +238,7 @@ func TestEnforceFileSizeLimit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := &Config{}
+			config := &models.Config{}
 			config.Security.MaxTempFileSize = tt.maxSize
 
 			err := EnforceFileSizeLimit(tempFile.Name(), config)

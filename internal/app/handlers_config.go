@@ -28,7 +28,7 @@ func (a *App) handleShowConfig() error {
 	a.Logger.Debug("Using xdg-open to open config file")
 
 	// Security: allowlist check on editor
-	if !a.Config.IsCommandAllowed(editor) {
+	if !config.IsCommandAllowed(a.Config, editor) {
 		return fmt.Errorf("command not allowed: %s", editor)
 	}
 

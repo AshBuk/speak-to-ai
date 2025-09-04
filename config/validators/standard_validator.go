@@ -1,17 +1,19 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package validators
 
 import (
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
 )
 
 // ValidateConfig validates the configuration and corrects issues
-func ValidateConfig(config *Config) error {
+func ValidateConfig(config *models.Config) error {
 	var errors []string
 
 	// Validate general settings
@@ -106,33 +108,4 @@ func ValidateConfig(config *Config) error {
 	}
 
 	return nil
-}
-
-// IsCommandAllowed checks if a command is in the allowed list
-func (c *Config) IsCommandAllowed(command string) bool {
-	// Extract base command name
-	base := filepath.Base(command)
-
-	// Check if it's in allowed list
-	for _, cmd := range c.Security.AllowedCommands {
-		if cmd == base {
-			return true
-		}
-	}
-
-	return false
-}
-
-// SanitizeCommandArgs removes potentially dangerous arguments
-func SanitizeCommandArgs(args []string) []string {
-	sanitized := make([]string, 0, len(args))
-
-	for _, arg := range args {
-		// Filter out shell metacharacters and other dangerous constructs
-		if !strings.ContainsAny(arg, "&|;$<>(){}[]") && !strings.Contains(arg, "..") {
-			sanitized = append(sanitized, arg)
-		}
-	}
-
-	return sanitized
 }

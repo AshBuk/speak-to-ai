@@ -485,7 +485,7 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	}
 
 	// Security: validate command and sanitize args before execution
-	if !b.config.IsCommandAllowed(cmdName) {
+	if !config.IsCommandAllowed(b.config, cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
 	}
 	safeArgs := config.SanitizeCommandArgs(finalArgs)

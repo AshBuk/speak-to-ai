@@ -1,13 +1,13 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package models
 
-import (
-	"log"
-	"os"
-
-	yaml "gopkg.in/yaml.v2"
+// Output mode constants to avoid magic strings throughout the codebase
+const (
+	OutputModeClipboard    = "clipboard"
+	OutputModeActiveWindow = "active_window"
+	OutputModeCombined     = "combined"
 )
 
 // Config structure for storing application configuration
@@ -64,8 +64,8 @@ type Config struct {
 		Enabled     bool   `yaml:"enabled"`
 		Port        int    `yaml:"port"`
 		Host        string `yaml:"host"`
-		AuthToken   string `yaml:"auth_token"`   // Optional auth token
-		APIVersion  string `yaml:"api_version"`  // API version
+		AuthToken   string   `yaml:"auth_token"`   // Optional auth token
+		APIVersion  string   `yaml:"api_version"`  // API version
 		LogRequests bool   `yaml:"log_requests"` // Whether to log requests
 		CORSOrigins string `yaml:"cors_origins"` // Allowed origins for CORS
 		MaxClients  int    `yaml:"max_clients"`  // Maximum number of clients
@@ -78,34 +78,4 @@ type Config struct {
 		ConfigHash      string   `yaml:"config_hash"`        // Hash for integrity check
 		MaxTempFileSize int64    `yaml:"max_temp_file_size"` // Max temp file size in bytes
 	} `yaml:"security"`
-}
-
-// LoadConfig loads configuration from file
-func LoadConfig(filename string) (*Config, error) {
-	var config Config
-
-	// Set default values
-	SetDefaultConfig(&config)
-
-	// Read configuration file
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		log.Printf("Warning: could not read config file: %v", err)
-		log.Println("Using default configuration")
-		return &config, nil
-	}
-
-	// Parse YAML
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate configuration
-	if err := ValidateConfig(&config); err != nil {
-		log.Printf("Configuration validation error: %v", err)
-		log.Println("Using validated configuration with corrections")
-	}
-
-	return &config, nil
 }

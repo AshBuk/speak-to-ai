@@ -34,7 +34,7 @@ func NewClipboardOutputter(clipboardTool string, cfg *config.Config) (interfaces
 // CopyToClipboard copies text to the system clipboard
 func (o *ClipboardOutputter) CopyToClipboard(text string) error {
 	// Security: validate command before execution
-	if !o.config.IsCommandAllowed(o.clipboardTool) {
+	if !config.IsCommandAllowed(o.config, o.clipboardTool) {
 		return fmt.Errorf("clipboard tool not allowed: %s", o.clipboardTool)
 	}
 

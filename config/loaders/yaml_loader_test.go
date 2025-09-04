@@ -1,12 +1,14 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package config
+package loaders
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -23,7 +25,7 @@ func TestLoadConfig(t *testing.T) {
 		name          string
 		configContent string
 		expectError   bool
-		checkValues   func(*testing.T, *Config)
+		checkValues   func(*testing.T, *models.Config)
 	}{
 		{
 			name: "valid config",
@@ -51,7 +53,7 @@ hotkeys:
   stop_recording: "AltGr+."
 `,
 			expectError: false,
-			checkValues: func(t *testing.T, cfg *Config) {
+			checkValues: func(t *testing.T, cfg *models.Config) {
 				if !cfg.General.Debug {
 					t.Errorf("expected debug to be true")
 				}
@@ -73,7 +75,7 @@ general:
   model_type: "tiny"
 `,
 			expectError: false,
-			checkValues: func(t *testing.T, cfg *Config) {
+			checkValues: func(t *testing.T, cfg *models.Config) {
 				if cfg.General.ModelType != "tiny" {
 					t.Errorf("expected model type to be 'tiny', got %s", cfg.General.ModelType)
 				}
@@ -94,7 +96,7 @@ general:
 			name:          "empty config",
 			configContent: ``,
 			expectError:   false,
-			checkValues: func(t *testing.T, cfg *Config) {
+			checkValues: func(t *testing.T, cfg *models.Config) {
 				// Should create config with default values
 				if cfg == nil {
 					t.Errorf("expected config to be created")
@@ -177,7 +179,7 @@ func TestLoadConfig_InvalidPermissions(t *testing.T) {
 
 func TestConfig_DefaultValues(t *testing.T) {
 	// Test that default config has reasonable values
-	config := &Config{}
+	config := &models.Config{}
 
 	// Apply default values (this would typically be done in LoadConfig)
 	// For this test, we'll just verify the structure exists

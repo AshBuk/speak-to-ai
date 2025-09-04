@@ -82,10 +82,10 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 	}
 
 	// Security: Validate selected tool commands against allowlist
-	if clipboardTool != "" && !f.config.IsCommandAllowed(clipboardTool) {
+	if clipboardTool != "" && !config.IsCommandAllowed(f.config, clipboardTool) {
 		return nil, fmt.Errorf("clipboard tool not allowed: %s", clipboardTool)
 	}
-	if typeTool != "" && !f.config.IsCommandAllowed(typeTool) {
+	if typeTool != "" && !config.IsCommandAllowed(f.config, typeTool) {
 		return nil, fmt.Errorf("type tool not allowed: %s", typeTool)
 	}
 
