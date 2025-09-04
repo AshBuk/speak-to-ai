@@ -9,15 +9,23 @@ import (
 	"encoding/base64"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 )
 
 // GetIconMicOff returns the binary data for the microphone-off icon
 func GetIconMicOff() []byte {
+	if data, ok := loadIconFromAppImage(); ok {
+		return data
+	}
 	return mustDecodeIcon(iconMicOffBase64)
 }
 
 // GetIconMicOn returns the binary data for the microphone-on icon
 func GetIconMicOn() []byte {
+	if data, ok := loadIconFromAppImage(); ok {
+		return data
+	}
 	return mustDecodeIcon(iconMicOnBase64)
 }
 
@@ -44,6 +52,24 @@ func mustDecodeIcon(encoded string) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+// loadIconFromAppImage tries to load an icon shipped inside the AppImage
+func loadIconFromAppImage() ([]byte, bool) {
+	appDir := os.Getenv("APPDIR")
+	if appDir == "" {
+		return nil, false
+	}
+	candidates := []string{
+		filepath.Join(appDir, "speak-to-ai.png"),
+		filepath.Join(appDir, "usr/share/icons/hicolor/256x256/apps/speak-to-ai.png"),
+	}
+	for _, p := range candidates {
+		if data, err := os.ReadFile(p); err == nil && len(data) > 0 {
+			return data, true
+		}
+	}
+	return nil, false
 }
 
 // Base64-encoded gzipped PNG icons

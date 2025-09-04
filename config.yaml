@@ -18,8 +18,8 @@ general:
 
 # Hotkey settings
 hotkeys:
-  start_recording: "altgr+comma"       # AltGr+, (comma) - Microsoft Copilot key
-  stop_recording: "altgr+comma"        # Same combination for start/stop
+  start_recording: "ctrl+alt+r"       # Universal default
+  stop_recording: "ctrl+alt+r"        # Same combination for start/stop
   toggle_streaming: "altgr+shift+s"    # Toggle streaming transcription
   switch_model: "altgr+shift+m"        # Switch between models
   toggle_vad: "altgr+shift+v"          # Toggle VAD on/off

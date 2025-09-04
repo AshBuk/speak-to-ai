@@ -5,11 +5,8 @@ go 1.24.1
 require (
 	github.com/getlantern/systray v1.2.2
 	github.com/gorilla/websocket v1.5.3
-	// github.com/robotn/gohook v0.42.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-// require github.com/vcaesar/keycode v0.10.1 // indirect
 
 require (
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250824163423-7745fcf32846

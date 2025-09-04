@@ -4,8 +4,10 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // LogLevel represents the level of logging
@@ -57,9 +59,15 @@ func Configure(config Config) (*DefaultLogger, error) {
 
 	// If log file is specified, set up file logging
 	if config.File != "" {
+		// Create directory if it doesn't exist
+		dir := filepath.Dir(config.File)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create log directory %s: %w", dir, err)
+		}
+		// Try to open the log file
 		f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to open log file %s: %w", config.File, err)
 		}
 		log.SetOutput(f)
 	}

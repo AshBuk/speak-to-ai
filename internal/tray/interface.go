@@ -11,5 +11,7 @@ type TrayManagerInterface interface {
 	SetRecordingState(isRecording bool)
 	SetTooltip(tooltip string)
 	UpdateSettings(config *config.Config)
+	// SetAudioActions sets callbacks for audio-related actions
+	SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error)
 	Stop()
 }

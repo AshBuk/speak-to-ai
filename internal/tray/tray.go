@@ -33,16 +33,20 @@ type TrayManager struct {
 	exitItem         *systray.MenuItem
 
 	// Settings submenus
-	hotkeysMenu *systray.MenuItem
-	audioMenu   *systray.MenuItem
-	aiModelMenu *systray.MenuItem
-	outputMenu  *systray.MenuItem
+	hotkeysMenu       *systray.MenuItem
+	audioRecorderMenu *systray.MenuItem
+	aiModelMenu       *systray.MenuItem
+	outputMenu        *systray.MenuItem
 
 	// Dynamic settings items
 	hotkeyItems map[string]*systray.MenuItem
 	audioItems  map[string]*systray.MenuItem
 	modelItems  map[string]*systray.MenuItem
 	outputItems map[string]*systray.MenuItem
+
+	// Audio action callbacks
+	onSelectRecorder func(method string) error
+	onTestRecording  func() error
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -100,10 +104,24 @@ func (tm *TrayManager) onReady() {
 
 // createSettingsSubmenus creates the settings submenus
 func (tm *TrayManager) createSettingsSubmenus() {
-	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("🎹 Hotkeys", "Hotkey settings")
-	tm.audioMenu = tm.settingsItem.AddSubMenuItem("🎤 Audio", "Audio settings")
-	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("🤖 AI Model", "AI model settings")
-	tm.outputMenu = tm.settingsItem.AddSubMenuItem("📋 Output", "Output settings")
+	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
+	tm.audioRecorderMenu = tm.settingsItem.AddSubMenuItem("Audio Recorder", "Select audio recorder")
+
+	// Device and Sample Rate as top-level items, placed after Audio Recorder
+	tm.audioItems["device"] = tm.settingsItem.AddSubMenuItem(
+		"Device: -",
+		"Current audio device",
+	)
+	tm.audioItems["device"].Disable()
+
+	tm.audioItems["sample_rate"] = tm.settingsItem.AddSubMenuItem(
+		"Sample Rate: -",
+		"Current sample rate",
+	)
+	tm.audioItems["sample_rate"].Disable()
+
+	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("Whisper Model", "AI model settings")
+	tm.outputMenu = tm.settingsItem.AddSubMenuItem("Output", "Output settings")
 
 	// Populate with initial values if config is available
 	if tm.config != nil {
@@ -124,24 +142,68 @@ func (tm *TrayManager) populateSettingsMenus() {
 	)
 	tm.hotkeyItems["start_recording"].Disable()
 
-	// Populate Audio menu
-	tm.audioItems["device"] = tm.audioMenu.AddSubMenuItem(
-		fmt.Sprintf("Device: %s", tm.config.Audio.Device),
-		"Current audio device",
+	// Populate Audio Recorder submenu with selectable items
+	tm.audioItems["recorder_arecord"] = tm.audioRecorderMenu.AddSubMenuItem(
+		"○ arecord (ALSA)",
+		"Use arecord (ALSA)",
 	)
-	tm.audioItems["device"].Disable()
+	tm.audioItems["recorder_ffmpeg"] = tm.audioRecorderMenu.AddSubMenuItem(
+		"○ ffmpeg (PulseAudio)",
+		"Use ffmpeg (PulseAudio)",
+	)
 
-	tm.audioItems["sample_rate"] = tm.audioMenu.AddSubMenuItem(
-		fmt.Sprintf("Sample Rate: %d Hz", tm.config.Audio.SampleRate),
-		"Current sample rate",
+	// Add test recording item
+	tm.audioItems["recorder_test"] = tm.audioRecorderMenu.AddSubMenuItem(
+		"Test Recording",
+		"Record 3s sample to validate settings",
 	)
-	tm.audioItems["sample_rate"].Disable()
 
-	tm.audioItems["method"] = tm.audioMenu.AddSubMenuItem(
-		fmt.Sprintf("Method: %s", tm.config.Audio.RecordingMethod),
-		"Current recording method",
-	)
-	tm.audioItems["method"].Disable()
+	// Reflect current selection
+	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
+
+	// Handle clicks for recorder selection
+	go func() {
+		for range tm.audioItems["recorder_arecord"].ClickedCh {
+			log.Println("Audio recorder switched to arecord (UI)")
+			tm.updateRecorderRadioUI("arecord")
+			if tm.onSelectRecorder != nil {
+				if err := tm.onSelectRecorder("arecord"); err != nil {
+					log.Printf("Error selecting recorder: %v", err)
+				}
+			}
+		}
+	}()
+	go func() {
+		for range tm.audioItems["recorder_ffmpeg"].ClickedCh {
+			log.Println("Audio recorder switched to ffmpeg (UI)")
+			tm.updateRecorderRadioUI("ffmpeg")
+			if tm.onSelectRecorder != nil {
+				if err := tm.onSelectRecorder("ffmpeg"); err != nil {
+					log.Printf("Error selecting recorder: %v", err)
+				}
+			}
+		}
+	}()
+
+	// Handle test recording
+	go func() {
+		for range tm.audioItems["recorder_test"].ClickedCh {
+			log.Println("Test recording clicked")
+			if tm.onTestRecording != nil {
+				if err := tm.onTestRecording(); err != nil {
+					log.Printf("Test recording failed: %v", err)
+				}
+			}
+		}
+	}()
+
+	// Update Device and Sample Rate placeholders created in createSettingsSubmenus
+	if tm.audioItems["device"] != nil {
+		tm.audioItems["device"].SetTitle(fmt.Sprintf("Device: %s", tm.config.Audio.Device))
+	}
+	if tm.audioItems["sample_rate"] != nil {
+		tm.audioItems["sample_rate"].SetTitle(fmt.Sprintf("Sample Rate: %d Hz", tm.config.Audio.SampleRate))
+	}
 
 	// Populate AI Model menu
 	tm.modelItems["type"] = tm.aiModelMenu.AddSubMenuItem(
@@ -193,9 +255,8 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 		tm.audioItems["sample_rate"].SetTitle(fmt.Sprintf("Sample Rate: %d Hz", config.Audio.SampleRate))
 	}
 
-	if tm.audioItems["method"] != nil {
-		tm.audioItems["method"].SetTitle(fmt.Sprintf("Method: %s", config.Audio.RecordingMethod))
-	}
+	// Update recorder selection UI
+	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
 
 	if tm.modelItems["type"] != nil {
 		tm.modelItems["type"].SetTitle(fmt.Sprintf("Model: %s", config.General.ModelType))
@@ -215,6 +276,27 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 
 	if tm.outputItems["type_tool"] != nil {
 		tm.outputItems["type_tool"].SetTitle(fmt.Sprintf("Type Tool: %s", config.Output.TypeTool))
+	}
+}
+
+// updateRecorderRadioUI updates titles to emulate radio selection
+func (tm *TrayManager) updateRecorderRadioUI(method string) {
+	arecordItem := tm.audioItems["recorder_arecord"]
+	ffmpegItem := tm.audioItems["recorder_ffmpeg"]
+	if arecordItem == nil || ffmpegItem == nil {
+		return
+	}
+
+	switch method {
+	case "arecord":
+		arecordItem.SetTitle("● arecord (ALSA)")
+		ffmpegItem.SetTitle("○ ffmpeg (PulseAudio)")
+	case "ffmpeg":
+		ffmpegItem.SetTitle("● ffmpeg (PulseAudio)")
+		arecordItem.SetTitle("○ arecord (ALSA)")
+	default:
+		arecordItem.SetTitle("○ arecord (ALSA)")
+		ffmpegItem.SetTitle("○ ffmpeg (PulseAudio)")
 	}
 }
 
@@ -243,7 +325,12 @@ func (tm *TrayManager) handleMenuClicks() {
 			}
 		case <-tm.exitItem.ClickedCh:
 			log.Println("Exit clicked")
+			// Quit systray first to ensure UI responds
 			systray.Quit()
+			// Then trigger application shutdown
+			if tm.onExit != nil {
+				tm.onExit() // Call directly, not in goroutine to ensure cleanup
+			}
 			return
 		}
 	}
@@ -274,4 +361,10 @@ func (tm *TrayManager) SetTooltip(tooltip string) {
 // Stop stops the tray manager
 func (tm *TrayManager) Stop() {
 	systray.Quit()
+}
+
+// SetAudioActions sets callbacks for audio-related actions (recorder selection, test recording)
+func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
+	tm.onSelectRecorder = onSelectRecorder
+	tm.onTestRecording = onTestRecording
 }

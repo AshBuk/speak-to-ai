@@ -5,6 +5,7 @@ package output
 
 import (
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -144,16 +145,11 @@ func TestClipboardOutputter_CopyToClipboard_SupportedTools(t *testing.T) {
 				config:        cfg,
 			}
 
-			// This will fail since the tools don't exist, but we're testing the command building logic
+			// Environment may or may not have the tool; accept success or failure,
+			// but failure must not be due to unsupported tool.
 			err := outputter.CopyToClipboard("test text")
-
-			// We expect an error since the tools don't exist, but it should be a "failed to copy" error
-			// not an "unsupported tool" error
-			if err == nil {
-				t.Error("expected error since tool doesn't exist")
-			}
-			if err != nil && err.Error() == "unsupported clipboard tool: "+tt.tool {
-				t.Errorf("tool %s should be supported", tt.tool)
+			if err != nil && strings.Contains(err.Error(), "unsupported clipboard tool:") {
+				t.Errorf("tool %s should be supported, got error: %v", tt.tool, err)
 			}
 		})
 	}

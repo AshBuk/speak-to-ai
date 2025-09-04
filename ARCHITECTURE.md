@@ -82,9 +82,15 @@ The application follows a **modular daemon architecture** with clear separation 
 - **`adapter.go`**: Abstraction layer for different providers
 
 #### Provider Implementations
-- **`dbus_provider.go`**: DBus GlobalShortcuts portal (preferred)
-- **`evdev_provider.go`**: Direct evdev input handling (fallback)
+- **`dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
+- **`evdev_provider.go`**: Direct evdev input handling (fallback for other DEs)
+- **`provider_fallback.go`**: Fallback logic and hotkey re-registration
 - **`dummy_provider.go`**: Dummy provider for testing
+
+#### Fallback Strategy
+- **GNOME/KDE**: No fallback - D-Bus portal
+- **i3/XFCE/MATE**: Auto-fallback from D-Bus to evdev on provider failure
+- **Failover**: Seamless hotkey re-registration on provider switching
 
 ### 🗣️ **Speech Recognition** (`whisper/`)
 

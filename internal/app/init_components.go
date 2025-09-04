@@ -5,6 +5,7 @@ package app
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/audio"
 	"github.com/AshBuk/speak-to-ai/config"
@@ -74,6 +75,45 @@ func (a *App) initializeComponents(modelPath string) error {
 	a.OutputManager, err = output.GetOutputterFromConfig(a.Config, outputEnv)
 	if err != nil {
 		a.Logger.Warning("Failed to initialize text outputter: %v", err)
+		// Graceful fallback: try clipboard-only if typing tool is missing
+		clipboardTool := ""
+		if outputEnv == output.EnvironmentWayland {
+			if _, lookErr := exec.LookPath("wl-copy"); lookErr == nil {
+				clipboardTool = "wl-copy"
+			}
+		}
+		if clipboardTool == "" {
+			if _, lookErr := exec.LookPath("xclip"); lookErr == nil {
+				clipboardTool = "xclip"
+			}
+		}
+		if clipboardTool != "" {
+			a.Logger.Info("Falling back to clipboard output using %s", clipboardTool)
+			oldCfg := *a.Config
+			a.Config.Output.DefaultMode = config.OutputModeClipboard
+			a.Config.Output.ClipboardTool = clipboardTool
+			if out, cerr := output.NewClipboardOutputter(clipboardTool, a.Config); cerr == nil {
+				a.OutputManager = out
+				if a.NotifyManager != nil {
+					_ = a.NotifyManager.ShowNotification("Output Fallback", "Typing tool not found. Using clipboard output. Install 'wtype' or 'ydotool' for Wayland typing.")
+				}
+				a.Logger.Info("Clipboard output initialized successfully")
+			} else {
+				// rollback on failure
+				a.Config = &oldCfg
+				a.Logger.Warning("Failed to initialize clipboard fallback: %v", cerr)
+			}
+		} else {
+			// No output tools available - show helpful notification
+			if a.NotifyManager != nil {
+				notifyMsg := "No output tools found. Install required packages:\n" +
+					"Ubuntu/Debian: sudo apt install wl-clipboard\n" +
+					"Fedora: sudo dnf install wl-clipboard\n" +
+					"Arch: sudo pacman -S wl-clipboard"
+				_ = a.NotifyManager.ShowNotification("Output Tools Missing", notifyMsg)
+			}
+			a.Logger.Warning("No output tools available (wtype, ydotool, wl-copy, xclip). Speech recognition will work but text output is disabled.")
+		}
 	}
 
 	// Initialize hotkey manager

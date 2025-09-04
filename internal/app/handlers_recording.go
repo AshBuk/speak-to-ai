@@ -89,6 +89,32 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	// Stop recording
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
+		a.Logger.Warning("StopRecording returned error: %v", err)
+		// Reset tray and hotkey state so subsequent attempts work
+		if a.TrayManager != nil {
+			a.TrayManager.SetRecordingState(false)
+			a.TrayManager.SetTooltip("⚠️  Recording failed")
+		}
+		if a.HotkeyManager != nil {
+			a.HotkeyManager.ResetRecordingState()
+		}
+		if a.NotifyManager != nil {
+			_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
+		}
+
+		// Suggest and auto-switch fallback if using ffmpeg
+		if a.Config.Audio.RecordingMethod == "ffmpeg" {
+			old := a.Config
+			newCfg := *a.Config
+			newCfg.Audio.RecordingMethod = "arecord"
+			a.Config = &newCfg
+			if rerr := a.reinitializeComponents(old); rerr == nil {
+				if a.NotifyManager != nil {
+					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to capture error")
+				}
+			}
+		}
+
 		return fmt.Errorf("failed to stop recording: %w", err)
 	}
 
@@ -175,6 +201,18 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 		case config.OutputModeActiveWindow:
 			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
+				// Fallback to clipboard if typing fails
+				a.Logger.Info("Falling back to clipboard output")
+				if clipErr := a.OutputManager.CopyToClipboard(transcript); clipErr != nil {
+					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
+					if a.NotifyManager != nil {
+						_ = a.NotifyManager.ShowNotification("Output Failed", "Both typing and clipboard failed. Check output configuration.")
+					}
+				} else {
+					if a.NotifyManager != nil {
+						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Typing not supported by compositor. Text copied to clipboard - press Ctrl+V to paste.")
+					}
+				}
 			}
 		case config.OutputModeCombined:
 			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
@@ -186,6 +224,15 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 		default:
 			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
+				// Fallback to clipboard if typing fails
+				a.Logger.Info("Falling back to clipboard output")
+				if clipErr := a.OutputManager.CopyToClipboard(transcript); clipErr != nil {
+					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
+				} else {
+					if a.NotifyManager != nil {
+						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Text copied to clipboard - press Ctrl+V to paste.")
+					}
+				}
 			}
 		}
 	}

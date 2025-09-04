@@ -5,7 +5,9 @@ package app
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/AshBuk/speak-to-ai/audio"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
@@ -104,4 +106,48 @@ func (a *App) initializeTrayManager() {
 
 	// Create the tray manager with configuration
 	a.TrayManager = tray.CreateTrayManagerWithConfig(a.Config, exitFunc, toggleFunc, showConfigFunc, reloadConfigFunc)
+
+	// Wire audio actions: recorder selection + test recording
+	a.TrayManager.SetAudioActions(
+		func(method string) error {
+			// Update config and reinitialize recorder at runtime
+			old := a.Config
+			newCfg := *a.Config
+			newCfg.Audio.RecordingMethod = method
+			a.Config = &newCfg
+			if err := a.reinitializeComponents(old); err != nil {
+				// rollback on error
+				a.Config = old
+				return err
+			}
+			return nil
+		},
+		func() error {
+			// Perform a short 3s test recording and show result via notification
+			recorder, err := audio.GetRecorder(a.Config)
+			if err != nil {
+				return err
+			}
+			// Start
+			if err := recorder.StartRecording(); err != nil {
+				return err
+			}
+			// Sleep for ~3s non-blocking using context
+			select {
+			case <-a.Ctx.Done():
+				return a.Ctx.Err()
+			case <-time.After(3 * time.Second):
+			}
+			// Stop
+			file, err := recorder.StopRecording()
+			if err != nil {
+				return err
+			}
+			// Notify
+			if a.NotifyManager != nil {
+				_ = a.NotifyManager.ShowNotification("Audio Test", fmt.Sprintf("Saved test recording: %s", file))
+			}
+			return nil
+		},
+	)
 }

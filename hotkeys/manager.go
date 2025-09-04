@@ -125,58 +125,17 @@ func (h *HotkeyManager) Start() error {
 	log.Println("Starting hotkey manager...")
 	log.Printf("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
 
-	// Register hotkeys with the provider
-	err := h.provider.RegisterHotkey(h.config.GetStartRecordingHotkey(), func() error {
-		h.hotkeysMutex.Lock()
-		defer h.hotkeysMutex.Unlock()
-
-		if !h.isRecording && h.recordingStarted != nil {
-			log.Println("Start recording hotkey detected")
-			if err := h.recordingStarted(); err != nil {
-				log.Printf("Error starting recording: %v", err)
-				return err
-			}
-			h.isRecording = true
-		} else if h.isRecording && h.recordingStopped != nil {
-			log.Println("Stop recording hotkey detected")
-			if err := h.recordingStopped(); err != nil {
-				log.Printf("Error stopping recording: %v", err)
-				return err
-			}
-			h.isRecording = false
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
+	// Register all hotkeys using helper
+	if err := h.registerAllHotkeysOn(h.provider); err != nil {
+		return err
 	}
-
-	// Register additional hotkeys
-	h.hotkeysMutex.Lock()
-	for hotkey, action := range h.hotkeyActions {
-		hotkeyToRegister := hotkey
-		actionToExecute := action
-
-		err := h.provider.RegisterHotkey(hotkeyToRegister, func() error {
-			log.Printf("Custom hotkey detected: %s", hotkeyToRegister)
-			if err := actionToExecute(); err != nil {
-				log.Printf("Error executing hotkey action for %s: %v", hotkeyToRegister, err)
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			h.hotkeysMutex.Unlock()
-			return fmt.Errorf("failed to register hotkey %s: %w", hotkeyToRegister, err)
-		}
-	}
-	h.hotkeysMutex.Unlock()
 
 	// Start the provider
-	err = h.provider.Start()
+	err := h.provider.Start()
 	if err != nil {
-		h.isListening = false // Reset state if provider failed to start
-		return fmt.Errorf("failed to start keyboard provider: %w", err)
+		// Delegate fallback logic to helper
+		h.isListening = false
+		return startFallbackAfterRegistration(h, err)
 	}
 
 	return nil
@@ -195,6 +154,13 @@ func (h *HotkeyManager) IsRecording() bool {
 	return h.isRecording
 }
 
+// ResetRecordingState forcefully sets recording state to false
+func (h *HotkeyManager) ResetRecordingState() {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
+	h.isRecording = false
+}
+
 // SimulateHotkeyPress simulates a hotkey press for testing
 func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	h.hotkeysMutex.Lock()
@@ -209,7 +175,7 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 			h.isRecording = true
 		}
 	case "stop_recording":
-		if h.isRecording && h.recordingStopped != nil {
+		if h.recordingStopped != nil {
 			if err := h.recordingStopped(); err != nil {
 				return err
 			}

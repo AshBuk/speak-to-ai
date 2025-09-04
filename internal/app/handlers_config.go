@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/AshBuk/speak-to-ai/config"
 )
@@ -22,15 +23,9 @@ func (a *App) handleShowConfig() error {
 		}
 	}
 
-	// Get editor from environment variable
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		// Fallback to xdg-open
-		editor = "xdg-open"
-		a.Logger.Debug("$EDITOR not set, using xdg-open as fallback")
-	} else {
-		a.Logger.Debug("Using editor from $EDITOR: %s", editor)
-	}
+	// Prefer xdg-open for better compatibility and security
+	editor := "xdg-open"
+	a.Logger.Debug("Using xdg-open to open config file")
 
 	// Security: allowlist check on editor
 	if !a.Config.IsCommandAllowed(editor) {
@@ -49,8 +44,25 @@ func (a *App) handleShowConfig() error {
 		return fmt.Errorf("config file not found: %s", a.ConfigFile)
 	}
 
-	// Sanitize args (config file path)
-	args := config.SanitizeCommandArgs([]string{a.ConfigFile})
+	// Resolve absolute path and sanitize args (config file path)
+	absPath := a.ConfigFile
+	if _, statErr := os.Stat(absPath); os.IsNotExist(statErr) {
+		// Try XDG config path ~/.config/speak-to-ai/config.yaml
+		xdg := os.Getenv("XDG_CONFIG_HOME")
+		if xdg == "" {
+			if home, herr := os.UserHomeDir(); herr == nil {
+				xdg = filepath.Join(home, ".config")
+			}
+		}
+		candidate := filepath.Join(xdg, "speak-to-ai", "config.yaml")
+		if _, cerr := os.Stat(candidate); cerr == nil {
+			absPath = candidate
+		}
+	}
+	if p, err := filepath.Abs(absPath); err == nil {
+		absPath = p
+	}
+	args := config.SanitizeCommandArgs([]string{absPath})
 	if len(args) != 1 {
 		return fmt.Errorf("invalid config file path")
 	}
@@ -87,7 +99,7 @@ func (a *App) handleReloadConfig() error {
 
 	// Show notification about config reload
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Configuration", "Reloading configuration..."); err != nil {
+		if err := a.NotifyManager.ShowNotification("Configuration", "Reloading..."); err != nil {
 			a.Logger.Warning("failed to show notification: %v", err)
 		}
 	}
@@ -126,7 +138,7 @@ func (a *App) handleReloadConfig() error {
 
 	// Success notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Configuration", "Configuration reloaded successfully!"); err != nil {
+		if err := a.NotifyManager.ShowNotification("Configuration", "Reloaded successfully!"); err != nil {
 			a.Logger.Warning("failed to show notification: %v", err)
 		}
 	}

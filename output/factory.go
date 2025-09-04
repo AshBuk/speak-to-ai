@@ -92,7 +92,9 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 	case config.OutputModeClipboard:
 		return NewClipboardOutputter(clipboardTool, f.config)
 	case config.OutputModeActiveWindow:
-		return NewTypeOutputter(typeTool, f.config)
+		// Use combined outputter even for ActiveWindow to enable seamless clipboard fallback
+		// on compositors where typing tools are unsupported (e.g., GNOME on Wayland)
+		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	case config.OutputModeCombined:
 		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	default:

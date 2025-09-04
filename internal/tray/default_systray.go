@@ -5,7 +5,12 @@
 
 package tray
 
-import "github.com/AshBuk/speak-to-ai/config"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/AshBuk/speak-to-ai/config"
+)
 
 // CreateDefaultTrayManager creates the default tray manager
 // based on available dependencies
@@ -13,6 +18,10 @@ func CreateDefaultTrayManager(onExit func(), onToggle func() error, onShowConfig
 	// Use the real systray implementation
 	iconMicOff := GetIconMicOff()
 	iconMicOn := GetIconMicOn()
+
+	// Try to detect AppImage dir (reserved for potential icon overrides)
+	_ = os.Getenv("APPDIR")
+	_ = filepath.Join
 
 	return NewTrayManager(iconMicOff, iconMicOn, onExit, onToggle, onShowConfig, onReloadConfig)
 }
