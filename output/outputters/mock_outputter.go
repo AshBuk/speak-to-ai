@@ -1,14 +1,16 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package outputters
 
 import (
 	"errors"
 	"strings"
+
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
-// MockOutputter implements Outputter interface for testing
+// MockOutputter implements interfaces.Outputter interface for testing
 type MockOutputter struct {
 	clipboardContent     string
 	typedContent         string
@@ -157,8 +159,8 @@ func (m *MockOutputter) ContainsTypeText(text string) bool {
 // MockCombinedOutputter implements both clipboard and typing functionality
 type MockCombinedOutputter struct {
 	*MockOutputter
-	clipboardOutputter Outputter
-	typeOutputter      Outputter
+	clipboardOutputter interfaces.Outputter
+	typeOutputter      interfaces.Outputter
 }
 
 // NewMockCombinedOutputter creates a new mock combined outputter

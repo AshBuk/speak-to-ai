@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package outputters
 
 import (
 	"fmt"
@@ -9,16 +9,17 @@ import (
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
-// ClipboardOutputter implements Outputter for clipboard operations
+// ClipboardOutputter implements interfaces.Outputter for clipboard operations
 type ClipboardOutputter struct {
 	clipboardTool string
 	config        *config.Config
 }
 
 // NewClipboardOutputter creates a new clipboard outputter
-func NewClipboardOutputter(clipboardTool string, cfg *config.Config) (Outputter, error) {
+func NewClipboardOutputter(clipboardTool string, cfg *config.Config) (interfaces.Outputter, error) {
 	// Verify tool exists
 	if _, err := exec.LookPath(clipboardTool); err != nil {
 		return nil, fmt.Errorf("clipboard tool not found: %s", clipboardTool)

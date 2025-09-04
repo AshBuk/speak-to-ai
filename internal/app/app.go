@@ -16,7 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
@@ -31,7 +31,7 @@ type App struct {
 	Recorder        interfaces.AudioRecorder
 	WhisperEngine   *whisper.WhisperEngine
 	StreamingEngine *whisper.StreamingWhisperEngine
-	OutputManager   output.Outputter
+	OutputManager   outputInterfaces.Outputter
 	HotkeyManager   *manager.HotkeyManager
 	WebSocketServer *websocket.WebSocketServer
 	TrayManager     tray.TrayManagerInterface

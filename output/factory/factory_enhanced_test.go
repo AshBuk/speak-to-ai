@@ -1,12 +1,14 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package factory
 
 import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
+	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
 
 func TestOutputFactory_ErrorHandling(t *testing.T) {
@@ -462,10 +464,10 @@ func TestEnvironmentType_Validation(t *testing.T) {
 
 func TestOutputFactory_MockIntegration(t *testing.T) {
 	// Test integration with mock outputters
-	mockOutputter := NewMockOutputter()
+	mockOutputter := outputters.NewMockOutputter()
 
 	// Test that mock implements the interface
-	var _ Outputter = mockOutputter
+	var _ interfaces.Outputter = mockOutputter
 
 	// Test basic functionality
 	err := mockOutputter.CopyToClipboard("test text")
@@ -478,7 +480,7 @@ func TestOutputFactory_MockIntegration(t *testing.T) {
 	}
 
 	// Test error simulation
-	mockWithErrors := NewMockOutputterWithErrors()
+	mockWithErrors := outputters.NewMockOutputterWithErrors()
 	mockWithErrors.SimulateClipboardUnavailable()
 
 	err = mockWithErrors.CopyToClipboard("test")

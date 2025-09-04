@@ -1,22 +1,23 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package outputters
 
 import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
-// CombinedOutputter implements Outputter for both clipboard and typing
+// CombinedOutputter implements interfaces.Outputter for both clipboard and typing
 type CombinedOutputter struct {
-	clipboardOutputter Outputter
-	typeOutputter      Outputter
+	clipboardOutputter interfaces.Outputter
+	typeOutputter      interfaces.Outputter
 }
 
 // NewCombinedOutputter creates a new combined outputter
-func NewCombinedOutputter(clipboardTool, typeTool string, cfg *config.Config) (Outputter, error) {
+func NewCombinedOutputter(clipboardTool, typeTool string, cfg *config.Config) (interfaces.Outputter, error) {
 	clipboard, err := NewClipboardOutputter(clipboardTool, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create clipboard outputter: %w", err)

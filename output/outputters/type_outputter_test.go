@@ -1,9 +1,10 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package outputters
 
 import (
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 	"os/exec"
 	"testing"
 
@@ -188,6 +189,6 @@ func TestTypeOutputter_Interface(t *testing.T) {
 		config:   cfg,
 	}
 
-	// Verify it implements the Outputter interface
-	var _ Outputter = outputter
+	// Verify it implements the interfaces.Outputter interface
+	var _ interfaces.Outputter = outputter
 }

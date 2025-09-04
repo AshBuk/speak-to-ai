@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package interfaces
 
 // Outputter defines the interface for text output operations
 type Outputter interface {

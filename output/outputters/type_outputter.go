@@ -1,23 +1,24 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package outputters
 
 import (
 	"fmt"
 	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
-// TypeOutputter implements Outputter for typing in active window
+// TypeOutputter implements interfaces.Outputter for typing in active window
 type TypeOutputter struct {
 	typeTool string
 	config   *config.Config
 }
 
 // NewTypeOutputter creates a new type outputter
-func NewTypeOutputter(typeTool string, cfg *config.Config) (Outputter, error) {
+func NewTypeOutputter(typeTool string, cfg *config.Config) (interfaces.Outputter, error) {
 	// Verify tool exists
 	if _, err := exec.LookPath(typeTool); err != nil {
 		return nil, fmt.Errorf("type tool not found: %s", typeTool)

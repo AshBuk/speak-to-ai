@@ -10,7 +10,7 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
 func TestNewApp(t *testing.T) {
@@ -222,22 +222,22 @@ func TestApp_ConvertEnvironmentType(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    platform.EnvironmentType
-		expected output.EnvironmentType
+		expected outputFactory.EnvironmentType
 	}{
 		{
 			name:     "X11 environment",
 			input:    platform.EnvironmentX11,
-			expected: output.EnvironmentX11,
+			expected: outputFactory.EnvironmentX11,
 		},
 		{
 			name:     "Wayland environment",
 			input:    platform.EnvironmentWayland,
-			expected: output.EnvironmentWayland,
+			expected: outputFactory.EnvironmentWayland,
 		},
 		{
 			name:     "Unknown environment",
 			input:    platform.EnvironmentUnknown,
-			expected: output.EnvironmentUnknown,
+			expected: outputFactory.EnvironmentUnknown,
 		},
 	}
 

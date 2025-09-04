@@ -16,7 +16,7 @@ import (
 
 func TestAudioRecorderInterface_MockCompliance(t *testing.T) {
 	// Test that MockAudioRecorder implements AudioRecorder interface
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	// Verify interface compliance at compile time
 	var _ interfaces.AudioRecorder = mock
@@ -103,7 +103,7 @@ func TestAudioRecorderInterface_MockCompliance(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_ErrorHandling(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("StartRecording_Error", func(t *testing.T) {
 		expectedError := errors.New("start recording failed")
@@ -171,7 +171,7 @@ func TestAudioRecorderInterface_ErrorHandling(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_StateValidation(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("DoubleStart", func(t *testing.T) {
 		err := mock.StartRecording()
@@ -226,7 +226,7 @@ func TestAudioRecorderInterface_StateValidation(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_StreamingMode(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("DefaultStreamingMode", func(t *testing.T) {
 		if mock.UseStreaming() {
@@ -288,7 +288,7 @@ func TestAudioRecorderInterface_StreamingMode(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("DefaultAudioLevel", func(t *testing.T) {
 		level := mock.GetAudioLevel()
@@ -360,7 +360,7 @@ func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_EdgeCases(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("NilCallback", func(t *testing.T) {
 		// Should not panic
@@ -415,7 +415,7 @@ func TestAudioRecorderInterface_EdgeCases(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_ConcurrentAccess(t *testing.T) {
-	mock := &mocks.MockAudioRecorder{}
+	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("ConcurrentLevelUpdates", func(t *testing.T) {
 		var receivedLevels []float64

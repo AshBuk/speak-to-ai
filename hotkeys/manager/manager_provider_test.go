@@ -12,28 +12,28 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
 )
 
-// MockFactory для тестирования dependency injection
+// MockFactory for testing dependency injection
 type MockFactory struct {
 	mu        sync.RWMutex
 	providers map[string]interfaces.KeyboardEventProvider
 	createErr error
 }
 
-// NewMockFactory создает новую mock factory
+// NewMockFactory creates a new mock factory
 func NewMockFactory() *MockFactory {
 	return &MockFactory{
 		providers: make(map[string]interfaces.KeyboardEventProvider),
 	}
 }
 
-// RegisterProvider регистрирует provider в factory
+// RegisterProvider registers a provider in the factory
 func (f *MockFactory) RegisterProvider(name string, provider interfaces.KeyboardEventProvider) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.providers[name] = provider
 }
 
-// CreateProvider создает provider по имени
+// CreateProvider creates a provider by name
 func (f *MockFactory) CreateProvider(name string) (interfaces.KeyboardEventProvider, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
@@ -50,7 +50,7 @@ func (f *MockFactory) CreateProvider(name string) (interfaces.KeyboardEventProvi
 	return provider, nil
 }
 
-// SetCreateError устанавливает ошибку для CreateProvider
+// SetCreateError sets an error for CreateProvider
 func (f *MockFactory) SetCreateError(err error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

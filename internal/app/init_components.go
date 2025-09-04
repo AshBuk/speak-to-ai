@@ -15,7 +15,8 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
+	"github.com/AshBuk/speak-to-ai/output/outputters"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
@@ -74,12 +75,12 @@ func (a *App) initializeComponents(modelPath string) error {
 
 	// Initialize output manager based on environment
 	outputEnv := a.convertEnvironmentType()
-	a.OutputManager, err = output.GetOutputterFromConfig(a.Config, outputEnv)
+	a.OutputManager, err = outputFactory.GetOutputterFromConfig(a.Config, outputEnv)
 	if err != nil {
 		a.Logger.Warning("Failed to initialize text outputter: %v", err)
 		// Graceful fallback: try clipboard-only if typing tool is missing
 		clipboardTool := ""
-		if outputEnv == output.EnvironmentWayland {
+		if outputEnv == outputFactory.EnvironmentWayland {
 			if _, lookErr := exec.LookPath("wl-copy"); lookErr == nil {
 				clipboardTool = "wl-copy"
 			}
@@ -94,7 +95,7 @@ func (a *App) initializeComponents(modelPath string) error {
 			oldCfg := *a.Config
 			a.Config.Output.DefaultMode = config.OutputModeClipboard
 			a.Config.Output.ClipboardTool = clipboardTool
-			if out, cerr := output.NewClipboardOutputter(clipboardTool, a.Config); cerr == nil {
+			if out, cerr := outputters.NewClipboardOutputter(clipboardTool, a.Config); cerr == nil {
 				a.OutputManager = out
 				if a.NotifyManager != nil {
 					_ = a.NotifyManager.ShowNotification("Output Fallback", "Typing tool not found. Using clipboard output. Install 'wtype' or 'ydotool' for Wayland typing.")
@@ -210,7 +211,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		a.Logger.Info("Output settings changed, reinitializing output manager...")
 
 		outputEnv := a.convertEnvironmentType()
-		a.OutputManager, err = output.GetOutputterFromConfig(a.Config, outputEnv)
+		a.OutputManager, err = outputFactory.GetOutputterFromConfig(a.Config, outputEnv)
 		if err != nil {
 			a.Logger.Warning("Failed to reinitialize output manager: %v", err)
 		} else {

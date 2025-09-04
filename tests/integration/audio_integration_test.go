@@ -130,7 +130,7 @@ func TestAudioStreamingIntegration(t *testing.T) {
 		speechCount := 0
 
 		// Create chunk processor with VAD
-		processor := audio.NewChunkProcessor(audio.ChunkProcessorConfig{
+		processor := processing.NewChunkProcessor(processing.ChunkProcessorConfig{
 			ChunkDurationMs: 64,
 			SampleRate:      16000,
 			OnChunk: func(chunk []float32) error {
@@ -143,7 +143,7 @@ func TestAudioStreamingIntegration(t *testing.T) {
 				return nil
 			},
 			UseVAD:         true,
-			VADSensitivity: audio.VADMedium,
+			VADSensitivity: processing.VADMedium,
 		})
 
 		// Start streaming
@@ -221,7 +221,7 @@ func TestAudioDeviceDetection(t *testing.T) {
 
 		for _, method := range methods {
 			cfg.Audio.RecordingMethod = method
-			_, err := audio.GetRecorder(cfg)
+			_, err := factory.GetRecorder(cfg)
 			if err == nil {
 				workingMethods++
 				t.Logf("Recording method %s is available", method)
@@ -242,7 +242,7 @@ func TestTemporaryFileManagement(t *testing.T) {
 	// Test that temporary audio files are properly managed
 	tempDir := t.TempDir()
 
-	manager := audio.GetTempFileManager()
+	manager := processing.GetTempFileManager()
 
 	// Add several test files
 	testFiles := []string{

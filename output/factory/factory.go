@@ -1,13 +1,15 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package output
+package factory
 
 import (
 	"fmt"
 	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
+	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
 
 // EnvironmentType represents the display server type
@@ -35,7 +37,7 @@ func NewFactory(config *config.Config) *Factory {
 }
 
 // GetOutputter creates an appropriate outputter based on environment
-func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
+func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error) {
 	// Choose clipboard tool based on environment
 	clipboardTool := f.config.Output.ClipboardTool
 	if clipboardTool == "auto" {
@@ -90,20 +92,20 @@ func (f *Factory) GetOutputter(env EnvironmentType) (Outputter, error) {
 	// Create appropriate outputter
 	switch f.config.Output.DefaultMode {
 	case config.OutputModeClipboard:
-		return NewClipboardOutputter(clipboardTool, f.config)
+		return outputters.NewClipboardOutputter(clipboardTool, f.config)
 	case config.OutputModeActiveWindow:
 		// Use combined outputter even for ActiveWindow to enable seamless clipboard fallback
 		// on compositors where typing tools are unsupported (e.g., GNOME on Wayland)
-		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
+		return outputters.NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	case config.OutputModeCombined:
-		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
+		return outputters.NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	default:
-		return NewCombinedOutputter(clipboardTool, typeTool, f.config)
+		return outputters.NewCombinedOutputter(clipboardTool, typeTool, f.config)
 	}
 }
 
 // GetOutputterFromConfig is a convenience function to create an outputter directly from config
-func GetOutputterFromConfig(config *config.Config, env EnvironmentType) (Outputter, error) {
+func GetOutputterFromConfig(config *config.Config, env EnvironmentType) (interfaces.Outputter, error) {
 	factory := NewFactory(config)
 	return factory.GetOutputter(env)
 }
