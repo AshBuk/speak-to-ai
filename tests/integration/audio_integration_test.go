@@ -49,6 +49,12 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		// Record for a short time
 		time.Sleep(100 * time.Millisecond)
 
+		// Ensure cleanup happens even if test fails
+		defer func() {
+			recorder.StopRecording()
+			recorder.CleanupFile()
+		}()
+
 		outputFile, err := recorder.StopRecording()
 		if err != nil {
 			t.Skipf("Failed to stop recording (audio device issue): %v", err)
@@ -60,9 +66,6 @@ func TestAudioRecordingIntegration(t *testing.T) {
 				t.Errorf("Recording file not created: %v", err)
 			}
 		}
-
-		// Cleanup
-		recorder.CleanupFile()
 	})
 
 	t.Run("ffmpeg_real_device", func(t *testing.T) {
@@ -82,6 +85,12 @@ func TestAudioRecordingIntegration(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
+		// Ensure cleanup happens even if test fails
+		defer func() {
+			recorder.StopRecording()
+			recorder.CleanupFile()
+		}()
+
 		outputFile, err := recorder.StopRecording()
 		if err != nil {
 			t.Skipf("Failed to stop FFmpeg recording (audio device issue): %v", err)
@@ -92,8 +101,6 @@ func TestAudioRecordingIntegration(t *testing.T) {
 				t.Errorf("FFmpeg recording file not created: %v", err)
 			}
 		}
-
-		recorder.CleanupFile()
 	})
 }
 
@@ -161,6 +168,13 @@ func TestAudioStreamingIntegration(t *testing.T) {
 		}()
 
 		<-ctx.Done()
+
+		// Ensure cleanup happens even if test fails
+		defer func() {
+			recorder.StopRecording()
+			recorder.CleanupFile()
+		}()
+
 		recorder.StopRecording()
 
 		t.Logf("Processed %d chunks, detected %d speech chunks", chunkCount, speechCount)
@@ -190,8 +204,12 @@ func TestAudioDeviceDetection(t *testing.T) {
 		if err != nil {
 			t.Logf("Default device not functional: %v", err)
 		} else {
+			// Ensure cleanup happens even if test fails
+			defer func() {
+				recorder.StopRecording()
+				recorder.CleanupFile()
+			}()
 			recorder.StopRecording()
-			recorder.CleanupFile()
 			t.Log("Default audio device is functional")
 		}
 	})

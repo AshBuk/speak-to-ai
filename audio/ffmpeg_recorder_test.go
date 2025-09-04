@@ -36,8 +36,8 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	}
 }
 
-// TestFFmpegRecorder_buildCommandArgs tests command argument building with real scenarios
-func TestFFmpegRecorder_buildCommandArgs(t *testing.T) {
+// TestFFmpegRecorder_buildBaseCommandArgs tests command argument building with real scenarios
+func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 	tests := []struct {
 		name          string
 		device        string
@@ -96,7 +96,7 @@ func TestFFmpegRecorder_buildCommandArgs(t *testing.T) {
 			recorder.streamingEnabled = tt.streamingMode
 			recorder.outputFile = "/tmp/test.wav"
 
-			args := recorder.buildCommandArgs()
+			args := recorder.buildBaseCommandArgs()
 
 			// Verify device argument
 			found := false
@@ -285,7 +285,7 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 			recorder := NewFFmpegRecorder(cfg)
 
 			// Build args to see if they're reasonable
-			args := recorder.buildCommandArgs()
+			args := recorder.buildBaseCommandArgs()
 
 			if tt.expectError {
 				// Check for obviously problematic arguments

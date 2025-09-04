@@ -43,6 +43,10 @@ type TrayManager struct {
 	audioItems  map[string]*systray.MenuItem
 	modelItems  map[string]*systray.MenuItem
 	outputItems map[string]*systray.MenuItem
+
+	// Audio action callbacks
+	onSelectRecorder func(method string) error
+	onTestRecording  func() error
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -148,6 +152,12 @@ func (tm *TrayManager) populateSettingsMenus() {
 		"Use ffmpeg (PulseAudio)",
 	)
 
+	// Add test recording item
+	tm.audioItems["recorder_test"] = tm.audioRecorderMenu.AddSubMenuItem(
+		"Test Recording",
+		"Record 3s sample to validate settings",
+	)
+
 	// Reflect current selection
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
 
@@ -156,12 +166,34 @@ func (tm *TrayManager) populateSettingsMenus() {
 		for range tm.audioItems["recorder_arecord"].ClickedCh {
 			log.Println("Audio recorder switched to arecord (UI)")
 			tm.updateRecorderRadioUI("arecord")
+			if tm.onSelectRecorder != nil {
+				if err := tm.onSelectRecorder("arecord"); err != nil {
+					log.Printf("Error selecting recorder: %v", err)
+				}
+			}
 		}
 	}()
 	go func() {
 		for range tm.audioItems["recorder_ffmpeg"].ClickedCh {
 			log.Println("Audio recorder switched to ffmpeg (UI)")
 			tm.updateRecorderRadioUI("ffmpeg")
+			if tm.onSelectRecorder != nil {
+				if err := tm.onSelectRecorder("ffmpeg"); err != nil {
+					log.Printf("Error selecting recorder: %v", err)
+				}
+			}
+		}
+	}()
+
+	// Handle test recording
+	go func() {
+		for range tm.audioItems["recorder_test"].ClickedCh {
+			log.Println("Test recording clicked")
+			if tm.onTestRecording != nil {
+				if err := tm.onTestRecording(); err != nil {
+					log.Printf("Test recording failed: %v", err)
+				}
+			}
 		}
 	}()
 
@@ -293,7 +325,12 @@ func (tm *TrayManager) handleMenuClicks() {
 			}
 		case <-tm.exitItem.ClickedCh:
 			log.Println("Exit clicked")
+			// Quit systray first to ensure UI responds
 			systray.Quit()
+			// Then trigger application shutdown
+			if tm.onExit != nil {
+				tm.onExit() // Call directly, not in goroutine to ensure cleanup
+			}
 			return
 		}
 	}
@@ -324,4 +361,10 @@ func (tm *TrayManager) SetTooltip(tooltip string) {
 // Stop stops the tray manager
 func (tm *TrayManager) Stop() {
 	systray.Quit()
+}
+
+// SetAudioActions sets callbacks for audio-related actions (recorder selection, test recording)
+func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
+	tm.onSelectRecorder = onSelectRecorder
+	tm.onTestRecording = onTestRecording
 }

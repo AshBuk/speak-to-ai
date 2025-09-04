@@ -11,11 +11,13 @@ import (
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
 type MockTrayManager struct {
-	isRecording    bool
-	onExit         func()
-	onToggle       func() error
-	onShowConfig   func() error
-	onReloadConfig func() error
+	isRecording      bool
+	onExit           func()
+	onToggle         func() error
+	onShowConfig     func() error
+	onReloadConfig   func() error
+	onSelectRecorder func(method string) error
+	onTestRecording  func() error
 }
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray
@@ -53,4 +55,11 @@ func (tm *MockTrayManager) UpdateSettings(config *config.Config) {
 
 func (tm *MockTrayManager) Stop() {
 	log.Println("Mock tray stopped")
+}
+
+// SetAudioActions sets callbacks for audio-related actions (mock implementation)
+func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
+	tm.onSelectRecorder = onSelectRecorder
+	tm.onTestRecording = onTestRecording
+	log.Println("Mock tray: audio actions set")
 }

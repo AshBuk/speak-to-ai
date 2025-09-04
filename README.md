@@ -36,7 +36,16 @@
 
 ## ✦ Installation
 
-Get prebuilt Flatpak or AppImage packages on the [Releases](https://github.com/AshBuk/speak-to-ai/releases) page:
+### Flatpak 
+
+Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
+
+```bash
+# Download the file, then:
+flatpak install --user io.github.ashbuk.speak-to-ai.flatpak
+# Run the application
+flatpak run io.github.ashbuk.speak-to-ai
+```
 
 ### AppImage
 
@@ -47,21 +56,21 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 chmod +x speak-to-ai-*.AppImage
 # For hotkeys to work, add user to input group:
 sudo usermod -a -G input $USER
-# Then reboot or log out/in
+# then reboot
 # Open:
 ./speak-to-ai-*.AppImage
 ```
 
-### Flatpak
-
-Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
-
+**For system tray integration on GNOME**:
 ```bash
-# Download the file, then:
-flatpak install --user io.github.ashbuk.speak-to-ai.flatpak
-# Run the application
-flatpak run io.github.ashbuk.speak-to-ai
+# Ubuntu/Debian
+sudo apt install gnome-shell-extension-appindicator
+# Fedora
+sudo dnf install gnome-shell-extension-appindicator
+# Arch Linux
+sudo pacman -S gnome-shell-extension-appindicator
 ```
+*KDE and other DEs have built-in system tray support*
 
 ## ✦ Configuration
 

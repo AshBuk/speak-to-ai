@@ -42,6 +42,13 @@ type BaseRecorder struct {
 	chunkProcessor   *ChunkProcessor
 	audioChunks      chan []float32
 	streamingActive  bool
+
+	// Diagnostics
+	stderrBuf bytes.Buffer
+
+	// Process synchronization
+	waitOnce   sync.Once
+	processErr error
 }
 
 // NewBaseRecorder creates a new base recorder instance
@@ -52,9 +59,15 @@ func NewBaseRecorder(config *config.Config) BaseRecorder {
 		config.Audio.ExpectedDuration < 10 &&
 		config.Audio.SampleRate <= 16000
 
+	// Determine command timeout from configuration
+	maxTime := time.Duration(config.Audio.MaxRecordingTime) * time.Second
+	if maxTime <= 0 {
+		maxTime = 5 * time.Minute
+	}
+
 	return BaseRecorder{
 		config:           config,
-		cmdTimeout:       60 * time.Second, // Default timeout
+		cmdTimeout:       maxTime,
 		useBuffer:        useBuffer,
 		buffer:           bytes.NewBuffer(nil),
 		tempManager:      GetTempFileManager(), // Use the global temp file manager
@@ -194,55 +207,6 @@ func (b *BaseRecorder) createTempFile() error {
 	return nil
 }
 
-// StartProcessTemplate is a template method for starting recording processes
-func (b *BaseRecorder) StartProcessTemplate(cmdName string, args []string, outputPipe bool) error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	// Create context with timeout
-	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
-
-	if b.useBuffer {
-		// Reset buffer
-		b.buffer.Reset()
-	} else {
-		// Create temporary file if not using in-memory buffer
-		if err := b.createTempFile(); err != nil {
-			return err
-		}
-	}
-
-	// Security: validate command and sanitize args before execution
-	if !b.config.IsCommandAllowed(cmdName) {
-		return fmt.Errorf("command not allowed: %s", cmdName)
-	}
-	safeArgs := config.SanitizeCommandArgs(args)
-
-	// Create command with context
-	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
-
-	// Set up output redirection and audio level monitoring
-	if b.useBuffer && outputPipe {
-		// Create a pipe to monitor audio data
-		stdout, err := b.cmd.StdoutPipe()
-		if err != nil {
-			b.cancel()
-			return fmt.Errorf("failed to create stdout pipe: %w", err)
-		}
-
-		// Start goroutine to read data and monitor audio levels
-		go b.monitorAudioLevel(stdout)
-	}
-
-	// Start the process
-	if err := b.cmd.Start(); err != nil {
-		b.cancel()
-		return fmt.Errorf("failed to start recording: %w", err)
-	}
-
-	return nil
-}
-
 // StartStreamingRecording starts streaming recording and returns audio chunks channel
 func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
 	b.mutex.Lock()
@@ -367,6 +331,24 @@ func (b *BaseRecorder) monitorAudioLevel(reader io.Reader) {
 	}
 }
 
+// waitForProcess safely waits for the command to finish (can be called multiple times)
+func (b *BaseRecorder) waitForProcess() error {
+	if b.cmd == nil {
+		return fmt.Errorf("no command to wait for")
+	}
+
+	b.waitOnce.Do(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				b.processErr = fmt.Errorf("panic in Wait(): %v", r)
+			}
+		}()
+		b.processErr = b.cmd.Wait()
+	})
+
+	return b.processErr
+}
+
 // StopProcess stops the recording process with proper cleanup and retries
 func (b *BaseRecorder) StopProcess() error {
 	b.mutex.Lock()
@@ -407,7 +389,7 @@ func (b *BaseRecorder) StopProcess() error {
 		waitDone := false
 
 		go func() {
-			done <- b.cmd.Wait()
+			done <- b.waitForProcess()
 		}()
 
 		select {
@@ -426,19 +408,41 @@ func (b *BaseRecorder) StopProcess() error {
 		}
 	}
 
+	// Clean up process state after successful termination
+	b.cmd = nil
+	b.cancel = nil
+
+	// Log any stderr captured for diagnostics
+	if b.stderrBuf.Len() > 0 {
+		cmdName := "recorder"
+		if b.cmd != nil && b.cmd.Path != "" {
+			cmdName = b.cmd.Path
+		}
+		log.Printf("%s stderr: %s", cmdName, b.stderrBuf.String())
+	}
+
 	// If we're using a file, verify it was created
 	if !b.useBuffer {
+		// Small delay to ensure buffers are flushed to disk
+		time.Sleep(50 * time.Millisecond)
+		log.Printf("[DEBUG] Checking audio file: %s", b.outputFile)
 		info, err := os.Stat(b.outputFile)
 		if err != nil {
 			if os.IsNotExist(err) {
+				log.Printf("[DEBUG] Audio file does not exist: %s", b.outputFile)
 				return fmt.Errorf("audio file was not created")
 			}
+			log.Printf("[DEBUG] Failed to stat audio file: %v", err)
 			return fmt.Errorf("failed to stat audio file: %w", err)
 		}
+		log.Printf("[DEBUG] Audio file size: %d bytes", info.Size())
 		// Minimal valid WAV header is 44 bytes
 		if info.Size() <= 44 {
+			log.Printf("[AUDIO ERROR] Audio file empty (size=%d) - likely recording failed", info.Size())
+			log.Printf("[AUDIO HINT] Check audio device availability and permissions")
 			return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
 		}
+		log.Printf("[DEBUG] Audio file validation successful: %d bytes", info.Size())
 	}
 
 	return nil
@@ -449,6 +453,11 @@ func (b *BaseRecorder) StopProcess() error {
 func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+
+	// Check if recording is already in progress
+	if b.cmd != nil && b.cmd.Process != nil {
+		return fmt.Errorf("recording already in progress")
+	}
 
 	// Create context with timeout
 	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
@@ -467,14 +476,24 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		}
 	}
 
+	// Add output file to args if needed (for file output mode)
+	finalArgs := args
+	if !b.useBuffer && !b.streamingEnabled {
+		finalArgs = append(args, b.outputFile)
+	}
+
 	// Security: validate command and sanitize args before execution
 	if !b.config.IsCommandAllowed(cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
 	}
-	safeArgs := config.SanitizeCommandArgs(args)
+	safeArgs := config.SanitizeCommandArgs(finalArgs)
 
 	// Create command with context
 	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
+
+	// Capture stderr for diagnostics
+	b.stderrBuf.Reset()
+	b.cmd.Stderr = &b.stderrBuf
 
 	// Handle streaming mode
 	if b.streamingEnabled {
@@ -512,6 +531,15 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 			}
 		}()
 
+		// Log stderr after start in background for visibility
+		go func(name string) {
+			// Wait for process end to flush stderr
+			_ = b.waitForProcess()
+			if b.stderrBuf.Len() > 0 {
+				log.Printf("%s stderr: %s", name, b.stderrBuf.String())
+			}
+		}(cmdName)
+
 		return nil
 	}
 
@@ -533,6 +561,36 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		b.cancel()
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
+
+	// Log stderr after start in background for visibility
+	go func(name string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[AUDIO ERROR] Panic in %s monitoring: %v", name, r)
+			}
+		}()
+
+		// Wait for process end to flush stderr
+		if b.cmd == nil {
+			return
+		}
+
+		err := b.waitForProcess()
+		if b.stderrBuf.Len() > 0 {
+			log.Printf("[AUDIO ERROR] %s stderr: %s", name, b.stderrBuf.String())
+		}
+		if err != nil {
+			log.Printf("[AUDIO ERROR] %s exited with error: %v", name, err)
+			// Provide specific troubleshooting hints
+			switch name {
+			case "ffmpeg":
+				log.Printf("[AUDIO HINT] FFmpeg failed - try switching to arecord via tray menu")
+				log.Printf("[AUDIO HINT] Common cause: PulseAudio sources SUSPENDED in PipeWire")
+			case "arecord":
+				log.Printf("[AUDIO HINT] arecord failed - check microphone permissions and hardware")
+			}
+		}
+	}(cmdName)
 
 	return nil
 }

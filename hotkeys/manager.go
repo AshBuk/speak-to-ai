@@ -154,6 +154,13 @@ func (h *HotkeyManager) IsRecording() bool {
 	return h.isRecording
 }
 
+// ResetRecordingState forcefully sets recording state to false
+func (h *HotkeyManager) ResetRecordingState() {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
+	h.isRecording = false
+}
+
 // SimulateHotkeyPress simulates a hotkey press for testing
 func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	h.hotkeysMutex.Lock()
@@ -168,7 +175,7 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 			h.isRecording = true
 		}
 	case "stop_recording":
-		if h.isRecording && h.recordingStopped != nil {
+		if h.recordingStopped != nil {
 			if err := h.recordingStopped(); err != nil {
 				return err
 			}
