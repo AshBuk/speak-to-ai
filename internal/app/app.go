@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -28,7 +28,7 @@ type App struct {
 	ConfigFile      string // Path to the configuration file
 	Environment     platform.EnvironmentType
 	ModelManager    *whisper.ModelManager
-	Recorder        audio.AudioRecorder
+	Recorder        interfaces.AudioRecorder
 	WhisperEngine   *whisper.WhisperEngine
 	StreamingEngine *whisper.StreamingWhisperEngine
 	OutputManager   output.Outputter

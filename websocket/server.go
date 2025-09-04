@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/whisper"
 	"github.com/gorilla/websocket"
@@ -31,7 +31,7 @@ type WebSocketServer struct {
 	clients     map[*websocket.Conn]bool
 	clientsLock sync.Mutex
 	upgrader    websocket.Upgrader
-	recorder    audio.AudioRecorder
+	recorder    interfaces.AudioRecorder
 	whisper     *whisper.WhisperEngine
 	server      *http.Server
 	started     bool
@@ -50,7 +50,7 @@ type Message struct {
 }
 
 // NewWebSocketServer creates a new instance of WebSocketServer
-func NewWebSocketServer(config *config.Config, recorder audio.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger Logger) *WebSocketServer {
+func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
 		clients: make(map[*websocket.Conn]bool),

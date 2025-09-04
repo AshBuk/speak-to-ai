@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package audio
+package recorders
 
 import (
 	"bytes"
@@ -15,6 +15,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
@@ -27,19 +29,19 @@ type BaseRecorder struct {
 	cancel             context.CancelFunc
 	mutex              sync.Mutex
 	cmdTimeout         time.Duration
-	buffer             *bytes.Buffer      // For in-memory recording
-	useBuffer          bool               // Whether to use in-memory buffer instead of file
-	tempManager        *TempFileManager   // For managing temp files
-	audioLevelCallback AudioLevelCallback // Callback for audio level updates
-	currentAudioLevel  float64            // Current audio level (0.0 to 1.0)
-	levelMutex         sync.RWMutex       // Mutex for audio level access
+	buffer             *bytes.Buffer                 // For in-memory recording
+	useBuffer          bool                          // Whether to use in-memory buffer instead of file
+	tempManager        *processing.TempFileManager   // For managing temp files
+	audioLevelCallback interfaces.AudioLevelCallback // Callback for audio level updates
+	currentAudioLevel  float64                       // Current audio level (0.0 to 1.0)
+	levelMutex         sync.RWMutex                  // Mutex for audio level access
 
 	// Streaming support
 	streamingEnabled bool
 	pipeReader       *io.PipeReader
 	pipeWriter       *io.PipeWriter
 	stdoutPipe       io.ReadCloser
-	chunkProcessor   *ChunkProcessor
+	chunkProcessor   *processing.ChunkProcessor
 	audioChunks      chan []float32
 	streamingActive  bool
 
@@ -70,7 +72,7 @@ func NewBaseRecorder(config *config.Config) BaseRecorder {
 		cmdTimeout:       maxTime,
 		useBuffer:        useBuffer,
 		buffer:           bytes.NewBuffer(nil),
-		tempManager:      GetTempFileManager(), // Use the global temp file manager
+		tempManager:      processing.GetTempFileManager(), // Use the global temp file manager
 		streamingEnabled: config.Audio.EnableStreaming,
 		audioChunks:      make(chan []float32, 10), // Buffer for 10 chunks
 		streamingActive:  false,
@@ -96,7 +98,7 @@ func (b *BaseRecorder) GetAudioStream() (io.Reader, error) {
 }
 
 // SetAudioLevelCallback sets the callback for audio level monitoring
-func (b *BaseRecorder) SetAudioLevelCallback(callback AudioLevelCallback) {
+func (b *BaseRecorder) SetAudioLevelCallback(callback interfaces.AudioLevelCallback) {
 	b.levelMutex.Lock()
 	defer b.levelMutex.Unlock()
 	b.audioLevelCallback = callback
@@ -221,7 +223,7 @@ func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
 	}
 
 	// Initialize chunk processor
-	processorConfig := ChunkProcessorConfig{
+	processorConfig := processing.ChunkProcessorConfig{
 		ChunkDurationMs: 1000, // 1 second chunks
 		SampleRate:      b.config.Audio.SampleRate,
 		UseVAD:          true,
@@ -236,7 +238,7 @@ func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
 		},
 	}
 
-	b.chunkProcessor = NewChunkProcessor(processorConfig)
+	b.chunkProcessor = processing.NewChunkProcessor(processorConfig)
 	b.streamingActive = true
 
 	// Start processing audio stream

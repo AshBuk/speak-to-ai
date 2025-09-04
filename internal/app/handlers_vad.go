@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 )
 
 // handleStartVADRecording handles VAD-based automatic recording
@@ -50,8 +50,8 @@ func (a *App) processVADStream(audioStream <-chan []float32) {
 	a.Logger.Info("Starting VAD stream processing...")
 
 	// Create VAD with configured sensitivity
-	vadSensitivity := audio.ParseVADSensitivity(a.Config.Audio.VADSensitivity)
-	vad := audio.NewVADWithSensitivity(vadSensitivity)
+	vadSensitivity := processing.ParseVADSensitivity(a.Config.Audio.VADSensitivity)
+	vad := processing.NewVADWithSensitivity(vadSensitivity)
 
 	speechBuffer := make([][]float32, 0)
 	isRecordingSpeech := false

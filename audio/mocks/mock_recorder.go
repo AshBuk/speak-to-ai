@@ -1,13 +1,15 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package audio
+package mocks
 
 import (
 	"errors"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 )
 
 // MockAudioRecorder implements AudioRecorder interface for testing
@@ -17,7 +19,7 @@ type MockAudioRecorder struct {
 	cleanupCalled       bool
 	streaming           bool
 	audioLevel          float64
-	audioLevelCallback  AudioLevelCallback
+	audioLevelCallback  interfaces.AudioLevelCallback
 	startError          error
 	stopError           error
 	getStreamError      error
@@ -111,7 +113,7 @@ func (m *MockAudioRecorder) GetAudioStream() (io.Reader, error) {
 }
 
 // SetAudioLevelCallback sets the callback for audio level monitoring
-func (m *MockAudioRecorder) SetAudioLevelCallback(callback AudioLevelCallback) {
+func (m *MockAudioRecorder) SetAudioLevelCallback(callback interfaces.AudioLevelCallback) {
 	m.audioLevelCallback = callback
 }
 

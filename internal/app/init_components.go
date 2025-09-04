@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -48,7 +48,7 @@ func (a *App) initializeComponents(modelPath string) error {
 	a.Logger.Info("Model path resolved: %s", modelFilePath)
 
 	// Initialize audio recorder
-	a.Recorder, err = audio.GetRecorder(a.Config)
+	a.Recorder, err = factory.GetRecorder(a.Config)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		}
 
 		// Reinitialize audio recorder
-		a.Recorder, err = audio.GetRecorder(a.Config)
+		a.Recorder, err = factory.GetRecorder(a.Config)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}

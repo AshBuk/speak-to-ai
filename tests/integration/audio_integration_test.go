@@ -13,7 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/factory"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
@@ -36,7 +37,7 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.SampleRate = 16000
 		cfg.Audio.Channels = 1
 
-		recorder, err := audio.GetRecorder(cfg)
+		recorder, err := factory.GetRecorder(cfg)
 		if err != nil {
 			t.Skipf("Audio recorder not available: %v", err)
 		}
@@ -73,7 +74,7 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.RecordingMethod = "ffmpeg"
 		cfg.Audio.Device = "default"
 
-		recorder, err := audio.GetRecorder(cfg)
+		recorder, err := factory.GetRecorder(cfg)
 		if err != nil {
 			t.Skipf("FFmpeg recorder not available: %v", err)
 		}
@@ -115,7 +116,7 @@ func TestAudioStreamingIntegration(t *testing.T) {
 	cfg.Audio.Device = "default"
 
 	t.Run("streaming_with_vad", func(t *testing.T) {
-		recorder, err := audio.GetRecorder(cfg)
+		recorder, err := factory.GetRecorder(cfg)
 		if err != nil {
 			t.Skipf("Audio recorder not available: %v", err)
 		}
@@ -194,7 +195,7 @@ func TestAudioDeviceDetection(t *testing.T) {
 		cfg.Audio.Device = "default"
 		cfg.Audio.RecordingMethod = "arecord"
 
-		recorder, err := audio.GetRecorder(cfg)
+		recorder, err := factory.GetRecorder(cfg)
 		if err != nil {
 			t.Skipf("Default audio device not available: %v", err)
 		}

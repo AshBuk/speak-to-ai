@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package audio
+package interfaces_test
 
 import (
 	"errors"
@@ -9,14 +9,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/mocks"
 )
 
 func TestAudioRecorderInterface_MockCompliance(t *testing.T) {
 	// Test that MockAudioRecorder implements AudioRecorder interface
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	// Verify interface compliance at compile time
-	var _ AudioRecorder = mock
+	var _ interfaces.AudioRecorder = mock
 
 	// Test all interface methods
 	t.Run("StartRecording", func(t *testing.T) {
@@ -100,7 +103,7 @@ func TestAudioRecorderInterface_MockCompliance(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_ErrorHandling(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("StartRecording_Error", func(t *testing.T) {
 		expectedError := errors.New("start recording failed")
@@ -168,7 +171,7 @@ func TestAudioRecorderInterface_ErrorHandling(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_StateValidation(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("DoubleStart", func(t *testing.T) {
 		err := mock.StartRecording()
@@ -223,7 +226,7 @@ func TestAudioRecorderInterface_StateValidation(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_StreamingMode(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("DefaultStreamingMode", func(t *testing.T) {
 		if mock.UseStreaming() {
@@ -285,7 +288,7 @@ func TestAudioRecorderInterface_StreamingMode(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("DefaultAudioLevel", func(t *testing.T) {
 		level := mock.GetAudioLevel()
@@ -357,7 +360,7 @@ func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_EdgeCases(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("NilCallback", func(t *testing.T) {
 		// Should not panic
@@ -412,7 +415,7 @@ func TestAudioRecorderInterface_EdgeCases(t *testing.T) {
 }
 
 func TestAudioRecorderInterface_ConcurrentAccess(t *testing.T) {
-	mock := NewMockAudioRecorder()
+	mock := &mocks.MockAudioRecorder{}
 
 	t.Run("ConcurrentLevelUpdates", func(t *testing.T) {
 		var receivedLevels []float64
