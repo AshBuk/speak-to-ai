@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -120,7 +121,13 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 // loadAudioData loads audio data from file and converts it to float32 samples
 func (w *WhisperEngine) loadAudioData(audioFile string) ([]float32, error) {
 	// Open the WAV file
-	file, err := os.Open(audioFile)
+	// Sanitize and validate path to mitigate file inclusion risks
+	clean := filepath.Clean(audioFile)
+	if clean != audioFile || strings.Contains(clean, "..") {
+		return nil, fmt.Errorf("invalid audio file path")
+	}
+	// #nosec G304 -- Safe: path is sanitized above and also validated by IsValidFile in Transcribe
+	file, err := os.Open(clean)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audio file: %w", err)
 	}
