@@ -20,3 +20,7 @@ linters:
     - staticcheck
     - ineffassign
     - errcheck
+    - gosec
+    - unconvert
+    - unused
+    - unparam

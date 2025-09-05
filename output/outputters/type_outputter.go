@@ -55,6 +55,7 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 
 	// Security: sanitize arguments (text is user content, needs special handling)
 	safeArgs := config.SanitizeCommandArgs(args)
+	// #nosec G204 -- Safe: tool is allowlisted and arguments are sanitized.
 	cmd = exec.Command(o.typeTool, safeArgs...)
 
 	// Run the command

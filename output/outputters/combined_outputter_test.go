@@ -4,10 +4,10 @@
 package outputters
 
 import (
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
 func TestNewCombinedOutputter(t *testing.T) {
@@ -138,14 +138,6 @@ func TestCombinedOutputter_TypeToActiveWindow(t *testing.T) {
 }
 
 func TestCombinedOutputter_Interface(t *testing.T) {
-	mockClipboard := NewMockOutputter()
-	mockType := NewMockOutputter()
-
-	outputter := &CombinedOutputter{
-		clipboardOutputter: mockClipboard,
-		typeOutputter:      mockType,
-	}
-
-	// Verify it implements the interfaces.Outputter interface
-	var _ interfaces.Outputter = outputter
+	// Compile-time assertion: CombinedOutputter implements interfaces.Outputter
+	var _ interfaces.Outputter = (*CombinedOutputter)(nil)
 }

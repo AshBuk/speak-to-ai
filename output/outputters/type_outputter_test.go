@@ -4,11 +4,11 @@
 package outputters
 
 import (
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
 	"os/exec"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
 func TestNewTypeOutputter(t *testing.T) {

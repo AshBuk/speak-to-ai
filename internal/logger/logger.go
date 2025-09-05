@@ -61,11 +61,11 @@ func Configure(config Config) (*DefaultLogger, error) {
 	if config.File != "" {
 		// Create directory if it doesn't exist
 		dir := filepath.Dir(config.File)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create log directory %s: %w", dir, err)
 		}
 		// Try to open the log file
-		f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file %s: %w", config.File, err)
 		}

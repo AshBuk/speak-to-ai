@@ -52,6 +52,7 @@ func (o *ClipboardOutputter) CopyToClipboard(text string) error {
 
 	// Security: sanitize arguments
 	safeArgs := config.SanitizeCommandArgs(args)
+	// #nosec G204 -- Safe: tool is allowlisted and arguments are sanitized.
 	cmd = exec.Command(o.clipboardTool, safeArgs...)
 
 	// Pipe text to the command

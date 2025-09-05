@@ -105,7 +105,14 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, cmdName, testArgs...)
+	// Security: validate command and sanitize args before execution
+	if !config.IsCommandAllowed(&testConfig, cmdName) {
+		return fmt.Errorf("command not allowed: %s", cmdName)
+	}
+	safeArgs := config.SanitizeCommandArgs(testArgs)
+
+	// #nosec G204 -- Safe: command is allowlisted and arguments are sanitized.
+	cmd := exec.CommandContext(ctx, cmdName, safeArgs...)
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {

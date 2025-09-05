@@ -86,7 +86,12 @@ func UpdateConfigHash(filename string, config *models.Config) error {
 
 // CalculateFileHash calculates SHA-256 hash of a file
 func CalculateFileHash(filename string) (string, error) {
-	f, err := os.Open(filename)
+	safe := filepath.Clean(filename)
+	if strings.Contains(safe, "\x00") {
+		return "", fmt.Errorf("invalid filename")
+	}
+	// #nosec G304 -- Safe: caller controls and sanitizes path to config file.
+	f, err := os.Open(safe)
 	if err != nil {
 		return "", err
 	}

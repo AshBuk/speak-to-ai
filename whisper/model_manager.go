@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	urlpkg "net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -48,9 +49,7 @@ func NewModelManager(config *config.Config) *ModelManager {
 // Initialize sets up the model manager
 func (m *ModelManager) Initialize() error {
 	// Load models from configuration
-	if err := m.loadModelsFromConfig(); err != nil {
-		return fmt.Errorf("failed to load models from config: %w", err)
-	}
+	m.loadModelsFromConfig()
 
 	// Set active model
 	if err := m.setActiveModel(); err != nil {
@@ -116,7 +115,7 @@ func (m *ModelManager) getModelDir() string {
 func (m *ModelManager) downloadModelWithProgress(modelType, precision string, progressCallback ProgressCallback) (string, error) {
 	// Create model directory if it doesn't exist
 	modelDir := m.getModelDir()
-	if err := os.MkdirAll(modelDir, 0755); err != nil {
+	if err := os.MkdirAll(modelDir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create model directory: %w", err)
 	}
 
@@ -128,14 +127,19 @@ func (m *ModelManager) downloadModelWithProgress(modelType, precision string, pr
 	url := fmt.Sprintf("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/%s", modelFile)
 
 	// Create output file
-	out, err := os.Create(modelPath)
+	cleanPath := filepath.Clean(modelPath)
+	out, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return "", fmt.Errorf("failed to create output file: %w", err)
 	}
 	defer func() { _ = out.Close() }()
 
 	// Get the data
-	resp, err := http.Get(url)
+	parsed, perr := urlpkg.Parse(url)
+	if perr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return "", fmt.Errorf("invalid download URL")
+	}
+	resp, err := http.Get(parsed.String())
 	if err != nil {
 		return "", fmt.Errorf("failed to download model: %w", err)
 	}
@@ -276,7 +280,7 @@ func (m *ModelManager) GetActiveModelPath() string {
 }
 
 // loadModelsFromConfig loads model information from configuration
-func (m *ModelManager) loadModelsFromConfig() error {
+func (m *ModelManager) loadModelsFromConfig() {
 	// Load from models array if available
 	if len(m.config.General.Models) > 0 {
 		for _, modelPath := range m.config.General.Models {
@@ -288,8 +292,6 @@ func (m *ModelManager) loadModelsFromConfig() error {
 		modelInfo := m.createModelInfo(m.config.General.ModelPath)
 		m.models[modelInfo.Name] = modelInfo
 	}
-
-	return nil
 }
 
 // createModelInfo creates ModelInfo from a file path

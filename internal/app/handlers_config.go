@@ -68,6 +68,7 @@ func (a *App) handleShowConfig() error {
 	}
 
 	// Start editor in background
+	// #nosec G204 -- Safe: editor is allowlisted constant (xdg-open) and args are sanitized.
 	cmd := exec.Command(editor, args[0])
 
 	// For GUI applications, detach from parent process

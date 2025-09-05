@@ -4,8 +4,11 @@
 package loaders
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config/models"
 	"github.com/AshBuk/speak-to-ai/config/validators"
@@ -20,7 +23,13 @@ func LoadConfig(filename string) (*models.Config, error) {
 	SetDefaultConfig(&config)
 
 	// Read configuration file
-	data, err := os.ReadFile(filename)
+	// Sanitize and validate path
+	clean := filepath.Clean(filename)
+	if strings.Contains(clean, "..") {
+		return nil, fmt.Errorf("invalid config path: %s", filename)
+	}
+	// #nosec G304 -- Safe: path is sanitized and controlled by application configuration.
+	data, err := os.ReadFile(clean)
 	if err != nil {
 		log.Printf("Warning: could not read config file: %v", err)
 		log.Println("Using default configuration")

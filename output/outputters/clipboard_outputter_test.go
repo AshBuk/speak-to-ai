@@ -4,12 +4,12 @@
 package outputters
 
 import (
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
 	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
 func TestNewClipboardOutputter(t *testing.T) {
@@ -174,12 +174,6 @@ func TestClipboardOutputter_TypeToActiveWindow(t *testing.T) {
 }
 
 func TestClipboardOutputter_Interface(t *testing.T) {
-	cfg := &config.Config{}
-	outputter := &ClipboardOutputter{
-		clipboardTool: "xclip",
-		config:        cfg,
-	}
-
-	// Verify it implements the interfaces.Outputter interface
-	var _ interfaces.Outputter = outputter
+	// Compile-time assertion: ClipboardOutputter implements interfaces.Outputter
+	var _ interfaces.Outputter = (*ClipboardOutputter)(nil)
 }

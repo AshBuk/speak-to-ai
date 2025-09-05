@@ -6,9 +6,9 @@ package processing
 import (
 	"context"
 	"io"
+	"math"
 	"sync"
 	"time"
-	"unsafe"
 )
 
 // ChunkProcessor handles real-time audio chunk processing
@@ -167,7 +167,7 @@ func (cp *ChunkProcessor) bytesToFloat32(data []byte) []float32 {
 				uint32(data[offset+2])<<16 |
 				uint32(data[offset+3])<<24
 
-			samples[i] = *(*float32)(unsafe.Pointer(&bits))
+			samples[i] = math.Float32frombits(bits)
 		}
 	}
 

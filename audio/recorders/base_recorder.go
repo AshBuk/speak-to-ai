@@ -190,7 +190,7 @@ func (b *BaseRecorder) createTempFile() error {
 	}
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err := os.MkdirAll(tempDir, 0700); err != nil {
 		return fmt.Errorf("failed to create temp directory: %w", err)
 	}
 
@@ -199,13 +199,12 @@ func (b *BaseRecorder) createTempFile() error {
 	b.outputFile = filepath.Join(tempDir, fmt.Sprintf("audio_%s.wav", timestamp))
 
 	// Precreate the file so existence checks during stop won't fail even if recorder exited early
-	if f, err := os.Create(b.outputFile); err == nil {
+	if f, err := os.OpenFile(b.outputFile, os.O_CREATE|os.O_WRONLY, 0600); err == nil {
 		_ = f.Close()
 	}
 
 	// Register with temp file manager
 	b.tempManager.AddFile(b.outputFile)
-
 	return nil
 }
 
@@ -491,6 +490,8 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	safeArgs := config.SanitizeCommandArgs(finalArgs)
 
 	// Create command with context
+	// The command name is validated against an allowlist and arguments are sanitized above.
+	// #nosec G204 -- Safe: allowlisted cmdName and sanitized args mitigate command injection.
 	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
 
 	// Capture stderr for diagnostics
