@@ -10,7 +10,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
 // Initialize initializes the application and all its components
@@ -102,14 +102,14 @@ func (a *App) registerCallbacks() {
 	}
 }
 
-// convertEnvironmentType converts platform.EnvironmentType to output.EnvironmentType
-func (a *App) convertEnvironmentType() output.EnvironmentType {
+// convertEnvironmentType converts platform.EnvironmentType to outputFactory.EnvironmentType
+func (a *App) convertEnvironmentType() outputFactory.EnvironmentType {
 	switch a.Environment {
 	case platform.EnvironmentX11:
-		return output.EnvironmentX11
+		return outputFactory.EnvironmentX11
 	case platform.EnvironmentWayland:
-		return output.EnvironmentWayland
+		return outputFactory.EnvironmentWayland
 	default:
-		return output.EnvironmentUnknown
+		return outputFactory.EnvironmentUnknown
 	}
 }

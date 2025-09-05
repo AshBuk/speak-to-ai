@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
@@ -124,7 +124,7 @@ func (a *App) initializeTrayManager() {
 		},
 		func() error {
 			// Perform a short 3s test recording and show result via notification
-			recorder, err := audio.GetRecorder(a.Config)
+			recorder, err := factory.GetRecorder(a.Config)
 			if err != nil {
 				return err
 			}

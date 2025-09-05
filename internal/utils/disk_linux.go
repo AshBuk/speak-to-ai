@@ -19,6 +19,11 @@ func CheckDiskSpace(path string) error {
 		return err
 	}
 
+	// Guard against invalid block size reported by the system
+	if stat.Bsize <= 0 {
+		return fmt.Errorf("invalid block size: %d", stat.Bsize)
+	}
+
 	available := stat.Bavail * uint64(stat.Bsize)
 	const requiredSpace uint64 = 100 * 1024 * 1024
 	if available < requiredSpace {

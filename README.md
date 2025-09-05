@@ -82,7 +82,7 @@ Configuration file is automatically created at:
 
 GNOME (Wayland/X11) and KDE Plasma (Wayland/X11) have native support. Help us test different desktop environments:
 
-📋 **[Desktop Environment Support Guide](Desktop_Environment_Support.md)**
+📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)**
 
 ## ✦ Project Status
 
@@ -93,9 +93,9 @@ Functionality and Go code are ready. Currently improving UI/UX as for now it's m
 
 Start onboarding with:
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — system architecture and component design
-- [DEVELOPMENT.md](DEVELOPMENT.md) — development workflow and build instructions
-- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guidelines and how to help improve the project
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — system architecture and component design
+- [DEVELOPMENT.md](docs/DEVELOPMENT.md) — development workflow and build instructions
+- [CONTRIBUTING.md](docs/CONTRIBUTING.md) — contribution guidelines and how to help improve the project
 - [docker/README.md](docker/README.md) — Docker-based development
 
 

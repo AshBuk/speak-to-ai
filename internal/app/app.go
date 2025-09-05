@@ -9,14 +9,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys"
+	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
@@ -28,11 +28,11 @@ type App struct {
 	ConfigFile      string // Path to the configuration file
 	Environment     platform.EnvironmentType
 	ModelManager    *whisper.ModelManager
-	Recorder        audio.AudioRecorder
+	Recorder        interfaces.AudioRecorder
 	WhisperEngine   *whisper.WhisperEngine
 	StreamingEngine *whisper.StreamingWhisperEngine
-	OutputManager   output.Outputter
-	HotkeyManager   *hotkeys.HotkeyManager
+	OutputManager   outputInterfaces.Outputter
+	HotkeyManager   *manager.HotkeyManager
 	WebSocketServer *websocket.WebSocketServer
 	TrayManager     tray.TrayManagerInterface
 	NotifyManager   *notify.NotificationManager

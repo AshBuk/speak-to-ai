@@ -12,15 +12,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/factory"
+	audiointerfaces "github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys"
-	"github.com/AshBuk/speak-to-ai/output"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	hotkeyinterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
+	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
 // setupRecorderWithCleanup creates a recorder and ensures cleanup on test completion
-func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audio.AudioRecorder {
-	recorder, err := audio.GetRecorder(cfg)
+func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audiointerfaces.AudioRecorder {
+	recorder, err := factory.GetRecorder(cfg)
 	if err != nil {
 		t.Skipf("Audio not available: %v", err)
 	}
@@ -35,7 +39,7 @@ func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audio.AudioRecor
 }
 
 // forceStopRecorder ensures recording is stopped even if errors occur
-func forceStopRecorder(recorder audio.AudioRecorder) {
+func forceStopRecorder(recorder audiointerfaces.AudioRecorder) {
 	// Try to stop gracefully first (ignore errors)
 	_, _ = recorder.StopRecording()
 	// Cleanup any remaining resources
@@ -94,8 +98,8 @@ func TestEndToEndWorkflow(t *testing.T) {
 		}
 
 		// Test output system
-		factory := output.NewFactory(cfg)
-		outputter, err := factory.GetOutputter(output.EnvironmentUnknown)
+		outputFactory := outputfactory.NewFactory(cfg)
+		outputter, err := outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 		if err != nil {
 			t.Logf("Output system not available (expected): %v", err)
 		} else {
@@ -135,7 +139,7 @@ func TestApplicationInitializationFlow(t *testing.T) {
 
 		// Test audio system
 		t.Log("Testing audio system...")
-		_, err = audio.GetRecorder(cfg)
+		_, err = factory.GetRecorder(cfg)
 		if err != nil {
 			t.Logf("Audio system not available: %v", err)
 		} else {
@@ -144,8 +148,8 @@ func TestApplicationInitializationFlow(t *testing.T) {
 
 		// Test output system
 		t.Log("Testing output system...")
-		factory := output.NewFactory(cfg)
-		_, err = factory.GetOutputter(output.EnvironmentUnknown)
+		outputFactory := outputfactory.NewFactory(cfg)
+		_, err = outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 		if err != nil {
 			t.Logf("Output system not fully available: %v", err)
 		} else {
@@ -154,9 +158,9 @@ func TestApplicationInitializationFlow(t *testing.T) {
 
 		// Test hotkey system
 		t.Log("Testing hotkey system...")
-		hotkeyConfig := hotkeys.NewConfigAdapter(cfg.Hotkeys.StartRecording)
-		manager := hotkeys.NewHotkeyManager(hotkeyConfig, hotkeys.EnvironmentUnknown)
-		if manager != nil {
+		hotkeyConfig := adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording)
+		hotkeyManager := manager.NewHotkeyManager(hotkeyConfig, hotkeyinterfaces.EnvironmentUnknown)
+		if hotkeyManager != nil {
 			t.Log("Hotkey system initialized successfully")
 		}
 
@@ -275,7 +279,7 @@ func TestRealWorldScenarios(t *testing.T) {
 
 	t.Run("concurrent_operations", func(t *testing.T) {
 		// Test that concurrent operations are handled safely
-		manager := audio.GetTempFileManager()
+		tempManager := processing.GetTempFileManager()
 
 		// Add files concurrently
 		errChan := make(chan error, 10)
@@ -290,7 +294,7 @@ func TestRealWorldScenarios(t *testing.T) {
 				}
 				f.Close()
 
-				manager.AddFile(testFile)
+				tempManager.AddFile(testFile)
 				errChan <- nil
 			}(i)
 		}
@@ -316,7 +320,7 @@ func TestSystemResourceManagement(t *testing.T) {
 	// Test that system resources are properly managed
 	t.Run("temporary_file_cleanup", func(t *testing.T) {
 		tempDir := t.TempDir()
-		manager := audio.GetTempFileManager()
+		tempManager := processing.GetTempFileManager()
 
 		// Create several temp files
 		testFiles := []string{}
@@ -329,7 +333,7 @@ func TestSystemResourceManagement(t *testing.T) {
 			f.Close()
 
 			testFiles = append(testFiles, file)
-			manager.AddFile(file)
+			tempManager.AddFile(file)
 		}
 
 		// Verify files exist
@@ -340,7 +344,7 @@ func TestSystemResourceManagement(t *testing.T) {
 		}
 
 		// Test cleanup
-		manager.Stop()
+		tempManager.Stop()
 		time.Sleep(100 * time.Millisecond)
 
 		t.Log("Resource management test completed")
@@ -356,13 +360,13 @@ func TestSystemResourceManagement(t *testing.T) {
 			// Skip whisper engine (requires CGO)
 			t.Logf("Iteration %d: Skipping whisper engine (requires CGO)", i+1)
 
-			recorder, err := audio.GetRecorder(cfg)
+			recorder, err := factory.GetRecorder(cfg)
 			if err == nil {
 				recorder.CleanupFile()
 			}
 
-			factory := output.NewFactory(cfg)
-			_, _ = factory.GetOutputter(output.EnvironmentUnknown)
+			outputFactory := outputfactory.NewFactory(cfg)
+			_, _ = outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 		}
 
 		t.Log("Memory usage monitoring test completed")
@@ -380,8 +384,8 @@ func TestCrossComponentIntegration(t *testing.T) {
 		// Test the complete pipeline from audio to output
 		recorder := setupRecorderWithCleanup(t, cfg)
 
-		factory := output.NewFactory(cfg)
-		outputter, err := factory.GetOutputter(output.EnvironmentUnknown)
+		outputFactory := outputfactory.NewFactory(cfg)
+		outputter, err := outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 		if err != nil {
 			t.Logf("Output not available: %v", err)
 		}
@@ -431,15 +435,15 @@ func TestCrossComponentIntegration(t *testing.T) {
 		for i, testCfg := range testConfigs {
 			t.Run(testCfg.Audio.RecordingMethod, func(t *testing.T) {
 				// Test that configuration is respected
-				_, err := audio.GetRecorder(testCfg)
+				_, err := factory.GetRecorder(testCfg)
 				if err != nil {
 					t.Logf("Config %d: recorder not available: %v", i, err)
 				} else {
 					t.Logf("Config %d: recorder created successfully", i)
 				}
 
-				factory := output.NewFactory(testCfg)
-				_, err = factory.GetOutputter(output.EnvironmentUnknown)
+				outputFactory := outputfactory.NewFactory(testCfg)
+				_, err = outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 				if err != nil {
 					t.Logf("Config %d: output not available: %v", i, err)
 				} else {

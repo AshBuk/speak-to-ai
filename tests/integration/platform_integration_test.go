@@ -11,9 +11,11 @@ import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	hotkeyinterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
 // Platform-specific integration tests
@@ -29,10 +31,10 @@ func TestWaylandCompatibility(t *testing.T) {
 
 	t.Run("wayland_output_tools", func(t *testing.T) {
 		// Test that Wayland output tools are properly configured
-		factory := output.NewFactory(cfg)
+		factory := outputfactory.NewFactory(cfg)
 
 		// Test clipboard on Wayland
-		_, err := factory.GetOutputter(output.EnvironmentWayland)
+		_, err := factory.GetOutputter(outputfactory.EnvironmentWayland)
 		if err != nil {
 			t.Logf("Expected error in test environment (tools not available): %v", err)
 		} else {
@@ -42,8 +44,8 @@ func TestWaylandCompatibility(t *testing.T) {
 
 	t.Run("wayland_hotkeys", func(t *testing.T) {
 		// Test DBus hotkey provider
-		hotkeyConfig := hotkeys.NewConfigAdapter("altgr+comma")
-		provider := hotkeys.NewDbusKeyboardProvider(hotkeyConfig, hotkeys.EnvironmentWayland)
+		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma")
+		provider := providers.NewDbusKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentWayland)
 
 		if provider.IsSupported() {
 			t.Log("DBus GlobalShortcuts portal is available")
@@ -75,10 +77,10 @@ func TestX11Compatibility(t *testing.T) {
 
 	t.Run("x11_output_tools", func(t *testing.T) {
 		// Test that X11 output tools are properly configured
-		factory := output.NewFactory(cfg)
+		factory := outputfactory.NewFactory(cfg)
 
 		// Test clipboard on X11
-		_, err := factory.GetOutputter(output.EnvironmentX11)
+		_, err := factory.GetOutputter(outputfactory.EnvironmentX11)
 		if err != nil {
 			t.Logf("Expected error in test environment (tools not available): %v", err)
 		} else {
@@ -88,8 +90,8 @@ func TestX11Compatibility(t *testing.T) {
 
 	t.Run("x11_hotkeys", func(t *testing.T) {
 		// Test evdev hotkey provider
-		hotkeyConfig := hotkeys.NewConfigAdapter("altgr+comma")
-		provider := hotkeys.NewEvdevKeyboardProvider(hotkeyConfig, hotkeys.EnvironmentX11)
+		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma")
+		provider := providers.NewEvdevKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentX11)
 
 		if provider.IsSupported() {
 			t.Log("Evdev input devices are available")
@@ -104,12 +106,12 @@ func TestCrossplatformToolFallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
 
-	factory := output.NewFactory(cfg)
+	factory := outputfactory.NewFactory(cfg)
 
-	environments := []output.EnvironmentType{
-		output.EnvironmentX11,
-		output.EnvironmentWayland,
-		output.EnvironmentUnknown,
+	environments := []outputfactory.EnvironmentType{
+		outputfactory.EnvironmentX11,
+		outputfactory.EnvironmentWayland,
+		outputfactory.EnvironmentUnknown,
 	}
 
 	for _, env := range environments {
@@ -134,7 +136,7 @@ func TestSecurityValidation(t *testing.T) {
 	// Test allowed commands
 	allowedCommands := []string{"xdotool", "wtype", "wl-copy", "arecord"}
 	for _, cmd := range allowedCommands {
-		if !cfg.IsCommandAllowed(cmd) {
+		if !config.IsCommandAllowed(cfg, cmd) {
 			t.Errorf("Command %s should be allowed but isn't", cmd)
 		}
 	}
@@ -142,7 +144,7 @@ func TestSecurityValidation(t *testing.T) {
 	// Test disallowed commands
 	disallowedCommands := []string{"rm", "curl", "wget", "sh", "bash"}
 	for _, cmd := range disallowedCommands {
-		if cfg.IsCommandAllowed(cmd) {
+		if config.IsCommandAllowed(cfg, cmd) {
 			t.Errorf("Command %s should not be allowed but is", cmd)
 		}
 	}

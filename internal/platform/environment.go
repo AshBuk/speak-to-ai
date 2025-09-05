@@ -103,5 +103,5 @@ func CheckPrivileges() bool {
 
 // EnsureDirectoryExists creates a directory if it doesn't exist
 func EnsureDirectoryExists(path string) error {
-	return os.MkdirAll(path, 0755)
+	return os.MkdirAll(path, 0700)
 }

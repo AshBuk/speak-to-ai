@@ -1,0 +1,125 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
+package security
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/AshBuk/speak-to-ai/config/models"
+)
+
+// IsCommandAllowed checks if a command is in the allowed list
+func IsCommandAllowed(config *models.Config, command string) bool {
+	// Extract base command name
+	base := filepath.Base(command)
+
+	// Check if it's in allowed list
+	for _, cmd := range config.Security.AllowedCommands {
+		if cmd == base {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SanitizeCommandArgs removes potentially dangerous arguments
+func SanitizeCommandArgs(args []string) []string {
+	sanitized := make([]string, 0, len(args))
+
+	for _, arg := range args {
+		// Filter out shell metacharacters and other dangerous constructs
+		if !strings.ContainsAny(arg, "&|;$<>(){}[]") && !strings.Contains(arg, "..") {
+			sanitized = append(sanitized, arg)
+		}
+	}
+
+	return sanitized
+}
+
+// VerifyConfigIntegrity checks if the config file has been tampered with
+func VerifyConfigIntegrity(filename string, config *models.Config) error {
+	// Skip check if not enabled
+	if !config.Security.CheckIntegrity {
+		return nil
+	}
+
+	// If no hash is set, just return
+	if config.Security.ConfigHash == "" {
+		return nil
+	}
+
+	// Calculate hash of the config file
+	hash, err := CalculateFileHash(filename)
+	if err != nil {
+		return fmt.Errorf("failed to calculate config file hash: %w", err)
+	}
+
+	// Compare hashes
+	if hash != config.Security.ConfigHash {
+		return fmt.Errorf("config file integrity check failed: hash mismatch")
+	}
+
+	return nil
+}
+
+// UpdateConfigHash updates the hash in the config
+func UpdateConfigHash(filename string, config *models.Config) error {
+	// Calculate hash
+	hash, err := CalculateFileHash(filename)
+	if err != nil {
+		return fmt.Errorf("failed to calculate config file hash: %w", err)
+	}
+
+	// Update hash in config
+	config.Security.ConfigHash = hash
+	return nil
+}
+
+// CalculateFileHash calculates SHA-256 hash of a file
+func CalculateFileHash(filename string) (string, error) {
+	safe := filepath.Clean(filename)
+	if strings.Contains(safe, "\x00") {
+		return "", fmt.Errorf("invalid filename")
+	}
+	// #nosec G304 -- Safe: caller controls and sanitizes path to config file.
+	f, err := os.Open(safe)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("Warning: failed to close file %s: %v", filename, err)
+		}
+	}()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// EnforceFileSizeLimit checks if a file exceeds the maximum allowed size
+func EnforceFileSizeLimit(filename string, config *models.Config) error {
+	info, err := os.Stat(filename)
+	if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
+	}
+
+	if info.Size() > config.Security.MaxTempFileSize {
+		return fmt.Errorf("file size exceeds limit: %d bytes (limit: %d bytes)",
+			info.Size(), config.Security.MaxTempFileSize)
+	}
+
+	return nil
+}

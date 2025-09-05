@@ -28,7 +28,7 @@ func (a *App) handleShowConfig() error {
 	a.Logger.Debug("Using xdg-open to open config file")
 
 	// Security: allowlist check on editor
-	if !a.Config.IsCommandAllowed(editor) {
+	if !config.IsCommandAllowed(a.Config, editor) {
 		return fmt.Errorf("command not allowed: %s", editor)
 	}
 
@@ -68,6 +68,7 @@ func (a *App) handleShowConfig() error {
 	}
 
 	// Start editor in background
+	// #nosec G204 -- Safe: editor is allowlisted constant (xdg-open) and args are sanitized.
 	cmd := exec.Command(editor, args[0])
 
 	// For GUI applications, detach from parent process

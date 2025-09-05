@@ -331,10 +331,6 @@ func TestDefaultLogger_Interface(t *testing.T) {
 	// Test that DefaultLogger implements Logger interface
 	var logger Logger = NewDefaultLogger(InfoLevel)
 
-	if logger == nil {
-		t.Error("DefaultLogger should implement Logger interface")
-	}
-
 	// Test all interface methods
 	logger.Debug("debug test")
 	logger.Info("info test")

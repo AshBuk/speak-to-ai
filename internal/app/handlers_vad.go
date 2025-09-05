@@ -4,10 +4,13 @@
 package app
 
 import (
+	"encoding/binary"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 )
 
 // handleStartVADRecording handles VAD-based automatic recording
@@ -50,8 +53,8 @@ func (a *App) processVADStream(audioStream <-chan []float32) {
 	a.Logger.Info("Starting VAD stream processing...")
 
 	// Create VAD with configured sensitivity
-	vadSensitivity := audio.ParseVADSensitivity(a.Config.Audio.VADSensitivity)
-	vad := audio.NewVADWithSensitivity(vadSensitivity)
+	vadSensitivity := processing.ParseVADSensitivity(a.Config.Audio.VADSensitivity)
+	vad := processing.NewVADWithSensitivity(vadSensitivity)
 
 	speechBuffer := make([][]float32, 0)
 	isRecordingSpeech := false
@@ -145,13 +148,106 @@ func (a *App) saveSpeechBufferToFile(speechBuffer [][]float32) (string, error) {
 	// This is a simplified implementation
 	// In reality, you'd need to properly encode the audio data
 
-	tempFile := fmt.Sprintf("%s/speak-to-ai-vad-%d.wav",
-		a.Config.General.TempAudioPath, time.Now().UnixNano())
+	// Ensure target directory exists with secure permissions
+	base := a.Config.General.TempAudioPath
+	if base == "" {
+		base = os.TempDir()
+	}
+	if err := os.MkdirAll(base, 0700); err != nil {
+		return "", err
+	}
 
-	// For now, return the temp file path
-	// The actual audio encoding would need to be implemented
-	// based on your specific audio format requirements
+	tempFile := filepath.Join(base, fmt.Sprintf("speak-to-ai-vad-%d.wav", time.Now().UnixNano()))
+	tempFile = filepath.Clean(tempFile)
 
-	a.Logger.Debug("Would save speech buffer to: %s", tempFile)
+	// Minimal WAV header with zero data, but we include the number of samples from speechBuffer
+	var totalSamples int
+	for _, chunk := range speechBuffer {
+		totalSamples += len(chunk)
+	}
+	// Guard against overflow when converting to uint32
+	if totalSamples < 0 || totalSamples > (1<<31-1)/2 {
+		return "", fmt.Errorf("too many samples")
+	}
+	dataBytes := totalSamples * 2 // pretend 16-bit PCM
+
+	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = f.Close() }()
+
+	// RIFF header
+	// ChunkID "RIFF"
+	if _, err := f.Write([]byte{'R', 'I', 'F', 'F'}); err != nil {
+		return "", err
+	}
+	// ChunkSize 36 + dataBytes
+	chunkSize := 36 + dataBytes
+	if chunkSize < 0 || chunkSize > 0xFFFFFFFF {
+		return "", fmt.Errorf("chunk size overflow")
+	}
+	if err := binary.Write(f, binary.LittleEndian, uint32(chunkSize)); err != nil {
+		return "", err
+	}
+	// Format "WAVE"
+	if _, err := f.Write([]byte{'W', 'A', 'V', 'E'}); err != nil {
+		return "", err
+	}
+	// Subchunk1ID "fmt "
+	if _, err := f.Write([]byte{'f', 'm', 't', ' '}); err != nil {
+		return "", err
+	}
+	// Subchunk1Size 16 for PCM
+	if err := binary.Write(f, binary.LittleEndian, uint32(16)); err != nil {
+		return "", err
+	}
+	// AudioFormat 1 PCM
+	if err := binary.Write(f, binary.LittleEndian, uint16(1)); err != nil {
+		return "", err
+	}
+	// NumChannels 1
+	if err := binary.Write(f, binary.LittleEndian, uint16(1)); err != nil {
+		return "", err
+	}
+	// SampleRate from config
+	sr := a.Config.Audio.SampleRate
+	if sr < 0 || sr > 0x7FFFFFFF {
+		return "", fmt.Errorf("invalid sample rate")
+	}
+	if err := binary.Write(f, binary.LittleEndian, uint32(sr)); err != nil {
+		return "", err
+	}
+	// ByteRate = SampleRate * NumChannels * BitsPerSample/8
+	br := sr * 2
+	if br < 0 || br > 0x7FFFFFFF {
+		return "", fmt.Errorf("invalid byte rate")
+	}
+	byteRate := uint32(br)
+	if err := binary.Write(f, binary.LittleEndian, byteRate); err != nil {
+		return "", err
+	}
+	// BlockAlign = NumChannels * BitsPerSample/8
+	if err := binary.Write(f, binary.LittleEndian, uint16(2)); err != nil {
+		return "", err
+	}
+	// BitsPerSample 16
+	if err := binary.Write(f, binary.LittleEndian, uint16(16)); err != nil {
+		return "", err
+	}
+	// Subchunk2ID "data"
+	if _, err := f.Write([]byte{'d', 'a', 't', 'a'}); err != nil {
+		return "", err
+	}
+	// Subchunk2Size dataBytes
+	if dataBytes < 0 || dataBytes > 0x7FFFFFFF {
+		return "", fmt.Errorf("invalid data size")
+	}
+	if err := binary.Write(f, binary.LittleEndian, uint32(dataBytes)); err != nil {
+		return "", err
+	}
+	// For now, we do not write actual PCM data; placeholder only
+
+	a.Logger.Debug("Saved placeholder VAD buffer (%d samples) to: %s", totalSamples, tempFile)
 	return tempFile, nil
 }

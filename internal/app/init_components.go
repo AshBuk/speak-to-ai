@@ -7,13 +7,16 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/AshBuk/speak-to-ai/audio"
+	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output"
+	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
+	"github.com/AshBuk/speak-to-ai/output/outputters"
 	"github.com/AshBuk/speak-to-ai/websocket"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
@@ -48,7 +51,7 @@ func (a *App) initializeComponents(modelPath string) error {
 	a.Logger.Info("Model path resolved: %s", modelFilePath)
 
 	// Initialize audio recorder
-	a.Recorder, err = audio.GetRecorder(a.Config)
+	a.Recorder, err = factory.GetRecorder(a.Config)
 	if err != nil {
 		return err
 	}
@@ -72,12 +75,12 @@ func (a *App) initializeComponents(modelPath string) error {
 
 	// Initialize output manager based on environment
 	outputEnv := a.convertEnvironmentType()
-	a.OutputManager, err = output.GetOutputterFromConfig(a.Config, outputEnv)
+	a.OutputManager, err = outputFactory.GetOutputterFromConfig(a.Config, outputEnv)
 	if err != nil {
 		a.Logger.Warning("Failed to initialize text outputter: %v", err)
 		// Graceful fallback: try clipboard-only if typing tool is missing
 		clipboardTool := ""
-		if outputEnv == output.EnvironmentWayland {
+		if outputEnv == outputFactory.EnvironmentWayland {
 			if _, lookErr := exec.LookPath("wl-copy"); lookErr == nil {
 				clipboardTool = "wl-copy"
 			}
@@ -92,7 +95,7 @@ func (a *App) initializeComponents(modelPath string) error {
 			oldCfg := *a.Config
 			a.Config.Output.DefaultMode = config.OutputModeClipboard
 			a.Config.Output.ClipboardTool = clipboardTool
-			if out, cerr := output.NewClipboardOutputter(clipboardTool, a.Config); cerr == nil {
+			if out, cerr := outputters.NewClipboardOutputter(clipboardTool, a.Config); cerr == nil {
 				a.OutputManager = out
 				if a.NotifyManager != nil {
 					_ = a.NotifyManager.ShowNotification("Output Fallback", "Typing tool not found. Using clipboard output. Install 'wtype' or 'ydotool' for Wayland typing.")
@@ -193,7 +196,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		}
 
 		// Reinitialize audio recorder
-		a.Recorder, err = audio.GetRecorder(a.Config)
+		a.Recorder, err = factory.GetRecorder(a.Config)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}
@@ -208,7 +211,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		a.Logger.Info("Output settings changed, reinitializing output manager...")
 
 		outputEnv := a.convertEnvironmentType()
-		a.OutputManager, err = output.GetOutputterFromConfig(a.Config, outputEnv)
+		a.OutputManager, err = outputFactory.GetOutputterFromConfig(a.Config, outputEnv)
 		if err != nil {
 			a.Logger.Warning("Failed to reinitialize output manager: %v", err)
 		} else {
@@ -254,21 +257,21 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 // initializeHotkeyManager initializes the hotkey manager component
 func (a *App) initializeHotkeyManager() {
 	// Convert platform.EnvironmentType to hotkeys.EnvironmentType
-	var hotkeyEnv hotkeys.EnvironmentType
+	var hotkeyEnv interfaces.EnvironmentType
 	switch a.Environment {
 	case platform.EnvironmentX11:
-		hotkeyEnv = hotkeys.EnvironmentX11
+		hotkeyEnv = interfaces.EnvironmentX11
 	case platform.EnvironmentWayland:
-		hotkeyEnv = hotkeys.EnvironmentWayland
+		hotkeyEnv = interfaces.EnvironmentWayland
 	default:
-		hotkeyEnv = hotkeys.EnvironmentUnknown
+		hotkeyEnv = interfaces.EnvironmentUnknown
 	}
 
 	// Create hotkey config adapter
-	hotkeyConfig := hotkeys.NewConfigAdapter(
+	hotkeyConfig := adapters.NewConfigAdapter(
 		a.Config.Hotkeys.StartRecording,
 	)
 
 	// Initialize hotkey manager with environment information
-	a.HotkeyManager = hotkeys.NewHotkeyManager(hotkeyConfig, hotkeyEnv)
+	a.HotkeyManager = manager.NewHotkeyManager(hotkeyConfig, hotkeyEnv)
 }

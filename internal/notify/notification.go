@@ -52,7 +52,7 @@ func (nm *NotificationManager) ShowNotification(summary, body string) error {
 // sendNotification sends a notification with the given parameters
 func (nm *NotificationManager) sendNotification(summary, body, icon string) error {
 	// Security: validate command before execution
-	if !nm.config.IsCommandAllowed("notify-send") {
+	if !config.IsCommandAllowed(nm.config, "notify-send") {
 		return fmt.Errorf("notify-send command not allowed")
 	}
 
@@ -64,6 +64,7 @@ func (nm *NotificationManager) sendNotification(summary, body, icon string) erro
 
 	// Security: sanitize arguments
 	safeArgs := config.SanitizeCommandArgs(args)
+	// #nosec G204 -- Safe: notify-send is allowlisted and arguments are sanitized.
 	cmd := exec.Command("notify-send", safeArgs...)
 
 	if err := cmd.Run(); err != nil {

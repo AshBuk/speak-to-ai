@@ -47,7 +47,9 @@ func mustDecodeIcon(encoded string) []byte {
 	}()
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, gzipReader); err != nil {
+	// Limit decompressed size to 5MB to mitigate decompression bombs
+	limited := io.LimitReader(gzipReader, 5*1024*1024)
+	if _, err := io.Copy(&buf, limited); err != nil {
 		panic("Failed to decompress icon: " + err.Error())
 	}
 
@@ -65,7 +67,8 @@ func loadIconFromAppImage() ([]byte, bool) {
 		filepath.Join(appDir, "usr/share/icons/hicolor/256x256/apps/speak-to-ai.png"),
 	}
 	for _, p := range candidates {
-		if data, err := os.ReadFile(p); err == nil && len(data) > 0 {
+		clean := filepath.Clean(p)
+		if data, err := os.ReadFile(clean); err == nil && len(data) > 0 {
 			return data, true
 		}
 	}

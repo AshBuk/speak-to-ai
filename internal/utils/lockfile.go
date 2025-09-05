@@ -40,7 +40,7 @@ func GetDefaultLockPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err == nil {
 		configDir := filepath.Join(homeDir, ".config", "speak-to-ai")
-		if err := os.MkdirAll(configDir, 0755); err == nil {
+		if err := os.MkdirAll(configDir, 0700); err == nil {
 			return filepath.Join(configDir, DefaultLockFileName)
 		}
 	}
@@ -52,12 +52,12 @@ func GetDefaultLockPath() string {
 // TryLock attempts to acquire the lock
 func (lf *LockFile) TryLock() error {
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(lf.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(lf.path), 0700); err != nil {
 		return fmt.Errorf("failed to create lock directory: %w", err)
 	}
 
 	// Try to open/create the lock file
-	file, err := os.OpenFile(lf.path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(lf.path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create lock file: %w", err)
 	}
