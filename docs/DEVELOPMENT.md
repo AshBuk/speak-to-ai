@@ -82,11 +82,6 @@ DBus GlobalShortcuts (GNOME/KDE) → Evdev (i3/XFCE/MATE)
    (portal)                       (direct input)
 ```
 
-**Fallback Logic:**
-- **GNOME/KDE**: No fallback, surface portal issues
-- **Other DEs**: Auto-fallback to evdev on D-Bus failure
-- Extracted to `hotkeys/provider_fallback.go`
-
 ### Module Structure
 ```
 hotkeys/

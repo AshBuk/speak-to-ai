@@ -16,8 +16,14 @@ The application follows a **modular daemon architecture** with clear separation 
 ┌─────────────────────────────────────────────────────────────────┐
 │                       Service Modules                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  audio/     │  hotkeys/   │  whisper/   │  output/    │  tray/  │
-│  websocket/ │  config/    │  notify/    │  logger/    │  utils/ │
+│  audio/     │  hotkeys/   │  whisper/   │  output/    │  config/ │
+│  websocket/ │                                                   │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      Internal Utilities                         │
+├─────────────────────────────────────────────────────────────────┤
+│  internal/logger/ │ internal/notify/ │ internal/platform/       │
+│  internal/tray/   │ internal/utils/  │                          │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                       System Integration                        │
@@ -56,36 +62,37 @@ The application follows a **modular daemon architecture** with clear separation 
 ### 🎤 **Audio Processing Module** (`audio/`)
 
 #### Core Audio Components
-- **`interface.go`**: AudioRecorder interface definition
-- **`base_recorder.go`**: Common functionality for all audio recorders
-- **`factory.go`**: Factory pattern for creating appropriate recorders
-- **`arecord_recorder.go`**: ALSA-based recording implementation
-- **`ffmpeg_recorder.go`**: FFmpeg-based recording implementation
+- **`interfaces/recorder.go`**: AudioRecorder interface definition
+- **`recorders/`**: Recorder implementations
+  - `base_recorder.go`: Common functionality for all audio recorders
+  - `arecord_recorder.go`: ALSA-based recording implementation
+  - `ffmpeg_recorder.go`: FFmpeg-based recording implementation
+- **`factory/factory.go`**: Factory pattern for creating appropriate recorders
 
-#### Streaming & Processing
+#### Streaming & Processing (`processing/`)
 - **`chunk_processor.go`**: Real-time audio chunk processing
 - **`vad.go`**: Voice Activity Detection implementation
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
 #### Testing & Mocking
-- **`mock_recorder.go`**: Mock implementation for testing
-- **`interface_validation_test.go`**: Interface compliance tests
+- **`mocks/mock_recorder.go`**: Mock implementation for testing
+- **`interfaces/interface_validation_test.go`**: Interface compliance tests
 - **`*_test.go`**: Comprehensive unit tests for all components
 
 ### ⌨️ **Hotkey Management** (`hotkeys/`)
 
 #### Core Hotkey System
-- **`interface.go`**: KeyboardEventProvider interface and types
-- **`manager.go`**: Cross-platform hotkey manager
-- **`manager_linux.go`**: Linux-specific hotkey implementation
-- **`manager_stub.go`**: Stub implementation for unsupported platforms
-- **`adapter.go`**: Abstraction layer for different providers
+- **`interfaces/provider.go`**: KeyboardEventProvider interface and types
+- **`manager/manager.go`**: Cross-platform hotkey manager
+- **`manager/manager_linux.go`**: Linux-specific hotkey implementation
+- **`manager/manager_stub.go`**: Stub implementation for unsupported platforms
+- **`adapters/adapter.go`**: Abstraction layer for different providers
 
 #### Provider Implementations
-- **`dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
-- **`evdev_provider.go`**: Direct evdev input handling (fallback for other DEs)
-- **`provider_fallback.go`**: Fallback logic and hotkey re-registration
-- **`dummy_provider.go`**: Dummy provider for testing
+- **`providers/dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
+- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs)
+- **`manager/provider_fallback.go`**: Fallback logic and hotkey re-registration
+- **`providers/dummy_provider.go`**: Dummy provider for testing
 
 #### Fallback Strategy
 - **GNOME/KDE**: No fallback - D-Bus portal
@@ -104,12 +111,13 @@ The application follows a **modular daemon architecture** with clear separation 
 ### 📤 **Output Management** (`output/`)
 
 #### Output Implementations
-- **`interface.go`**: Outputter interface definition
-- **`factory.go`**: Factory for creating appropriate output handlers
-- **`clipboard_outputter.go`**: System clipboard integration
-- **`type_outputter.go`**: Active window typing simulation
-- **`combined_outputter.go`**: Combined clipboard + typing output
-- **`mock_outputter.go`**: Mock implementation for testing
+- **`interfaces/outputter.go`**: Outputter interface definition
+- **`factory/factory.go`**: Factory for creating appropriate output handlers
+- **`outputters/`**: Output implementations
+  - `clipboard_outputter.go`: System clipboard integration
+  - `type_outputter.go`: Active window typing simulation
+  - `combined_outputter.go`: Combined clipboard + typing output
+  - `mock_outputter.go`: Mock implementation for testing
 
 ### 🌐 **WebSocket API** (`websocket/`)
 
@@ -121,11 +129,10 @@ The application follows a **modular daemon architecture** with clear separation 
 ### ⚙️ **Configuration System** (`config/`)
 
 #### Configuration Management
-- **`loader.go`**: YAML configuration loading and parsing
-- **`default_config.go`**: Default configuration values
-- **`validator.go`**: Configuration validation and sanitization
-- **`constants.go`**: Configuration constants and enums
-- **`security.go`**: Configuration security and integrity checks
+- **`models/config.go`**: Configuration data structures and constants
+- **`loaders/yaml_loader.go`**: YAML configuration loading, parsing and defaults
+- **`validators/standard_validator.go`**: Configuration validation and sanitization
+- **`security/utils.go`**: Configuration security and integrity checks
 
 ### 🔧 **Internal Utilities** (`internal/`)
 
@@ -177,4 +184,4 @@ The application follows a **modular daemon architecture** with clear separation 
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-08-28*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-05*
