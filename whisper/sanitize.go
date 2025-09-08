@@ -1,5 +1,3 @@
-//go:build cgo
-
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
@@ -17,7 +15,7 @@ func sanitizeTranscript(input string) string {
 	}
 
 	// Remove tokens like [BLANK_AUDIO], [NO_SPEECH], [MUSIC], etc.
-	tokenPattern := regexp.MustCompile(`\[[A-Z_]+\]`)
+	tokenPattern := regexp.MustCompile(`(?i)\[[a-z0-9_\-]+\]`)
 	cleaned := tokenPattern.ReplaceAllString(input, " ")
 
 	// Collapse multiple spaces
@@ -26,4 +24,10 @@ func sanitizeTranscript(input string) string {
 	// Trim
 	cleaned = strings.TrimSpace(cleaned)
 	return cleaned
+}
+
+// SanitizeTranscript provides a public API for transcript sanitization.
+// It removes placeholder tokens and normalizes whitespace.
+func SanitizeTranscript(input string) string { // exported for use by app layer
+	return sanitizeTranscript(input)
 }
