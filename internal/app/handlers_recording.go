@@ -231,7 +231,7 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 						_ = a.NotifyManager.ShowNotification("Output Failed", "Both typing and clipboard failed. Check output configuration.")
 					}
 				} else {
-					if a.NotifyManager != nil {
+					if a.NotifyManager != nil && a.Config.Notifications.EnableWorkflowNotifications {
 						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Typing not supported by compositor. Text copied to clipboard - press Ctrl+V to paste.")
 					}
 				}

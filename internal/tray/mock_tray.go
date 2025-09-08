@@ -11,13 +11,17 @@ import (
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
 type MockTrayManager struct {
-	isRecording      bool
-	onExit           func()
-	onToggle         func() error
-	onShowConfig     func() error
-	onReloadConfig   func() error
-	onSelectRecorder func(method string) error
-	onTestRecording  func() error
+	isRecording            bool
+	onExit                 func()
+	onToggle               func() error
+	onShowConfig           func() error
+	onReloadConfig         func() error
+	onSelectRecorder       func(method string) error
+	onTestRecording        func() error
+	onSelectVADSens        func(sensitivity string) error
+	onSelectLang           func(language string) error
+	onSelectModel          func(modelType string) error
+	onToggleWorkflowNotify func() error
 }
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray
@@ -62,4 +66,18 @@ func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) 
 	tm.onSelectRecorder = onSelectRecorder
 	tm.onTestRecording = onTestRecording
 	log.Println("Mock tray: audio actions set")
+}
+
+// SetSettingsActions sets callbacks for settings (mock implementation)
+func (tm *MockTrayManager) SetSettingsActions(
+	onSelectVADSensitivity func(sensitivity string) error,
+	onSelectLanguage func(language string) error,
+	onSelectModelType func(modelType string) error,
+	onToggleWorkflowNotifications func() error,
+) {
+	tm.onSelectVADSens = onSelectVADSensitivity
+	tm.onSelectLang = onSelectLanguage
+	tm.onSelectModel = onSelectModelType
+	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
+	log.Println("Mock tray: settings actions set")
 }

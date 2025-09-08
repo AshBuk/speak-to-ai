@@ -179,4 +179,12 @@ func (a *App) initializeTrayManager() {
 			return nil
 		},
 	)
+
+	// Wire settings actions: VAD sensitivity, language, model switch
+	a.TrayManager.SetSettingsActions(
+		func(sensitivity string) error { return a.handleSelectVADSensitivity(sensitivity) },
+		func(language string) error { return a.handleSelectLanguage(language) },
+		func(modelType string) error { return a.handleSelectModelType(modelType) },
+		func() error { return a.handleToggleWorkflowNotifications() },
+	)
 }

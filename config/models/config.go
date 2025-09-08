@@ -58,6 +58,11 @@ type Config struct {
 		TypeTool      string `yaml:"type_tool"`      // 'xdotool', 'wl-clipboard', 'dbus'
 	} `yaml:"output"`
 
+	// Notification settings
+	Notifications struct {
+		EnableWorkflowNotifications bool `yaml:"enable_workflow_notifications"` // Enable workflow notifications (recording, transcription)
+	} `yaml:"notifications"`
+
 	// Web server settings
 	WebServer struct {
 		Enabled     bool   `yaml:"enabled"`

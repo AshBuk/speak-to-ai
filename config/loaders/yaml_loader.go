@@ -97,6 +97,9 @@ func SetDefaultConfig(config *models.Config) {
 	config.Output.ClipboardTool = "auto" // auto-detect
 	config.Output.TypeTool = "auto"      // auto-detect
 
+	// Notification settings
+	config.Notifications.EnableWorkflowNotifications = true // Enable workflow notifications by default
+
 	// Web server settings
 	config.WebServer.Enabled = false
 	config.WebServer.Port = 8080
