@@ -24,16 +24,26 @@ func NewArecordRecorder(config *config.Config) *ArecordRecorder {
 // StartRecording starts audio recording
 func (a *ArecordRecorder) StartRecording() error {
 	// Build arecord command arguments (output file will be set in ExecuteRecordingCommand)
+	// Determine format: use FLOAT_LE for streaming to match float32 pipeline
+	formatArg := a.getArecordFormat()
+	if a.streamingEnabled {
+		formatArg = "FLOAT_LE"
+	}
+
 	baseArgs := []string{
 		"-D", a.config.Audio.Device,
-		"-f", a.getArecordFormat(),
+		"-f", formatArg,
 		"-r", fmt.Sprintf("%d", a.config.Audio.SampleRate),
 		"-c", fmt.Sprintf("%d", a.config.Audio.Channels),
 	}
 
-	if a.useBuffer || a.streamingEnabled {
-		// Output to stdout for buffer/streaming mode
+	if a.streamingEnabled {
+		// For streaming we prefer FLOAT_LE to match float32 pipeline
+		// Override format to FLOAT if needed
 		baseArgs = append(baseArgs, "-t", "raw")
+	} else if a.useBuffer {
+		// Keep WAV header for buffer mode compatibility
+		baseArgs = append(baseArgs, "-t", "wav")
 	} else {
 		// Output to file with WAV header - file path will be added in ExecuteRecordingCommand
 		baseArgs = append(baseArgs, "-t", "wav")

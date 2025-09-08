@@ -68,11 +68,6 @@ func (a *App) processStreamingTranscription(audioStream <-chan []float32) {
 			}
 			a.TrayManager.SetTooltip(fmt.Sprintf("%s %s", status, text[:min(50, len(text))]))
 		}
-
-		// Output confirmed results
-		if isConfirmed && a.OutputManager != nil {
-			a.handleConfirmedTranscription(text)
-		}
 	})
 
 	// Start transcription in background

@@ -89,6 +89,7 @@ func (s *StreamingWhisperEngine) TranscribeChunk(audioData []float32) (*Transcri
 	}
 
 	result := strings.TrimSpace(transcript.String())
+	result = sanitizeTranscript(result)
 
 	// Apply iterative agreement logic
 	transcriptionResult := s.processWithAgreement(result)
