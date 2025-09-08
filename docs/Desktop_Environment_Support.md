@@ -1,15 +1,10 @@
 ## 🖥️ Desktop Environment Support
 
->take 1: This document requires validation and testing across different environments. I have Fedora 42 (GNOME/Wayland).
->take 2: Open GitHub issues and community contributions can help make this project an excellent solution for the Linux community. 
+> This document requires validation and testing across different environments. I have Fedora 42 (GNOME/Wayland).
 
-### 🟢 **GNOME (Wayland/X11)**
-- **Distributions:** Ubuntu 22.04+, Fedora 36+, openSUSE Tumbleweed
-- **AppImage:** evdev (requires `sudo usermod -a -G input $USER && reboot`)
-- **Flatpak:** D-Bus GlobalShortcuts portal (works out of the box)
-- **Experience:** Hotkeys work immediately after setup
+> Open GitHub issues and community contributions can help make this project an excellent `speak to text` solution for the Linux community. 
 
-**For system tray on GNOME**:
+### **For system tray on GNOME - to have full-featured UX with menu**:
 ```bash
 # Ubuntu/Debian
 sudo apt install gnome-shell-extension-appindicator
@@ -18,39 +13,54 @@ sudo dnf install gnome-shell-extension-appindicator
 # Arch Linux
 sudo pacman -S gnome-shell-extension-appindicator
 ```
-*KDE and other DEs have built-in system tray support*
+*KDE and other DEs have built-in system tray support, no need for appindicator*
+
+### **Text output status (outputter, for automatic insertion of speech-to-text into active window)**
+
+***Current Implementation: Smart Auto-Selection***
+| Desktop Environment | Primary Tool | Fallback | Status |
+|---------------------|--------------|----------|--------|
+| **🟢 GNOME+Wayland** | ydotool* | clipboard | ⚠️ Requires setup |
+| **🟢 KDE+Wayland** | wtype → ydotool → xdotool | clipboard | ✅ Works out-of-box |
+| **🟢 Sway/i3** | wtype → ydotool → xdotool | clipboard | ✅ Works out-of-box |
+| **🟢 X11 (all DEs)** | xdotool | clipboard | ✅ Works out-of-box |
+
+*wtype doesn't work on GNOME/Wayland - compositor limitation, so use clipboard (ctrl+v) or setup ydotool
+*RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!
+
+**Outputter setup - ydotool (requires for GNOME!)**
+```bash
+sudo usermod -a -G input $USER            # Add to input group
+# logout → login (or reboot), then:
+sudo systemctl enable --now ydotoold      # Start daemon
+```
+
+**Clipboard fallback**
+- Works on **all** desktop environments  
+- Requires manual `Ctrl+V` after speech recognition
+- No additional setup needed
+
+## ⌨️ **Hotkey Support Status (for hotkey registration and binding)**
+
+### **GNOME (Wayland/X11)**
+- **AppImage:** D-Bus portal → evdev fallback (requires `input` group)
+- **Flatpak:** D-Bus portal → evdev fallback (may require `input` group)
+- **Experience:** Portal usually works, evdev fallback if portal unavailable
 
 ### **KDE Plasma (Wayland/X11)**  
-- **Distributions:** KDE Neon, Kubuntu, Manjaro KDE, openSUSE
-- **AppImage:** evdev (requires `sudo usermod -a -G input $USER && reboot`)
-- **Flatpak:** D-Bus GlobalShortcuts + KGlobalAccel (works out of the box)
-- **Experience:** Same as GNOME - excellent with proper setup
+- **AppImage:** D-Bus portal → evdev fallback (requires `input` group)
+- **Flatpak:** D-Bus portal → evdev fallback (may require `input` group)
+- **Experience:** Better portal support than GNOME, but fallbacks available
 
-### **XFCE**
-- **Distributions:** Xubuntu, Xfce spin of Fedora/openSUSE
-- **AppImage:** evdev (requires `sudo usermod -a -G input $USER && reboot`)
-- **Flatpak:** Limited D-Bus support, may require manual setup
-- **Experience:** Requires `input` group membership
-
-### **MATE**
-- **Distributions:** Ubuntu MATE, Fedora MATE spin
-- **AppImage:** evdev (requires `sudo usermod -a -G input $USER && reboot`)
+### **Other DEs (XFCE/MATE/LXQt)**
+- **AppImage:** evdev only (requires `input` group)
 - **Flatpak:** Limited portal support, evdev fallback available
+- **Experience:** Requires `input` group membership for reliable hotkeys
 
-### **LXQt/LXDE**
-- **Distributions:** Lubuntu, PCLinuxOS
-- **AppImage:** evdev (requires `sudo usermod -a -G input $USER && reboot`)
-- **Flatpak:** No portal support, evdev required
-- **Note:** Lightweight DEs typically lack portal infrastructure
+### **Tiling WMs (i3/sway/dwm/bspwm)**
+- **AppImage:** evdev only (requires `input` group)
+- **Flatpak:** evdev only (requires `input` group)
+- **Alternative:** System hotkey tools (sxhkd, etc.) + webhook integration
 
-### **Tiling Window Managers**
-- **Examples:** i3, sway, dwm, awesome, bspwm
-- **AppImage:** evdev only (requires `sudo usermod -a -G input $USER && reboot`)
-- **Flatpak:** No portal support, evdev required with input devices permission
-- **Requirement:** User MUST be in `input` group
-- **Alternative:** Manual system hotkey setup (sxhkd, etc.)
-
----
-
-*Last updated: 2025-09-03*  
-*Tested on: Fedora 42, Ubuntu 24.04,*
+*Last updated: 2025-09-05*  
+*Tested on: Fedora 42, Ubuntu 24.04*

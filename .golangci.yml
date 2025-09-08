@@ -1,12 +1,13 @@
-version: "2"
+version: 2
 
 run:
   timeout: 5m
   tests: false
+  skip-dirs:
+    - build
+    - build/whisper.cpp
 
 issues:
-  exclude-dirs:
-    - build
   exclude-rules:
     - path: cmd/daemon/main\.go
       text: "error obtaining VCS status"
@@ -14,7 +15,6 @@ issues:
         - typecheck
 
 linters:
-  disable-all: true
   enable:
     - govet
     - staticcheck

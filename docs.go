@@ -21,5 +21,5 @@
 //   - Unit tests colocated with packages (default go test ./...)
 //   - Integration tests in tests/integration (run with -tags=integration)
 //
-// For more details, see README.md, DEVELOPMENT.md, and docker/README.md.
+// For more details, see docs/
 package speaktoai
