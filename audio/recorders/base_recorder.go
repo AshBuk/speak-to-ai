@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -183,28 +182,11 @@ func (b *BaseRecorder) createTempFile() error {
 		return nil
 	}
 
-	// Create temporary file for recording
-	tempDir := b.config.General.TempAudioPath
-	if tempDir == "" {
-		tempDir = os.TempDir()
+	path, err := b.tempManager.CreateTempWav(b.config.General.TempAudioPath)
+	if err != nil {
+		return fmt.Errorf("failed to create temp audio file: %w", err)
 	}
-
-	// Create directory if it doesn't exist
-	if err := os.MkdirAll(tempDir, 0700); err != nil {
-		return fmt.Errorf("failed to create temp directory: %w", err)
-	}
-
-	// Create unique filename based on timestamp and random suffix
-	timestamp := time.Now().Format("20060102-150405")
-	b.outputFile = filepath.Join(tempDir, fmt.Sprintf("audio_%s.wav", timestamp))
-
-	// Precreate the file so existence checks during stop won't fail even if recorder exited early
-	if f, err := os.OpenFile(b.outputFile, os.O_CREATE|os.O_WRONLY, 0600); err == nil {
-		_ = f.Close()
-	}
-
-	// Register with temp file manager
-	b.tempManager.AddFile(b.outputFile)
+	b.outputFile = path
 	return nil
 }
 
@@ -422,8 +404,8 @@ func (b *BaseRecorder) StopProcess() error {
 		log.Printf("%s stderr: %s", cmdName, b.stderrBuf.String())
 	}
 
-	// If we're using a file, verify it was created
-	if !b.useBuffer {
+	// If we're using a file and not streaming, verify it was created
+	if !b.useBuffer && !b.streamingEnabled {
 		// Small delay to ensure buffers are flushed to disk
 		time.Sleep(50 * time.Millisecond)
 		log.Printf("[DEBUG] Checking audio file: %s", b.outputFile)
