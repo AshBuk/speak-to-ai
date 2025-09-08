@@ -109,6 +109,15 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 			a.Config.Audio.RecordingMethod = "arecord"
 			a.audioRecorderNeedsReinit = true
 
+			// Update tray settings asynchronously to reflect selection immediately
+			if a.TrayManager != nil {
+				go a.TrayManager.UpdateSettings(a.Config)
+			}
+			// Persist new recorder selection
+			if err := config.SaveConfig(a.ConfigFile, a.Config); err != nil {
+				a.Logger.Warning("failed to save config after fallback: %v", err)
+			}
+
 			if a.NotifyManager != nil {
 				go a.notify("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
 			}

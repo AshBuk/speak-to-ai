@@ -113,3 +113,26 @@ func SetDefaultConfig(config *models.Config) {
 	config.Security.ConfigHash = ""
 	config.Security.MaxTempFileSize = 50 * 1024 * 1024 // 50MB by default
 }
+
+// SaveConfig writes the configuration back to disk in YAML format
+func SaveConfig(filename string, config *models.Config) error {
+	// Sanitize and validate path
+	safe := filepath.Clean(filename)
+	if strings.Contains(safe, "..") {
+		return fmt.Errorf("invalid config path: %s", filename)
+	}
+
+	// Marshal to YAML
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(filepath.Dir(safe), 0o750); err != nil {
+		return err
+	}
+
+	// Write with restrictive permissions
+	return os.WriteFile(safe, data, 0o600)
+}

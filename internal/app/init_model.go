@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
@@ -135,6 +136,17 @@ func (a *App) initializeTrayManager() {
 			// Update config and set reinitialization flag
 			a.Config.Audio.RecordingMethod = method
 			a.audioRecorderNeedsReinit = true
+
+			// Immediately reflect in tray UI
+			if a.TrayManager != nil {
+				go a.TrayManager.UpdateSettings(a.Config)
+			}
+			// Persist selection to config file
+			if a.ConfigFile != "" {
+				if err := config.SaveConfig(a.ConfigFile, a.Config); err != nil {
+					a.Logger.Warning("failed to save config after recorder selection: %v", err)
+				}
+			}
 
 			a.Logger.Info("Audio recorder method changed via tray to: %s", method)
 			return nil

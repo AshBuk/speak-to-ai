@@ -33,6 +33,11 @@ func LoadConfig(filename string) (*Config, error) {
 	return loaders.LoadConfig(filename)
 }
 
+// SaveConfig writes configuration to file
+func SaveConfig(filename string, config *Config) error {
+	return loaders.SaveConfig(filename, config)
+}
+
 // SetDefaultConfig sets default values
 func SetDefaultConfig(config *Config) {
 	loaders.SetDefaultConfig(config)
