@@ -24,9 +24,7 @@ func (a *App) ensureModelAvailable() error {
 
 	// Show notification about download starting
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Speak-to-AI", "Downloading Whisper model for first use..."); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
+		a.notify("Speak-to-AI", "Downloading Whisper model for first use...")
 	}
 
 	// Create progress callback
@@ -58,9 +56,7 @@ func (a *App) ensureModelAvailable() error {
 
 	// Show completion notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Speak-to-AI", "Model downloaded successfully!"); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
+		a.notify("Speak-to-AI", "Model downloaded successfully!")
 	}
 
 	// Reset tray tooltip
@@ -124,9 +120,7 @@ func (a *App) initializeTrayManager() {
 		a.Logger.Info("StatusNotifier watcher not found; using mock tray")
 		if a.NotifyManager != nil {
 			msg := "System tray support is not available. On GNOME, install and enable the AppIndicator extension."
-			if err := a.NotifyManager.ShowNotification("ℹ️ Speak-to-AI", msg); err != nil {
-				a.Logger.Warning("Failed to show notification: %v", err)
-			}
+			a.notify("ℹ️ Speak-to-AI", msg)
 		}
 		a.TrayManager = tray.CreateMockTrayManager(exitFunc, toggleFunc, showConfigFunc, reloadConfigFunc)
 		return
@@ -168,7 +162,7 @@ func (a *App) initializeTrayManager() {
 			}
 			// Notify
 			if a.NotifyManager != nil {
-				_ = a.NotifyManager.ShowNotification("Audio Test", fmt.Sprintf("Saved test recording: %s", file))
+				a.notify("Audio Test", fmt.Sprintf("Saved test recording: %s", file))
 			}
 			return nil
 		},

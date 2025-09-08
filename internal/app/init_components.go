@@ -253,10 +253,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 	// Update tray settings display asynchronously
 	if a.TrayManager != nil {
 		// Run tray update on separate goroutine to avoid blocking UI thread
-		go func() {
-			a.TrayManager.UpdateSettings(a.Config)
-			a.Logger.Info("Tray settings updated")
-		}()
+		go a.updateTraySettings()
 	}
 
 	return nil

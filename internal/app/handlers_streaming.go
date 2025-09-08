@@ -34,9 +34,7 @@ func (a *App) handleStartStreamingRecording() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Streaming Mode", "Real-time transcription started. Speak normally."); err != nil {
-			a.Logger.Warning("failed to show notification: %v", err)
-		}
+		a.notify("Streaming Mode", "Real-time transcription started. Speak normally.")
 	}
 
 	// Start streaming processing in background
@@ -106,7 +104,7 @@ func (a *App) handleConfirmedTranscription(text string) {
 			a.TrayManager.SetTooltip("✅ Ready")
 		}
 		if a.NotifyManager != nil {
-			_ = a.NotifyManager.ShowNotification("No Speech", "No speech detected in recording")
+			a.notify("No Speech", "No speech detected in recording")
 		}
 		a.Logger.Info("Confirmed transcription: <empty>")
 		return
