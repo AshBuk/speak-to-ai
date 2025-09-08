@@ -53,7 +53,7 @@ func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	// Audio format settings
 	args = append(args,
 		"-ar", fmt.Sprintf("%d", f.config.Audio.SampleRate),
-		"-ac", fmt.Sprintf("%d", f.config.Audio.Channels),
+		"-ac", "1",
 	)
 
 	// Add quality settings

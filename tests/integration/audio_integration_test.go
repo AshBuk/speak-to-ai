@@ -35,7 +35,7 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.RecordingMethod = "arecord"
 		cfg.Audio.Device = "default"
 		cfg.Audio.SampleRate = 16000
-		cfg.Audio.Channels = 1
+		// channels removed (mono enforced internally)
 
 		recorder, err := factory.GetRecorder(cfg)
 		if err != nil {

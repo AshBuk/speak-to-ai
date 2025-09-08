@@ -55,11 +55,6 @@ func ValidateConfig(config *models.Config) error {
 		errors = append(errors, fmt.Sprintf("invalid sample rate: %d, using 16000", config.Audio.SampleRate))
 	}
 
-	if config.Audio.Channels < 1 || config.Audio.Channels > 2 {
-		config.Audio.Channels = 1
-		errors = append(errors, fmt.Sprintf("invalid channels: %d, using 1", config.Audio.Channels))
-	}
-
 	validRecordingMethods := map[string]bool{
 		"arecord": true,
 		"ffmpeg":  true,

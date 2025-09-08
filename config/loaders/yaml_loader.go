@@ -83,7 +83,6 @@ func SetDefaultConfig(config *models.Config) {
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000
 	config.Audio.Format = "s16le"
-	config.Audio.Channels = 1
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0 // No expected duration by default
 	config.Audio.EnableStreaming = false

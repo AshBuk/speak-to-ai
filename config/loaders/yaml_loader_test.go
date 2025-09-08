@@ -40,7 +40,6 @@ audio:
   device: "default"
   sample_rate: 16000
   format: "S16_LE"
-  channels: 1
   recording_method: "arecord"
 
 output:
@@ -189,9 +188,6 @@ func TestConfig_DefaultValues(t *testing.T) {
 	if config.Audio.SampleRate == 0 {
 		config.Audio.SampleRate = 16000
 	}
-	if config.Audio.Channels == 0 {
-		config.Audio.Channels = 1
-	}
 
 	// Verify defaults
 	if config.General.ModelType != "base" {
@@ -199,8 +195,5 @@ func TestConfig_DefaultValues(t *testing.T) {
 	}
 	if config.Audio.SampleRate != 16000 {
 		t.Errorf("expected default sample rate to be 16000, got %d", config.Audio.SampleRate)
-	}
-	if config.Audio.Channels != 1 {
-		t.Errorf("expected default channels to be 1, got %d", config.Audio.Channels)
 	}
 }

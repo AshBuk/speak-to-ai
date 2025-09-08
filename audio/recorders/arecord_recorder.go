@@ -34,7 +34,7 @@ func (a *ArecordRecorder) StartRecording() error {
 		"-D", a.config.Audio.Device,
 		"-f", formatArg,
 		"-r", fmt.Sprintf("%d", a.config.Audio.SampleRate),
-		"-c", fmt.Sprintf("%d", a.config.Audio.Channels),
+		"-c", "1",
 	}
 
 	if a.streamingEnabled {

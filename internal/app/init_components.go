@@ -182,8 +182,7 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 	// Reinitialize AudioRecorder if audio settings changed
 	if oldConfig.Audio.Device != a.Config.Audio.Device ||
 		oldConfig.Audio.SampleRate != a.Config.Audio.SampleRate ||
-		oldConfig.Audio.RecordingMethod != a.Config.Audio.RecordingMethod ||
-		oldConfig.Audio.Channels != a.Config.Audio.Channels {
+		oldConfig.Audio.RecordingMethod != a.Config.Audio.RecordingMethod {
 
 		a.Logger.Info("Audio settings changed, reinitializing audio recorder...")
 

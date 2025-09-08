@@ -18,7 +18,6 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	cfg.Audio.Device = "default"
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
-	cfg.Audio.Channels = 1
 
 	recorder := NewFFmpegRecorder(cfg)
 
@@ -42,7 +41,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 		name          string
 		device        string
 		sampleRate    int
-		channels      int
 		useBuffer     bool
 		streamingMode bool
 		expectDevice  string
@@ -52,7 +50,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			name:          "basic file output",
 			device:        "hw:0,0",
 			sampleRate:    44100,
-			channels:      2,
 			useBuffer:     false,
 			streamingMode: false,
 			expectDevice:  "hw:0,0",
@@ -62,7 +59,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			name:          "streaming mode should output to stdout",
 			device:        "default",
 			sampleRate:    16000,
-			channels:      1,
 			useBuffer:     false,
 			streamingMode: true,
 			expectDevice:  "default",
@@ -72,7 +68,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			name:          "buffer mode should output to stdout",
 			device:        "plughw:1,0",
 			sampleRate:    48000,
-			channels:      1,
 			useBuffer:     true,
 			streamingMode: false,
 			expectDevice:  "plughw:1,0",
@@ -85,7 +80,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			cfg := &config.Config{}
 			cfg.Audio.Device = tt.device
 			cfg.Audio.SampleRate = tt.sampleRate
-			cfg.Audio.Channels = tt.channels
 
 			recorder := NewFFmpegRecorder(cfg)
 			recorder.useBuffer = tt.useBuffer
@@ -173,7 +167,6 @@ func TestFFmpegRecorder_OutputFileHandling(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
 	cfg.Audio.SampleRate = 16000
-	cfg.Audio.Channels = 1
 
 	recorder := NewFFmpegRecorder(cfg)
 
@@ -197,7 +190,6 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
 	cfg.Audio.SampleRate = 16000
-	cfg.Audio.Channels = 1
 
 	recorder := NewFFmpegRecorder(cfg)
 
@@ -263,7 +255,6 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 				cfg := &config.Config{}
 				cfg.Audio.Device = ""
 				cfg.Audio.SampleRate = 16000
-				cfg.Audio.Channels = 1
 				return cfg
 			},
 			expectError: false, // ffmpeg might handle empty device
@@ -274,18 +265,6 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 				cfg := &config.Config{}
 				cfg.Audio.Device = "default"
 				cfg.Audio.SampleRate = 0
-				cfg.Audio.Channels = 1
-				return cfg
-			},
-			expectError: true, // This should cause issues
-		},
-		{
-			name: "zero channels",
-			setupConfig: func() *config.Config {
-				cfg := &config.Config{}
-				cfg.Audio.Device = "default"
-				cfg.Audio.SampleRate = 16000
-				cfg.Audio.Channels = 0
 				return cfg
 			},
 			expectError: true, // This should cause issues
@@ -305,10 +284,6 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 				for i, arg := range args {
 					if arg == "-ar" && i+1 < len(args) && args[i+1] == "0" {
 						t.Log("Correctly detected zero sample rate in args")
-						return
-					}
-					if arg == "-ac" && i+1 < len(args) && args[i+1] == "0" {
-						t.Log("Correctly detected zero channels in args")
 						return
 					}
 				}
