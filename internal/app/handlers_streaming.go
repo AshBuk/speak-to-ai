@@ -68,11 +68,6 @@ func (a *App) processStreamingTranscription(audioStream <-chan []float32) {
 			}
 			a.TrayManager.SetTooltip(fmt.Sprintf("%s %s", status, text[:min(50, len(text))]))
 		}
-
-		// Output confirmed results
-		if isConfirmed && a.OutputManager != nil {
-			a.handleConfirmedTranscription(text)
-		}
 	})
 
 	// Start transcription in background
@@ -105,31 +100,43 @@ func (a *App) processStreamingTranscription(audioStream <-chan []float32) {
 
 // handleConfirmedTranscription processes confirmed transcription results
 func (a *App) handleConfirmedTranscription(text string) {
-	a.Logger.Info("Confirmed transcription: %s", text)
+	sanitized := whisper.SanitizeTranscript(text)
+	if sanitized == "" {
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("✅ Ready")
+		}
+		if a.NotifyManager != nil {
+			_ = a.NotifyManager.ShowNotification("No Speech", "No speech detected in recording")
+		}
+		a.Logger.Info("Confirmed transcription: <empty>")
+		return
+	}
+
+	a.Logger.Info("Confirmed transcription: %s", sanitized)
 
 	// Store transcript
-	a.LastTranscript = text
+	a.LastTranscript = sanitized
 
 	// Route the transcript according to configured output mode
 	if a.OutputManager != nil {
 		switch a.Config.Output.DefaultMode {
 		case config.OutputModeClipboard:
-			if err := a.OutputManager.CopyToClipboard(text); err != nil {
+			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
 		case config.OutputModeActiveWindow:
-			if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 			}
 		case config.OutputModeCombined:
-			if err := a.OutputManager.CopyToClipboard(text); err != nil {
+			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
-			if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 			}
 		default:
-			if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 			}
 		}

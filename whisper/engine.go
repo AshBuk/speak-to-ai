@@ -115,6 +115,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	}
 
 	result := strings.TrimSpace(transcript.String())
+	result = sanitizeTranscript(result)
 	return result, nil
 }
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // handleStartRecording handles the start of recording
@@ -22,6 +23,15 @@ func (a *App) handleStartRecording() error {
 			a.TrayManager.SetTooltip("❌ Model unavailable")
 		}
 		return fmt.Errorf("model not available: %w", err)
+	}
+
+	// Lazy reinitialization of audio recorder if method changed (auto-fallback)
+	if err := a.ensureAudioRecorderAvailable(); err != nil {
+		a.Logger.Error("Audio recorder not available: %v", err)
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("❌ Audio recorder unavailable")
+		}
+		return fmt.Errorf("audio recorder not available: %w", err)
 	}
 
 	// If VAD auto start/stop is enabled, use streaming mode
@@ -90,29 +100,36 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
 		a.Logger.Warning("StopRecording returned error: %v", err)
-		// Reset tray and hotkey state so subsequent attempts work
+		// Reset tray and hotkey state so subsequent attempts work (asynchronously to prevent deadlock)
 		if a.TrayManager != nil {
-			a.TrayManager.SetRecordingState(false)
-			a.TrayManager.SetTooltip("⚠️  Recording failed")
+			go func() {
+				a.TrayManager.SetRecordingState(false)
+				a.TrayManager.SetTooltip("⚠️  Recording failed")
+			}()
 		}
 		if a.HotkeyManager != nil {
-			a.HotkeyManager.ResetRecordingState()
+			go func() {
+				a.HotkeyManager.ResetRecordingState()
+			}()
 		}
 		if a.NotifyManager != nil {
-			_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
+			go func() {
+				_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
+			}()
 		}
 
-		// Suggest and auto-switch fallback if using ffmpeg
+		// Auto-fallback to arecord if using ffmpeg (deferred to avoid deadlock)
 		if a.Config.Audio.RecordingMethod == "ffmpeg" {
-			old := a.Config
-			newCfg := *a.Config
-			newCfg.Audio.RecordingMethod = "arecord"
-			a.Config = &newCfg
-			if rerr := a.reinitializeComponents(old); rerr == nil {
-				if a.NotifyManager != nil {
-					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to capture error")
-				}
+			// Simply update config and set reinitialization flag
+			a.Config.Audio.RecordingMethod = "arecord"
+			a.audioRecorderNeedsReinit = true
+
+			if a.NotifyManager != nil {
+				go func() {
+					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
+				}()
 			}
+			a.Logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
 
 		return fmt.Errorf("failed to stop recording: %w", err)
@@ -188,22 +205,35 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 		return
 	}
 
-	// Store transcript
-	a.LastTranscript = transcript
+	// Sanitize and store transcript
+	sanitized := whisper.SanitizeTranscript(transcript)
+	a.LastTranscript = sanitized
+
+	// Do not output empty transcripts
+	if sanitized == "" {
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("✅ Ready")
+		}
+		if a.NotifyManager != nil {
+			_ = a.NotifyManager.ShowNotification("No Speech", "No speech detected in recording")
+		}
+		a.Logger.Info("Transcription completed: <empty>")
+		return
+	}
 
 	// Route the transcript according to configured output mode
 	if a.OutputManager != nil {
 		switch a.Config.Output.DefaultMode {
 		case config.OutputModeClipboard:
-			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
 		case config.OutputModeActiveWindow:
-			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 				// Fallback to clipboard if typing fails
 				a.Logger.Info("Falling back to clipboard output")
-				if clipErr := a.OutputManager.CopyToClipboard(transcript); clipErr != nil {
+				if clipErr := a.OutputManager.CopyToClipboard(sanitized); clipErr != nil {
 					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
 					if a.NotifyManager != nil {
 						_ = a.NotifyManager.ShowNotification("Output Failed", "Both typing and clipboard failed. Check output configuration.")
@@ -215,18 +245,18 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 				}
 			}
 		case config.OutputModeCombined:
-			if err := a.OutputManager.CopyToClipboard(transcript); err != nil {
+			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
 				a.Logger.Warning("Failed to copy to clipboard: %v", err)
 			}
-			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 			}
 		default:
-			if err := a.OutputManager.TypeToActiveWindow(transcript); err != nil {
+			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
 				a.Logger.Warning("Failed to type to active window: %v", err)
 				// Fallback to clipboard if typing fails
 				a.Logger.Info("Falling back to clipboard output")
-				if clipErr := a.OutputManager.CopyToClipboard(transcript); clipErr != nil {
+				if clipErr := a.OutputManager.CopyToClipboard(sanitized); clipErr != nil {
 					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
 				} else {
 					if a.NotifyManager != nil {
@@ -249,7 +279,7 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 		}
 	}
 
-	a.Logger.Info("Transcription completed: %s", transcript)
+	a.Logger.Info("Transcription completed: %s", sanitized)
 }
 
 // handleTranscriptionCancellation handles cancellation of transcription

@@ -45,7 +45,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 		channels      int
 		useBuffer     bool
 		streamingMode bool
-		expectWavMode bool
 		expectDevice  string
 		expectRate    string
 	}{
@@ -56,7 +55,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			channels:      2,
 			useBuffer:     false,
 			streamingMode: false,
-			expectWavMode: false,
 			expectDevice:  "hw:0,0",
 			expectRate:    "44100",
 		},
@@ -67,7 +65,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			channels:      1,
 			useBuffer:     false,
 			streamingMode: true,
-			expectWavMode: true,
 			expectDevice:  "default",
 			expectRate:    "16000",
 		},
@@ -78,7 +75,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			channels:      1,
 			useBuffer:     true,
 			streamingMode: false,
-			expectWavMode: true,
 			expectDevice:  "plughw:1,0",
 			expectRate:    "48000",
 		},
@@ -122,22 +118,39 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 				t.Errorf("Expected sample rate %s not found in args: %v", tt.expectRate, args)
 			}
 
-			// Check for wav mode when expected (streaming/buffer)
+			// Check for correct output format and destination
 			hasWavMode := false
+			hasF32leMode := false
 			hasStdout := false
 			for i, arg := range args {
-				if arg == "-f" && i+1 < len(args) && args[i+1] == "wav" {
-					hasWavMode = true
+				if arg == "-f" && i+1 < len(args) {
+					switch args[i+1] {
+					case "wav":
+						hasWavMode = true
+					case "f32le":
+						hasF32leMode = true
+					}
 				}
 				if arg == "-" {
 					hasStdout = true
 				}
 			}
-			if tt.expectWavMode && (!hasWavMode || !hasStdout) {
-				t.Error("Expected wav mode with stdout (-f wav -) in streaming/buffer mode")
-			}
-			if !tt.expectWavMode && hasWavMode && hasStdout {
-				t.Error("Did not expect wav stdout mode in file output mode")
+
+			if tt.streamingMode {
+				if !hasF32leMode || !hasStdout {
+					t.Error("Expected f32le stdout mode (-f f32le -) in streaming mode")
+				}
+			} else if tt.useBuffer {
+				if !hasWavMode || !hasStdout {
+					t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
+				}
+			} else { // File output mode
+				if hasStdout {
+					t.Error("Did not expect stdout mode in file output mode")
+				}
+				if !hasWavMode {
+					t.Error("Expected wav file output mode (-f wav)")
+				}
 			}
 
 			// Verify quality setting is always present

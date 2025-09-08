@@ -72,6 +72,34 @@ func (a *App) ensureModelAvailable() error {
 	return nil
 }
 
+// ensureAudioRecorderAvailable ensures audio recorder matches current config (lazy reinitialization)
+func (a *App) ensureAudioRecorderAvailable() error {
+	// Add a flag to track if recorder needs reinitialization
+	if a.audioRecorderNeedsReinit {
+		a.Logger.Info("Audio recorder method changed to %s, reinitializing...", a.Config.Audio.RecordingMethod)
+
+		// Reinitialize audio recorder
+		recorder, err := factory.GetRecorder(a.Config)
+		if err != nil {
+			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
+		}
+
+		a.Recorder = recorder
+		a.audioRecorderNeedsReinit = false // Reset flag
+		a.Logger.Info("Audio recorder reinitialized successfully with method: %s", a.Config.Audio.RecordingMethod)
+
+		// Update tray settings asynchronously to prevent UI deadlock
+		if a.TrayManager != nil {
+			go func() {
+				a.TrayManager.UpdateSettings(a.Config)
+				a.Logger.Info("Tray settings updated after audio recorder change")
+			}()
+		}
+	}
+
+	return nil
+}
+
 // initializeTrayManager initializes the system tray manager
 func (a *App) initializeTrayManager() {
 	// Define shared functions for tray manager
@@ -110,16 +138,11 @@ func (a *App) initializeTrayManager() {
 	// Wire audio actions: recorder selection + test recording
 	a.TrayManager.SetAudioActions(
 		func(method string) error {
-			// Update config and reinitialize recorder at runtime
-			old := a.Config
-			newCfg := *a.Config
-			newCfg.Audio.RecordingMethod = method
-			a.Config = &newCfg
-			if err := a.reinitializeComponents(old); err != nil {
-				// rollback on error
-				a.Config = old
-				return err
-			}
+			// Update config and set reinitialization flag
+			a.Config.Audio.RecordingMethod = method
+			a.audioRecorderNeedsReinit = true
+
+			a.Logger.Info("Audio recorder method changed via tray to: %s", method)
 			return nil
 		},
 		func() error {
