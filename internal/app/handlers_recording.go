@@ -24,6 +24,15 @@ func (a *App) handleStartRecording() error {
 		return fmt.Errorf("model not available: %w", err)
 	}
 
+	// Lazy reinitialization of audio recorder if method changed (auto-fallback)
+	if err := a.ensureAudioRecorderAvailable(); err != nil {
+		a.Logger.Error("Audio recorder not available: %v", err)
+		if a.TrayManager != nil {
+			a.TrayManager.SetTooltip("❌ Audio recorder unavailable")
+		}
+		return fmt.Errorf("audio recorder not available: %w", err)
+	}
+
 	// If VAD auto start/stop is enabled, use streaming mode
 	if a.Config.Audio.EnableVAD && a.Config.Audio.AutoStartStop {
 		return a.handleStartVADRecording()
@@ -90,29 +99,36 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
 		a.Logger.Warning("StopRecording returned error: %v", err)
-		// Reset tray and hotkey state so subsequent attempts work
+		// Reset tray and hotkey state so subsequent attempts work (asynchronously to prevent deadlock)
 		if a.TrayManager != nil {
-			a.TrayManager.SetRecordingState(false)
-			a.TrayManager.SetTooltip("⚠️  Recording failed")
+			go func() {
+				a.TrayManager.SetRecordingState(false)
+				a.TrayManager.SetTooltip("⚠️  Recording failed")
+			}()
 		}
 		if a.HotkeyManager != nil {
-			a.HotkeyManager.ResetRecordingState()
+			go func() {
+				a.HotkeyManager.ResetRecordingState()
+			}()
 		}
 		if a.NotifyManager != nil {
-			_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
+			go func() {
+				_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
+			}()
 		}
 
-		// Suggest and auto-switch fallback if using ffmpeg
+		// Auto-fallback to arecord if using ffmpeg (deferred to avoid deadlock)
 		if a.Config.Audio.RecordingMethod == "ffmpeg" {
-			old := a.Config
-			newCfg := *a.Config
-			newCfg.Audio.RecordingMethod = "arecord"
-			a.Config = &newCfg
-			if rerr := a.reinitializeComponents(old); rerr == nil {
-				if a.NotifyManager != nil {
-					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to capture error")
-				}
+			// Simply update config and set reinitialization flag
+			a.Config.Audio.RecordingMethod = "arecord"
+			a.audioRecorderNeedsReinit = true
+
+			if a.NotifyManager != nil {
+				go func() {
+					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
+				}()
 			}
+			a.Logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
 
 		return fmt.Errorf("failed to stop recording: %w", err)

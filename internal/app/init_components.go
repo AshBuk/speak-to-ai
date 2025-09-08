@@ -190,9 +190,14 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		// Stop current recording if active
 		if a.HotkeyManager != nil && a.HotkeyManager.IsRecording() {
 			a.Logger.Warning("Stopping active recording for audio reconfiguration")
-			if err := a.HotkeyManager.SimulateHotkeyPress("stop_recording"); err != nil {
-				a.Logger.Warning("Failed to simulate hotkey press: %v", err)
+			// Stop recorder directly to avoid deadlock
+			if a.Recorder != nil {
+				if _, err := a.Recorder.StopRecording(); err != nil {
+					a.Logger.Warning("Failed to stop recording: %v", err)
+				}
 			}
+			// Reset hotkey manager state
+			a.HotkeyManager.ResetRecordingState()
 		}
 
 		// Reinitialize audio recorder
@@ -245,10 +250,13 @@ func (a *App) reinitializeComponents(oldConfig *config.Config) error {
 		a.Logger.Info("WebSocket server reinitialized successfully")
 	}
 
-	// Update tray settings display
+	// Update tray settings display asynchronously
 	if a.TrayManager != nil {
-		a.TrayManager.UpdateSettings(a.Config)
-		a.Logger.Info("Tray settings updated")
+		// Run tray update on separate goroutine to avoid blocking UI thread
+		go func() {
+			a.TrayManager.UpdateSettings(a.Config)
+			a.Logger.Info("Tray settings updated")
+		}()
 	}
 
 	return nil

@@ -23,23 +23,24 @@ import (
 
 // App represents the application with all its components
 type App struct {
-	Logger          logger.Logger
-	Config          *config.Config
-	ConfigFile      string // Path to the configuration file
-	Environment     platform.EnvironmentType
-	ModelManager    *whisper.ModelManager
-	Recorder        interfaces.AudioRecorder
-	WhisperEngine   *whisper.WhisperEngine
-	StreamingEngine *whisper.StreamingWhisperEngine
-	OutputManager   outputInterfaces.Outputter
-	HotkeyManager   *manager.HotkeyManager
-	WebSocketServer *websocket.WebSocketServer
-	TrayManager     tray.TrayManagerInterface
-	NotifyManager   *notify.NotificationManager
-	LastTranscript  string
-	ShutdownCh      chan os.Signal
-	Ctx             context.Context
-	Cancel          context.CancelFunc
+	Logger                   logger.Logger
+	Config                   *config.Config
+	ConfigFile               string // Path to the configuration file
+	Environment              platform.EnvironmentType
+	ModelManager             *whisper.ModelManager
+	Recorder                 interfaces.AudioRecorder
+	WhisperEngine            *whisper.WhisperEngine
+	StreamingEngine          *whisper.StreamingWhisperEngine
+	OutputManager            outputInterfaces.Outputter
+	HotkeyManager            *manager.HotkeyManager
+	WebSocketServer          *websocket.WebSocketServer
+	TrayManager              tray.TrayManagerInterface
+	NotifyManager            *notify.NotificationManager
+	LastTranscript           string
+	audioRecorderNeedsReinit bool // Flag to trigger lazy audio recorder reinitialization
+	ShutdownCh               chan os.Signal
+	Ctx                      context.Context
+	Cancel                   context.CancelFunc
 }
 
 // NewApp creates a new application instance with the specified configuration
