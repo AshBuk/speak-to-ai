@@ -47,16 +47,22 @@ The application follows a **modular daemon architecture** with clear separation 
   - Application initialization and lifecycle management
 
 #### `internal/app/` - Application Core
-- **`app.go`**: Main application struct and lifecycle management
-- **`initialization.go` / `init_components.go` / `init_model.go`**: Component and model initialization, DI
-- **`runtime.go`**: Application runtime loop and graceful shutdown
-- **`handlers_*.go`**: Event handlers per subsystem (config, hotkeys, recording, streaming, vad, settings)
-- **`ui_helpers.go`**: Centralized UI helpers (tray state, notifications, level bar)
+- **`app.go`**: Application orchestrator with ServiceContainer and RuntimeContext
+- **`handlers.go`**: Hotkey handlers that delegate to services
+
+### **Service Layer** (`internal/services/`)
+- **`interfaces.go`**: Service contracts and ServiceContainer definition
+- **`factory.go`**: Service factory with dependency injection
+- **`audio_service.go`**: Audio recording, Whisper transcription, streaming, VAD
+- **`ui_service.go`**: System tray, notifications, UI state
+- **`io_service.go`**: Text output, WebSocket server
+- **`config_service.go`**: Configuration file operations
+- **`hotkey_service.go`**: Hotkey registration and callbacks
 
 Related constants:
 - **`internal/constants/ui.go`**: UI icons/messages/titles centralization
 
-### 🎤 **Audio Processing Module** (`audio/`)
+### **Audio Processing Module** (`audio/`)
 
 #### Core Audio Components
 - **`interfaces/recorder.go`**: AudioRecorder interface definition
@@ -76,7 +82,7 @@ Related constants:
 - **`interfaces/interface_validation_test.go`**: Interface compliance tests
 - **`*_test.go`**: Comprehensive unit tests for all components
 
-### ⌨️ **Hotkey Management** (`hotkeys/`)
+### **Hotkey Management** (`hotkeys/`)
 
 #### Core Hotkey System
 - **`interfaces/provider.go`**: KeyboardEventProvider interface and types
@@ -97,7 +103,7 @@ Related constants:
 - **i3/XFCE/MATE/AppImage**: Auto‑fallback to evdev on portal failure
 - **Failover**: Seamless re‑registration on provider switching
 
-### 🗣️ **Speech Recognition** (`whisper/`)
+### **Speech Recognition** (`whisper/`)
 
 #### Engine Components
 - **`engine.go`**: Main Whisper engine using CGO bindings
@@ -109,7 +115,7 @@ Related constants:
 - **`providers/model_downloader.go`**: Model download with progress
 - **`whisper.go`**: Public facade and type re-exports for external use
 
-### 📤 **Output Management** (`output/`)
+### **Output Management** (`output/`)
 
 #### Output Implementations
 - **`interfaces/outputter.go`**: Outputter interface definition
@@ -120,14 +126,14 @@ Related constants:
   - `combined_outputter.go`: Combined clipboard + typing output
   - `mock_outputter.go`: Mock implementation for testing
 
-### 🌐 **WebSocket API** (`websocket/`)
+### **WebSocket API** (`websocket/`)
 
 - **`server.go`**: WebSocket server for external integrations
 - **`message_handler.go`**: WebSocket message processing
 - **`authentication.go`**: API authentication and authorization
 - **`retry_manager.go`**: Connection retry logic
 
-### ⚙️ **Configuration System** (`config/`)
+### **Configuration System** (`config/`)
 
 #### Configuration Management
 - **`models/config.go`**: Configuration data structures and constants
@@ -135,7 +141,7 @@ Related constants:
 - **`validators/standard_validator.go`**: Configuration validation and sanitization
 - **`security/utils.go`**: Configuration security and integrity checks
 
-### 🔧 **Internal Utilities** (`internal/`)
+### **Internal Utilities** (`internal/`)
 
 #### System Integration
 - **`logger/logger.go`**: Structured logging with levels
@@ -152,7 +158,7 @@ Related constants:
   - `disk_stub.go`: Stub implementation
   - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
 
-### 🏗️ **Build & Packaging**
+### **Build & Packaging**
 
 #### Bash Scripts (`bash-scripts/`)
 - **`build-appimage.sh`**: AppImage creation with dependencies
@@ -172,7 +178,7 @@ Related constants:
 - **`io.github.ashbuk.speak-to-ai.desktop`**: Desktop entry
 - **`io.github.ashbuk.speak-to-ai.appdata.xml`**: AppStream metadata
 
-### 🧪 **Testing Infrastructure** (`tests/`)
+###  **Testing Infrastructure** (`tests/`)
 
 #### Integration Tests (`tests/integration/`)
 - **`integration_test.go`**: Main integration test suite
@@ -186,4 +192,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-09*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-09*
