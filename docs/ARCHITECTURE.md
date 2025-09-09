@@ -104,9 +104,12 @@ The application follows a **modular daemon architecture** with clear separation 
 #### Engine Components
 - **`engine.go`**: Main Whisper engine using CGO bindings
 - **`engine_stub.go`**: Stub implementation when CGO is disabled
-- **`streaming_engine.go`**: Real-time streaming transcription
-- **`streaming_engine_stub.go`**: Stub for streaming when CGO disabled
-- **`model_manager.go`**: Whisper model lifecycle management
+- **`processing/streaming_engine.go`**: Real-time streaming transcription
+- **`processing/streaming_engine_stub.go`**: Stub for streaming when CGO disabled
+- **`manager/model_manager.go`**: Whisper model lifecycle management
+- **`providers/model_path_resolver.go`**: Model path resolution for bundled/user models
+- **`providers/model_downloader.go`**: Model download with progress
+- **`whisper.go`**: Public facade and type re-exports for external use
 
 ### 📤 **Output Management** (`output/`)
 
@@ -149,6 +152,7 @@ The application follows a **modular daemon architecture** with clear separation 
   - `files.go`: File system utilities
   - `disk_linux.go`: Disk space checking (Linux)
   - `disk_stub.go`: Stub implementation
+  - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
 
 ### 🏗️ **Build & Packaging**
 
@@ -184,4 +188,4 @@ The application follows a **modular daemon architecture** with clear separation 
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-05*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-09*

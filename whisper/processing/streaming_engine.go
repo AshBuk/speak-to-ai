@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package whisper
+package processing
 
 import (
 	"context"
@@ -13,16 +13,23 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
+	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 )
 
 // StreamingWhisperEngine provides real-time streaming transcription
 type StreamingWhisperEngine struct {
-	*WhisperEngine
+	interfaces.WhisperEngine
 	agreementCache     map[string]int     // Cache for iterative agreement
 	lastTranscript     string             // Last agreed transcript
 	mutex              sync.RWMutex       // Protects agreement cache
 	agreementThreshold int                // Minimum agreements for consensus
 	onPartialResult    func(string, bool) // Callback for partial results (text, isConfirmed)
+
+	// Direct access to whisper components for streaming
+	config *config.Config
+	model  whisper.Model
 }
 
 // TranscriptionResult holds both partial and confirmed transcription results
@@ -34,10 +41,23 @@ type TranscriptionResult struct {
 }
 
 // NewStreamingWhisperEngine creates a new streaming whisper engine
-func NewStreamingWhisperEngine(config *config.Config, modelPath string) (*StreamingWhisperEngine, error) {
-	baseEngine, err := NewWhisperEngine(config, modelPath)
-	if err != nil {
-		return nil, err
+func NewStreamingWhisperEngine(baseEngine interfaces.WhisperEngine) *StreamingWhisperEngine {
+	// Extract model and config from base engine
+	modelInterface := baseEngine.GetModel()
+	cfg := baseEngine.GetConfig()
+
+	whisperModel, modelOk := modelInterface.(whisper.Model)
+
+	if !modelOk || whisperModel == nil || cfg == nil {
+		// Return a minimal engine that will fail gracefully
+		return &StreamingWhisperEngine{
+			WhisperEngine:      baseEngine,
+			agreementCache:     make(map[string]int),
+			agreementThreshold: 2,
+			mutex:              sync.RWMutex{},
+			config:             cfg,          // May be nil but that's okay
+			model:              whisperModel, // May be nil but better than crashing
+		}
 	}
 
 	return &StreamingWhisperEngine{
@@ -45,7 +65,9 @@ func NewStreamingWhisperEngine(config *config.Config, modelPath string) (*Stream
 		agreementCache:     make(map[string]int),
 		agreementThreshold: 2, // Require 2 consecutive agreements
 		mutex:              sync.RWMutex{},
-	}, nil
+		config:             cfg,
+		model:              whisperModel,
+	}
 }
 
 // SetPartialResultCallback sets callback for receiving partial transcription results
@@ -89,7 +111,7 @@ func (s *StreamingWhisperEngine) TranscribeChunk(audioData []float32) (*Transcri
 	}
 
 	result := strings.TrimSpace(transcript.String())
-	result = sanitizeTranscript(result)
+	result = utils.SanitizeTranscript(result)
 
 	// Apply iterative agreement logic
 	transcriptionResult := s.processWithAgreement(result)
@@ -238,3 +260,5 @@ func (s *StreamingWhisperEngine) SetAgreementThreshold(threshold int) {
 	}
 	s.agreementThreshold = threshold
 }
+
+// sanitizeTranscript removed in favor of textutil.SanitizeTranscript

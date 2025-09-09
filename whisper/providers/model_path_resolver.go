@@ -1,0 +1,113 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
+package providers
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/AshBuk/speak-to-ai/config"
+)
+
+// ModelPathResolver handles all path resolution logic for models
+type ModelPathResolver struct {
+	config *config.Config
+}
+
+// NewModelPathResolver creates a new model path resolver
+func NewModelPathResolver(config *config.Config) *ModelPathResolver {
+	return &ModelPathResolver{
+		config: config,
+	}
+}
+
+// GetModelDir returns the directory for storing models
+func (r *ModelPathResolver) GetModelDir() string {
+	// Check if we need to use user directory for downloaded models
+	if r.ShouldUseUserDirectory() {
+		return r.GetUserModelsDirectory()
+	}
+
+	dir := r.config.General.ModelPath
+	if dir == "" {
+		dir = "models"
+	}
+
+	// If the path looks like a file (has extension), return its directory
+	if filepath.Ext(dir) != "" {
+		return filepath.Dir(dir)
+	}
+
+	return dir
+}
+
+// ShouldUseUserDirectory determines if we should use user directory for models
+func (r *ModelPathResolver) ShouldUseUserDirectory() bool {
+	// If ModelPath points to a bundled model but ModelType doesn't match, use user directory
+	if r.config.General.ModelPath != "" {
+		// Check if this is a bundled model path
+		if r.IsBundledModelPath(r.config.General.ModelPath) {
+			// Extract model type from bundled path
+			bundledType := r.ExtractModelTypeFromPath(r.config.General.ModelPath)
+			// If requested type differs from bundled type, use user directory
+			return bundledType != r.config.General.ModelType
+		}
+	}
+	return false
+}
+
+// IsBundledModelPath checks if path points to a bundled model
+func (r *ModelPathResolver) IsBundledModelPath(modelPath string) bool {
+	// Check for AppImage bundled paths
+	if strings.Contains(modelPath, "sources/language-models/") {
+		return true
+	}
+	// Check for Flatpak bundled paths
+	if strings.Contains(modelPath, "/app/share/speak-to-ai/models/") {
+		return true
+	}
+	return false
+}
+
+// ExtractModelTypeFromPath extracts model type from file path
+func (r *ModelPathResolver) ExtractModelTypeFromPath(modelPath string) string {
+	basename := filepath.Base(modelPath)
+	name := strings.ToLower(basename)
+
+	switch {
+	case strings.Contains(name, "tiny"):
+		return "tiny"
+	case strings.Contains(name, "small"):
+		return "small"
+	case strings.Contains(name, "medium"):
+		return "medium"
+	case strings.Contains(name, "large"):
+		return "large"
+	default:
+		return "base"
+	}
+}
+
+// GetUserModelsDirectory returns the user's models directory
+func (r *ModelPathResolver) GetUserModelsDirectory() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		// Fallback to current directory
+		return "models"
+	}
+	return filepath.Join(homeDir, ".config", "speak-to-ai", "language-models")
+}
+
+// BuildModelPath constructs the full path for a model file
+func (r *ModelPathResolver) BuildModelPath(modelType, precision string) string {
+	modelFile := r.BuildModelFileName(modelType, precision)
+	return filepath.Join(r.GetModelDir(), modelFile)
+}
+
+// BuildModelFileName constructs the filename for a model
+func (r *ModelPathResolver) BuildModelFileName(modelType, precision string) string {
+	return fmt.Sprintf("ggml-model-%s.%s.bin", modelType, precision)
+}

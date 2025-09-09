@@ -28,7 +28,7 @@ type App struct {
 	Config                   *config.Config
 	ConfigFile               string // Path to the configuration file
 	Environment              platform.EnvironmentType
-	ModelManager             *whisper.ModelManager
+	ModelManager             whisper.ModelManager
 	Recorder                 interfaces.AudioRecorder
 	WhisperEngine            *whisper.WhisperEngine
 	StreamingEngine          *whisper.StreamingWhisperEngine

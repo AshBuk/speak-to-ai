@@ -9,6 +9,7 @@ import (
 	"errors"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 )
 
 // WhisperEngine is a no-cgo stub that fails gracefully when CGO is disabled.
@@ -25,4 +26,14 @@ func (w *WhisperEngine) Close() error { return nil }
 // Transcribe returns an error in the stub implementation.
 func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	return "", errors.New("transcription unavailable: built without cgo")
+}
+
+// GetModel returns nil in the stub implementation.
+func (w *WhisperEngine) GetModel() interfaces.WhisperModel {
+	return nil
+}
+
+// GetConfig returns nil in the stub implementation.
+func (w *WhisperEngine) GetConfig() *config.Config {
+	return nil
 }

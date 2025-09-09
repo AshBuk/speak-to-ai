@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
@@ -98,7 +99,7 @@ func (a *App) processStreamingTranscription(audioStream <-chan []float32) {
 
 // handleConfirmedTranscription processes confirmed transcription results
 func (a *App) handleConfirmedTranscription(text string) {
-	sanitized := whisper.SanitizeTranscript(text)
+	sanitized := utils.SanitizeTranscript(text)
 	if sanitized == "" {
 		if a.TrayManager != nil {
 			a.TrayManager.SetTooltip("✅ Ready")

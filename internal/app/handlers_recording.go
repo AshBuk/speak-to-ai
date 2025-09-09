@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // handleStartRecording handles the start of recording
@@ -198,7 +198,7 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 	}
 
 	// Sanitize and store transcript
-	sanitized := whisper.SanitizeTranscript(transcript)
+	sanitized := utils.SanitizeTranscript(transcript)
 	a.LastTranscript = sanitized
 
 	// Do not output empty transcripts
