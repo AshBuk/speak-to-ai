@@ -69,8 +69,8 @@ func main() {
 		}
 	}()
 
-	// Create application instance
-	application := app.NewApp(configFile, debug, modelPath, quantizePath)
+	// Create application instance with service-based architecture
+	application := app.NewApp(appLogger)
 
 	// Initialize the application
 	if err := application.Initialize(configFile, debug, modelPath, quantizePath); err != nil {
