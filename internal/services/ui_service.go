@@ -6,6 +6,7 @@ package services
 import (
 	"fmt"
 
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
@@ -80,7 +81,7 @@ func (us *UIService) SetError(message string) {
 	}
 
 	if us.notifyManager != nil {
-		if err := us.sendNotification("Error", message, "dialog-error"); err != nil {
+		if err := us.sendNotification(constants.NotifyError, message, "dialog-error"); err != nil {
 			us.logger.Warning("Failed to show error notification: %v", err)
 		}
 	}
@@ -91,11 +92,11 @@ func (us *UIService) SetSuccess(message string) {
 	us.logger.Info("UI Success: %s", message)
 
 	if us.trayManager != nil {
-		us.trayManager.SetTooltip("Ready")
+		us.trayManager.SetTooltip(constants.MsgReady)
 	}
 
 	if us.notifyManager != nil {
-		if err := us.sendNotification("Success", message, "dialog-ok-apply"); err != nil {
+		if err := us.sendNotification(constants.NotifySuccess, message, "dialog-ok-apply"); err != nil {
 			us.logger.Warning("Failed to show success notification: %v", err)
 		}
 	}
@@ -123,13 +124,13 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 
 	// Use appropriate notification method based on title/context
 	switch title {
-	case "Error":
+	case constants.NotifyError:
 		return us.notifyManager.NotifyError(message)
 	case "Recording Started":
 		return us.notifyManager.NotifyStartRecording()
 	case "Recording Stopped":
 		return us.notifyManager.NotifyStopRecording()
-	case "Transcription Complete", "Success":
+	case "Transcription Complete", constants.NotifySuccess:
 		return us.notifyManager.NotifyTranscriptionComplete()
 	default:
 		// Generic notification - use a simple approach
