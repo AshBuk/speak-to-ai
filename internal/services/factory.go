@@ -68,9 +68,12 @@ func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
 		return nil, fmt.Errorf("failed to initialize components: %w", err)
 	}
 
-	// Create ConfigService
-	configService := sf.createConfigService(components.HotkeyManager)
+	// Create ConfigService and HotkeyService
+	configService := sf.createConfigService()
 	container.Config = configService
+
+	hotkeyService := sf.createHotkeyService(components.HotkeyManager)
+	container.Hotkeys = hotkeyService
 
 	// Create AudioService
 	audioService := sf.createAudioService(components)
@@ -165,12 +168,19 @@ func (sf *ServiceFactory) initializeComponents() (*Components, error) {
 	return components, nil
 }
 
-// createConfigService creates a ConfigService instance
-func (sf *ServiceFactory) createConfigService(hotkeyManager *manager.HotkeyManager) *ConfigService {
+// createConfigService creates a ConfigService instance for configuration management only
+func (sf *ServiceFactory) createConfigService() *ConfigService {
 	return NewConfigService(
 		sf.config.Logger,
 		sf.config.Config,
 		sf.config.ConfigFile,
+	)
+}
+
+// createHotkeyService creates a HotkeyService instance for hotkey management
+func (sf *ServiceFactory) createHotkeyService(hotkeyManager *manager.HotkeyManager) *HotkeyService {
+	return NewHotkeyService(
+		sf.config.Logger,
 		hotkeyManager,
 	)
 }

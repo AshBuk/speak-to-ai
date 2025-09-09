@@ -82,7 +82,24 @@ type ConfigServiceInterface interface {
 	ToggleStreaming() error
 	ToggleVAD() error
 
-	// Hotkey management
+	// Cleanup
+	Shutdown() error
+}
+
+// HotkeyServiceInterface defines the contract for hotkey operations
+type HotkeyServiceInterface interface {
+	// Hotkey callback setup
+	SetupHotkeyCallbacks(
+		startRecording func() error,
+		stopRecording func() error,
+		toggleStreaming func() error,
+		toggleVAD func() error,
+		switchModel func() error,
+		showConfig func() error,
+		reloadConfig func() error,
+	) error
+
+	// Hotkey lifecycle
 	RegisterHotkeys() error
 	UnregisterHotkeys() error
 
@@ -92,10 +109,11 @@ type ConfigServiceInterface interface {
 
 // ServiceContainer holds all service interfaces
 type ServiceContainer struct {
-	Audio  AudioServiceInterface
-	UI     UIServiceInterface
-	IO     IOServiceInterface
-	Config ConfigServiceInterface
+	Audio   AudioServiceInterface
+	UI      UIServiceInterface
+	IO      IOServiceInterface
+	Config  ConfigServiceInterface
+	Hotkeys HotkeyServiceInterface
 }
 
 // NewServiceContainer creates a new service container with all services
@@ -127,6 +145,12 @@ func (sc *ServiceContainer) Shutdown() error {
 
 	if sc.Config != nil {
 		if err := sc.Config.Shutdown(); err != nil {
+			lastErr = err
+		}
+	}
+
+	if sc.Hotkeys != nil {
+		if err := sc.Hotkeys.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}

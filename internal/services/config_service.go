@@ -8,16 +8,14 @@ import (
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// ConfigService implements ConfigServiceInterface
+// ConfigService implements ConfigServiceInterface for configuration management only
 type ConfigService struct {
-	logger        logger.Logger
-	config        *config.Config
-	configFile    string
-	hotkeyManager *manager.HotkeyManager
+	logger     logger.Logger
+	config     *config.Config
+	configFile string
 }
 
 // NewConfigService creates a new ConfigService instance
@@ -25,13 +23,11 @@ func NewConfigService(
 	logger logger.Logger,
 	config *config.Config,
 	configFile string,
-	hotkeyManager *manager.HotkeyManager,
 ) *ConfigService {
 	return &ConfigService{
-		logger:        logger,
-		config:        config,
-		configFile:    configFile,
-		hotkeyManager: hotkeyManager,
+		logger:     logger,
+		config:     config,
+		configFile: configFile,
 	}
 }
 
@@ -168,75 +164,14 @@ func (cs *ConfigService) ToggleVAD() error {
 	return cs.SaveConfig()
 }
 
-// SetupHotkeyCallbacks configures hotkey callbacks with handler functions
-func (cs *ConfigService) SetupHotkeyCallbacks(
-	startRecording func() error,
-	stopRecording func() error,
-	toggleStreaming func() error,
-	toggleVAD func() error,
-	switchModel func() error,
-	showConfig func() error,
-	reloadConfig func() error,
-) error {
-	if cs.hotkeyManager == nil {
-		return fmt.Errorf("hotkey manager not available")
-	}
-
-	cs.logger.Info("Setting up hotkey callbacks...")
-
-	// Register the main recording callbacks
-	cs.hotkeyManager.RegisterCallbacks(startRecording, stopRecording)
-
-	// Register additional hotkey actions
-	cs.hotkeyManager.RegisterHotkeyAction("toggle_streaming", toggleStreaming)
-	cs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
-	cs.hotkeyManager.RegisterHotkeyAction("switch_model", switchModel)
-	cs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
-	cs.hotkeyManager.RegisterHotkeyAction("reload_config", reloadConfig)
-
-	cs.logger.Info("Hotkey callbacks configured successfully")
-	return nil
-}
-
-// RegisterHotkeys implements ConfigServiceInterface
-func (cs *ConfigService) RegisterHotkeys() error {
-	if cs.hotkeyManager == nil {
-		return fmt.Errorf("hotkey manager not available")
-	}
-
-	cs.logger.Info("Registering hotkeys...")
-
-	return cs.hotkeyManager.Start()
-}
-
-// UnregisterHotkeys implements ConfigServiceInterface
-func (cs *ConfigService) UnregisterHotkeys() error {
-	if cs.hotkeyManager == nil {
-		return nil
-	}
-
-	cs.logger.Info("Unregistering hotkeys...")
-
-	cs.hotkeyManager.Stop()
-	return nil
-}
-
 // Shutdown implements ConfigServiceInterface
 func (cs *ConfigService) Shutdown() error {
-	var lastErr error
-
-	// Unregister hotkeys
-	if err := cs.UnregisterHotkeys(); err != nil {
-		cs.logger.Error("Error unregistering hotkeys: %v", err)
-		lastErr = err
-	}
-
 	// Save final configuration state
 	if err := cs.SaveConfig(); err != nil {
 		cs.logger.Error("Error saving config during shutdown: %v", err)
-		lastErr = err
+		return err
 	}
 
 	cs.logger.Info("ConfigService shutdown complete")
-	return lastErr
+	return nil
 }

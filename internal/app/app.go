@@ -143,19 +143,13 @@ func (a *App) setupServiceDependencies() {
 
 // setupHotkeyCallbacks connects hotkey manager with handler methods
 func (a *App) setupHotkeyCallbacks() error {
-	if a.Services == nil || a.Services.Config == nil {
+	if a.Services == nil || a.Services.Hotkeys == nil {
 		return fmt.Errorf("services not initialized")
-	}
-
-	// Get the hotkey manager from config service
-	configSvc, ok := a.Services.Config.(*services.ConfigService)
-	if !ok {
-		return fmt.Errorf("config service type assertion failed")
 	}
 
 	// Set up hotkey callbacks by connecting to handler methods
 	// The hotkey manager will call these handlers when hotkeys are triggered
-	if err := configSvc.SetupHotkeyCallbacks(
+	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
 		a.handleStartRecording,
 		a.handleStopRecordingAndTranscribe,
 		a.handleToggleStreaming,
@@ -186,9 +180,9 @@ func (a *App) startServices() error {
 		}
 	}
 
-	// Register hotkeys if config service supports it
-	if a.Services.Config != nil {
-		if err := a.Services.Config.RegisterHotkeys(); err != nil {
+	// Register hotkeys if hotkey service supports it
+	if a.Services.Hotkeys != nil {
+		if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
 			a.Runtime.Logger.Warning("Failed to register hotkeys: %v", err)
 		}
 	}
@@ -263,4 +257,11 @@ func (a *App) Config() services.ConfigServiceInterface {
 		return nil
 	}
 	return a.Services.Config
+}
+
+func (a *App) Hotkeys() services.HotkeyServiceInterface {
+	if a.Services == nil {
+		return nil
+	}
+	return a.Services.Hotkeys
 }
