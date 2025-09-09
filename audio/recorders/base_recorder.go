@@ -17,6 +17,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // BaseRecorder implements common functionality for audio recorders
@@ -50,10 +51,13 @@ type BaseRecorder struct {
 	// Process synchronization
 	waitOnce   sync.Once
 	processErr error
+
+	// Logger
+	logger logger.Logger
 }
 
 // NewBaseRecorder creates a new base recorder instance
-func NewBaseRecorder(config *config.Config) BaseRecorder {
+func NewBaseRecorder(config *config.Config, logger logger.Logger) BaseRecorder {
 	// Calculate if we should use buffer based on recording settings
 	// For small recordings (< 10 seconds), use memory buffer
 	useBuffer := config.Audio.ExpectedDuration > 0 &&
@@ -75,6 +79,7 @@ func NewBaseRecorder(config *config.Config) BaseRecorder {
 		streamingEnabled: config.Audio.EnableStreaming,
 		audioChunks:      make(chan []float32, 10), // Buffer for 10 chunks
 		streamingActive:  false,
+		logger:           logger,
 	}
 }
 
@@ -408,24 +413,24 @@ func (b *BaseRecorder) StopProcess() error {
 	if !b.useBuffer && !b.streamingEnabled {
 		// Small delay to ensure buffers are flushed to disk
 		time.Sleep(50 * time.Millisecond)
-		log.Printf("[DEBUG] Checking audio file: %s", b.outputFile)
+		b.logger.Debug("Checking audio file: %s", b.outputFile)
 		info, err := os.Stat(b.outputFile)
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Printf("[DEBUG] Audio file does not exist: %s", b.outputFile)
+				b.logger.Debug("Audio file does not exist: %s", b.outputFile)
 				return fmt.Errorf("audio file was not created")
 			}
-			log.Printf("[DEBUG] Failed to stat audio file: %v", err)
+			b.logger.Debug("Failed to stat audio file: %v", err)
 			return fmt.Errorf("failed to stat audio file: %w", err)
 		}
-		log.Printf("[DEBUG] Audio file size: %d bytes", info.Size())
+		b.logger.Debug("Audio file size: %d bytes", info.Size())
 		// Minimal valid WAV header is 44 bytes
 		if info.Size() <= 44 {
 			log.Printf("[AUDIO ERROR] Audio file empty (size=%d) - likely recording failed", info.Size())
 			log.Printf("[AUDIO HINT] Check audio device availability and permissions")
 			return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
 		}
-		log.Printf("[DEBUG] Audio file validation successful: %d bytes", info.Size())
+		b.logger.Debug("Audio file validation successful: %d bytes", info.Size())
 	}
 
 	return nil

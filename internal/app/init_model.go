@@ -76,7 +76,7 @@ func (a *App) ensureAudioRecorderAvailable() error {
 		a.Logger.Info("Audio recorder method changed to %s, reinitializing...", a.Config.Audio.RecordingMethod)
 
 		// Reinitialize audio recorder
-		recorder, err := factory.GetRecorder(a.Config)
+		recorder, err := factory.GetRecorder(a.Config, a.Logger)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}
@@ -153,7 +153,7 @@ func (a *App) initializeTrayManager() {
 		},
 		func() error {
 			// Perform a short 3s test recording and show result via notification
-			recorder, err := factory.GetRecorder(a.Config)
+			recorder, err := factory.GetRecorder(a.Config, a.Logger)
 			if err != nil {
 				return err
 			}

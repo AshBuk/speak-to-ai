@@ -6,12 +6,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/internal/app"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
@@ -33,16 +33,23 @@ func init() {
 }
 
 func main() {
+	// Create logger early for consistent logging
+	logLevel := logger.InfoLevel
+	if debug {
+		logLevel = logger.DebugLevel
+	}
+	appLogger := logger.NewDefaultLogger(logLevel)
+
 	// Adjust paths for AppImage and Flatpak environments
-	adjustPathsForAppImage()
-	adjustPathsForFlatpak()
+	adjustPathsForAppImage(appLogger)
+	adjustPathsForFlatpak(appLogger)
 
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 
 	// Check if another instance is already running
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
-		log.Printf("Warning: Failed to check existing instance: %v", err)
+		appLogger.Warning("Failed to check existing instance: %v", err)
 	} else if isRunning {
 		fmt.Fprintf(os.Stderr, "Another instance of speak-to-ai is already running (PID: %d)\n", pid)
 		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
@@ -51,13 +58,14 @@ func main() {
 
 	// Try to acquire the lock
 	if err := lockFile.TryLock(); err != nil {
-		log.Fatalf("Failed to acquire application lock: %v", err)
+		appLogger.Error("Failed to acquire application lock: %v", err)
+		os.Exit(1)
 	}
 
 	// Ensure lock is released on exit
 	defer func() {
 		if err := lockFile.Unlock(); err != nil {
-			log.Printf("Warning: Failed to release lock: %v", err)
+			appLogger.Warning("Failed to release lock: %v", err)
 		}
 	}()
 
@@ -66,13 +74,13 @@ func main() {
 
 	// Initialize the application
 	if err := application.Initialize(configFile, debug, modelPath, quantizePath); err != nil {
-		log.Fatalf("Failed to initialize application: %v", err)
+		appLogger.Error("Failed to initialize application: %v", err)
 		os.Exit(1)
 	}
 
 	// Run the application and wait for shutdown
 	if err := application.RunAndWait(); err != nil {
-		log.Fatalf("Application error: %v", err)
+		appLogger.Error("Application error: %v", err)
 		os.Exit(1)
 	}
 
@@ -80,7 +88,7 @@ func main() {
 }
 
 // adjustPathsForAppImage detects if running inside an AppImage and adjusts paths accordingly
-func adjustPathsForAppImage() {
+func adjustPathsForAppImage(logger logger.Logger) {
 	// Check for AppImage environment
 	appImagePath := os.Getenv("APPIMAGE")
 	if appImagePath == "" {
@@ -99,16 +107,16 @@ func adjustPathsForAppImage() {
 	}
 
 	if appDir == "" {
-		log.Println("Warning: Running in AppImage but could not detect AppDir")
+		logger.Warning("Running in AppImage but could not detect AppDir")
 		return
 	}
 
-	log.Printf("Running inside AppImage, base path: %s", appDir)
+	logger.Info("Running inside AppImage, base path: %s", appDir)
 
 	// Adjust paths for AppImage
 	if quantizePath == "sources/core/quantize" {
 		quantizePath = filepath.Join(appDir, "sources/core/quantize")
-		log.Printf("Adjusted quantize path: %s", quantizePath)
+		logger.Info("Adjusted quantize path: %s", quantizePath)
 	}
 
 	// If no model path specified, check built-in model
@@ -116,7 +124,7 @@ func adjustPathsForAppImage() {
 		builtinModelPath := filepath.Join(appDir, "sources/language-models/base.bin")
 		if _, err := os.Stat(builtinModelPath); err == nil {
 			modelPath = builtinModelPath
-			log.Printf("Using built-in model: %s", modelPath)
+			logger.Info("Using built-in model: %s", modelPath)
 		}
 	}
 
@@ -125,13 +133,13 @@ func adjustPathsForAppImage() {
 		bundledConfig := filepath.Join(appDir, "config.yaml")
 		if _, err := os.Stat(bundledConfig); err == nil {
 			configFile = bundledConfig
-			log.Printf("Using AppImage bundled config: %s", configFile)
+			logger.Info("Using AppImage bundled config: %s", configFile)
 		}
 	}
 }
 
 // adjustPathsForFlatpak detects if running inside a Flatpak and adjusts paths accordingly
-func adjustPathsForFlatpak() {
+func adjustPathsForFlatpak(logger logger.Logger) {
 	// Check for Flatpak environment
 	flatpakInfo := os.Getenv("FLATPAK_ID")
 	if flatpakInfo == "" {
@@ -139,12 +147,12 @@ func adjustPathsForFlatpak() {
 		return
 	}
 
-	log.Printf("Running inside Flatpak: %s", flatpakInfo)
+	logger.Info("Running inside Flatpak: %s", flatpakInfo)
 
 	// Adjust paths for Flatpak
 	if quantizePath == "sources/core/quantize" {
 		quantizePath = "/app/bin/quantize"
-		log.Printf("Adjusted quantize path: %s", quantizePath)
+		logger.Info("Adjusted quantize path: %s", quantizePath)
 	}
 
 	// If no model path specified, check built-in model
@@ -152,7 +160,7 @@ func adjustPathsForFlatpak() {
 		builtinModelPath := "/app/share/speak-to-ai/models/base.bin"
 		if _, err := os.Stat(builtinModelPath); err == nil {
 			modelPath = builtinModelPath
-			log.Printf("Using built-in model: %s", modelPath)
+			logger.Info("Using built-in model: %s", modelPath)
 		}
 	}
 
@@ -161,7 +169,7 @@ func adjustPathsForFlatpak() {
 		flatpakConfigPath := "/app/share/speak-to-ai/config.yaml"
 		if _, err := os.Stat(flatpakConfigPath); err == nil {
 			configFile = flatpakConfigPath
-			log.Printf("Using Flatpak config: %s", configFile)
+			logger.Info("Using Flatpak config: %s", configFile)
 		}
 	}
 }

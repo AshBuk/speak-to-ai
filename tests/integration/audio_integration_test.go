@@ -16,6 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 func TestAudioRecordingIntegration(t *testing.T) {
@@ -37,7 +38,8 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.SampleRate = 16000
 		// channels removed (mono enforced internally)
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("Audio recorder not available: %v", err)
 		}
@@ -74,7 +76,8 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.RecordingMethod = "ffmpeg"
 		cfg.Audio.Device = "default"
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("FFmpeg recorder not available: %v", err)
 		}
@@ -116,7 +119,8 @@ func TestAudioStreamingIntegration(t *testing.T) {
 	cfg.Audio.Device = "default"
 
 	t.Run("streaming_with_vad", func(t *testing.T) {
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("Audio recorder not available: %v", err)
 		}
@@ -195,7 +199,8 @@ func TestAudioDeviceDetection(t *testing.T) {
 		cfg.Audio.Device = "default"
 		cfg.Audio.RecordingMethod = "arecord"
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("Default audio device not available: %v", err)
 		}
@@ -221,7 +226,8 @@ func TestAudioDeviceDetection(t *testing.T) {
 
 		for _, method := range methods {
 			cfg.Audio.RecordingMethod = method
-			_, err := factory.GetRecorder(cfg)
+			testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+			_, err := factory.GetRecorder(cfg, testLogger)
 			if err == nil {
 				workingMethods++
 				t.Logf("Recording method %s is available", method)

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
@@ -19,18 +20,14 @@ func (a *App) handleStartRecording() error {
 	// Ensure model is available (lazy loading)
 	if err := a.ensureModelAvailable(); err != nil {
 		a.Logger.Error("Model not available: %v", err)
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip("❌ Model unavailable")
-		}
+		a.setUIError(constants.MsgModelUnavailable)
 		return fmt.Errorf("model not available: %w", err)
 	}
 
 	// Lazy reinitialization of audio recorder if method changed (auto-fallback)
 	if err := a.ensureAudioRecorderAvailable(); err != nil {
 		a.Logger.Error("Audio recorder not available: %v", err)
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip("❌ Audio recorder unavailable")
-		}
+		a.setUIError(constants.MsgRecorderUnavailable)
 		return fmt.Errorf("audio recorder not available: %w", err)
 	}
 
@@ -53,19 +50,7 @@ func (a *App) handleStartRecording() error {
 				levelPercentage = 100
 			}
 
-			// Create visual level indicator
-			var levelBar string
-			bars := levelPercentage / 10
-			for i := 0; i < 10; i++ {
-				if i < bars {
-					levelBar += "█"
-				} else {
-					levelBar += "░"
-				}
-			}
-
-			tooltip := fmt.Sprintf("🎤 Recording... Level: %s %d%%", levelBar, levelPercentage)
-			a.TrayManager.SetTooltip(tooltip)
+			a.setUIRecording(levelPercentage)
 		}
 
 		// Log level for debugging
@@ -130,7 +115,7 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	// Update tray state
 	if a.TrayManager != nil {
 		a.TrayManager.SetRecordingState(false)
-		a.TrayManager.SetTooltip("🔄 Transcribing...")
+		a.setUIProcessing(constants.MsgTranscribing)
 	}
 
 	// Show notification
@@ -181,19 +166,7 @@ func (a *App) transcribeAsync(audioFile string) {
 // handleTranscriptionResult handles the result of transcription
 func (a *App) handleTranscriptionResult(transcript string, err error) {
 	if err != nil {
-		// Reset tray state on error
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip("❌ Transcription failed")
-		}
-
-		// Show error notification
-		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Transcription failed: %v", err)); err != nil {
-				a.Logger.Warning("failed to show notification: %v", err)
-			}
-		}
-
-		a.Logger.Error("Failed to transcribe audio: %v", err)
+		a.handleTranscriptionError(err)
 		return
 	}
 
@@ -201,68 +174,94 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 	sanitized := utils.SanitizeTranscript(transcript)
 	a.LastTranscript = sanitized
 
-	// Do not output empty transcripts
 	if sanitized == "" {
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip("✅ Ready")
-		}
-		if a.NotifyManager != nil {
-			_ = a.NotifyManager.ShowNotification("No Speech", "No speech detected in recording")
-		}
-		a.Logger.Info("Transcription completed: <empty>")
+		a.handleEmptyTranscript()
 		return
 	}
 
-	// Route the transcript according to configured output mode
-	if a.OutputManager != nil {
-		switch a.Config.Output.DefaultMode {
-		case config.OutputModeClipboard:
-			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
-				a.Logger.Warning("Failed to copy to clipboard: %v", err)
-			}
-		case config.OutputModeActiveWindow:
-			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
-				a.Logger.Warning("Failed to type to active window: %v", err)
-				// Fallback to clipboard if typing fails
-				a.Logger.Info("Falling back to clipboard output")
-				if clipErr := a.OutputManager.CopyToClipboard(sanitized); clipErr != nil {
-					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
-					if a.NotifyManager != nil {
-						_ = a.NotifyManager.ShowNotification("Output Failed", "Both typing and clipboard failed. Check output configuration.")
-					}
-				} else {
-					if a.NotifyManager != nil && a.Config.Notifications.EnableWorkflowNotifications {
-						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Typing not supported by compositor. Text copied to clipboard - press Ctrl+V to paste.")
-					}
-				}
-			}
-		case config.OutputModeCombined:
-			if err := a.OutputManager.CopyToClipboard(sanitized); err != nil {
-				a.Logger.Warning("Failed to copy to clipboard: %v", err)
-			}
-			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
-				a.Logger.Warning("Failed to type to active window: %v", err)
-			}
-		default:
-			if err := a.OutputManager.TypeToActiveWindow(sanitized); err != nil {
-				a.Logger.Warning("Failed to type to active window: %v", err)
-				// Fallback to clipboard if typing fails
-				a.Logger.Info("Falling back to clipboard output")
-				if clipErr := a.OutputManager.CopyToClipboard(sanitized); clipErr != nil {
-					a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
-				} else {
-					if a.NotifyManager != nil {
-						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Text copied to clipboard - press Ctrl+V to paste.")
-					}
-				}
-			}
-		}
+	a.routeTranscriptOutput(sanitized)
+	a.finalizeTranscription()
+}
+
+// handleTranscriptionError handles transcription errors
+func (a *App) handleTranscriptionError(err error) {
+	a.setUIError(constants.MsgTranscriptionFailed)
+	a.notifyError(err)
+	a.Logger.Error("Failed to transcribe audio: %v", err)
+}
+
+// handleEmptyTranscript handles empty transcript results
+func (a *App) handleEmptyTranscript() {
+	a.setUIReady()
+	a.notifyInfo(constants.NotifyNoSpeech, constants.MsgTranscriptionEmpty)
+	a.Logger.Info("Transcription completed: <empty>")
+}
+
+// routeTranscriptOutput routes transcript to configured output mode
+func (a *App) routeTranscriptOutput(text string) {
+	if a.OutputManager == nil {
+		return
 	}
 
-	// Reset tray state
-	if a.TrayManager != nil {
-		a.TrayManager.SetTooltip("✅ Ready")
+	switch a.Config.Output.DefaultMode {
+	case config.OutputModeClipboard:
+		a.outputToClipboard(text)
+	case config.OutputModeActiveWindow:
+		a.outputToActiveWindow(text)
+	case config.OutputModeCombined:
+		a.outputToBoth(text)
+	default:
+		a.outputWithFallback(text)
 	}
+}
+
+// outputToClipboard copies text to clipboard
+func (a *App) outputToClipboard(text string) {
+	if err := a.OutputManager.CopyToClipboard(text); err != nil {
+		a.Logger.Warning("Failed to copy to clipboard: %v", err)
+	}
+}
+
+// outputToActiveWindow types text to active window with fallback
+func (a *App) outputToActiveWindow(text string) {
+	if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+		a.Logger.Warning("Failed to type to active window: %v", err)
+		a.handleTypingFallback(text)
+	}
+}
+
+// outputToBoth outputs to both clipboard and active window
+func (a *App) outputToBoth(text string) {
+	a.outputToClipboard(text)
+	if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+		a.Logger.Warning("Failed to type to active window: %v", err)
+	}
+}
+
+// outputWithFallback outputs with automatic fallback to clipboard
+func (a *App) outputWithFallback(text string) {
+	if err := a.OutputManager.TypeToActiveWindow(text); err != nil {
+		a.Logger.Warning("Failed to type to active window: %v", err)
+		a.handleTypingFallback(text)
+	}
+}
+
+// handleTypingFallback handles fallback when typing fails
+func (a *App) handleTypingFallback(text string) {
+	a.Logger.Info("Falling back to clipboard output")
+	if clipErr := a.OutputManager.CopyToClipboard(text); clipErr != nil {
+		a.Logger.Warning("Clipboard fallback also failed: %v", clipErr)
+		a.notifyError(fmt.Errorf(constants.NotifyOutputBothFailed))
+	} else {
+		if a.Config.Notifications.EnableWorkflowNotifications {
+			a.notifyInfo(constants.NotifyClipboard, constants.NotifyTypingFallback)
+		}
+	}
+}
+
+// finalizeTranscription completes the transcription process
+func (a *App) finalizeTranscription() {
+	a.setUIReady()
 
 	// Show completion notification
 	if a.NotifyManager != nil {
@@ -271,22 +270,13 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 		}
 	}
 
-	a.Logger.Info("Transcription completed: %s", sanitized)
+	a.Logger.Info("Transcription completed: %s", a.LastTranscript)
 }
 
 // handleTranscriptionCancellation handles cancellation of transcription
 func (a *App) handleTranscriptionCancellation(err error) {
 	a.Logger.Warning("Transcription cancelled: %v", err)
 
-	// Reset tray state
-	if a.TrayManager != nil {
-		a.TrayManager.SetTooltip("⚠️  Transcription cancelled")
-	}
-
-	// Show cancellation notification
-	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Cancelled", "Transcription was cancelled"); err != nil {
-			a.Logger.Warning("failed to show notification: %v", err)
-		}
-	}
+	a.setUIWarning(constants.MsgTranscriptionCancelled)
+	a.notifyInfo(constants.NotifyCancelled, constants.NotifyTranscriptionCancelled)
 }

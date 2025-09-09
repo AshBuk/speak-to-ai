@@ -124,9 +124,7 @@ func (a *App) handleSelectModelType(modelType string) error {
 
 	// Progress callback updates tray tooltip
 	progress := func(downloaded, total int64, percentage float64) {
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip(fmt.Sprintf("📥 Downloading %s: %.1f%%", t, percentage))
-		}
+		a.setUIProcessing(fmt.Sprintf("Downloading %s: %.1f%%", t, percentage))
 	}
 
 	// Ensure model path (download if missing)
@@ -134,9 +132,7 @@ func (a *App) handleSelectModelType(modelType string) error {
 	if err != nil {
 		// rollback model type
 		a.Config.General.ModelType = oldType
-		if a.TrayManager != nil {
-			a.TrayManager.SetTooltip("❌ Model switch failed")
-		}
+		a.setUIError("Model switch failed")
 		return fmt.Errorf("failed to prepare model: %w", err)
 	}
 
@@ -181,8 +177,8 @@ func (a *App) handleSelectModelType(modelType string) error {
 	}
 
 	// Update tray UI
+	a.setUIReady()
 	if a.TrayManager != nil {
-		a.TrayManager.SetTooltip("✅ Ready")
 		go a.TrayManager.UpdateSettings(a.Config)
 	}
 

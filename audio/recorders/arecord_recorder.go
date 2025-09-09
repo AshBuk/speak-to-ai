@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // ArecordRecorder implements AudioRecorder using arecord
@@ -15,9 +16,9 @@ type ArecordRecorder struct {
 }
 
 // NewArecordRecorder creates a new instance of ArecordRecorder
-func NewArecordRecorder(config *config.Config) *ArecordRecorder {
+func NewArecordRecorder(config *config.Config, logger logger.Logger) *ArecordRecorder {
 	return &ArecordRecorder{
-		BaseRecorder: NewBaseRecorder(config),
+		BaseRecorder: NewBaseRecorder(config, logger),
 	}
 }
 

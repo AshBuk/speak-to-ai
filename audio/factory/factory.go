@@ -13,17 +13,20 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/audio/recorders"
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // AudioRecorderFactory creates appropriate audio recorder instances
 type AudioRecorderFactory struct {
 	config *config.Config
+	logger logger.Logger
 }
 
 // NewAudioRecorderFactory creates a new factory instance
-func NewAudioRecorderFactory(config *config.Config) *AudioRecorderFactory {
+func NewAudioRecorderFactory(config *config.Config, logger logger.Logger) *AudioRecorderFactory {
 	return &AudioRecorderFactory{
 		config: config,
+		logger: logger,
 	}
 }
 
@@ -34,9 +37,9 @@ func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error
 
 	switch f.config.Audio.RecordingMethod {
 	case "arecord":
-		return recorders.NewArecordRecorder(f.config), nil
+		return recorders.NewArecordRecorder(f.config, f.logger), nil
 	case "ffmpeg":
-		return recorders.NewFFmpegRecorder(f.config), nil
+		return recorders.NewFFmpegRecorder(f.config, f.logger), nil
 	default:
 		return nil, fmt.Errorf("unsupported recording method: %s", f.config.Audio.RecordingMethod)
 	}
@@ -162,13 +165,13 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 }
 
 // GetRecorder is a convenience function to create a recorder directly from config
-func GetRecorder(config *config.Config) (interfaces.AudioRecorder, error) {
-	factory := NewAudioRecorderFactory(config)
+func GetRecorder(config *config.Config, logger logger.Logger) (interfaces.AudioRecorder, error) {
+	factory := NewAudioRecorderFactory(config, logger)
 	return factory.CreateRecorder()
 }
 
 // GetRecorderWithFallback is a convenience function to create a recorder with fallback
-func GetRecorderWithFallback(config *config.Config) (interfaces.AudioRecorder, error) {
-	factory := NewAudioRecorderFactory(config)
+func GetRecorderWithFallback(config *config.Config, logger logger.Logger) (interfaces.AudioRecorder, error) {
+	factory := NewAudioRecorderFactory(config, logger)
 	return factory.CreateRecorderWithFallback()
 }

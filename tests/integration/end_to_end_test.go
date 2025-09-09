@@ -19,12 +19,14 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	hotkeyinterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
 // setupRecorderWithCleanup creates a recorder and ensures cleanup on test completion
 func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audiointerfaces.AudioRecorder {
-	recorder, err := factory.GetRecorder(cfg)
+	testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+	recorder, err := factory.GetRecorder(cfg, testLogger)
 	if err != nil {
 		t.Skipf("Audio not available: %v", err)
 	}
@@ -139,7 +141,8 @@ func TestApplicationInitializationFlow(t *testing.T) {
 
 		// Test audio system
 		t.Log("Testing audio system...")
-		_, err = factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		_, err = factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Logf("Audio system not available: %v", err)
 		} else {
@@ -360,7 +363,8 @@ func TestSystemResourceManagement(t *testing.T) {
 			// Skip whisper engine (requires CGO)
 			t.Logf("Iteration %d: Skipping whisper engine (requires CGO)", i+1)
 
-			recorder, err := factory.GetRecorder(cfg)
+			testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+			recorder, err := factory.GetRecorder(cfg, testLogger)
 			if err == nil {
 				recorder.CleanupFile()
 			}
@@ -435,7 +439,8 @@ func TestCrossComponentIntegration(t *testing.T) {
 		for i, testCfg := range testConfigs {
 			t.Run(testCfg.Audio.RecordingMethod, func(t *testing.T) {
 				// Test that configuration is respected
-				_, err := factory.GetRecorder(testCfg)
+				testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+				_, err := factory.GetRecorder(testCfg, testLogger)
 				if err != nil {
 					t.Logf("Config %d: recorder not available: %v", i, err)
 				} else {

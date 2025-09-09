@@ -132,6 +132,8 @@ func (h *HotkeyManager) Stop() {
 
 // IsRecording returns the current recording state
 func (h *HotkeyManager) IsRecording() bool {
+	h.hotkeysMutex.Lock()
+	defer h.hotkeysMutex.Unlock()
 	return h.isRecording
 }
 

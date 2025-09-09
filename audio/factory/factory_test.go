@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/tests/mocks"
 )
 
 func TestNewAudioRecorderFactory(t *testing.T) {
 	config := &config.Config{}
-	factory := NewAudioRecorderFactory(config)
+	mockLogger := &mocks.MockLogger{}
+	factory := NewAudioRecorderFactory(config, mockLogger)
 
 	if factory.config != config {
 		t.Errorf("expected config to be set correctly")
@@ -56,7 +58,8 @@ func TestAudioRecorderFactory_CreateRecorder(t *testing.T) {
 			config := &config.Config{}
 			config.Audio.RecordingMethod = tt.recordingMethod
 
-			factory := NewAudioRecorderFactory(config)
+			mockLogger := &mocks.MockLogger{}
+			factory := NewAudioRecorderFactory(config, mockLogger)
 			recorder, err := factory.CreateRecorder()
 
 			if tt.expectError && err == nil {
@@ -100,7 +103,8 @@ func TestGetRecorder(t *testing.T) {
 			config := &config.Config{}
 			config.Audio.RecordingMethod = tt.recordingMethod
 
-			recorder, err := GetRecorder(config)
+			mockLogger := &mocks.MockLogger{}
+			recorder, err := GetRecorder(config, mockLogger)
 
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")

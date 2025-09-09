@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // FFmpegRecorder implements AudioRecorder using ffmpeg
@@ -15,9 +16,9 @@ type FFmpegRecorder struct {
 }
 
 // NewFFmpegRecorder creates a new instance of FFmpegRecorder
-func NewFFmpegRecorder(config *config.Config) *FFmpegRecorder {
+func NewFFmpegRecorder(config *config.Config, logger logger.Logger) *FFmpegRecorder {
 	return &FFmpegRecorder{
-		BaseRecorder: NewBaseRecorder(config),
+		BaseRecorder: NewBaseRecorder(config, logger),
 	}
 }
 

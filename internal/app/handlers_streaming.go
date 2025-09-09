@@ -28,10 +28,7 @@ func (a *App) handleStartStreamingRecording() error {
 	}
 
 	// Update tray state
-	if a.TrayManager != nil {
-		a.TrayManager.SetRecordingState(true)
-		a.TrayManager.SetTooltip("🎤 Streaming transcription active...")
-	}
+	a.updateUIState(true, "🎤 Streaming transcription active...")
 
 	// Show notification
 	if a.NotifyManager != nil {
