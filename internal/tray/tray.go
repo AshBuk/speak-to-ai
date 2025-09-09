@@ -123,30 +123,6 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
 }
 
-// helper to format int without importing fmt
-func fmtInt(v int) string {
-	if v == 0 {
-		return "0"
-	}
-	neg := false
-	if v < 0 {
-		neg = true
-		v = -v
-	}
-	buf := [20]byte{}
-	i := len(buf)
-	for v > 0 {
-		i--
-		buf[i] = byte('0' + v%10)
-		v /= 10
-	}
-	if neg {
-		i--
-		buf[i] = '-'
-	}
-	return string(buf[i:])
-}
-
 // handleMenuClicks handles all menu item clicks
 func (tm *TrayManager) handleMenuClicks() {
 	for {

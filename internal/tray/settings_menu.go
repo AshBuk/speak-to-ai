@@ -172,7 +172,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Model type display (gray text under Model)
 	tm.modelItems["type"] = tm.aiModelMenu.AddSubMenuItem(
-		fmt.Sprintf("%s", tm.config.General.ModelType),
+		tm.config.General.ModelType,
 		"Current model type",
 	)
 	tm.modelItems["type"].Disable()
@@ -193,7 +193,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Language display (gray text under Set Language)
 	tm.modelItems["language"] = tm.aiModelMenu.AddSubMenuItem(
-		fmt.Sprintf("%s", tm.config.General.Language),
+		tm.config.General.Language,
 		"Current language setting",
 	)
 	tm.modelItems["language"].Disable()
