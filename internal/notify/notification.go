@@ -26,16 +26,25 @@ func NewNotificationManager(appName string, cfg *config.Config) *NotificationMan
 
 // NotifyStartRecording shows a notification when recording starts
 func (nm *NotificationManager) NotifyStartRecording() error {
+	if !nm.config.Notifications.EnableWorkflowNotifications {
+		return nil // Skip workflow notification
+	}
 	return nm.sendNotification("🎤 Speak-to-AI", "Recording started", "notification-microphone-sensitivity-high")
 }
 
 // NotifyStopRecording shows a notification when recording stops
 func (nm *NotificationManager) NotifyStopRecording() error {
+	if !nm.config.Notifications.EnableWorkflowNotifications {
+		return nil // Skip workflow notification
+	}
 	return nm.sendNotification("🛑 Recording stopped", "Transcribing audio...", "notification-microphone-sensitivity-muted")
 }
 
 // NotifyTranscriptionComplete shows a notification when transcription is complete
 func (nm *NotificationManager) NotifyTranscriptionComplete() error {
+	if !nm.config.Notifications.EnableWorkflowNotifications {
+		return nil // Skip workflow notification
+	}
 	return nm.sendNotification("✅ Transcription complete", "Text copied to clipboard", "edit-copy")
 }
 

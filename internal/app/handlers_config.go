@@ -37,9 +37,7 @@ func (a *App) handleShowConfig() error {
 		errMsg := fmt.Sprintf("Configuration file not found: %s", a.ConfigFile)
 		a.Logger.Error(errMsg)
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", errMsg); err != nil {
-				a.Logger.Warning("failed to show notification: %v", err)
-			}
+			a.notify("Error", errMsg)
 		}
 		return fmt.Errorf("config file not found: %s", a.ConfigFile)
 	}
@@ -83,9 +81,7 @@ func (a *App) handleShowConfig() error {
 		errMsg := fmt.Sprintf("Failed to open config file with %s: %v", editor, err)
 		a.Logger.Error(errMsg)
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", errMsg); err != nil {
-				a.Logger.Warning("failed to show notification: %v", err)
-			}
+			a.notify("Error", errMsg)
 		}
 		return fmt.Errorf("failed to open config file: %w", err)
 	}
@@ -111,9 +107,7 @@ func (a *App) handleReloadConfig() error {
 		errMsg := fmt.Sprintf("Failed to reload config: %v", err)
 		a.Logger.Error(errMsg)
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", errMsg); err != nil {
-				a.Logger.Warning("failed to show notification: %v", err)
-			}
+			a.notify("Error", errMsg)
 		}
 		return fmt.Errorf("failed to reload config: %w", err)
 	}
@@ -130,9 +124,7 @@ func (a *App) handleReloadConfig() error {
 		errMsg := fmt.Sprintf("Failed to reinitialize components: %v", err)
 		a.Logger.Error(errMsg)
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", errMsg); err != nil {
-				a.Logger.Warning("failed to show notification: %v", err)
-			}
+			a.notify("Error", errMsg)
 		}
 		return fmt.Errorf("failed to reinitialize components: %w", err)
 	}

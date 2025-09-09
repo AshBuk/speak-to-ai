@@ -29,7 +29,6 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000
 	config.Audio.Format = "s16le"
-	config.Audio.Channels = 1
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0
 	config.Audio.EnableStreaming = false
@@ -122,19 +121,6 @@ func TestValidateConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid channels",
-			setupConfig: func() *models.Config {
-				config := &models.Config{}
-				setDefaultConfigForTest(config)
-				config.Audio.Channels = 5
-				return config
-			},
-			expectError: true,
-			expectedValues: map[string]interface{}{
-				"channels": 1,
-			},
-		},
-		{
 			name: "invalid recording method",
 			setupConfig: func() *models.Config {
 				config := &models.Config{}
@@ -177,11 +163,7 @@ func TestValidateConfig(t *testing.T) {
 					t.Errorf("expected ModelPath %v, got %v", modelPath, config.General.ModelPath)
 				}
 			}
-			if channels, ok := tt.expectedValues["channels"]; ok {
-				if config.Audio.Channels != channels {
-					t.Errorf("expected Channels %v, got %v", channels, config.Audio.Channels)
-				}
-			}
+			// channels removed
 			if recordingMethod, ok := tt.expectedValues["recordingMethod"]; ok {
 				if config.Audio.RecordingMethod != recordingMethod {
 					t.Errorf("expected RecordingMethod %v, got %v", recordingMethod, config.Audio.RecordingMethod)

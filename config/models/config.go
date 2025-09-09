@@ -41,7 +41,6 @@ type Config struct {
 		Device            string `yaml:"device"`
 		SampleRate        int    `yaml:"sample_rate"`
 		Format            string `yaml:"format"`
-		Channels          int    `yaml:"channels"`
 		RecordingMethod   string `yaml:"recording_method"`    // 'arecord', 'ffmpeg', 'go-native'
 		ExpectedDuration  int    `yaml:"expected_duration"`   // Expected recording duration in seconds
 		EnableStreaming   bool   `yaml:"enable_streaming"`    // Whether to enable streaming transcription
@@ -58,6 +57,11 @@ type Config struct {
 		ClipboardTool string `yaml:"clipboard_tool"` // 'wl-copy', 'xclip'
 		TypeTool      string `yaml:"type_tool"`      // 'xdotool', 'wl-clipboard', 'dbus'
 	} `yaml:"output"`
+
+	// Notification settings
+	Notifications struct {
+		EnableWorkflowNotifications bool `yaml:"enable_workflow_notifications"` // Enable workflow notifications (recording, transcription)
+	} `yaml:"notifications"`
 
 	// Web server settings
 	WebServer struct {

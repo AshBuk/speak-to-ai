@@ -21,9 +21,7 @@ func (a *App) handleToggleStreaming() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Streaming Mode", fmt.Sprintf("Streaming transcription %s", status)); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
+		a.notify("Streaming Mode", fmt.Sprintf("Streaming transcription %s", status))
 	}
 
 	// Update tray tooltip
@@ -47,9 +45,7 @@ func (a *App) handleSwitchModel() error {
 	availableModels := a.ModelManager.GetAvailableModels()
 	if len(availableModels) <= 1 {
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Model Switch", "Only one model available"); err != nil {
-				a.Logger.Warning("Failed to show notification: %v", err)
-			}
+			a.notify("Model Switch", "Only one model available")
 		}
 		return nil
 	}
@@ -90,9 +86,7 @@ func (a *App) handleSwitchModel() error {
 	if err := a.ModelManager.SwitchModel(nextModel); err != nil {
 		a.Logger.Error("Failed to switch model: %v", err)
 		if a.NotifyManager != nil {
-			if err := a.NotifyManager.ShowNotification("Error", fmt.Sprintf("Failed to switch model: %v", err)); err != nil {
-				a.Logger.Warning("Failed to show notification: %v", err)
-			}
+			a.notify("Error", fmt.Sprintf("Failed to switch model: %v", err))
 		}
 		return err
 	}
@@ -102,9 +96,7 @@ func (a *App) handleSwitchModel() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Model Switched", fmt.Sprintf("Now using: %s", modelInfo.Description)); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
+		a.notify("Model Switched", fmt.Sprintf("Now using: %s", modelInfo.Description))
 	}
 
 	// Update tray tooltip
@@ -130,9 +122,7 @@ func (a *App) handleToggleVAD() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Voice Activity Detection", fmt.Sprintf("VAD %s", status)); err != nil {
-			a.Logger.Warning("Failed to show notification: %v", err)
-		}
+		a.notify("Voice Activity Detection", fmt.Sprintf("VAD %s", status))
 	}
 
 	// Update tray tooltip

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // handleStartRecording handles the start of recording
@@ -100,23 +100,8 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	audioFile, err := a.Recorder.StopRecording()
 	if err != nil {
 		a.Logger.Warning("StopRecording returned error: %v", err)
-		// Reset tray and hotkey state so subsequent attempts work (asynchronously to prevent deadlock)
-		if a.TrayManager != nil {
-			go func() {
-				a.TrayManager.SetRecordingState(false)
-				a.TrayManager.SetTooltip("⚠️  Recording failed")
-			}()
-		}
-		if a.HotkeyManager != nil {
-			go func() {
-				a.HotkeyManager.ResetRecordingState()
-			}()
-		}
-		if a.NotifyManager != nil {
-			go func() {
-				_ = a.NotifyManager.ShowNotification("Recording Error", fmt.Sprintf("%v", err))
-			}()
-		}
+		// Keep async to avoid potential deadlock, but centralize logic
+		go a.handleRecordingError(err)
 
 		// Auto-fallback to arecord if using ffmpeg (deferred to avoid deadlock)
 		if a.Config.Audio.RecordingMethod == "ffmpeg" {
@@ -124,10 +109,17 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 			a.Config.Audio.RecordingMethod = "arecord"
 			a.audioRecorderNeedsReinit = true
 
+			// Update tray settings asynchronously to reflect selection immediately
+			if a.TrayManager != nil {
+				go a.TrayManager.UpdateSettings(a.Config)
+			}
+			// Persist new recorder selection
+			if err := config.SaveConfig(a.ConfigFile, a.Config); err != nil {
+				a.Logger.Warning("failed to save config after fallback: %v", err)
+			}
+
 			if a.NotifyManager != nil {
-				go func() {
-					_ = a.NotifyManager.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
-				}()
+				go a.notify("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
 			}
 			a.Logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
@@ -206,7 +198,7 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 	}
 
 	// Sanitize and store transcript
-	sanitized := whisper.SanitizeTranscript(transcript)
+	sanitized := utils.SanitizeTranscript(transcript)
 	a.LastTranscript = sanitized
 
 	// Do not output empty transcripts
@@ -239,7 +231,7 @@ func (a *App) handleTranscriptionResult(transcript string, err error) {
 						_ = a.NotifyManager.ShowNotification("Output Failed", "Both typing and clipboard failed. Check output configuration.")
 					}
 				} else {
-					if a.NotifyManager != nil {
+					if a.NotifyManager != nil && a.Config.Notifications.EnableWorkflowNotifications {
 						_ = a.NotifyManager.ShowNotification("Output via Clipboard", "Typing not supported by compositor. Text copied to clipboard - press Ctrl+V to paste.")
 					}
 				}

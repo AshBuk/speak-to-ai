@@ -18,7 +18,6 @@ func TestNewArecordRecorder(t *testing.T) {
 	cfg.Audio.Device = "default"
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
-	cfg.Audio.Channels = 1
 
 	recorder := NewArecordRecorder(cfg)
 
@@ -90,7 +89,6 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.Device = "default"
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
-	cfg.Audio.Channels = 1
 
 	recorder := NewArecordRecorder(cfg)
 
@@ -148,7 +146,7 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 				cfg.Audio.Device = ""
 				cfg.Audio.Format = "S16_LE"
 				cfg.Audio.SampleRate = 16000
-				cfg.Audio.Channels = 1
+				// channels removed
 				return cfg
 			},
 			expectError: false, // arecord might handle empty device
@@ -160,22 +158,21 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 				cfg.Audio.Device = "default"
 				cfg.Audio.Format = "S16_LE"
 				cfg.Audio.SampleRate = 0
-				cfg.Audio.Channels = 1
+				// channels removed
 				return cfg
 			},
 			expectError: true, // This should cause issues
 		},
 		{
-			name: "zero channels",
+			name: "placeholder_no_channels",
 			setupConfig: func() *config.Config {
 				cfg := &config.Config{}
 				cfg.Audio.Device = "default"
 				cfg.Audio.Format = "S16_LE"
 				cfg.Audio.SampleRate = 16000
-				cfg.Audio.Channels = 0
 				return cfg
 			},
-			expectError: true, // This should cause issues
+			expectError: false,
 		},
 	}
 

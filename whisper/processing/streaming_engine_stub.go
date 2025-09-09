@@ -3,18 +3,18 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package whisper
+package processing
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 )
 
 type StreamingWhisperEngine struct {
-	*WhisperEngine
+	interfaces.WhisperEngine
 }
 
 type TranscriptionResult struct {
@@ -24,8 +24,8 @@ type TranscriptionResult struct {
 	Timestamp   time.Time
 }
 
-func NewStreamingWhisperEngine(config *config.Config, modelPath string) (*StreamingWhisperEngine, error) {
-	return nil, errors.New("streaming whisper engine unavailable: built without cgo")
+func NewStreamingWhisperEngine(baseEngine interfaces.WhisperEngine) *StreamingWhisperEngine {
+	return nil // unavailable: built without cgo
 }
 
 func (s *StreamingWhisperEngine) SetPartialResultCallback(callback func(string, bool)) {}

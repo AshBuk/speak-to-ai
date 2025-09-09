@@ -29,10 +29,9 @@ hotkeys:
 # Audio recording settings
 audio:
   device: "default"
-  sample_rate: 16000
-  format: "s16le"
-  channels: 1
-  recording_method: "arecord"  # Options: "arecord", "ffmpeg"
+  sample_rate: 16000            # Optimal for speech recognition (do not change)
+  format: "s16le"               # Note: audio is always recorded in mono (1 channel)
+  recording_method: "arecord"   # Options: "arecord", "ffmpeg"
   enable_vad: false           # Enable Voice Activity Detection
   vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
   auto_start_stop: false      # Auto start/stop recording based on VAD

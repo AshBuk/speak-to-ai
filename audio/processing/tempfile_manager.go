@@ -4,8 +4,11 @@
 package processing
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -102,4 +105,39 @@ func (t *TempFileManager) Stop() {
 		t.stopChan <- true
 		close(t.stopChan)
 	}
+}
+
+// CreateTempWav creates a temp .wav file in provided base dir (or os.TempDir) and registers it
+func (t *TempFileManager) CreateTempWav(baseDir string) (string, error) {
+	// Determine directory
+	dir := baseDir
+	if dir == "" {
+		dir = os.TempDir()
+	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	// Generate unique name
+	timestamp := time.Now().Format("20060102-150405")
+	path := filepath.Join(dir, fmt.Sprintf("audio_%s.wav", timestamp))
+	cleaned := filepath.Clean(path)
+	// Ensure the path remains within the base directory to avoid traversal
+	if !strings.HasPrefix(cleaned+string(os.PathSeparator), filepath.Clean(dir)+string(os.PathSeparator)) {
+		return "", fmt.Errorf("unsafe temp file path outside base dir")
+	}
+
+	// Pre-create file for downstream checks
+	// #nosec G304 -- Safe: path is constructed, cleaned, and verified under controlled base directory
+	f, err := os.OpenFile(cleaned, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	_ = f.Close()
+
+	// Track file for cleanup
+	t.AddFile(cleaned)
+	return cleaned, nil
 }

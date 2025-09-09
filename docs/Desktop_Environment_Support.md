@@ -30,7 +30,12 @@ sudo pacman -S gnome-shell-extension-appindicator
 
 **Outputter setup - ydotool (requires for GNOME!)**
 ```bash
-sudo usermod -a -G input $USER            # Add to input group
+# Fedora
+sudo dnf install ydotool
+# Debian/Ubuntu-based
+sudo apt install ydotool
+# Add to input group
+sudo usermod -a -G input $USER            
 # logout → login (or reboot), then:
 sudo systemctl enable --now ydotoold      # Start daemon
 ```

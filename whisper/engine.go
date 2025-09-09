@@ -14,6 +14,7 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 	"github.com/go-audio/wav"
 )
@@ -23,6 +24,16 @@ type WhisperEngine struct {
 	config    *config.Config
 	model     whisper.Model
 	modelPath string
+}
+
+// GetModel returns the underlying whisper model for advanced usage
+func (w *WhisperEngine) GetModel() interfaces.WhisperModel {
+	return w.model
+}
+
+// GetConfig returns the configuration for advanced usage
+func (w *WhisperEngine) GetConfig() *config.Config {
+	return w.config
 }
 
 // NewWhisperEngine creates a new instance of WhisperEngine
@@ -115,7 +126,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	}
 
 	result := strings.TrimSpace(transcript.String())
-	result = sanitizeTranscript(result)
+	result = utils.SanitizeTranscript(result)
 	return result, nil
 }
 

@@ -83,7 +83,6 @@ func SetDefaultConfig(config *models.Config) {
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000
 	config.Audio.Format = "s16le"
-	config.Audio.Channels = 1
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0 // No expected duration by default
 	config.Audio.EnableStreaming = false
@@ -97,6 +96,9 @@ func SetDefaultConfig(config *models.Config) {
 	config.Output.DefaultMode = models.OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto" // auto-detect
 	config.Output.TypeTool = "auto"      // auto-detect
+
+	// Notification settings
+	config.Notifications.EnableWorkflowNotifications = true // Enable workflow notifications by default
 
 	// Web server settings
 	config.WebServer.Enabled = false
@@ -113,4 +115,27 @@ func SetDefaultConfig(config *models.Config) {
 	config.Security.CheckIntegrity = false
 	config.Security.ConfigHash = ""
 	config.Security.MaxTempFileSize = 50 * 1024 * 1024 // 50MB by default
+}
+
+// SaveConfig writes the configuration back to disk in YAML format
+func SaveConfig(filename string, config *models.Config) error {
+	// Sanitize and validate path
+	safe := filepath.Clean(filename)
+	if strings.Contains(safe, "..") {
+		return fmt.Errorf("invalid config path: %s", filename)
+	}
+
+	// Marshal to YAML
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(filepath.Dir(safe), 0o750); err != nil {
+		return err
+	}
+
+	// Write with restrictive permissions
+	return os.WriteFile(safe, data, 0o600)
 }

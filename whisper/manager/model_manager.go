@@ -1,48 +1,38 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package whisper
+package manager
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	urlpkg "net/url"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
+	"github.com/AshBuk/speak-to-ai/whisper/providers"
 )
-
-// ModelInfo represents information about a Whisper model
-type ModelInfo struct {
-	Path        string
-	Name        string
-	Type        string // tiny, base, small, medium, large
-	Size        int64  // File size in bytes
-	Available   bool   // Whether the model file exists
-	Description string
-}
 
 // ModelManager handles downloading and managing Whisper models
 type ModelManager struct {
-	config      *config.Config
-	models      map[string]*ModelInfo
-	activeModel string
+	config       *config.Config
+	models       map[string]*interfaces.ModelInfo
+	activeModel  string
+	pathResolver interfaces.ModelPathResolver
+	downloader   interfaces.ModelDownloader
 }
-
-// ProgressCallback is called during model download with progress information
-type ProgressCallback func(downloaded, total int64, percentage float64)
 
 // NewModelManager creates a new model manager instance
 func NewModelManager(config *config.Config) *ModelManager {
+	pathResolver := providers.NewModelPathResolver(config)
+	downloader := providers.NewModelDownloader(pathResolver)
+
 	return &ModelManager{
-		config: config,
-		models: make(map[string]*ModelInfo),
+		config:       config,
+		models:       make(map[string]*interfaces.ModelInfo),
+		pathResolver: pathResolver,
+		downloader:   downloader,
 	}
 }
 
@@ -70,22 +60,29 @@ func (m *ModelManager) GetModelPath() (string, error) {
 }
 
 // GetModelPathWithProgress returns the path to the requested model with progress callback
-func (m *ModelManager) GetModelPathWithProgress(progressCallback ProgressCallback) (string, error) {
-	// If model path is specified directly, use it
-	if m.config.General.ModelPath != "" {
-		// Check if it's a direct file path
-		if utils.IsValidFile(m.config.General.ModelPath) {
+func (m *ModelManager) GetModelPathWithProgress(progressCallback interfaces.ProgressCallback) (string, error) {
+	// If model path is specified directly, use it ONLY if it matches the requested model type
+	if m.config.General.ModelPath != "" && utils.IsValidFile(m.config.General.ModelPath) {
+		// For bundled models, check if the type matches what user requested
+		if m.pathResolver.IsBundledModelPath(m.config.General.ModelPath) {
+			bundledType := m.pathResolver.ExtractModelTypeFromPath(m.config.General.ModelPath)
+			if bundledType == m.config.General.ModelType {
+				// Bundled model matches requested type, use it
+				return m.config.General.ModelPath, nil
+			}
+			// Bundled model doesn't match, continue to download logic below
+		} else {
+			// Non-bundled model path, use it as-is
 			return m.config.General.ModelPath, nil
 		}
 	}
 
-	// Otherwise, use the standard model naming convention
+	// Use the standard model naming convention for downloading
 	modelType := m.config.General.ModelType
 	precision := m.config.General.ModelPrecision
 
-	// Build the model filename
-	modelFile := fmt.Sprintf("ggml-model-%s.%s.bin", modelType, precision)
-	modelPath := filepath.Join(m.getModelDir(), modelFile)
+	// Build the model path using path resolver
+	modelPath := m.pathResolver.BuildModelPath(modelType, precision)
 
 	// Check if model exists
 	if utils.IsValidFile(modelPath) {
@@ -93,116 +90,7 @@ func (m *ModelManager) GetModelPathWithProgress(progressCallback ProgressCallbac
 	}
 
 	// If not, try to download it
-	return m.downloadModelWithProgress(modelType, precision, progressCallback)
-}
-
-// getModelDir returns the directory for storing models
-func (m *ModelManager) getModelDir() string {
-	dir := m.config.General.ModelPath
-	if dir == "" {
-		dir = "models"
-	}
-
-	// If the path looks like a file (has extension), return its directory
-	if filepath.Ext(dir) != "" {
-		return filepath.Dir(dir)
-	}
-
-	return dir
-}
-
-// downloadModelWithProgress downloads a model from the server with progress reporting
-func (m *ModelManager) downloadModelWithProgress(modelType, precision string, progressCallback ProgressCallback) (string, error) {
-	// Create model directory if it doesn't exist
-	modelDir := m.getModelDir()
-	if err := os.MkdirAll(modelDir, 0700); err != nil {
-		return "", fmt.Errorf("failed to create model directory: %w", err)
-	}
-
-	// Build model filename
-	modelFile := fmt.Sprintf("ggml-model-%s.%s.bin", modelType, precision)
-	modelPath := filepath.Join(modelDir, modelFile)
-
-	// Build URL for downloading
-	url := fmt.Sprintf("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/%s", modelFile)
-
-	// Create output file
-	cleanPath := filepath.Clean(modelPath)
-	out, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
-	if err != nil {
-		return "", fmt.Errorf("failed to create output file: %w", err)
-	}
-	defer func() { _ = out.Close() }()
-
-	// Get the data
-	parsed, perr := urlpkg.Parse(url)
-	if perr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
-		return "", fmt.Errorf("invalid download URL")
-	}
-	resp, err := http.Get(parsed.String())
-	if err != nil {
-		return "", fmt.Errorf("failed to download model: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	// Check server response
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	// Get content length for progress tracking
-	contentLength := resp.ContentLength
-	if contentLength <= 0 {
-		// Try to get from header
-		if lengthStr := resp.Header.Get("Content-Length"); lengthStr != "" {
-			if parsed, err := strconv.ParseInt(lengthStr, 10, 64); err == nil {
-				contentLength = parsed
-			}
-		}
-	}
-
-	// Create progress reader if callback provided
-	var reader io.Reader = resp.Body
-	if progressCallback != nil && contentLength > 0 {
-		reader = &progressReader{
-			reader:           resp.Body,
-			total:            contentLength,
-			progressCallback: progressCallback,
-		}
-	}
-
-	// Write the body to file
-	_, err = io.Copy(out, reader)
-	if err != nil {
-		return "", fmt.Errorf("failed to save model: %w", err)
-	}
-
-	return modelPath, nil
-}
-
-// progressReader wraps an io.Reader to report download progress
-type progressReader struct {
-	reader           io.Reader
-	total            int64
-	downloaded       int64
-	progressCallback ProgressCallback
-	lastReportTime   time.Time
-}
-
-// Read implements io.Reader interface with progress reporting
-func (pr *progressReader) Read(p []byte) (int, error) {
-	n, err := pr.reader.Read(p)
-	pr.downloaded += int64(n)
-
-	// Report progress every 100ms to avoid too frequent updates
-	now := time.Now()
-	if pr.progressCallback != nil && (now.Sub(pr.lastReportTime) > 100*time.Millisecond || err == io.EOF) {
-		percentage := float64(pr.downloaded) / float64(pr.total) * 100
-		pr.progressCallback(pr.downloaded, pr.total, percentage)
-		pr.lastReportTime = now
-	}
-
-	return n, err
+	return m.downloader.DownloadModelWithProgress(modelType, precision, progressCallback)
 }
 
 // ValidateModel checks if a model file is valid
@@ -227,8 +115,8 @@ func (m *ModelManager) ValidateModel(modelPath string) error {
 }
 
 // GetAvailableModels returns list of available models
-func (m *ModelManager) GetAvailableModels() map[string]*ModelInfo {
-	result := make(map[string]*ModelInfo)
+func (m *ModelManager) GetAvailableModels() map[string]*interfaces.ModelInfo {
+	result := make(map[string]*interfaces.ModelInfo)
 	for k, v := range m.models {
 		if v.Available {
 			result[k] = v
@@ -238,8 +126,8 @@ func (m *ModelManager) GetAvailableModels() map[string]*ModelInfo {
 }
 
 // GetAllModels returns all configured models (available or not)
-func (m *ModelManager) GetAllModels() map[string]*ModelInfo {
-	result := make(map[string]*ModelInfo)
+func (m *ModelManager) GetAllModels() map[string]*interfaces.ModelInfo {
+	result := make(map[string]*interfaces.ModelInfo)
 	for k, v := range m.models {
 		result[k] = v
 	}
@@ -295,7 +183,7 @@ func (m *ModelManager) loadModelsFromConfig() {
 }
 
 // createModelInfo creates ModelInfo from a file path
-func (m *ModelManager) createModelInfo(modelPath string) *ModelInfo {
+func (m *ModelManager) createModelInfo(modelPath string) *interfaces.ModelInfo {
 	// Resolve absolute path
 	absPath := modelPath
 	if !filepath.IsAbs(modelPath) {
@@ -311,20 +199,8 @@ func (m *ModelManager) createModelInfo(modelPath string) *ModelInfo {
 		name = basename[:len(basename)-len(ext)]
 	}
 
-	// Determine model type from filename
-	var modelType string
-	switch {
-	case contains(name, "tiny"):
-		modelType = "tiny"
-	case contains(name, "small"):
-		modelType = "small"
-	case contains(name, "medium"):
-		modelType = "medium"
-	case contains(name, "large"):
-		modelType = "large"
-	default:
-		modelType = "base"
-	}
+	// Use path resolver to determine model type from filename
+	modelType := m.pathResolver.ExtractModelTypeFromPath(absPath)
 
 	// Check if file exists and get size
 	var size int64
@@ -337,7 +213,7 @@ func (m *ModelManager) createModelInfo(modelPath string) *ModelInfo {
 	// Generate description
 	description := m.generateModelDescription(modelType, size, available)
 
-	return &ModelInfo{
+	return &interfaces.ModelInfo{
 		Path:        absPath,
 		Name:        name,
 		Type:        modelType,
@@ -406,9 +282,4 @@ func formatFileSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
-
-// contains checks if string contains substring (case-insensitive)
-func contains(s, substr string) bool {
-	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }

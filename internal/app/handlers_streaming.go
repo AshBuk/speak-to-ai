@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
@@ -34,9 +35,7 @@ func (a *App) handleStartStreamingRecording() error {
 
 	// Show notification
 	if a.NotifyManager != nil {
-		if err := a.NotifyManager.ShowNotification("Streaming Mode", "Real-time transcription started. Speak normally."); err != nil {
-			a.Logger.Warning("failed to show notification: %v", err)
-		}
+		a.notify("Streaming Mode", "Real-time transcription started. Speak normally.")
 	}
 
 	// Start streaming processing in background
@@ -100,13 +99,13 @@ func (a *App) processStreamingTranscription(audioStream <-chan []float32) {
 
 // handleConfirmedTranscription processes confirmed transcription results
 func (a *App) handleConfirmedTranscription(text string) {
-	sanitized := whisper.SanitizeTranscript(text)
+	sanitized := utils.SanitizeTranscript(text)
 	if sanitized == "" {
 		if a.TrayManager != nil {
 			a.TrayManager.SetTooltip("✅ Ready")
 		}
 		if a.NotifyManager != nil {
-			_ = a.NotifyManager.ShowNotification("No Speech", "No speech detected in recording")
+			a.notify("No Speech", "No speech detected in recording")
 		}
 		a.Logger.Info("Confirmed transcription: <empty>")
 		return
