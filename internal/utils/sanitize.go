@@ -22,4 +22,3 @@ func SanitizeTranscript(input string) string {
 	cleaned = strings.TrimSpace(cleaned)
 	return cleaned
 }
-
