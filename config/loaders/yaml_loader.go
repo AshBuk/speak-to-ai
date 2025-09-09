@@ -71,6 +71,7 @@ func SetDefaultConfig(config *models.Config) {
 	config.General.ActiveModel = "sources/language-models/base.bin" // Default to base model
 
 	// Hotkey settings (defaults)
+	config.Hotkeys.Provider = "auto"
 	config.Hotkeys.StartRecording = "ctrl+alt+r"     // Universal default
 	config.Hotkeys.StopRecording = "ctrl+alt+r"      // Same combination for start/stop
 	config.Hotkeys.ToggleStreaming = "altgr+shift+s" // AltGr + Shift + S

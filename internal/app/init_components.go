@@ -274,6 +274,7 @@ func (a *App) initializeHotkeyManager() {
 	// Create hotkey config adapter
 	hotkeyConfig := adapters.NewConfigAdapter(
 		a.Config.Hotkeys.StartRecording,
+		a.Config.Hotkeys.Provider,
 	)
 
 	// Initialize hotkey manager with environment information

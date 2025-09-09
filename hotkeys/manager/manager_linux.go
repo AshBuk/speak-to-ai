@@ -15,6 +15,15 @@ import (
 )
 
 func selectProviderForEnvironment(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) interfaces.KeyboardEventProvider {
+	// Respect provider override from config
+	switch config.GetProvider() {
+	case "evdev":
+		log.Println("Hotkeys provider override: evdev")
+		return providers.NewEvdevKeyboardProvider(config, environment)
+	case "dbus":
+		log.Println("Hotkeys provider override: dbus")
+		return providers.NewDbusKeyboardProvider(config, environment)
+	}
 	// AppImage: Prefer evdev due to potential D-Bus portal sandbox issues
 	isAppImage := os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != ""
 	if isAppImage {

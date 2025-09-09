@@ -10,6 +10,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
@@ -26,6 +27,7 @@ type EvdevKeyboardProvider struct {
 	stopListening chan bool
 	isListening   bool
 	modifierState map[string]bool // For tracking modifier keys state
+	mutex         sync.RWMutex
 }
 
 // NewEvdevKeyboardProvider creates a new EvdevKeyboardProvider instance
@@ -166,7 +168,9 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	// Track modifier key state
 	if utils.IsModifier(keyName) {
 		// Value 1 = key down, 0 = key up
+		p.mutex.Lock()
 		p.modifierState[strings.ToLower(keyName)] = (event.Value == 1)
+		p.mutex.Unlock()
 	}
 
 	// Only process key down events (value 1)
@@ -174,8 +178,20 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 		return
 	}
 
+	// Copy callbacks and modifier state under lock
+	p.mutex.RLock()
+	callbacksCopy := make(map[string]func() error, len(p.callbacks))
+	for k, v := range p.callbacks {
+		callbacksCopy[k] = v
+	}
+	modState := make(map[string]bool, len(p.modifierState))
+	for k, v := range p.modifierState {
+		modState[k] = v
+	}
+	p.mutex.RUnlock()
+
 	// Check for registered hotkeys
-	for hotkeyStr, callback := range p.callbacks {
+	for hotkeyStr, callback := range callbacksCopy {
 		hotkey := utils.ParseHotkey(hotkeyStr)
 
 		// Check if the pressed key matches the hotkey's main key
@@ -185,7 +201,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 			for _, mod := range hotkey.Modifiers {
 				// Convert general modifier names to specific ones
 				evdevModifier := utils.ConvertModifierToEvdev(mod)
-				if !p.modifierState[evdevModifier] {
+				if !modState[evdevModifier] {
 					allModifiersPressed = false
 					break
 				}
@@ -193,11 +209,11 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 
 			// If all conditions met, trigger the callback
 			if allModifiersPressed {
-				go func() {
-					if err := callback(); err != nil {
+				go func(cb func() error) {
+					if err := cb(); err != nil {
 						log.Printf("Hotkey callback error: %v", err)
 					}
-				}()
+				}(callback)
 			}
 		}
 	}
@@ -303,6 +319,8 @@ func getKeyName(keyCode int) string {
 
 // RegisterHotkey registers a callback for a hotkey
 func (p *EvdevKeyboardProvider) RegisterHotkey(hotkey string, callback func() error) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	p.callbacks[hotkey] = callback
 	return nil
 }

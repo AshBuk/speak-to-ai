@@ -44,7 +44,7 @@ func TestWaylandCompatibility(t *testing.T) {
 
 	t.Run("wayland_hotkeys", func(t *testing.T) {
 		// Test DBus hotkey provider
-		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma")
+		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma", "auto")
 		provider := providers.NewDbusKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentWayland)
 
 		if provider.IsSupported() {
@@ -90,7 +90,7 @@ func TestX11Compatibility(t *testing.T) {
 
 	t.Run("x11_hotkeys", func(t *testing.T) {
 		// Test evdev hotkey provider
-		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma")
+		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma", "auto")
 		provider := providers.NewEvdevKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentX11)
 
 		if provider.IsSupported() {

@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewEvdevKeyboardProvider(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	env := interfaces.EnvironmentX11
 
 	provider := NewEvdevKeyboardProvider(config, env)
@@ -41,7 +41,7 @@ func TestNewEvdevKeyboardProvider(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11)
 
 	// Test IsSupported - this will likely return false in test environment due to permissions
@@ -57,7 +57,7 @@ func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11)
 
 	callbackCalled := false
@@ -95,7 +95,7 @@ func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11)
 
 	// Set isListening to true to simulate already started
@@ -111,7 +111,7 @@ func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11)
 
 	// Stop should not panic even if not started
@@ -124,7 +124,7 @@ func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Stop_WhenStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11)
 
 	// Simulate started state
@@ -250,7 +250,7 @@ func TestHasKeyEvents(t *testing.T) {
 
 func TestModifierStateTracking(t *testing.T) {
 	// Test that modifier state tracking logic works
-	provider := NewEvdevKeyboardProvider(adapters.NewConfigAdapter("ctrl+shift+r"), interfaces.EnvironmentX11)
+	provider := NewEvdevKeyboardProvider(adapters.NewConfigAdapter("ctrl+shift+r", "auto"), interfaces.EnvironmentX11)
 
 	// Simulate modifier key press
 	provider.modifierState["leftctrl"] = true

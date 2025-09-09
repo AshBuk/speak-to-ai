@@ -35,9 +35,12 @@ func (f *FFmpegRecorder) StartRecording() error {
 func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	// Basic arguments with improved PipeWire compatibility
 	args := []string{
-		"-y",          // overwrite if temp file pre-created
+		"-y", // overwrite if temp file pre-created
+		"-nostdin",
+		"-hide_banner",
+		"-loglevel", "error",
 		"-f", "pulse", // Use pulse for PipeWire compatibility
-		"-thread_queue_size", "64",
+		"-thread_queue_size", "256",
 		"-probesize", "32", // Reduce probing time
 		"-analyzeduration", "0", // Skip analysis phase
 	}

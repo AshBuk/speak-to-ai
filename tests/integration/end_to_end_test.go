@@ -161,7 +161,7 @@ func TestApplicationInitializationFlow(t *testing.T) {
 
 		// Test hotkey system
 		t.Log("Testing hotkey system...")
-		hotkeyConfig := adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording)
+		hotkeyConfig := adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, "auto")
 		hotkeyManager := manager.NewHotkeyManager(hotkeyConfig, hotkeyinterfaces.EnvironmentUnknown)
 		if hotkeyManager != nil {
 			t.Log("Hotkey system initialized successfully")

@@ -32,20 +32,9 @@ func (a *App) handleShowConfig() error {
 		return fmt.Errorf("command not allowed: %s", editor)
 	}
 
-	// Check if config file exists
-	if _, err := os.Stat(a.ConfigFile); os.IsNotExist(err) {
-		errMsg := fmt.Sprintf("Configuration file not found: %s", a.ConfigFile)
-		a.Logger.Error(errMsg)
-		if a.NotifyManager != nil {
-			a.notify("Error", errMsg)
-		}
-		return fmt.Errorf("config file not found: %s", a.ConfigFile)
-	}
-
-	// Resolve absolute path and sanitize args (config file path)
+	// Resolve candidate absolute path with fallbacks (XDG, Flatpak)
 	absPath := a.ConfigFile
-	if _, statErr := os.Stat(absPath); os.IsNotExist(statErr) {
-		// Try XDG config path ~/.config/speak-to-ai/config.yaml
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		xdg := os.Getenv("XDG_CONFIG_HOME")
 		if xdg == "" {
 			if home, herr := os.UserHomeDir(); herr == nil {
@@ -55,6 +44,11 @@ func (a *App) handleShowConfig() error {
 		candidate := filepath.Join(xdg, "speak-to-ai", "config.yaml")
 		if _, cerr := os.Stat(candidate); cerr == nil {
 			absPath = candidate
+		} else {
+			flatpakPath := filepath.Join(os.Getenv("HOME"), ".var", "app", "io.github.ashbuk.speak-to-ai", "config", "speak-to-ai", "config.yaml")
+			if _, ferr := os.Stat(flatpakPath); ferr == nil {
+				absPath = flatpakPath
+			}
 		}
 	}
 	if p, err := filepath.Abs(absPath); err == nil {

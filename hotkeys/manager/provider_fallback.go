@@ -99,6 +99,10 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 			}
 
 			log.Println("Fallback keyboard provider started successfully")
+			if isAppImage {
+				log.Println("AppImage hint: add user to 'input' group for evdev hotkeys:")
+				log.Println("sudo usermod -a -G input $USER && reboot")
+			}
 			return nil
 		}
 	}

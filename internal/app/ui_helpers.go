@@ -5,6 +5,7 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 )
 

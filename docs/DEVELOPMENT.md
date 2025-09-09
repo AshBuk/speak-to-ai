@@ -18,7 +18,7 @@ make all                 # Build everything (deps + whisper + binary)
 make build               # Build binary with whisper.cpp integration
 make build-systray       # Build with system tray support
 make test                # Run unit tests with CGO dependencies
-make test-integration    # Run integration tests (fast mode, no CGO)
+make test-integration    # Run integration tests (fast mode, build tag: integration)
 make test-integration-full # Run full integration tests (with audio/CGO)
 make deps                # Download Go dependencies
 make whisper-libs        # Build whisper.cpp libraries into ./lib
@@ -27,7 +27,7 @@ make appimage            # Build AppImage package
 make flatpak             # Build Flatpak package
 make clean               # Clean build artifacts
 make fmt                 # Format Go code
-make lint                # Run linter (via Docker)
+make lint                # Run linter (via Docker). Возвращает 0 при отсутствии проблем
 ```
 
 ### 2. Bash Scripts - Orchestration & Dependencies  
@@ -60,7 +60,7 @@ GitHub Actions handle complex builds, releases, and distribution.
 | Test Type | Command | Duration | Dependencies | Use Case |
 |-----------|---------|----------|--------------|----------|
 | **Unit Tests** | `make test` | ~2-5s | CGO, whisper.cpp | Core functionality |
-| **Integration Fast** | `make test-integration` | ~0.3s | None | Development, CI |
+| **Integration Fast** | `make test-integration` | ~0.3s | Build tag `integration` | Development, CI |
 | **Integration Full** | `make test-integration-full` | ~5-15s | Audio devices, CGO | QA, Production |
 
 
@@ -74,9 +74,9 @@ GitHub Actions handle complex builds, releases, and distribution.
 
 ## Hotkeys Architecture
 
-### Provider Chain & Fallback System
+### Provider Chain, Override & Fallback
 ```
-DBus GlobalShortcuts (GNOME/KDE) → Evdev (i3/XFCE/MATE)
+DBus GlobalShortcuts (GNOME/KDE) → Evdev (i3/XFCE/MATE/AppImage)
       ↑                                  ↑
    preferred                        fallback
    (portal)                       (direct input)
@@ -103,7 +103,8 @@ general:
 
 # Hotkeys settings
 hotkeys:
-  start_recording: "Alt+R"  # Main recording hotkey
+  provider: "auto"          # "auto" | "dbus" | "evdev"
+  start_recording: "ctrl+alt+r"  # Main recording hotkey
   # Additional custom hotkeys can be registered programmatically
 
 # Audio settings

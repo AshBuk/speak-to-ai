@@ -62,7 +62,7 @@ func TestConvertHotkeyToAccelerator(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
-	config := adapters.NewConfigAdapter("altgr+comma")
+	config := adapters.NewConfigAdapter("altgr+comma", "auto")
 
 	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 
@@ -73,7 +73,7 @@ func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestDbusProvider_RegisterHotkey(t *testing.T) {
-	config := adapters.NewConfigAdapter("altgr+comma")
+	config := adapters.NewConfigAdapter("altgr+comma", "auto")
 
 	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
 

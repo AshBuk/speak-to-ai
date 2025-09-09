@@ -27,6 +27,8 @@ type Config struct {
 
 	// Hotkey settings
 	Hotkeys struct {
+		// Provider override: "auto" | "dbus" | "evdev"
+		Provider        string `yaml:"provider"`
 		StartRecording  string `yaml:"start_recording"`
 		StopRecording   string `yaml:"stop_recording"`
 		ToggleStreaming string `yaml:"toggle_streaming"`

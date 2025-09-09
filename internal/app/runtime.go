@@ -27,6 +27,9 @@ func (a *App) RunAndWait() error {
 	// Start hotkey manager
 	if err := a.HotkeyManager.Start(); err != nil {
 		a.Logger.Warning("Failed to start hotkey manager: %v", err)
+		if a.NotifyManager != nil {
+			_ = a.NotifyManager.ShowNotification("Hotkeys Disabled", "Failed to initialize global hotkeys. On AppImage try 'evdev' provider and add user to 'input' group.")
+		}
 	}
 
 	a.Logger.Info("Speak-to-AI is ready to use!")

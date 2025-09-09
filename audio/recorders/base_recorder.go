@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -359,17 +360,10 @@ func (b *BaseRecorder) StopProcess() error {
 			log.Printf("Retry %d to stop recording process", i)
 		}
 
-		// Send signal to terminate process
-		err = b.cmd.Process.Signal(os.Interrupt)
+		// Send SIGTERM first
+		err = b.cmd.Process.Signal(syscall.SIGTERM)
 		if err != nil {
-			log.Printf("Warning: failed to interrupt process: %v", err)
-			// Try with more force
-			err = b.cmd.Process.Kill()
-			if err != nil {
-				log.Printf("Warning: failed to kill process: %v", err)
-				time.Sleep(100 * time.Millisecond)
-				continue
-			}
+			log.Printf("Warning: failed to send SIGTERM: %v", err)
 		}
 
 		// Wait for process with timeout
@@ -387,16 +381,22 @@ func (b *BaseRecorder) StopProcess() error {
 				log.Printf("Process exited with error: %v", err)
 			}
 		case <-time.After(500 * time.Millisecond):
-			// Process still running, continue to next retry
-			continue
+			// Timed out; escalate to SIGKILL on last attempt or continue loop
 		}
 
 		if waitDone {
 			break
 		}
+
+		// Escalate to SIGKILL
+		if killErr := b.cmd.Process.Signal(syscall.SIGKILL); killErr != nil {
+			log.Printf("Warning: failed to send SIGKILL: %v", killErr)
+		}
+		// Give the kernel a moment to reap the process
+		time.Sleep(100 * time.Millisecond)
 	}
 
-	// Clean up process state after successful termination
+	// Clean up process state after termination
 	b.cmd = nil
 	b.cancel = nil
 

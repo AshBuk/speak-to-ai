@@ -102,6 +102,9 @@ func (p *DbusKeyboardProvider) Start() error {
 		if closeErr := p.conn.Close(); closeErr != nil {
 			log.Printf("Failed to close D-Bus connection: %v", closeErr)
 		}
+		log.Printf("DBus GlobalShortcuts binding failed: %v", err)
+		log.Printf("Hint: In Flatpak/AppImage, global shortcuts may require consent or permissions.")
+		log.Printf("If running as AppImage, consider provider override 'evdev' and adding user to 'input' group.")
 		return fmt.Errorf("failed to register hotkeys (GlobalShortcuts portal unavailable): %w", err)
 	}
 

@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewHotkeyManager(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -39,7 +39,7 @@ func TestNewHotkeyManager(t *testing.T) {
 }
 
 func TestHotkeyManager_Start_Success(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -60,7 +60,7 @@ func TestHotkeyManager_Start_Success(t *testing.T) {
 }
 
 func TestHotkeyManager_Start_ProviderError(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -79,7 +79,7 @@ func TestHotkeyManager_Start_ProviderError(t *testing.T) {
 }
 
 func TestHotkeyManager_Stop(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -97,7 +97,7 @@ func TestHotkeyManager_Stop(t *testing.T) {
 }
 
 func TestHotkeyManager_RegisterCallbacks(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -139,7 +139,7 @@ func TestHotkeyManager_RegisterCallbacks(t *testing.T) {
 }
 
 func TestHotkeyManager_IsRecording(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -168,7 +168,7 @@ func TestHotkeyManager_IsRecording(t *testing.T) {
 }
 
 func TestHotkeyManager_SimulateHotkeyPress_StartRecording(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -210,7 +210,7 @@ func TestHotkeyManager_SimulateHotkeyPress_StartRecording(t *testing.T) {
 }
 
 func TestHotkeyManager_SimulateHotkeyPress_StopRecording(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -255,7 +255,7 @@ func TestHotkeyManager_SimulateHotkeyPress_StopRecording(t *testing.T) {
 }
 
 func TestHotkeyManager_SimulateHotkeyPress_InvalidAction(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -271,7 +271,7 @@ func TestHotkeyManager_SimulateHotkeyPress_InvalidAction(t *testing.T) {
 }
 
 func TestHotkeyManager_SimulateHotkeyPress_CallbackError(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 
@@ -303,7 +303,7 @@ func TestHotkeyManager_SimulateHotkeyPress_CallbackError(t *testing.T) {
 }
 
 func TestHotkeyManager_EnvironmentTypes(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	tests := []struct {
 		name        string
@@ -363,7 +363,7 @@ func TestHotkeyManager_ConfigAdapter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := adapters.NewConfigAdapter(tt.startRecording)
+			config := adapters.NewConfigAdapter(tt.startRecording, "auto")
 
 			if config.GetStartRecordingHotkey() != tt.expected {
 				t.Errorf("Expected %q, got %q", tt.expected, config.GetStartRecordingHotkey())
@@ -373,7 +373,7 @@ func TestHotkeyManager_ConfigAdapter(t *testing.T) {
 }
 
 func TestHotkeyManager_ConcurrentAccess(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r")
+	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
 

@@ -48,16 +48,13 @@ The application follows a **modular daemon architecture** with clear separation 
 
 #### `internal/app/` - Application Core
 - **`app.go`**: Main application struct and lifecycle management
-- **`initialization.go`**: Component initialization and dependency injection
-- **`init_components.go`**: Individual component setup (tray, hotkeys, etc.)
-- **`init_model.go`**: Whisper model initialization and validation
-- **`runtime.go`**: Application runtime loop and shutdown handling
-- **`handlers_*.go`**: Event handlers for different subsystems
-  - `handlers_config.go`: Configuration management
-  - `handlers_hotkeys.go`: Global hotkey processing
-  - `handlers_recording.go`: Audio recording lifecycle
-  - `handlers_streaming.go`: Real-time transcription
-  - `handlers_vad.go`: Voice activity detection
+- **`initialization.go` / `init_components.go` / `init_model.go`**: Component and model initialization, DI
+- **`runtime.go`**: Application runtime loop and graceful shutdown
+- **`handlers_*.go`**: Event handlers per subsystem (config, hotkeys, recording, streaming, vad, settings)
+- **`ui_helpers.go`**: Centralized UI helpers (tray state, notifications, level bar)
+
+Related constants:
+- **`internal/constants/ui.go`**: UI icons/messages/titles centralization
 
 ### 🎤 **Audio Processing Module** (`audio/`)
 
@@ -90,14 +87,15 @@ The application follows a **modular daemon architecture** with clear separation 
 
 #### Provider Implementations
 - **`providers/dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
-- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs)
+- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs, often preferred in AppImage)
 - **`manager/provider_fallback.go`**: Fallback logic and hotkey re-registration
 - **`providers/dummy_provider.go`**: Dummy provider for testing
 
-#### Fallback Strategy
-- **GNOME/KDE**: No fallback - D-Bus portal
-- **i3/XFCE/MATE**: Auto-fallback from D-Bus to evdev on provider failure
-- **Failover**: Seamless hotkey re-registration on provider switching
+#### Provider Override & Fallback
+- **Override** (config): `hotkeys.provider: auto | dbus | evdev` (default: `auto`)
+- **GNOME/KDE**: Prefer D‑Bus portal
+- **i3/XFCE/MATE/AppImage**: Auto‑fallback to evdev on portal failure
+- **Failover**: Seamless re‑registration on provider switching
 
 ### 🗣️ **Speech Recognition** (`whisper/`)
 
