@@ -78,7 +78,7 @@ func SetDefaultConfig(config *models.Config) {
 	config.Hotkeys.SwitchModel = "altgr+shift+m"     // AltGr + Shift + M
 	config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
 	config.Hotkeys.ShowConfig = "altgr+shift+c"      // AltGr + Shift + C
-	config.Hotkeys.ReloadConfig = "altgr+shift+r"    // AltGr + Shift + R
+	config.Hotkeys.ResetToDefaults = "altgr+shift+r" // AltGr + Shift + R
 
 	// Audio settings
 	config.Audio.Device = "default"

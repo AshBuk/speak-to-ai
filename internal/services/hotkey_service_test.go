@@ -112,7 +112,7 @@ func TestHotkeyService(t *testing.T) {
 		}
 
 		// Verify all hotkey actions were registered
-		expectedActions := []string{"toggle_streaming", "toggle_vad", "switch_model", "show_config", "reload_config"}
+		expectedActions := []string{"toggle_streaming", "toggle_vad", "switch_model", "show_config", "reset_to_defaults"}
 		for _, action := range expectedActions {
 			if !mockManager.WasHotkeyActionRegistered(action) {
 				t.Errorf("RegisterHotkeyAction was not called for action: %s", action)

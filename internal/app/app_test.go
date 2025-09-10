@@ -237,9 +237,9 @@ func TestApp_HandlerMethods(t *testing.T) {
 			t.Error("handleShowConfig should fail with nil services")
 		}
 
-		err = app.handleReloadConfig()
+		err = app.handleResetToDefaults()
 		if err == nil {
-			t.Error("handleReloadConfig should fail with nil services")
+			t.Error("handleResetToDefaults should fail with nil services")
 		}
 	})
 
@@ -277,9 +277,9 @@ func TestApp_HandlerMethods(t *testing.T) {
 			t.Error("handleShowConfig should fail with nil UI service")
 		}
 
-		err = app.handleReloadConfig()
+		err = app.handleResetToDefaults()
 		if err == nil {
-			t.Error("handleReloadConfig should fail with nil config service")
+			t.Error("handleResetToDefaults should fail with nil config service")
 		}
 	})
 }

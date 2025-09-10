@@ -7,10 +7,14 @@ package constants
 const (
 	IconReady      = "✅"
 	IconError      = "❌"
-	IconRecording  = "🎤"
+	IconRecording  = "🔴"
+	IconStop       = "🟥"
 	IconProcessing = "🔄"
 	IconWarning    = "⚠️"
 	IconDownload   = "📥"
+	IconConfig     = "↺"
+	TraySettings   = "⚙️"
+	TrayShowConfig = "📄"
 )
 
 // Common UI Messages
@@ -18,22 +22,26 @@ const (
 	MsgReady                  = "Ready"
 	MsgRecording              = "Recording..."
 	MsgTranscribing           = "Transcribing..."
+	MsgTranscriptionComplete  = "Transcription complete"
 	MsgModelUnavailable       = "Model unavailable"
 	MsgRecorderUnavailable    = "Audio recorder unavailable"
 	MsgTranscriptionFailed    = "Transcription failed"
-	MsgTranscriptionEmpty     = "No speech detected in recording"
+	MsgTranscriptionEmpty     = "No speech was detected in the recording"
+	MsgNoSpeechDetected       = "No speech detected"
 	MsgModelSwitchFailed      = "Model switch failed"
 	MsgTranscriptionCancelled = "Transcription cancelled"
 )
 
 // Notification Titles
 const (
-	NotifyError      = "Error"
-	NotifySuccess    = "Success"
-	NotifyNoSpeech   = "No Speech"
-	NotifyCancelled  = "Cancelled"
-	NotifyClipboard  = "Output via Clipboard"
-	NotifyOutputFail = "Output Failed"
+	NotifyError             = "Error"
+	NotifySuccess           = "Success"
+	NotifyNoSpeech          = "No Speech"
+	NotifyConfigReset       = "Configuration Reset"
+	NotifyRecordingStarted  = "Recording Started"
+	NotifyRecordingStopped  = "Recording stopped"
+	NotifyTranscriptionDone = "Transcription Complete"
+	NotifyTranscriptionErr  = "Transcription Error"
 )
 
 // Notification Messages
@@ -42,4 +50,18 @@ const (
 	NotifyOutputBothFailed       = "both typing and clipboard failed, check output configuration"
 	NotifyClipboardFallback      = "Text copied to clipboard - press Ctrl+V to paste."
 	NotifyTranscriptionCancelled = "Transcription was cancelled"
+	NotifyConfigResetSuccess     = "Settings reset to defaults successfully"
+	NotifyRecordingStartMsg      = "Recording started"
+	NotifyRecordingStopMsg       = "Transcribing audio..."
+	NotifyTranscriptionMsg       = "Text copied to clipboard"
+	NotifyAppName                = "Speak-to-AI"
+)
+
+// Notification Full Titles (with icons)
+const (
+	NotifyTitleRecordingStart = IconRecording + " " + NotifyAppName
+	NotifyTitleRecordingStop  = IconStop + " " + NotifyRecordingStopped
+	NotifyTitleTranscription  = IconReady + " " + NotifyTranscriptionDone
+	NotifyTitleError          = IconError + " " + NotifyError
+	NotifyTitleConfigReset    = IconConfig + " " + NotifyConfigReset
 )

@@ -27,7 +27,7 @@ type MockHotkeyManager struct {
 		toggleVAD       manager.HotkeyAction
 		switchModel     manager.HotkeyAction
 		showConfig      manager.HotkeyAction
-		reloadConfig    manager.HotkeyAction
+		resetToDefaults manager.HotkeyAction
 	}
 }
 
@@ -61,8 +61,8 @@ func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager
 		m.callbacks.switchModel = callback
 	case "show_config":
 		m.callbacks.showConfig = callback
-	case "reload_config":
-		m.callbacks.reloadConfig = callback
+	case "reset_to_defaults":
+		m.callbacks.resetToDefaults = callback
 	}
 }
 

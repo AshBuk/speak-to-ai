@@ -147,7 +147,7 @@ func (as *AudioService) HandleStopRecording() error {
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetRecordingState(false)
-		as.ui.ShowNotification("Recording Stopped", "Transcribing audio...")
+		as.ui.ShowNotification(constants.NotifyRecordingStopped, constants.NotifyRecordingStopMsg)
 	}
 
 	// Start async transcription
@@ -327,7 +327,7 @@ func (as *AudioService) startStandardRecording() error {
 	if as.ui != nil {
 		as.ui.SetRecordingState(true)
 		as.ui.SetTooltip("Recording... Press hotkey to stop")
-		as.ui.ShowNotification("Recording Started", "Speak now...")
+		as.ui.ShowNotification(constants.NotifyRecordingStarted, "Speak now...")
 	}
 
 	return nil
@@ -393,7 +393,7 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 
 	// Update UI
 	if as.ui != nil {
-		as.ui.SetSuccess("Transcription complete")
+		as.ui.SetSuccess(constants.MsgTranscriptionComplete)
 	}
 }
 
@@ -401,8 +401,8 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 func (as *AudioService) handleTranscriptionError(err error) {
 	as.logger.Error("Transcription error: %v", err)
 	if as.ui != nil {
-		as.ui.SetError("Transcription failed")
-		as.ui.ShowNotification("Transcription Error", err.Error())
+		as.ui.SetError(constants.MsgTranscriptionFailed)
+		as.ui.ShowNotification(constants.NotifyTranscriptionErr, err.Error())
 	}
 }
 
@@ -410,8 +410,8 @@ func (as *AudioService) handleTranscriptionError(err error) {
 func (as *AudioService) handleEmptyTranscript() {
 	as.logger.Info("Empty transcript received")
 	if as.ui != nil {
-		as.ui.SetError("No speech detected")
-		as.ui.ShowNotification("No Speech", "No speech was detected in the recording")
+		as.ui.SetError(constants.MsgNoSpeechDetected)
+		as.ui.ShowNotification(constants.NotifyNoSpeech, constants.MsgTranscriptionEmpty)
 	}
 }
 

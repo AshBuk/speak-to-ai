@@ -86,6 +86,9 @@ func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
 	uiService := sf.createUIService(components.TrayManager, components.NotifyManager)
 	container.UI = uiService
 
+	// Wire UI service to config service for notifications
+	configService.SetUIService(uiService)
+
 	// Create IOService
 	ioService := sf.createIOService(components.OutputManager, components.WebSocketServer)
 	container.IO = ioService
@@ -326,8 +329,8 @@ func (sf *ServiceFactory) createTrayManager() tray.TrayManagerInterface {
 			sf.config.Logger.Info("Show config requested from tray")
 			return nil
 		},
-		func() error { // onReloadConfig
-			sf.config.Logger.Info("Reload config requested from tray")
+		func() error { // onResetToDefaults
+			sf.config.Logger.Info("Reset to defaults requested from tray")
 			return nil
 		})
 }
@@ -365,11 +368,11 @@ func (sf *ServiceFactory) wireTrayCallbacks(container *ServiceContainer, compone
 			}
 			return container.UI.ShowConfigFile()
 		},
-		func() error { // reload config
+		func() error { // reset to defaults
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")
 			}
-			return container.Config.ReloadConfig()
+			return container.Config.ResetToDefaults()
 		},
 	)
 

@@ -102,7 +102,7 @@ func (m *MockConfigService) Shutdown() error {
 
 func (m *MockConfigService) LoadConfig(configFile string) error            { return nil }
 func (m *MockConfigService) SaveConfig() error                             { return nil }
-func (m *MockConfigService) ReloadConfig() error                           { return nil }
+func (m *MockConfigService) ResetToDefaults() error                        { return nil }
 func (m *MockConfigService) GetConfig() interface{}                        { return nil }
 func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
 func (m *MockConfigService) UpdateLanguage(language string) error          { return nil }
@@ -138,7 +138,7 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 	toggleVAD func() error,
 	switchModel func() error,
 	showConfig func() error,
-	reloadConfig func() error,
+	resetToDefaults func() error,
 ) error {
 	return nil
 }

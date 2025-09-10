@@ -24,7 +24,7 @@ hotkeys:
   switch_model: "altgr+shift+m"        # Switch between models
   toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
   show_config: "altgr+shift+c"         # Open configuration file
-  reload_config: "altgr+shift+r"       # Reload configuration
+  reset_to_defaults: "altgr+shift+r"   # Reset all settings to defaults
 
 # Audio recording settings
 audio:

@@ -163,12 +163,14 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 	switch title {
 	case constants.NotifyError:
 		return us.notifyManager.NotifyError(message)
-	case "Recording Started":
+	case constants.NotifyRecordingStarted:
 		return us.notifyManager.NotifyStartRecording()
-	case "Recording Stopped":
+	case constants.NotifyRecordingStopped:
 		return us.notifyManager.NotifyStopRecording()
-	case "Transcription Complete", constants.NotifySuccess:
+	case constants.NotifyTranscriptionDone, constants.NotifySuccess:
 		return us.notifyManager.NotifyTranscriptionComplete()
+	case constants.NotifyConfigReset:
+		return us.notifyManager.NotifyConfigurationReset()
 	default:
 		// Generic notification - show to user
 		us.logger.Info("Notification: %s - %s", title, message)

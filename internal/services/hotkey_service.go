@@ -43,7 +43,7 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	toggleVAD func() error,
 	switchModel func() error,
 	showConfig func() error,
-	reloadConfig func() error,
+	resetToDefaults func() error,
 ) error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
@@ -59,7 +59,7 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	hs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
 	hs.hotkeyManager.RegisterHotkeyAction("switch_model", switchModel)
 	hs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
-	hs.hotkeyManager.RegisterHotkeyAction("reload_config", reloadConfig)
+	hs.hotkeyManager.RegisterHotkeyAction("reset_to_defaults", resetToDefaults)
 
 	hs.logger.Info("Hotkey callbacks configured successfully")
 	return nil

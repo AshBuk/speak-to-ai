@@ -71,7 +71,7 @@ type ConfigServiceInterface interface {
 	// Configuration management
 	LoadConfig(configFile string) error
 	SaveConfig() error
-	ReloadConfig() error
+	ResetToDefaults() error
 	GetConfig() interface{}
 
 	// Settings updates

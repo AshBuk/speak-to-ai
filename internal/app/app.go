@@ -156,7 +156,7 @@ func (a *App) setupHotkeyCallbacks() error {
 		a.handleToggleVAD,
 		a.handleSwitchModel,
 		a.handleShowConfig,
-		a.handleReloadConfig,
+		a.handleResetToDefaults,
 	); err != nil {
 		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
 	}

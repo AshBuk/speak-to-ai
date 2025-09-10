@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
@@ -16,6 +17,7 @@ type ConfigService struct {
 	logger     logger.Logger
 	config     *config.Config
 	configFile string
+	uiService  UIServiceInterface
 }
 
 // NewConfigService creates a new ConfigService instance
@@ -28,7 +30,13 @@ func NewConfigService(
 		logger:     logger,
 		config:     config,
 		configFile: configFile,
+		uiService:  nil, // Will be set later via dependency injection
 	}
+}
+
+// SetUIService sets the UI service for notifications (dependency injection)
+func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
+	cs.uiService = uiService
 }
 
 // LoadConfig implements ConfigServiceInterface
@@ -51,20 +59,29 @@ func (cs *ConfigService) SaveConfig() error {
 	return config.SaveConfig(cs.configFile, cs.config)
 }
 
-// ReloadConfig implements ConfigServiceInterface
-func (cs *ConfigService) ReloadConfig() error {
-	cs.logger.Info("Reloading configuration...")
+// ResetToDefaults implements ConfigServiceInterface
+func (cs *ConfigService) ResetToDefaults() error {
+	cs.logger.Info("Resetting configuration to defaults...")
 
-	if cs.configFile == "" {
-		return fmt.Errorf("no config file path set")
+	// Create new config and set defaults
+	defaultConfig := &config.Config{}
+	config.SetDefaultConfig(defaultConfig)
+
+	// Replace current config
+	cs.config = defaultConfig
+
+	// Save to file immediately
+	if err := cs.SaveConfig(); err != nil {
+		return fmt.Errorf("failed to save default config: %w", err)
 	}
 
-	newConfig, err := config.LoadConfig(cs.configFile)
-	if err != nil {
-		return fmt.Errorf("failed to reload config: %w", err)
+	cs.logger.Info("Configuration reset to defaults successfully")
+
+	// Show success notification via UI service
+	if cs.uiService != nil {
+		cs.uiService.ShowNotification(constants.NotifyConfigReset, constants.NotifyConfigResetSuccess)
 	}
 
-	cs.config = newConfig
 	return nil
 }
 

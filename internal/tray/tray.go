@@ -6,22 +6,24 @@
 package tray
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/getlantern/systray"
 )
 
 // TrayManager manages the system tray icon and menu
 type TrayManager struct {
-	isRecording    bool
-	iconMicOff     []byte
-	iconMicOn      []byte
-	onExit         func()
-	onToggle       func() error
-	onShowConfig   func() error
-	onReloadConfig func() error
-	config         *config.Config
+	isRecording       bool
+	iconMicOff        []byte
+	iconMicOn         []byte
+	onExit            func()
+	onToggle          func() error
+	onShowConfig      func() error
+	onResetToDefaults func() error
+	config            *config.Config
 
 	// Menu items
 	toggleItem       *systray.MenuItem
@@ -53,27 +55,27 @@ type TrayManager struct {
 }
 
 // NewTrayManager creates a new tray manager instance
-func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onReloadConfig func() error) *TrayManager {
+func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) *TrayManager {
 	return &TrayManager{
-		isRecording:    false,
-		iconMicOff:     iconMicOff,
-		iconMicOn:      iconMicOn,
-		onExit:         onExit,
-		onToggle:       onToggle,
-		onShowConfig:   onShowConfig,
-		onReloadConfig: onReloadConfig,
-		hotkeyItems:    make(map[string]*systray.MenuItem),
-		audioItems:     make(map[string]*systray.MenuItem),
-		modelItems:     make(map[string]*systray.MenuItem),
-		outputItems:    make(map[string]*systray.MenuItem),
+		isRecording:       false,
+		iconMicOff:        iconMicOff,
+		iconMicOn:         iconMicOn,
+		onExit:            onExit,
+		onToggle:          onToggle,
+		onShowConfig:      onShowConfig,
+		onResetToDefaults: onResetToDefaults,
+		hotkeyItems:       make(map[string]*systray.MenuItem),
+		audioItems:        make(map[string]*systray.MenuItem),
+		modelItems:        make(map[string]*systray.MenuItem),
+		outputItems:       make(map[string]*systray.MenuItem),
 	}
 }
 
 // SetCoreActions allows wiring core menu callbacks after construction
-func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onReloadConfig func() error) {
+func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) {
 	tm.onToggle = onToggle
 	tm.onShowConfig = onShowConfig
-	tm.onReloadConfig = onReloadConfig
+	tm.onResetToDefaults = onResetToDefaults
 }
 
 // Start initializes and starts the system tray icon and menu
@@ -88,7 +90,7 @@ func (tm *TrayManager) onReady() {
 	systray.SetTooltip("Speak-to-AI: Offline Speech-to-Text")
 
 	// Create main menu items
-	tm.toggleItem = systray.AddMenuItem("🔴 Start Recording", "Start/Stop recording")
+	tm.toggleItem = systray.AddMenuItem(fmt.Sprintf("%s Start Recording", constants.IconRecording), "Start/Stop recording")
 
 	// Workflow notifications toggle
 	tm.audioItems["workflow_notifications"] = systray.AddMenuItem(
@@ -99,18 +101,18 @@ func (tm *TrayManager) onReady() {
 	systray.AddSeparator()
 
 	// Settings submenu
-	tm.settingsItem = systray.AddMenuItem("⚙️  Settings", "Application settings")
+	tm.settingsItem = systray.AddMenuItem(fmt.Sprintf("%s  Settings", constants.TraySettings), "Application settings")
 	tm.createSettingsSubmenus()
 
 	systray.AddSeparator()
 
 	// Config actions
-	tm.showConfigItem = systray.AddMenuItem("📄 Show Config File", "Open configuration file")
-	tm.reloadConfigItem = systray.AddMenuItem("🔄 Reload Config", "Reload configuration from file")
+	tm.showConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Show Config File", constants.TrayShowConfig), "Open configuration file")
+	tm.reloadConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Reset to Defaults", constants.IconConfig), "Reset all settings to default values")
 
 	systray.AddSeparator()
 
-	tm.exitItem = systray.AddMenuItem("❌ Quit", "Quit Speak-to-AI")
+	tm.exitItem = systray.AddMenuItem(fmt.Sprintf("%s Quit", constants.IconError), "Quit Speak-to-AI")
 
 	// Handle menu item clicks
 	go tm.handleMenuClicks()
@@ -151,10 +153,10 @@ func (tm *TrayManager) handleMenuClicks() {
 				}
 			}
 		case <-tm.reloadConfigItem.ClickedCh:
-			log.Println("Reload config clicked")
-			if tm.onReloadConfig != nil {
-				if err := tm.onReloadConfig(); err != nil {
-					log.Printf("Error reloading config: %v", err)
+			log.Println("Reset to defaults clicked")
+			if tm.onResetToDefaults != nil {
+				if err := tm.onResetToDefaults(); err != nil {
+					log.Printf("Error resetting to defaults: %v", err)
 				}
 			}
 		case <-tm.exitItem.ClickedCh:
@@ -182,11 +184,11 @@ func (tm *TrayManager) SetRecordingState(isRecording bool) {
 	if isRecording {
 		systray.SetIcon(tm.iconMicOn)
 		systray.SetTooltip("Speak-to-AI: Recording...")
-		tm.toggleItem.SetTitle("🔴 Stop Recording")
+		tm.toggleItem.SetTitle(fmt.Sprintf("%s Stop Recording", constants.IconStop))
 	} else {
 		systray.SetIcon(tm.iconMicOff)
 		systray.SetTooltip("Speak-to-AI: Ready")
-		tm.toggleItem.SetTitle("🔴 Start Recording")
+		tm.toggleItem.SetTitle(fmt.Sprintf("%s Start Recording", constants.IconRecording))
 	}
 }
 

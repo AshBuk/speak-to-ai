@@ -35,7 +35,7 @@ type Config struct {
 		SwitchModel     string `yaml:"switch_model"`
 		ToggleVAD       string `yaml:"toggle_vad"`
 		ShowConfig      string `yaml:"show_config"`
-		ReloadConfig    string `yaml:"reload_config"`
+		ResetToDefaults string `yaml:"reset_to_defaults"`
 	} `yaml:"hotkeys"`
 
 	// Audio recording settings

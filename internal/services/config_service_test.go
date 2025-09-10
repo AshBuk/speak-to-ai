@@ -238,12 +238,32 @@ func TestConfigService(t *testing.T) {
 		}
 	})
 
-	t.Run("ReloadConfig_NoPath", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "")
+	t.Run("ResetToDefaults", func(t *testing.T) {
+		// Create temp config file
+		tempFile, err := os.CreateTemp("", "test-config-*.yaml")
+		if err != nil {
+			t.Fatalf("Failed to create temp file: %v", err)
+		}
+		defer os.Remove(tempFile.Name())
+		tempFile.Close()
 
-		err := service.ReloadConfig()
-		if err == nil {
-			t.Error("ReloadConfig should fail when no config file path is set")
+		service := NewConfigService(mockLogger, testConfig, tempFile.Name())
+
+		// Modify some settings first
+		service.config.General.Language = "fr"
+		service.config.Audio.EnableVAD = true
+
+		err = service.ResetToDefaults()
+		if err != nil {
+			t.Errorf("ResetToDefaults failed: %v", err)
+		}
+
+		// Verify settings were reset to defaults
+		if service.config.General.Language != "auto" {
+			t.Error("Language should be reset to default 'auto'")
+		}
+		if service.config.Audio.EnableVAD != false {
+			t.Error("EnableVAD should be reset to default false")
 		}
 	})
 

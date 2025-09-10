@@ -21,6 +21,8 @@ func TestUIConstants(t *testing.T) {
 			{"IconProcessing", IconProcessing},
 			{"IconWarning", IconWarning},
 			{"IconDownload", IconDownload},
+			{"IconConfig", IconConfig},
+			{"IconStop", IconStop},
 		}
 
 		for _, test := range iconTests {
@@ -73,9 +75,6 @@ func TestUIConstants(t *testing.T) {
 			{"NotifyError", NotifyError},
 			{"NotifySuccess", NotifySuccess},
 			{"NotifyNoSpeech", NotifyNoSpeech},
-			{"NotifyCancelled", NotifyCancelled},
-			{"NotifyClipboard", NotifyClipboard},
-			{"NotifyOutputFail", NotifyOutputFail},
 		}
 
 		for _, test := range titleTests {
@@ -130,6 +129,8 @@ func TestConstantUniqueness(t *testing.T) {
 		"IconProcessing": IconProcessing,
 		"IconWarning":    IconWarning,
 		"IconDownload":   IconDownload,
+		"IconConfig":     IconConfig,
+		"IconStop":       IconStop,
 	}
 
 	// Icons should be unique (different emojis)

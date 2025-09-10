@@ -63,10 +63,10 @@ func (a *App) handleShowConfig() error {
 	return a.Services.UI.ShowConfigFile()
 }
 
-// handleReloadConfig handles config reload hotkey
-func (a *App) handleReloadConfig() error {
+// handleResetToDefaults handles reset to defaults hotkey
+func (a *App) handleResetToDefaults() error {
 	if a.Services == nil || a.Services.Config == nil {
 		return fmt.Errorf("config service not available")
 	}
-	return a.Services.Config.ReloadConfig()
+	return a.Services.Config.ResetToDefaults()
 }
