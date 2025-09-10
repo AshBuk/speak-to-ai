@@ -132,7 +132,14 @@ func (as *AudioService) HandleStopRecording() error {
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
 
-		return fmt.Errorf("failed to stop recording: %w", err)
+		// Ensure state is reset so the hotkey toggle can recover
+		as.isRecording = false
+		if as.ui != nil {
+			as.ui.SetRecordingState(false)
+		}
+
+		// Swallow error to make stop idempotent and avoid being stuck
+		return nil
 	}
 
 	as.isRecording = false
@@ -387,7 +394,6 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetSuccess("Transcription complete")
-		as.ui.ShowNotification("Transcription Complete", fmt.Sprintf("Result: %s", sanitized))
 	}
 }
 

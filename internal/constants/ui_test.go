@@ -21,7 +21,6 @@ func TestUIConstants(t *testing.T) {
 			{"IconProcessing", IconProcessing},
 			{"IconWarning", IconWarning},
 			{"IconDownload", IconDownload},
-			{"IconInfo", IconInfo},
 		}
 
 		for _, test := range iconTests {
@@ -131,7 +130,6 @@ func TestConstantUniqueness(t *testing.T) {
 		"IconProcessing": IconProcessing,
 		"IconWarning":    IconWarning,
 		"IconDownload":   IconDownload,
-		"IconInfo":       IconInfo,
 	}
 
 	// Icons should be unique (different emojis)

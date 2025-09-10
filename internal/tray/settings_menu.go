@@ -150,6 +150,10 @@ func (tm *TrayManager) populateSettingsMenus() {
 					if err := tm.onToggleWorkflowNotify(); err != nil {
 						log.Printf("Error toggling workflow notifications: %v", err)
 					}
+					// Reflect new state in UI using updated config
+					if tm.config != nil {
+						tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
+					}
 				}
 			}
 		}()

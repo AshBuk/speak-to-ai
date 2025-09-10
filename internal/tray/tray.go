@@ -69,6 +69,13 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 	}
 }
 
+// SetCoreActions allows wiring core menu callbacks after construction
+func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onReloadConfig func() error) {
+	tm.onToggle = onToggle
+	tm.onShowConfig = onShowConfig
+	tm.onReloadConfig = onReloadConfig
+}
+
 // Start initializes and starts the system tray icon and menu
 func (tm *TrayManager) Start() {
 	go systray.Run(tm.onReady, tm.onExit)
@@ -107,6 +114,10 @@ func (tm *TrayManager) onReady() {
 
 	// Handle menu item clicks
 	go tm.handleMenuClicks()
+
+	// Apply the current recording state once menu items are ready
+	// This avoids missing early state updates before systray initialization
+	tm.SetRecordingState(tm.isRecording)
 }
 
 // createSettingsSubmenus is implemented in settings_menu.go
@@ -163,6 +174,11 @@ func (tm *TrayManager) handleMenuClicks() {
 func (tm *TrayManager) SetRecordingState(isRecording bool) {
 	tm.isRecording = isRecording
 
+	// Guard against early calls before onReady creates menu items
+	if tm.toggleItem == nil {
+		return
+	}
+
 	if isRecording {
 		systray.SetIcon(tm.iconMicOn)
 		systray.SetTooltip("Speak-to-AI: Recording...")
@@ -188,6 +204,11 @@ func (tm *TrayManager) Stop() {
 func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
 	tm.onSelectRecorder = onSelectRecorder
 	tm.onTestRecording = onTestRecording
+}
+
+// SetExitAction allows overriding the exit callback (useful once services are wired)
+func (tm *TrayManager) SetExitAction(onExit func()) {
+	tm.onExit = onExit
 }
 
 // SetSettingsActions sets callbacks for general settings

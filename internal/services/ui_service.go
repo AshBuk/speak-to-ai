@@ -5,6 +5,9 @@ package services
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -106,6 +109,14 @@ func (us *UIService) SetSuccess(message string) {
 func (us *UIService) ShowConfigFile() error {
 	us.logger.Info("Showing config file...")
 
+	// Try to open config file if possible
+	if path, ok := us.getConfigPath(); ok {
+		// Prefer xdg-open, fallback to gio open
+		if err := us.runCommand("xdg-open", path); err != nil {
+			_ = us.runCommand("gio", append([]string{"open"}, path)...)
+		}
+	}
+
 	if us.notifyManager != nil {
 		if err := us.sendNotification("Configuration", "Config file location copied to clipboard", "preferences-desktop"); err != nil {
 			us.logger.Error("Failed to show config notification: %v", err)
@@ -114,6 +125,32 @@ func (us *UIService) ShowConfigFile() error {
 	}
 
 	return nil
+}
+
+// getConfigPath retrieves the effective config file path
+func (us *UIService) getConfigPath() (string, bool) {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return "", false
+	}
+	appImagePath := filepath.Join(home, ".config", "speak-to-ai", "config.yaml")
+	flatpakPath := filepath.Join(home, ".var", "app", "io.github.ashbuk.speak-to-ai", "config", "speak-to-ai", "config.yaml")
+
+	// Prefer existing file
+	if _, err := os.Stat(appImagePath); err == nil {
+		return appImagePath, true
+	}
+	if _, err := os.Stat(flatpakPath); err == nil {
+		return flatpakPath, true
+	}
+	// Fallback to default AppImage path even if not present (opener will show dialog)
+	return appImagePath, true
+}
+
+// runCommand executes a desktop opener safely
+func (us *UIService) runCommand(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	return cmd.Start()
 }
 
 // sendNotification is a helper method for sending notifications
@@ -133,9 +170,9 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 	case "Transcription Complete", constants.NotifySuccess:
 		return us.notifyManager.NotifyTranscriptionComplete()
 	default:
-		// Generic notification - use a simple approach
+		// Generic notification - show to user
 		us.logger.Info("Notification: %s - %s", title, message)
-		return nil
+		return us.notifyManager.ShowNotification(title, message)
 	}
 }
 

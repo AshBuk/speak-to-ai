@@ -61,6 +61,20 @@ func (tm *MockTrayManager) Stop() {
 	log.Println("Mock tray stopped")
 }
 
+// SetExitAction sets the callback invoked when Quit is clicked (mock implementation)
+func (tm *MockTrayManager) SetExitAction(onExit func()) {
+	tm.onExit = onExit
+	log.Println("Mock tray: exit action set")
+}
+
+// SetCoreActions sets core callbacks (mock implementation)
+func (tm *MockTrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onReloadConfig func() error) {
+	tm.onToggle = onToggle
+	tm.onShowConfig = onShowConfig
+	tm.onReloadConfig = onReloadConfig
+	log.Println("Mock tray: core actions set")
+}
+
 // SetAudioActions sets callbacks for audio-related actions (mock implementation)
 func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
 	tm.onSelectRecorder = onSelectRecorder

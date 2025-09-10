@@ -5,7 +5,10 @@ package services
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"syscall"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -87,6 +90,16 @@ func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
 	ioService := sf.createIOService(components.OutputManager, components.WebSocketServer)
 	container.IO = ioService
 
+	// Wire tray callbacks to services
+	sf.wireTrayCallbacks(container, components)
+	// Ensure Quit exits app cleanly
+	if components.TrayManager != nil {
+		components.TrayManager.SetExitAction(func() {
+			// Send SIGTERM to trigger App shutdown flow and defers
+			_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
+		})
+	}
+
 	return container, nil
 }
 
@@ -161,6 +174,10 @@ func (sf *ServiceFactory) initializeComponents() (*Components, error) {
 
 	// Initialize tray manager
 	components.TrayManager = sf.createTrayManager()
+	// Start tray manager (no-op in mock). Ensures systray is initialized early.
+	if components.TrayManager != nil {
+		components.TrayManager.Start()
+	}
 
 	// Initialize notification manager
 	components.NotifyManager = notify.NewNotificationManager("Speak-to-AI", sf.config.Config)
@@ -323,4 +340,107 @@ func (sf *ServiceFactory) SetupServiceDependencies(container *ServiceContainer) 
 	}
 
 	// Additional cross-dependencies can be set up here as needed
+}
+
+// wireTrayCallbacks connects tray menu actions to real services
+func (sf *ServiceFactory) wireTrayCallbacks(container *ServiceContainer, components *Components) {
+	if components == nil || components.TrayManager == nil {
+		return
+	}
+
+	// Core actions (toggle, show config, reload config)
+	components.TrayManager.SetCoreActions(
+		func() error { // toggle
+			if container == nil || container.Audio == nil {
+				return fmt.Errorf("audio service not available")
+			}
+			if container.Audio.IsRecording() {
+				return container.Audio.HandleStopRecording()
+			}
+			return container.Audio.HandleStartRecording()
+		},
+		func() error { // show config
+			if container == nil || container.UI == nil {
+				return fmt.Errorf("UI service not available")
+			}
+			return container.UI.ShowConfigFile()
+		},
+		func() error { // reload config
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			return container.Config.ReloadConfig()
+		},
+	)
+
+	// Audio actions (recorder selection, test recording)
+	components.TrayManager.SetAudioActions(
+		func(method string) error {
+			// Update method and reinit on next start
+			sf.config.Config.Audio.RecordingMethod = method
+			if audioSvc, ok := container.Audio.(*AudioService); ok {
+				audioSvc.audioRecorderNeedsReinit = true
+			}
+			return nil
+		},
+		func() error { // test 3s recording
+			if container == nil || container.Audio == nil {
+				return fmt.Errorf("audio service not available")
+			}
+			if err := container.Audio.HandleStartRecording(); err != nil {
+				return err
+			}
+			go func() {
+				time.Sleep(3 * time.Second)
+				_ = container.Audio.HandleStopRecording()
+			}()
+			return nil
+		},
+	)
+
+	// Settings actions (VAD, language, model, notifications)
+	components.TrayManager.SetSettingsActions(
+		func(sensitivity string) error {
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			return container.Config.UpdateVADSensitivity(sensitivity)
+		},
+		func(language string) error {
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			return container.Config.UpdateLanguage(language)
+		},
+		func(modelType string) error {
+			if container == nil || container.Audio == nil || container.Config == nil {
+				return fmt.Errorf("services not available")
+			}
+			if err := container.Config.UpdateModelType(modelType); err != nil {
+				return err
+			}
+			return container.Audio.SwitchModel(modelType)
+		},
+		func() error {
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			if err := container.Config.ToggleWorkflowNotifications(); err != nil {
+				return err
+			}
+			// Inform user about new state
+			if container.UI != nil {
+				enabled := "disabled"
+				if cfg, ok := container.Config.(*ConfigService); ok && cfg != nil {
+					if c, ok2 := cfg.GetConfig().(*config.Config); ok2 && c != nil {
+						if c.Notifications.EnableWorkflowNotifications {
+							enabled = "enabled"
+						}
+					}
+				}
+				container.UI.ShowNotification("Workflow Notifications", "Now "+enabled)
+			}
+			return nil
+		},
+	)
 }

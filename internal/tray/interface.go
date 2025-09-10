@@ -11,6 +11,10 @@ type TrayManagerInterface interface {
 	SetRecordingState(isRecording bool)
 	SetTooltip(tooltip string)
 	UpdateSettings(config *config.Config)
+	// SetExitAction sets the callback invoked when Quit is clicked
+	SetExitAction(onExit func())
+	// SetCoreActions sets core menu callbacks (toggle, show config, reload config)
+	SetCoreActions(onToggle func() error, onShowConfig func() error, onReloadConfig func() error)
 	// SetAudioActions sets callbacks for audio-related actions
 	SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error)
 	// SetSettingsActions sets callbacks for general settings from tray (VAD, Language, Model, Notifications)

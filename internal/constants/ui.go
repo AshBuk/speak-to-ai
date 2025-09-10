@@ -11,7 +11,6 @@ const (
 	IconProcessing = "🔄"
 	IconWarning    = "⚠️"
 	IconDownload   = "📥"
-	IconInfo       = "ℹ️"
 )
 
 // Common UI Messages
