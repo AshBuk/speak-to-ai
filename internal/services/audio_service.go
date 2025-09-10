@@ -97,9 +97,10 @@ func (as *AudioService) HandleStartRecording() error {
 	}
 
 	// Choose recording mode
-	if as.config.Audio.EnableVAD && as.config.Audio.AutoStartStop {
-		return as.HandleStartVADRecording()
-	}
+	// TODO: Next feature - VAD implementation
+	// if as.config.Audio.EnableVAD && as.config.Audio.AutoStartStop {
+	//	return as.HandleStartVADRecording()
+	// }
 
 	if as.config.Audio.EnableStreaming && as.streamingEngine != nil {
 		return as.HandleStartStreamingRecording()
@@ -215,14 +216,15 @@ func (as *AudioService) HandleStreamingResult(text string, isFinal bool) {
 	}
 }
 
+// TODO: Next feature - VAD implementation
 // HandleStartVADRecording starts VAD-based recording
-func (as *AudioService) HandleStartVADRecording() error {
-	as.logger.Info("Starting VAD recording...")
-
-	// VAD implementation would go here
-	// For now, fallback to standard recording
-	return as.startStandardRecording()
-}
+// func (as *AudioService) HandleStartVADRecording() error {
+//	as.logger.Info("Starting VAD recording...")
+//
+//	// VAD implementation would go here
+//	// For now, fallback to standard recording
+//	return as.startStandardRecording()
+// }
 
 // EnsureModelAvailable ensures whisper model is ready
 func (as *AudioService) EnsureModelAvailable() error {

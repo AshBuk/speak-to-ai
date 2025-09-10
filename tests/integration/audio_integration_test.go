@@ -146,8 +146,9 @@ func TestAudioStreamingIntegration(t *testing.T) {
 				t.Logf("Speech detected in chunk %d", speechCount)
 				return nil
 			},
-			UseVAD:         true,
-			VADSensitivity: processing.VADMedium,
+			// TODO: Next feature - VAD implementation
+			// UseVAD:         true,
+			// VADSensitivity: processing.VADMedium,
 		})
 
 		// Start streaming

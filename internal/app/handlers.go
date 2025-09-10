@@ -32,12 +32,13 @@ func (a *App) handleToggleStreaming() error {
 }
 
 // handleToggleVAD handles VAD toggle hotkey
-func (a *App) handleToggleVAD() error {
-	if a.Services == nil || a.Services.Config == nil {
-		return fmt.Errorf("config service not available")
-	}
-	return a.Services.Config.ToggleVAD()
-}
+// TODO: Next feature - VAD implementation
+// func (a *App) handleToggleVAD() error {
+//	if a.Services == nil || a.Services.Config == nil {
+//		return fmt.Errorf("config service not available")
+//	}
+//	return a.Services.Config.ToggleVAD()
+// }
 
 // handleSwitchModel handles model switching hotkey
 func (a *App) handleSwitchModel() error {

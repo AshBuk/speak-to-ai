@@ -17,8 +17,9 @@ type AudioServiceInterface interface {
 	HandleStartStreamingRecording() error
 	HandleStreamingResult(text string, isFinal bool)
 
+	// TODO: Next feature - VAD implementation
 	// VAD (Voice Activity Detection) operations
-	HandleStartVADRecording() error
+	// HandleStartVADRecording() error
 
 	// Model management
 	EnsureModelAvailable() error
@@ -76,12 +77,14 @@ type ConfigServiceInterface interface {
 	GetConfig() interface{}
 
 	// Settings updates
-	UpdateVADSensitivity(sensitivity string) error
+	// TODO: Next feature - VAD implementation
+	// UpdateVADSensitivity(sensitivity string) error
 	UpdateLanguage(language string) error
 	UpdateModelType(modelType string) error
 	ToggleWorkflowNotifications() error
 	ToggleStreaming() error
-	ToggleVAD() error
+	// TODO: Next feature - VAD implementation
+	// ToggleVAD() error
 	UpdateRecordingMethod(method string) error
 
 	// Cleanup

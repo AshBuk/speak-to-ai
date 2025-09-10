@@ -21,9 +21,10 @@ func TestConfigService(t *testing.T) {
 	testConfig := &models.Config{}
 	testConfig.General.Language = "en"
 	testConfig.General.ModelType = "base"
-	testConfig.Audio.VADSensitivity = "medium"
+	// TODO: Next feature - VAD implementation
+	// testConfig.Audio.VADSensitivity = "medium"
 	testConfig.Audio.EnableStreaming = false
-	testConfig.Audio.EnableVAD = false
+	// testConfig.Audio.EnableVAD = false
 	testConfig.Notifications.EnableWorkflowNotifications = true
 
 	t.Run("NewConfigService", func(t *testing.T) {
@@ -52,37 +53,37 @@ func TestConfigService(t *testing.T) {
 		}
 	})
 
-	t.Run("UpdateVADSensitivity", func(t *testing.T) {
-		// Create temporary config file
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
-
-		// Create initial config file
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
-
-		service := NewConfigService(mockLogger, testConfig, configPath)
-
-		// Test valid sensitivity values
-		testCases := []string{"low", "medium", "high"}
-		for _, sensitivity := range testCases {
-			err := service.UpdateVADSensitivity(sensitivity)
-			if err != nil {
-				t.Errorf("UpdateVADSensitivity(%s) failed: %v", sensitivity, err)
-			}
-			if service.config.Audio.VADSensitivity != sensitivity {
-				t.Errorf("VAD sensitivity not updated to %s", sensitivity)
-			}
-		}
-
-		// Test invalid sensitivity
-		err = service.UpdateVADSensitivity("invalid")
-		if err == nil {
-			t.Error("UpdateVADSensitivity should fail with invalid sensitivity")
-		}
-	})
+	// 	t.Run("UpdateVADSensitivity", func(t *testing.T) {
+	// 		// Create temporary config file
+	// 		tempDir := t.TempDir()
+	// 		configPath := filepath.Join(tempDir, "test_config.yaml")
+	//
+	// 		// Create initial config file
+	// 		err := config.SaveConfig(configPath, testConfig)
+	// 		if err != nil {
+	// 			t.Fatalf("Failed to create test config file: %v", err)
+	// 		}
+	//
+	// 		service := NewConfigService(mockLogger, testConfig, configPath)
+	//
+	// 		// Test valid sensitivity values
+	// 		testCases := []string{"low", "medium", "high"}
+	// 		for _, sensitivity := range testCases {
+	// 			err := service.UpdateVADSensitivity(sensitivity)
+	// 			if err != nil {
+	// 				t.Errorf("UpdateVADSensitivity(%s) failed: %v", sensitivity, err)
+	// 			}
+	// 			if service.config.Audio.VADSensitivity != sensitivity {
+	// 				t.Errorf("VAD sensitivity not updated to %s", sensitivity)
+	// 			}
+	// 		}
+	//
+	// 		// Test invalid sensitivity
+	// 		err = service.UpdateVADSensitivity("invalid")
+	// 		if err == nil {
+	// 			t.Error("UpdateVADSensitivity should fail with invalid sensitivity")
+	// 		}
+	// 	})
 
 	t.Run("UpdateLanguage", func(t *testing.T) {
 		tempDir := t.TempDir()
@@ -191,31 +192,31 @@ func TestConfigService(t *testing.T) {
 		}
 	})
 
-	t.Run("ToggleVAD", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
-
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
-
-		service := NewConfigService(mockLogger, testConfig, configPath)
-
-		// Initial state should be false
-		if service.config.Audio.EnableVAD {
-			t.Error("Initial VAD state should be false")
-		}
-
-		// Toggle to true
-		err = service.ToggleVAD()
-		if err != nil {
-			t.Errorf("ToggleVAD failed: %v", err)
-		}
-		if !service.config.Audio.EnableVAD {
-			t.Error("VAD should be toggled to true")
-		}
-	})
+	// 	t.Run("ToggleVAD", func(t *testing.T) {
+	// 		tempDir := t.TempDir()
+	// 		configPath := filepath.Join(tempDir, "test_config.yaml")
+	//
+	// 		err := config.SaveConfig(configPath, testConfig)
+	// 		if err != nil {
+	// 			t.Fatalf("Failed to create test config file: %v", err)
+	// 		}
+	//
+	// 		service := NewConfigService(mockLogger, testConfig, configPath)
+	//
+	// 		// Initial state should be false
+	// 		if service.config.Audio.EnableVAD {
+	// 			t.Error("Initial VAD state should be false")
+	// 		}
+	//
+	// 		// Toggle to true
+	// 		err = service.ToggleVAD()
+	// 		if err != nil {
+	// 			t.Errorf("ToggleVAD failed: %v", err)
+	// 		}
+	// 		if !service.config.Audio.EnableVAD {
+	// 			t.Error("VAD should be toggled to true")
+	// 		}
+	// 	})
 
 	t.Run("LoadConfig", func(t *testing.T) {
 		service := NewConfigService(mockLogger, testConfig, "")
@@ -251,7 +252,8 @@ func TestConfigService(t *testing.T) {
 
 		// Modify some settings first
 		service.config.General.Language = "fr"
-		service.config.Audio.EnableVAD = true
+		// TODO: Next feature - VAD implementation
+		// service.config.Audio.EnableVAD = true
 
 		err = service.ResetToDefaults()
 		if err != nil {
@@ -262,9 +264,10 @@ func TestConfigService(t *testing.T) {
 		if service.config.General.Language != "auto" {
 			t.Error("Language should be reset to default 'auto'")
 		}
-		if service.config.Audio.EnableVAD != false {
-			t.Error("EnableVAD should be reset to default false")
-		}
+		// TODO: Next feature - VAD implementation
+		// if service.config.Audio.EnableVAD != false {
+		//	t.Error("EnableVAD should be reset to default false")
+		// }
 	})
 
 	t.Run("Shutdown", func(t *testing.T) {

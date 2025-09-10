@@ -85,14 +85,16 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 		},
 	)
 
-	// Settings actions (VAD, language, model, notifications)
+	// Settings actions (language, model, notifications)
+	// TODO: Next feature - VAD implementation
 	components.TrayManager.SetSettingsActions(
-		func(sensitivity string) error {
-			if container == nil || container.Config == nil {
-				return fmt.Errorf("config service not available")
-			}
-			return container.Config.UpdateVADSensitivity(sensitivity)
-		},
+		// func(sensitivity string) error {
+		//	if container == nil || container.Config == nil {
+		//		return fmt.Errorf("config service not available")
+		//	}
+		//	return container.Config.UpdateVADSensitivity(sensitivity)
+		// },
+		nil, // VAD sensitivity callback temporarily disabled
 		func(language string) error {
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")

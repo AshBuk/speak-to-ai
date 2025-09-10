@@ -130,7 +130,8 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	tm.config = config
 	// The helpers gracefully no-op if items are not yet created
 	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
-	tm.updateVADRadioUI(config.Audio.VADSensitivity)
+	// TODO: Next feature - VAD implementation
+	// tm.updateVADRadioUI(config.Audio.VADSensitivity)
 	tm.updateLanguageRadioUI(config.General.Language)
 	tm.updateModelRadioUI(config.General.ModelType)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)

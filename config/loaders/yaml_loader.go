@@ -76,7 +76,8 @@ func SetDefaultConfig(config *models.Config) {
 	config.Hotkeys.StopRecording = "ctrl+alt+r"      // Same combination for start/stop
 	config.Hotkeys.ToggleStreaming = "altgr+shift+s" // AltGr + Shift + S
 	config.Hotkeys.SwitchModel = "altgr+shift+m"     // AltGr + Shift + M
-	config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
+	// TODO: Next feature - VAD implementation
+	// config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
 	config.Hotkeys.ShowConfig = "altgr+shift+c"      // AltGr + Shift + C
 	config.Hotkeys.ResetToDefaults = "altgr+shift+r" // AltGr + Shift + R
 
@@ -87,11 +88,12 @@ func SetDefaultConfig(config *models.Config) {
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0 // No expected duration by default
 	config.Audio.EnableStreaming = false
-	config.Audio.MaxRecordingTime = 300    // 5 minutes max by default
-	config.Audio.EnableVAD = false         // VAD disabled by default for compatibility
-	config.Audio.VADSensitivity = "medium" // Balanced VAD sensitivity
-	config.Audio.AutoStartStop = false     // Manual control by default
-	config.Audio.StreamingBufferMs = 1000  // 1 second streaming buffer
+	config.Audio.MaxRecordingTime = 300 // 5 minutes max by default
+	// TODO: Next feature - VAD implementation
+	// config.Audio.EnableVAD = false         // VAD disabled by default for compatibility
+	// config.Audio.VADSensitivity = "medium" // Balanced VAD sensitivity
+	// config.Audio.AutoStartStop = false     // Manual control by default
+	config.Audio.StreamingBufferMs = 1000 // 1 second streaming buffer
 
 	// Output settings
 	config.Output.DefaultMode = models.OutputModeActiveWindow

@@ -222,10 +222,11 @@ func TestApp_HandlerMethods(t *testing.T) {
 			t.Error("handleToggleStreaming should fail with nil services")
 		}
 
-		err = app.handleToggleVAD()
-		if err == nil {
-			t.Error("handleToggleVAD should fail with nil services")
-		}
+		// TODO: Next feature - VAD implementation
+		// err = app.handleToggleVAD()
+		// if err == nil {
+		//	t.Error("handleToggleVAD should fail with nil services")
+		// }
 
 		err = app.handleSwitchModel()
 		if err == nil {
@@ -262,10 +263,11 @@ func TestApp_HandlerMethods(t *testing.T) {
 			t.Error("handleToggleStreaming should fail with nil config service")
 		}
 
-		err = app.handleToggleVAD()
-		if err == nil {
-			t.Error("handleToggleVAD should fail with nil config service")
-		}
+		// TODO: Next feature - VAD implementation
+		// err = app.handleToggleVAD()
+		// if err == nil {
+		//	t.Error("handleToggleVAD should fail with nil config service")
+		// }
 
 		err = app.handleSwitchModel()
 		if err == nil {

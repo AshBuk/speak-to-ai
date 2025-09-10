@@ -22,10 +22,12 @@ func (m *MockAudioService) IsRecording() bool                               { re
 func (m *MockAudioService) GetLastTranscript() string                       { return "" }
 func (m *MockAudioService) HandleStartStreamingRecording() error            { return nil }
 func (m *MockAudioService) HandleStreamingResult(text string, isFinal bool) {}
-func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
-func (m *MockAudioService) EnsureModelAvailable() error                     { return nil }
-func (m *MockAudioService) EnsureAudioRecorderAvailable() error             { return nil }
-func (m *MockAudioService) SwitchModel(modelType string) error              { return nil }
+
+// TODO: Next feature - VAD implementation
+// func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
+func (m *MockAudioService) EnsureModelAvailable() error         { return nil }
+func (m *MockAudioService) EnsureAudioRecorderAvailable() error { return nil }
+func (m *MockAudioService) SwitchModel(modelType string) error  { return nil }
 
 // Test helper methods
 func (m *MockAudioService) WasShutdownCalled() bool {
@@ -103,17 +105,21 @@ func (m *MockConfigService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockConfigService) LoadConfig(configFile string) error            { return nil }
-func (m *MockConfigService) SaveConfig() error                             { return nil }
-func (m *MockConfigService) ResetToDefaults() error                        { return nil }
-func (m *MockConfigService) GetConfig() interface{}                        { return nil }
-func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
-func (m *MockConfigService) UpdateLanguage(language string) error          { return nil }
-func (m *MockConfigService) UpdateModelType(modelType string) error        { return nil }
-func (m *MockConfigService) ToggleWorkflowNotifications() error            { return nil }
-func (m *MockConfigService) ToggleStreaming() error                        { return nil }
-func (m *MockConfigService) ToggleVAD() error                              { return nil }
-func (m *MockConfigService) UpdateRecordingMethod(method string) error     { return nil }
+func (m *MockConfigService) LoadConfig(configFile string) error { return nil }
+func (m *MockConfigService) SaveConfig() error                  { return nil }
+func (m *MockConfigService) ResetToDefaults() error             { return nil }
+func (m *MockConfigService) GetConfig() interface{}             { return nil }
+
+// TODO: Next feature - VAD implementation
+// func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
+func (m *MockConfigService) UpdateLanguage(language string) error   { return nil }
+func (m *MockConfigService) UpdateModelType(modelType string) error { return nil }
+func (m *MockConfigService) ToggleWorkflowNotifications() error     { return nil }
+func (m *MockConfigService) ToggleStreaming() error                 { return nil }
+
+// TODO: Next feature - VAD implementation
+// func (m *MockConfigService) ToggleVAD() error                              { return nil }
+func (m *MockConfigService) UpdateRecordingMethod(method string) error { return nil }
 
 // Test helper methods
 func (m *MockConfigService) WasShutdownCalled() bool {

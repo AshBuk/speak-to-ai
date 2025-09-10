@@ -62,7 +62,8 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Reflect current selections
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
-	tm.updateVADRadioUI(tm.config.Audio.VADSensitivity)
+	// TODO: Next feature - VAD implementation
+	// tm.updateVADRadioUI(tm.config.Audio.VADSensitivity)
 
 	// Handle clicks for recorder selection
 	go func() {

@@ -5,7 +5,6 @@ package services
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
@@ -90,31 +89,32 @@ func (cs *ConfigService) GetConfig() interface{} {
 	return cs.config
 }
 
+// TODO: Next feature - VAD implementation
 // UpdateVADSensitivity implements ConfigServiceInterface
-func (cs *ConfigService) UpdateVADSensitivity(sensitivity string) error {
-	cs.logger.Info("Updating VAD sensitivity to: %s", sensitivity)
-
-	s := strings.ToLower(sensitivity)
-	switch s {
-	case "low", "medium", "high":
-	default:
-		return fmt.Errorf("invalid VAD sensitivity: %s", sensitivity)
-	}
-
-	if cs.config.Audio.VADSensitivity == s {
-		return nil
-	}
-
-	old := cs.config.Audio.VADSensitivity
-	cs.config.Audio.VADSensitivity = s
-
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.Audio.VADSensitivity = old
-		return fmt.Errorf("failed to save config: %w", err)
-	}
-
-	return nil
-}
+// func (cs *ConfigService) UpdateVADSensitivity(sensitivity string) error {
+//	cs.logger.Info("Updating VAD sensitivity to: %s", sensitivity)
+//
+//	s := strings.ToLower(sensitivity)
+//	switch s {
+//	case "low", "medium", "high":
+//	default:
+//		return fmt.Errorf("invalid VAD sensitivity: %s", sensitivity)
+//	}
+//
+//	if cs.config.Audio.VADSensitivity == s {
+//		return nil
+//	}
+//
+//	old := cs.config.Audio.VADSensitivity
+//	cs.config.Audio.VADSensitivity = s
+//
+//	if err := cs.SaveConfig(); err != nil {
+//		cs.config.Audio.VADSensitivity = old
+//		return fmt.Errorf("failed to save config: %w", err)
+//	}
+//
+//	return nil
+// }
 
 // UpdateLanguage implements ConfigServiceInterface
 func (cs *ConfigService) UpdateLanguage(language string) error {
@@ -172,14 +172,15 @@ func (cs *ConfigService) ToggleStreaming() error {
 	return cs.SaveConfig()
 }
 
+// TODO: Next feature - VAD implementation
 // ToggleVAD implements ConfigServiceInterface
-func (cs *ConfigService) ToggleVAD() error {
-	cs.logger.Info("Toggling VAD mode")
-
-	cs.config.Audio.EnableVAD = !cs.config.Audio.EnableVAD
-
-	return cs.SaveConfig()
-}
+// func (cs *ConfigService) ToggleVAD() error {
+//	cs.logger.Info("Toggling VAD mode")
+//
+//	cs.config.Audio.EnableVAD = !cs.config.Audio.EnableVAD
+//
+//	return cs.SaveConfig()
+// }
 
 // UpdateRecordingMethod updates and persists the audio recording method
 func (cs *ConfigService) UpdateRecordingMethod(method string) error {
