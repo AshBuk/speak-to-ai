@@ -52,7 +52,10 @@ The application follows a **modular daemon architecture** with clear separation 
 
 ### **Service Layer** (`internal/services/`)
 - **`interfaces.go`**: Service contracts and ServiceContainer definition
-- **`factory.go`**: Service factory with dependency injection
+- **`component_factory.go`**: Components initialization (recorder, whisper, output, hotkeys, tray, notify, websocket)
+- **`service_assembler.go`**: Services assembly and cross-dependencies
+- **`callback_wirer.go`**: Tray menu callbacks wiring
+- **`factory.go`**: Facade delegating to ComponentFactory, ServiceAssembler, CallbackWirer
 - **`audio_service.go`**: Audio recording, Whisper transcription, streaming, VAD
 - **`ui_service.go`**: System tray, notifications, UI state
 - **`io_service.go`**: Text output, WebSocket server

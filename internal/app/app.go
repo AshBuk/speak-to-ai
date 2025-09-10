@@ -116,9 +116,6 @@ func (a *App) initializeServices(cfg *config.Config, modelPath string, cfgFilePa
 		return fmt.Errorf("failed to create services: %w", err)
 	}
 
-	// Set up cross-dependencies
-	factory.SetupServiceDependencies(serviceContainer)
-
 	a.Services = serviceContainer
 
 	// Set up hotkey callbacks

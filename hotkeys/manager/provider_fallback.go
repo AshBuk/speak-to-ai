@@ -40,21 +40,26 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
 	}
 
-	// Register additional hotkeys
+	// Register additional hotkeys (action -> configured hotkey string)
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
-	for hotkey, action := range h.hotkeyActions {
-		hk := hotkey
+	for actionName, action := range h.hotkeyActions {
+		hk := h.config.GetActionHotkey(actionName)
+		if strings.TrimSpace(hk) == "" {
+			// Skip actions without configured hotkey
+			continue
+		}
+
 		act := action
 		if err := provider.RegisterHotkey(hk, func() error {
-			log.Printf("Custom hotkey detected: %s", hk)
+			log.Printf("Custom hotkey detected: %s (%s)", actionName, hk)
 			if err := act(); err != nil {
-				log.Printf("Error executing hotkey action for %s: %v", hk, err)
+				log.Printf("Error executing hotkey action for %s: %v", actionName, err)
 				return err
 			}
 			return nil
 		}); err != nil {
-			return fmt.Errorf("failed to register hotkey %s: %w", hk, err)
+			return fmt.Errorf("failed to register hotkey %s for action %s: %w", hk, actionName, err)
 		}
 	}
 
