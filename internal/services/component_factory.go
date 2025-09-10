@@ -106,6 +106,7 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 	// Start tray manager (no-op in mock). Ensures systray is initialized early.
 	if components.TrayManager != nil {
 		components.TrayManager.Start()
+		components.TrayManager.UpdateSettings(cf.config.Config)
 	}
 
 	// Initialize notification manager

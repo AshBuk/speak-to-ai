@@ -51,6 +51,7 @@ func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 func (sa *ServiceAssembler) SetupDependencies(container *ServiceContainer) {
 	if audioSvc, ok := container.Audio.(*AudioService); ok {
 		audioSvc.SetDependencies(container.UI, container.IO)
+		audioSvc.SetConfig(container.Config)
 	}
 }
 

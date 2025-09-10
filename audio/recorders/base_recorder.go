@@ -396,6 +396,21 @@ func (b *BaseRecorder) StopProcess() error {
 		time.Sleep(100 * time.Millisecond)
 	}
 
+	// Final ensure the process is reaped without blocking indefinitely
+	if b.cmd != nil && b.cmd.Process != nil {
+		finalDone := make(chan error, 1)
+		go func() { finalDone <- b.waitForProcess() }()
+		select {
+		case <-finalDone:
+		case <-time.After(300 * time.Millisecond):
+			_ = b.cmd.Process.Signal(syscall.SIGKILL)
+			select {
+			case <-finalDone:
+			case <-time.After(200 * time.Millisecond):
+			}
+		}
+	}
+
 	// Clean up process state after termination
 	b.cmd = nil
 	b.cancel = nil

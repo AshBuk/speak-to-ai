@@ -43,7 +43,7 @@ type Config struct {
 		Device            string `yaml:"device"`
 		SampleRate        int    `yaml:"sample_rate"`
 		Format            string `yaml:"format"`
-		RecordingMethod   string `yaml:"recording_method"`    // 'arecord', 'ffmpeg', 'go-native'
+		RecordingMethod   string `yaml:"recording_method"`    // 'arecord', 'ffmpeg'
 		ExpectedDuration  int    `yaml:"expected_duration"`   // Expected recording duration in seconds
 		EnableStreaming   bool   `yaml:"enable_streaming"`    // Whether to enable streaming transcription
 		MaxRecordingTime  int    `yaml:"max_recording_time"`  // Max recording time in seconds

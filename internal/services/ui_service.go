@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
@@ -57,6 +58,13 @@ func (us *UIService) ShowNotification(title, message string) {
 		if err := us.sendNotification(title, message, "dialog-information"); err != nil {
 			us.logger.Warning("Failed to show notification: %v", err)
 		}
+	}
+}
+
+// UpdateSettings updates tray UI with current configuration
+func (us *UIService) UpdateSettings(cfg *config.Config) {
+	if us.trayManager != nil {
+		us.trayManager.UpdateSettings(cfg)
 	}
 }
 

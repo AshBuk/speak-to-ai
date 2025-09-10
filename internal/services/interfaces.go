@@ -3,7 +3,7 @@
 
 package services
 
-// No imports needed for interfaces
+import "github.com/AshBuk/speak-to-ai/config"
 
 // AudioServiceInterface defines the contract for audio-related operations
 type AudioServiceInterface interface {
@@ -35,6 +35,7 @@ type UIServiceInterface interface {
 	SetRecordingState(isRecording bool)
 	SetTooltip(tooltip string)
 	ShowNotification(title, message string)
+	UpdateSettings(config *config.Config)
 
 	// State updates
 	UpdateRecordingUI(isRecording bool, level float64)
@@ -81,6 +82,7 @@ type ConfigServiceInterface interface {
 	ToggleWorkflowNotifications() error
 	ToggleStreaming() error
 	ToggleVAD() error
+	UpdateRecordingMethod(method string) error
 
 	// Cleanup
 	Shutdown() error

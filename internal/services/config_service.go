@@ -181,6 +181,29 @@ func (cs *ConfigService) ToggleVAD() error {
 	return cs.SaveConfig()
 }
 
+// UpdateRecordingMethod updates and persists the audio recording method
+func (cs *ConfigService) UpdateRecordingMethod(method string) error {
+	cs.logger.Info("Updating recording method to: %s", method)
+
+	if method != "arecord" && method != "ffmpeg" {
+		return fmt.Errorf("invalid recording method: %s", method)
+	}
+
+	if cs.config.Audio.RecordingMethod == method {
+		return nil
+	}
+
+	old := cs.config.Audio.RecordingMethod
+	cs.config.Audio.RecordingMethod = method
+
+	if err := cs.SaveConfig(); err != nil {
+		cs.config.Audio.RecordingMethod = old
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return nil
+}
+
 // Shutdown implements ConfigServiceInterface
 func (cs *ConfigService) Shutdown() error {
 	// Save final configuration state

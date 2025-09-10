@@ -38,8 +38,9 @@ type AudioService struct {
 	cancel context.CancelFunc
 
 	// Dependencies
-	ui UIServiceInterface
-	io IOServiceInterface
+	ui  UIServiceInterface
+	io  IOServiceInterface
+	cfg ConfigServiceInterface
 }
 
 // NewAudioService creates a new AudioService instance
@@ -70,6 +71,9 @@ func (as *AudioService) SetDependencies(ui UIServiceInterface, io IOServiceInter
 	as.ui = ui
 	as.io = io
 }
+
+// SetConfig sets the config service dependency
+func (as *AudioService) SetConfig(cfg ConfigServiceInterface) { as.cfg = cfg }
 
 // HandleStartRecording starts audio recording
 func (as *AudioService) HandleStartRecording() error {
@@ -123,11 +127,17 @@ func (as *AudioService) HandleStopRecording() error {
 
 		// Auto-fallback to arecord if using ffmpeg
 		if as.config.Audio.RecordingMethod == "ffmpeg" {
+			// Persist change via ConfigService if available
+			if as.cfg != nil {
+				_ = as.cfg.UpdateRecordingMethod("arecord")
+			}
 			as.config.Audio.RecordingMethod = "arecord"
 			as.audioRecorderNeedsReinit = true
 
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
+				// Refresh tray to reflect new method
+				as.ui.UpdateSettings(as.config)
 			}
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}

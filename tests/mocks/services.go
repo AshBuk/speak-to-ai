@@ -3,6 +3,8 @@
 
 package mocks
 
+import "github.com/AshBuk/speak-to-ai/config"
+
 // MockAudioService implements AudioServiceInterface for testing
 type MockAudioService struct {
 	shutdownCalled bool
@@ -52,6 +54,7 @@ func (m *MockUIService) UpdateRecordingUI(isRecording bool, level float64) {}
 func (m *MockUIService) SetError(message string)                           {}
 func (m *MockUIService) SetSuccess(message string)                         {}
 func (m *MockUIService) ShowConfigFile() error                             { return nil }
+func (m *MockUIService) UpdateSettings(cfg *config.Config)                 {}
 
 // Test helper methods
 func (m *MockUIService) WasShutdownCalled() bool {
@@ -110,6 +113,7 @@ func (m *MockConfigService) UpdateModelType(modelType string) error        { ret
 func (m *MockConfigService) ToggleWorkflowNotifications() error            { return nil }
 func (m *MockConfigService) ToggleStreaming() error                        { return nil }
 func (m *MockConfigService) ToggleVAD() error                              { return nil }
+func (m *MockConfigService) UpdateRecordingMethod(method string) error     { return nil }
 
 // Test helper methods
 func (m *MockConfigService) WasShutdownCalled() bool {

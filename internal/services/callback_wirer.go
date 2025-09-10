@@ -50,14 +50,23 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 	// Audio actions (recorder selection, test recording)
 	components.TrayManager.SetAudioActions(
 		func(method string) error {
-			// Update method and reinit on next start
-			if cfgSvc, ok := container.Config.(*ConfigService); ok && cfgSvc != nil {
-				if cfg, ok2 := cfgSvc.GetConfig().(*config.Config); ok2 && cfg != nil {
-					cfg.Audio.RecordingMethod = method
-				}
+			// Persist method and reinit on next start
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			if err := container.Config.UpdateRecordingMethod(method); err != nil {
+				return err
 			}
 			if audioSvc, ok := container.Audio.(*AudioService); ok {
 				audioSvc.audioRecorderNeedsReinit = true
+			}
+			// Update tray to reflect new selection immediately
+			if uiSvc, ok := container.UI.(*UIService); ok && uiSvc != nil {
+				if cfgSvc, ok2 := container.Config.(*ConfigService); ok2 && cfgSvc != nil {
+					if cfg, ok3 := cfgSvc.GetConfig().(*config.Config); ok3 && cfg != nil {
+						uiSvc.UpdateSettings(cfg)
+					}
+				}
 			}
 			return nil
 		},

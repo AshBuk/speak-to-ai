@@ -15,7 +15,8 @@ func SanitizeTranscript(input string) string {
 		return ""
 	}
 
-	tokenPattern := regexp.MustCompile(`(?i)\[[a-z0-9_\-]+\]`)
+	// Remove bracketed placeholders like [music], etc. (Unicode letters supported)
+	tokenPattern := regexp.MustCompile(`(?i)\[[\p{L}0-9_\-]+\]`)
 	cleaned := tokenPattern.ReplaceAllString(input, " ")
 
 	cleaned = strings.Join(strings.Fields(cleaned), " ")
