@@ -10,16 +10,24 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
+// HotkeyManagerInterface defines the interface for hotkey managers
+type HotkeyManagerInterface interface {
+	Start() error
+	Stop()
+	RegisterCallbacks(startRecording, stopRecording func() error)
+	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
+}
+
 // HotkeyService implements HotkeyServiceInterface
 type HotkeyService struct {
 	logger        logger.Logger
-	hotkeyManager *manager.HotkeyManager
+	hotkeyManager HotkeyManagerInterface
 }
 
 // NewHotkeyService creates a new HotkeyService instance
 func NewHotkeyService(
 	logger logger.Logger,
-	hotkeyManager *manager.HotkeyManager,
+	hotkeyManager HotkeyManagerInterface,
 ) *HotkeyService {
 	return &HotkeyService{
 		logger:        logger,
