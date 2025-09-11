@@ -53,6 +53,7 @@ type TrayManager struct {
 	onSelectLang           func(language string) error
 	onSelectModel          func(modelType string) error
 	onToggleWorkflowNotify func() error
+	onGetOutputTools       func() (clipboardTool, typeTool string)
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -227,4 +228,9 @@ func (tm *TrayManager) SetSettingsActions(
 	tm.onSelectLang = onSelectLanguage
 	tm.onSelectModel = onSelectModelType
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
+}
+
+// SetGetOutputToolsCallback sets the callback for getting actual output tool names
+func (tm *TrayManager) SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
+	tm.onGetOutputTools = callback
 }

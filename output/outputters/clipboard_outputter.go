@@ -72,3 +72,8 @@ func (o *ClipboardOutputter) TypeToActiveWindow(text string) error {
 	// Not supported by clipboard outputter
 	return fmt.Errorf("typing to active window not supported by clipboard outputter")
 }
+
+// GetToolNames returns the actual tool names being used
+func (o *ClipboardOutputter) GetToolNames() (clipboardTool, typeTool string) {
+	return o.clipboardTool, ""
+}

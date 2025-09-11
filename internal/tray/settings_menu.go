@@ -370,13 +370,20 @@ func (tm *TrayManager) updateOutputUI() {
 		modeItem.SetTitle("Mode: " + tm.config.Output.DefaultMode)
 	}
 
+	// Get actual tool names if callback is available
+	clipboardTool := tm.config.Output.ClipboardTool
+	typeTool := tm.config.Output.TypeTool
+	if tm.onGetOutputTools != nil {
+		clipboardTool, typeTool = tm.onGetOutputTools()
+	}
+
 	// Update clipboard tool display
 	if clipboardItem := tm.outputItems["clipboard_tool"]; clipboardItem != nil {
-		clipboardItem.SetTitle("Clipboard Tool: " + tm.config.Output.ClipboardTool)
+		clipboardItem.SetTitle("Clipboard Tool: " + clipboardTool)
 	}
 
 	// Update type tool display
 	if typeItem := tm.outputItems["type_tool"]; typeItem != nil {
-		typeItem.SetTitle("Type Tool: " + tm.config.Output.TypeTool)
+		typeItem.SetTitle("Type Tool: " + typeTool)
 	}
 }

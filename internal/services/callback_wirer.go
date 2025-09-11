@@ -133,6 +133,17 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 		},
 	)
 
+	// Set callback for getting actual output tool names
+	components.TrayManager.SetGetOutputToolsCallback(func() (clipboardTool, typeTool string) {
+		if container == nil || container.IO == nil {
+			return "unknown", "unknown"
+		}
+		if ioSvc, ok := container.IO.(*IOService); ok && ioSvc != nil {
+			return ioSvc.GetOutputToolNames()
+		}
+		return "unknown", "unknown"
+	})
+
 	// Ensure Quit exits app cleanly
 	components.TrayManager.SetExitAction(func() {
 		_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)

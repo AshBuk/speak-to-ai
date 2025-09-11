@@ -10,4 +10,7 @@ type Outputter interface {
 
 	// TypeToActiveWindow simulates typing in the currently active window
 	TypeToActiveWindow(text string) error
+
+	// GetToolNames returns the actual tool names being used
+	GetToolNames() (clipboardTool, typeTool string)
 }

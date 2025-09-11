@@ -146,6 +146,14 @@ func (ios *IOService) HandleTypingFallback(text string) error {
 	return nil
 }
 
+// GetOutputToolNames returns the actual tool names being used
+func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
+	if ios.outputManager == nil {
+		return "unknown", "unknown"
+	}
+	return ios.outputManager.GetToolNames()
+}
+
 // Shutdown implements IOServiceInterface
 func (ios *IOService) Shutdown() error {
 	var lastErr error
