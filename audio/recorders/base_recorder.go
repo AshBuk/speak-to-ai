@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -194,7 +193,7 @@ func (b *BaseRecorder) monitorAudioLevel(reader io.Reader) {
 			n, err := reader.Read(buf)
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Error reading audio data: %v", err)
+					b.logger.Error("Error reading audio data: %v", err)
 				}
 				return
 			}
@@ -248,13 +247,13 @@ func (b *BaseRecorder) StopProcess() error {
 	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
-			log.Printf("Retry %d to stop recording process", i)
+			b.logger.Warning("Retry %d to stop recording process", i)
 		}
 
 		// Send SIGTERM first
 		err = b.cmd.Process.Signal(syscall.SIGTERM)
 		if err != nil {
-			log.Printf("Warning: failed to send SIGTERM: %v", err)
+			b.logger.Warning("Failed to send SIGTERM: %v", err)
 		}
 
 		// Wait for process with timeout
@@ -269,7 +268,7 @@ func (b *BaseRecorder) StopProcess() error {
 		case err := <-done:
 			waitDone = true
 			if err != nil {
-				log.Printf("Process exited with error: %v", err)
+				b.logger.Warning("Process exited with error: %v", err)
 			}
 		case <-time.After(500 * time.Millisecond):
 			// Timed out; escalate to SIGKILL on last attempt or continue loop
@@ -281,7 +280,7 @@ func (b *BaseRecorder) StopProcess() error {
 
 		// Escalate to SIGKILL
 		if killErr := b.cmd.Process.Signal(syscall.SIGKILL); killErr != nil {
-			log.Printf("Warning: failed to send SIGKILL: %v", killErr)
+			b.logger.Warning("Failed to send SIGKILL: %v", killErr)
 		}
 		// Give the kernel a moment to reap the process
 		time.Sleep(100 * time.Millisecond)
@@ -312,7 +311,7 @@ func (b *BaseRecorder) StopProcess() error {
 		if b.cmd != nil && b.cmd.Path != "" {
 			cmdName = b.cmd.Path
 		}
-		log.Printf("%s stderr: %s", cmdName, b.stderrBuf.String())
+		b.logger.Error("%s stderr: %s", cmdName, b.stderrBuf.String())
 	}
 
 	// If we're using a file, verify it was created
@@ -332,8 +331,8 @@ func (b *BaseRecorder) StopProcess() error {
 		b.logger.Debug("Audio file size: %d bytes", info.Size())
 		// Minimal valid WAV header is 44 bytes
 		if info.Size() <= 44 {
-			log.Printf("[AUDIO ERROR] Audio file empty (size=%d) - likely recording failed", info.Size())
-			log.Printf("[AUDIO HINT] Check audio device availability and permissions")
+			b.logger.Error("Audio file empty (size=%d) - likely recording failed", info.Size())
+			b.logger.Info("Check audio device availability and permissions")
 			return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
 		}
 		b.logger.Debug("Audio file validation successful: %d bytes", info.Size())
@@ -386,65 +385,43 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	b.stderrBuf.Reset()
 	b.cmd.Stderr = &b.stderrBuf
 
-	// Start the command
-	if err := b.cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start recording: %w", err)
-	}
-
-	// Log stderr after start in background for visibility
-	go func(name string) {
-		// Wait for process end to flush stderr
-		_ = b.waitForProcess()
-		if b.stderrBuf.Len() > 0 {
-			log.Printf("%s stderr: %s", name, b.stderrBuf.String())
-		}
-	}(cmdName)
-
-	// Handle buffer mode
+	// If using buffer, set StdoutPipe BEFORE starting the process
 	if b.useBuffer {
-		// Create a pipe to monitor audio data
 		stdout, err := b.cmd.StdoutPipe()
 		if err != nil {
 			b.cancel()
 			return fmt.Errorf("failed to create stdout pipe: %w", err)
 		}
-
-		// Start goroutine to read data and monitor audio levels
 		go b.monitorAudioLevel(stdout)
 	}
 
-	// Start the process
+	// Reset wait state for a fresh process and start ONCE
+	b.waitOnce = sync.Once{}
+	b.processErr = nil
 	if err := b.cmd.Start(); err != nil {
 		b.cancel()
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
-	// Log stderr after start in background for visibility
+	// Background diagnostics
 	go func(name string) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("[AUDIO ERROR] Panic in %s monitoring: %v", name, r)
+				b.logger.Error("Panic in %s monitoring: %v", name, r)
 			}
 		}()
-
-		// Wait for process end to flush stderr
-		if b.cmd == nil {
-			return
-		}
-
-		err := b.waitForProcess()
+		_ = b.waitForProcess()
 		if b.stderrBuf.Len() > 0 {
-			log.Printf("[AUDIO ERROR] %s stderr: %s", name, b.stderrBuf.String())
+			b.logger.Error("%s stderr: %s", name, b.stderrBuf.String())
 		}
-		if err != nil {
-			log.Printf("[AUDIO ERROR] %s exited with error: %v", name, err)
-			// Provide specific troubleshooting hints
+		if b.processErr != nil {
+			b.logger.Error("%s exited with error: %v", name, b.processErr)
 			switch name {
 			case "ffmpeg":
-				log.Printf("[AUDIO HINT] FFmpeg failed - try switching to arecord via tray menu")
-				log.Printf("[AUDIO HINT] Common cause: PulseAudio sources SUSPENDED in PipeWire")
+				b.logger.Info("FFmpeg failed - try switching to arecord via tray menu")
+				b.logger.Info("Common cause: PulseAudio sources SUSPENDED in PipeWire")
 			case "arecord":
-				log.Printf("[AUDIO HINT] arecord failed - check microphone permissions and hardware")
+				b.logger.Info("arecord failed - check microphone permissions and hardware")
 			}
 		}
 	}(cmdName)

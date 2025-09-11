@@ -136,6 +136,7 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	tm.updateLanguageRadioUI(config.General.Language)
 	tm.updateModelRadioUI(config.General.ModelType)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
+	tm.updateOutputUI()
 }
 
 // handleMenuClicks handles all menu item clicks

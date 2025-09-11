@@ -234,8 +234,8 @@ func TestConfigService(t *testing.T) {
 		}
 
 		// Verify settings were reset to defaults
-		if service.config.General.Language != "auto" {
-			t.Error("Language should be reset to default 'auto'")
+		if service.config.General.Language != "en" {
+			t.Error("Language should be reset to default 'en'")
 		}
 		// TODO: Next feature - VAD implementation
 		// if service.config.Audio.EnableVAD != false {

@@ -119,9 +119,11 @@ func (us *UIService) ShowConfigFile() error {
 
 	// Try to open config file if possible
 	if path, ok := us.getConfigPath(); ok {
-		// Prefer xdg-open, fallback to gio open
+		// Try to open file directly first (works on GNOME/KDE)
 		if err := us.runCommand("xdg-open", path); err != nil {
-			_ = us.runCommand("gio", append([]string{"open"}, path)...)
+			// Fallback: open directory for problematic desktop environments
+			dir := filepath.Dir(path)
+			_ = us.runCommand("xdg-open", dir)
 		}
 	}
 

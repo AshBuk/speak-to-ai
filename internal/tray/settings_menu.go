@@ -6,7 +6,6 @@
 package tray
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -39,7 +38,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Populate Hotkeys menu
 	tm.hotkeyItems["start_recording"] = tm.hotkeysMenu.AddSubMenuItem(
-		fmt.Sprintf("Start Recording: %s", tm.config.Hotkeys.StartRecording),
+		"Start Recording: "+tm.config.Hotkeys.StartRecording,
 		"Current start recording hotkey",
 	)
 	tm.hotkeyItems["start_recording"].Disable()
@@ -185,7 +184,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// Language selection submenu
 	langMenu := tm.aiModelMenu.AddSubMenuItem("Set Language", "Select recognition language")
 	langDefs := []struct{ key, title string }{
-		{"auto", "Auto"}, {"en", "English"}, {"de", "German"}, {"fr", "French"}, {"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
+		{"en", "English"}, {"de", "German"}, {"fr", "French"}, {"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
 	}
 	for _, l := range langDefs {
 		indicator := "○ "
@@ -204,7 +203,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	tm.modelItems["language"].Disable()
 
 	// Handle language clicks
-	for _, k := range []string{"auto", "en", "de", "fr", "es", "he", "ru"} {
+	for _, k := range []string{"en", "de", "fr", "es", "he", "ru"} {
 		if itm := tm.modelItems["lang_"+k]; itm != nil {
 			key := k
 			go func() {
@@ -241,19 +240,19 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Populate Output menu
 	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
-		fmt.Sprintf("Mode: %s", tm.config.Output.DefaultMode),
+		"Mode: "+tm.config.Output.DefaultMode,
 		"Current output mode",
 	)
 	tm.outputItems["mode"].Disable()
 
 	tm.outputItems["clipboard_tool"] = tm.outputMenu.AddSubMenuItem(
-		fmt.Sprintf("Clipboard Tool: %s", tm.config.Output.ClipboardTool),
+		"Clipboard Tool: "+tm.config.Output.ClipboardTool,
 		"Current clipboard tool",
 	)
 	tm.outputItems["clipboard_tool"].Disable()
 
 	tm.outputItems["type_tool"] = tm.outputMenu.AddSubMenuItem(
-		fmt.Sprintf("Type Tool: %s", tm.config.Output.TypeTool),
+		"Type Tool: "+tm.config.Output.TypeTool,
 		"Current typing tool",
 	)
 	tm.outputItems["type_tool"].Disable()
@@ -307,8 +306,8 @@ func (tm *TrayManager) updateRecorderRadioUI(method string) {
 // updateLanguageRadioUI updates selection marks for language menu
 func (tm *TrayManager) updateLanguageRadioUI(lang string) {
 	langDefs := map[string]string{
-		"auto": "Auto", "en": "English", "de": "German",
-		"fr": "French", "es": "Spanish", "he": "Hebrew", "ru": "Russian",
+		"en": "English", "de": "German", "fr": "French",
+		"es": "Spanish", "he": "Hebrew", "ru": "Russian",
 	}
 
 	for key, title := range langDefs {
@@ -357,5 +356,27 @@ func (tm *TrayManager) updateWorkflowNotificationUI(enabled bool) {
 		item.SetTitle("● Workflow Notifications")
 	} else {
 		item.SetTitle("○ Workflow Notifications")
+	}
+}
+
+// updateOutputUI updates the output settings display
+func (tm *TrayManager) updateOutputUI() {
+	if tm.config == nil {
+		return
+	}
+
+	// Update mode display
+	if modeItem := tm.outputItems["mode"]; modeItem != nil {
+		modeItem.SetTitle("Mode: " + tm.config.Output.DefaultMode)
+	}
+
+	// Update clipboard tool display
+	if clipboardItem := tm.outputItems["clipboard_tool"]; clipboardItem != nil {
+		clipboardItem.SetTitle("Clipboard Tool: " + tm.config.Output.ClipboardTool)
+	}
+
+	// Update type tool display
+	if typeItem := tm.outputItems["type_tool"]; typeItem != nil {
+		typeItem.SetTitle("Type Tool: " + tm.config.Output.TypeTool)
 	}
 }

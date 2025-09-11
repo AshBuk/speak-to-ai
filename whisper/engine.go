@@ -103,7 +103,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	// defer context.Close() // API may not have Close method
 
 	// Set language if specified
-	if lang := w.config.General.Language; lang != "" && lang != "auto" {
+	if lang := w.config.General.Language; lang != "" {
 		if err := context.SetLanguage(lang); err != nil {
 			return "", fmt.Errorf("failed to set language: %w", err)
 		}

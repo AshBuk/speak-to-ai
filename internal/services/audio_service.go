@@ -229,7 +229,7 @@ func (as *AudioService) SwitchModel(modelType string) error {
 	as.config.General.ModelType = modelType
 
 	// Reinitialize engines with new model
-	modelPath, err := as.modelManager.GetModelPath()
+	modelPath, err := as.modelManager.GetModelPathWithProgress(nil)
 	if err != nil {
 		return fmt.Errorf("failed to get model path: %w", err)
 	}

@@ -16,7 +16,7 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.General.TempAudioPath = "/tmp"
 	config.General.ModelType = "base"
 	config.General.ModelPrecision = "f16"
-	config.General.Language = "auto"
+	config.General.Language = "en"
 	config.General.LogFile = ""
 
 	config.General.Models = []string{

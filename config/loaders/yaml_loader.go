@@ -59,8 +59,8 @@ func SetDefaultConfig(config *models.Config) {
 	config.General.TempAudioPath = "/tmp"
 	config.General.ModelType = "base"
 	config.General.ModelPrecision = "f16"
-	config.General.Language = "auto" // Auto-detect language
-	config.General.LogFile = ""      // No log file by default
+	config.General.Language = "en" // Default to English
+	config.General.LogFile = ""    // No log file by default
 
 	// Multiple models support
 	config.General.Models = []string{

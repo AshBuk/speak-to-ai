@@ -115,7 +115,7 @@ general:
   model_path: "sources/language-models/base.bin"  # Backward compatibility
   temp_audio_path: "/tmp"
   model_precision: "base"
-  language: "auto"  # Auto-detect or specify "en", "ru", etc.
+  language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
   log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable)
   
   # Multiple models configuration
