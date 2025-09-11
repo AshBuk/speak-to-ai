@@ -8,10 +8,11 @@ This directory contains Docker infrastructure for the speak-to-ai project, provi
 # Dev shell
 make docker-dev
 
-# Lint (Docker)
+# Format & Lint (Docker)
+make fmt
 make lint
 
-# Tests (local)
+# Tests (Docker)
 make test
 
 # Build packages (multi-stage docker build)
@@ -27,6 +28,11 @@ make docker-flatpak
 - **Includes**: Go, golangci-lint, GUI libraries for systray
 - **Usage**: `make docker-dev`
 
+### `fmt` - Code Formatting (Docker)
+- **Image**: `docker/Dockerfile.dev` (reused)
+- **Purpose**: Format Go code with go fmt and goimports
+- **Usage**: `make fmt`
+
 ### `lint` - Linting (Docker)
 - **Image**: `golang:1.24-alpine` (runtime installs golangci-lint)
 - **Usage**: `make lint`
@@ -34,7 +40,7 @@ make docker-flatpak
 ### `test` - Testing Service
 - **Image**: `docker/Dockerfile.dev` (reused)
 - **Purpose**: Run tests with all dependencies
-- **Usage**: `make docker-test`
+- **Usage**: `make test`
 
 ### `build-appimage` - AppImage Builder
 - **Image**: `docker/Dockerfile.appimage`
@@ -50,6 +56,11 @@ make docker-flatpak
 - **Image**: `docker/Dockerfile.dev` (reused)
 - **Purpose**: Build whisper.cpp libraries shared between services
 - **Usage**: `make docker-whisper`
+
+### `ci` - CI Pipeline
+- **Profile**: `ci` (combines lint + test services)
+- **Purpose**: Full CI/CD pipeline with whisper.cpp libs, linting, testing, and package building
+- **Usage**: `make docker-ci`
 
 ## Docker Profiles
 

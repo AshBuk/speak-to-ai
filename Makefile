@@ -25,14 +25,15 @@ export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 
 # Default target (with systray support for desktop usage)
 all: deps whisper-libs build-systray
-# Format source code (local)
+# Format source code (full: go fmt + goimports)
 fmt:
-	@echo "=== Formatting Go sources (gofmt -s -w) ==="
-	@files=$$(find . -name '*.go' -type f | grep -v vendor/); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
-	@echo "Format completed"
+	@echo "=== Running go fmt and goimports in Docker ==="
+	docker compose --profile dev run --rm dev sh -c "go fmt ./... && go install golang.org/x/tools/cmd/goimports@latest && goimports -w ."
 
-# Lint alias (Docker)
-lint: docker-lint
+# Lint source code
+lint:
+	@echo "=== Running linter in Docker ==="
+	docker compose --profile lint run --rm lint
 
 
 # Help target
@@ -41,6 +42,8 @@ help:
 	@echo "  all               - Build everything (deps + whisper + binary)"
 	@echo "  build             - Build Go binary only"
 	@echo "  build-systray     - Build with systray support"
+	@echo "  fmt               - Format Go code (go fmt + goimports)"
+	@echo "  lint              - Run linter and code quality checks"
 	@echo "  test              - Run unit tests"
 	@echo "  test-integration  - Run integration tests (fast mode)"
 	@echo "  test-integration-full - Run full integration tests (with CGO)"
@@ -198,18 +201,7 @@ docker-whisper:
 	@echo "=== Building whisper.cpp libraries in Docker ==="
 	docker compose --profile init up whisper-builder
 
-# Docker linting
-docker-lint:
-	@echo "=== Running linter in Docker ==="
-	docker compose --profile lint run --rm lint
 
-docker-fmt:
-	@echo "=== Running go fmt in Docker ==="
-	docker compose --profile dev run --rm dev go fmt ./...
-
-docker-vet:
-	@echo "=== Running go vet in Docker ==="
-	docker compose --profile dev run --rm dev bash -c "source bash-scripts/dev-env.sh && go vet ./..."
 
 # Docker building packages
 docker-appimage:
@@ -273,9 +265,6 @@ docker-help:
 	@echo "  docker-whisper    - Build whisper.cpp in Docker"
 	@echo ""
 	@echo "Development commands:"
-	@echo "  docker-lint       - Run linter in Docker"
-	@echo "  docker-fmt        - Run go fmt in Docker"
-	@echo "  docker-vet        - Run go vet in Docker"
 	@echo "  docker-shell      - Open shell in dev container"
 	@echo ""
 	@echo "Package building:"

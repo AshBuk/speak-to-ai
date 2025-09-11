@@ -26,8 +26,8 @@ make check-tools         # Verify required tools
 make appimage            # Build AppImage package
 make flatpak             # Build Flatpak package
 make clean               # Clean build artifacts
-make fmt                 # Format Go code
-make lint                # Run linter (via Docker). Возвращает 0 при отсутствии проблем
+make fmt                 # Format Go code (go fmt + goimports)
+make lint                # Run linter and code quality checks
 ```
 
 ### 2. Bash Scripts - Orchestration & Dependencies  
