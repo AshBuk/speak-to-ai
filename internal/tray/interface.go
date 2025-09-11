@@ -23,6 +23,7 @@ type TrayManagerInterface interface {
 		onSelectLanguage func(language string) error,
 		onSelectModelType func(modelType string) error,
 		onToggleWorkflowNotifications func() error,
+		onSelectOutputMode func(mode string) error,
 	)
 	// SetGetOutputToolsCallback sets the callback for getting actual output tool names
 	SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string))

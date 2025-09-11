@@ -131,6 +131,23 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			}
 			return nil
 		},
+		func(mode string) error {
+			if container == nil || container.Config == nil {
+				return fmt.Errorf("config service not available")
+			}
+			if err := container.Config.UpdateOutputMode(mode); err != nil {
+				return err
+			}
+			// Update tray to reflect new selection immediately
+			if uiSvc, ok := container.UI.(*UIService); ok && uiSvc != nil {
+				if cfgSvc, ok2 := container.Config.(*ConfigService); ok2 && cfgSvc != nil {
+					if cfg, ok3 := cfgSvc.GetConfig().(*config.Config); ok3 && cfg != nil {
+						uiSvc.UpdateSettings(cfg)
+					}
+				}
+			}
+			return nil
+		},
 	)
 
 	// Set callback for getting actual output tool names
@@ -143,6 +160,15 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 		}
 		return "unknown", "unknown"
 	})
+
+	// Force UI update after callback is set
+	if container != nil && container.Config != nil {
+		if cfgSvc, ok := container.Config.(*ConfigService); ok && cfgSvc != nil {
+			if cfg, ok2 := cfgSvc.GetConfig().(*config.Config); ok2 && cfg != nil {
+				components.TrayManager.UpdateSettings(cfg)
+			}
+		}
+	}
 
 	// Ensure Quit exits app cleanly
 	components.TrayManager.SetExitAction(func() {

@@ -62,12 +62,8 @@ func (cs *ConfigService) SaveConfig() error {
 func (cs *ConfigService) ResetToDefaults() error {
 	cs.logger.Info("Resetting configuration to defaults...")
 
-	// Create new config and set defaults
-	defaultConfig := &config.Config{}
-	config.SetDefaultConfig(defaultConfig)
-
-	// Replace current config
-	cs.config = defaultConfig
+	// Reset existing config in-place to keep pointer stable across app
+	config.SetDefaultConfig(cs.config)
 
 	// Save to file immediately
 	if err := cs.SaveConfig(); err != nil {
@@ -76,9 +72,10 @@ func (cs *ConfigService) ResetToDefaults() error {
 
 	cs.logger.Info("Configuration reset to defaults successfully")
 
-	// Show success notification via UI service
+	// Show success notification via UI service and refresh UI
 	if cs.uiService != nil {
 		cs.uiService.ShowNotification(constants.NotifyConfigReset, constants.NotifyConfigResetSuccess)
+		cs.uiService.UpdateSettings(cs.config)
 	}
 
 	return nil
@@ -148,6 +145,25 @@ func (cs *ConfigService) UpdateModelType(modelType string) error {
 
 	if err := cs.SaveConfig(); err != nil {
 		cs.config.General.ModelType = old
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateOutputMode implements ConfigServiceInterface
+func (cs *ConfigService) UpdateOutputMode(mode string) error {
+	cs.logger.Info("Updating output mode to: %s", mode)
+
+	if cs.config.Output.DefaultMode == mode {
+		return nil
+	}
+
+	old := cs.config.Output.DefaultMode
+	cs.config.Output.DefaultMode = mode
+
+	if err := cs.SaveConfig(); err != nil {
+		cs.config.Output.DefaultMode = old
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 

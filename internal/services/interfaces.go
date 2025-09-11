@@ -80,6 +80,7 @@ type ConfigServiceInterface interface {
 	UpdateModelType(modelType string) error
 	ToggleWorkflowNotifications() error
 	UpdateRecordingMethod(method string) error
+	UpdateOutputMode(mode string) error
 
 	// Cleanup
 	Shutdown() error

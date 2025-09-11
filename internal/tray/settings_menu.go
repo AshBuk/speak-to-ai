@@ -239,8 +239,22 @@ func (tm *TrayManager) populateSettingsMenus() {
 	}
 
 	// Populate Output menu
+	// Output mode selection
+	modeDefs := []struct{ key, title string }{
+		{"clipboard", "Clipboard"}, {"active_window", "Active Window"},
+	}
+	for _, m := range modeDefs {
+		indicator := "○ "
+		if tm.config.Output.DefaultMode == m.key {
+			indicator = "● "
+		}
+		itm := tm.outputMenu.AddSubMenuItem(indicator+m.title, "")
+		tm.outputItems["mode_"+m.key] = itm
+	}
+
+	// Mode display (gray text)
 	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
-		"Mode: "+tm.config.Output.DefaultMode,
+		tm.config.Output.DefaultMode,
 		"Current output mode",
 	)
 	tm.outputItems["mode"].Disable()
@@ -256,6 +270,24 @@ func (tm *TrayManager) populateSettingsMenus() {
 		"Current typing tool",
 	)
 	tm.outputItems["type_tool"].Disable()
+
+	// Handle output mode clicks
+	for _, k := range []string{"clipboard", "active_window"} {
+		if itm := tm.outputItems["mode_"+k]; itm != nil {
+			key := k
+			go func() {
+				for range itm.ClickedCh {
+					log.Printf("Output mode switched to %s (UI)", key)
+					tm.updateOutputModeRadioUI(key)
+					if tm.onSelectOutputMode != nil {
+						if err := tm.onSelectOutputMode(key); err != nil {
+							log.Printf("Error selecting output mode: %v", err)
+						}
+					}
+				}
+			}()
+		}
+	}
 }
 
 // updateRecorderRadioUI updates titles to emulate radio selection
@@ -359,16 +391,36 @@ func (tm *TrayManager) updateWorkflowNotificationUI(enabled bool) {
 	}
 }
 
+// updateOutputModeRadioUI updates selection marks for output mode menu
+func (tm *TrayManager) updateOutputModeRadioUI(mode string) {
+	modeDefs := map[string]string{
+		"clipboard": "Clipboard", "active_window": "Active Window",
+	}
+
+	for key, title := range modeDefs {
+		if itm := tm.outputItems["mode_"+key]; itm != nil {
+			if key == mode {
+				itm.SetTitle("● " + title)
+			} else {
+				itm.SetTitle("○ " + title)
+			}
+		}
+	}
+
+	// Update the gray text display
+	if modeDisplay := tm.outputItems["mode"]; modeDisplay != nil {
+		modeDisplay.SetTitle(mode)
+	}
+}
+
 // updateOutputUI updates the output settings display
 func (tm *TrayManager) updateOutputUI() {
 	if tm.config == nil {
 		return
 	}
 
-	// Update mode display
-	if modeItem := tm.outputItems["mode"]; modeItem != nil {
-		modeItem.SetTitle("Mode: " + tm.config.Output.DefaultMode)
-	}
+	// Update mode radio buttons and display
+	tm.updateOutputModeRadioUI(tm.config.Output.DefaultMode)
 
 	// Get actual tool names if callback is available
 	clipboardTool := tm.config.Output.ClipboardTool

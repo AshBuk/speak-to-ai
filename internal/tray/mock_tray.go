@@ -24,6 +24,7 @@ type MockTrayManager struct {
 	onSelectModel          func(modelType string) error
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
+	onSelectOutputMode     func(mode string) error
 }
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray
@@ -90,11 +91,13 @@ func (tm *MockTrayManager) SetSettingsActions(
 	onSelectLanguage func(language string) error,
 	onSelectModelType func(modelType string) error,
 	onToggleWorkflowNotifications func() error,
+	onSelectOutputMode func(mode string) error,
 ) {
 	// tm.onSelectVADSens = onSelectVADSensitivity
 	tm.onSelectLang = onSelectLanguage
 	tm.onSelectModel = onSelectModelType
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
+	tm.onSelectOutputMode = onSelectOutputMode
 	log.Println("Mock tray: settings actions set")
 }
 

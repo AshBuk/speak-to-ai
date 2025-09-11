@@ -117,6 +117,7 @@ func (m *MockConfigService) ToggleWorkflowNotifications() error     { return nil
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) ToggleVAD() error                              { return nil }
 func (m *MockConfigService) UpdateRecordingMethod(method string) error { return nil }
+func (m *MockConfigService) UpdateOutputMode(mode string) error        { return nil }
 
 // Test helper methods
 func (m *MockConfigService) WasShutdownCalled() bool {
