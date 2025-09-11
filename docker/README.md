@@ -16,8 +16,8 @@ make lint
 make test
 
 # Build packages (multi-stage docker build)
-make docker-appimage
-make docker-flatpak
+make docker-appimage #fully functional in containers
+make docker-flatpak #complex in containers, mainly for validation
 ```
 
 ## Services
@@ -34,7 +34,7 @@ make docker-flatpak
 - **Usage**: `make fmt`
 
 ### `lint` - Linting (Docker)
-- **Image**: `golang:1.24-alpine` (runtime installs golangci-lint)
+- **Image**: `golang:1.24.1-alpine` (runtime installs golangci-lint)
 - **Usage**: `make lint`
 
 ### `test` - Testing Service
@@ -69,8 +69,7 @@ Services are organized into profiles for efficient resource usage:
 - **`dev`**: Development environment
 - **`lint`**: Linting only
 - **`test`**: Testing only
-- **`ci`**: CI pipeline (lint + test)
-- **`build`**: Package building (AppImage + Flatpak)
+- **`ci`**: CI pipeline (lint + test + flatpak/appimage builds)
 - **`appimage`**: AppImage building only
 - **`flatpak`**: Flatpak building only
 - **`init`**: Whisper.cpp initialization
@@ -96,6 +95,18 @@ make docker-dev
 source bash-scripts/dev-env.sh
 make build-systray
 make test
+```
+
+### Alternative Development Access
+```bash
+# Start services in background
+make docker-up
+
+# Open shell in running container
+make docker-shell
+
+# Stop development environment only
+make docker-dev-stop
 ```
 
 ### CI Pipeline
