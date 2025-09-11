@@ -41,21 +41,18 @@ lint:
 # Test targets
 # -----------------------------------------------------------------------------
 
-# Run tests
-# It is important to use `go test ./...` directly.
-# This target ensures that the CGO environment variables are set correctly before running the tests.
-# It also ensures that the whisper.cpp libraries are built and available.
-test: deps whisper-libs
-	@echo "=== Running tests ==="
-	go test -v -cover ./...
+# Run tests via Docker (reuses dev image with CGO + whisper.cpp)
+test:
+	@echo "=== Running tests via Docker ==="
+	docker compose --profile dev run --rm dev go test -v -cover ./...
 
-test-integration: deps
-	@echo "=== Running integration tests (fast mode, no CGO dependencies) ==="
-	go test -tags=integration ./tests/integration/... -short -v
+test-integration:
+	@echo "=== Running integration tests (fast mode) via Docker ==="
+	docker compose --profile dev run --rm -e CGO_ENABLED=0 dev go test -tags=integration ./tests/integration/... -short -v
 
-test-integration-full: deps whisper-libs
-	@echo "=== Running full integration tests (build tag: integration) ==="
-	go test -tags=integration ./tests/integration/... -v
+test-integration-full:
+	@echo "=== Running full integration tests via Docker ==="
+	docker compose --profile dev run --rm dev go test -tags=integration ./tests/integration/... -v
 
 # ============================================================================
 # Build & Dependencies

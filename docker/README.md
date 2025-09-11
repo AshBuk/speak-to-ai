@@ -12,8 +12,10 @@ make docker-dev
 make fmt
 make lint
 
-# Tests (Docker)
-make test
+# Tests (Docker) - reuses dev image
+make test                 # Unit tests
+make test-integration     # Integration tests (fast)
+make test-integration-full # Full integration tests
 
 # Build packages (multi-stage docker build)
 make docker-appimage #fully functional in containers
@@ -37,10 +39,11 @@ make docker-flatpak #complex in containers, mainly for validation
 - **Image**: `golang:1.24.1-alpine` (runtime installs golangci-lint)
 - **Usage**: `make lint`
 
-### `test` - Testing Service
-- **Image**: `docker/Dockerfile.dev` (reused)
-- **Purpose**: Run tests with all dependencies
-- **Usage**: `make test`
+### `test` - Testing Services
+- **Image**: `docker/Dockerfile.dev` (reused for all test types)
+- **Purpose**: Run tests with consistent Docker environment
+- **Usage**: `make test`, `make test-integration`, `make test-integration-full`
+- **Benefits**: No local CGO/whisper.cpp dependencies required
 
 ### `build-appimage` - AppImage Builder
 - **Image**: `docker/Dockerfile.appimage`

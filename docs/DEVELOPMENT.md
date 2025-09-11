@@ -17,9 +17,9 @@ Entry point for developers with proper CGO environment setup:
 make all                 # Build everything (deps + whisper + binary)
 make build               # Build binary with whisper.cpp integration
 make build-systray       # Build with system tray support
-make test                # Run unit tests with CGO dependencies
-make test-integration    # Run integration tests (fast mode, build tag: integration)
-make test-integration-full # Run full integration tests (with audio/CGO)
+make test                # Run unit tests via Docker (CGO + whisper.cpp)
+make test-integration    # Run integration tests via Docker (fast mode)
+make test-integration-full # Run full integration tests via Docker (audio/CGO)
 make deps                # Download Go dependencies
 make whisper-libs        # Build whisper.cpp libraries into ./lib
 make check-tools         # Verify required tools
@@ -67,9 +67,9 @@ GitHub Actions handle complex builds, releases, and distribution.
 
 | Test Type | Command | Duration | Dependencies | Use Case |
 |-----------|---------|----------|--------------|----------|
-| **Unit Tests** | `make test` | ~2-5s | CGO, whisper.cpp | Core functionality |
-| **Integration Fast** | `make test-integration` | ~1-3s | Build tag `integration` | Development, CI |
-| **Integration Full** | `make test-integration-full` | ~5-15s | Audio devices, CGO | QA, Production |
+| **Unit Tests** | `make test` | ~3-8s | Docker dev image | Core functionality |
+| **Integration Fast** | `make test-integration` | ~2-5s | Docker dev image | Development, CI |
+| **Integration Full** | `make test-integration-full` | ~8-20s | Docker dev image + audio | QA, Production |
 
 
 | Module | Test Coverage | Test Files | Integration Tests |

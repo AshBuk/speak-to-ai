@@ -88,11 +88,23 @@ func (m *MockHotkeyManager) TriggerCallback(callbackType string) error {
 		if m.callbacks.startRecording != nil {
 			return m.callbacks.startRecording()
 		}
+	case "switchModel":
+		if m.callbacks.switchModel != nil {
+			return m.callbacks.switchModel()
+		}
+	case "showConfig":
+		if m.callbacks.showConfig != nil {
+			return m.callbacks.showConfig()
+		}
+	case "resetToDefaults":
+		if m.callbacks.resetToDefaults != nil {
+			return m.callbacks.resetToDefaults()
+		}
 		// TODO: Next feature - VAD implementation
 		// case "toggleVAD":
-		//	if m.callbacks.toggleVAD != nil {
-		//		return m.callbacks.toggleVAD()
-		//	}
+		// 	if m.callbacks.toggleVAD != nil {
+		// 		return m.callbacks.toggleVAD()
+		// 	}
 	}
 	return nil
 }

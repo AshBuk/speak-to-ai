@@ -261,7 +261,8 @@ func TestConfigure_WithFile(t *testing.T) {
 func TestConfigure_WithInvalidFile(t *testing.T) {
 	config := Config{
 		Level: InfoLevel,
-		File:  "/invalid/path/log.txt",
+		// Use a path that is very likely invalid in containers and hosts
+		File: "/etc/hosts/log.txt",
 	}
 
 	logger, err := Configure(config)
