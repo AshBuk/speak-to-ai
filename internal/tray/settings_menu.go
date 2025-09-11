@@ -18,10 +18,10 @@ func (tm *TrayManager) createSettingsSubmenus() {
 	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("Whisper Model", "AI model settings")
 
 	// VAD Sensitivity submenu
-	vadMenu := tm.settingsItem.AddSubMenuItem("VAD Sensitivity", "Select VAD sensitivity level")
-	tm.audioItems["vad_low"] = vadMenu.AddSubMenuItem("○ Low", "Low sensitivity")
-	tm.audioItems["vad_medium"] = vadMenu.AddSubMenuItem("○ Medium", "Medium sensitivity")
-	tm.audioItems["vad_high"] = vadMenu.AddSubMenuItem("○ High", "High sensitivity")
+	// vadMenu := tm.settingsItem.AddSubMenuItem("VAD Sensitivity", "Select VAD sensitivity level")
+	// tm.audioItems["vad_low"] = vadMenu.AddSubMenuItem("○ Low", "Low sensitivity")
+	// tm.audioItems["vad_medium"] = vadMenu.AddSubMenuItem("○ Medium", "Medium sensitivity")
+	// tm.audioItems["vad_high"] = vadMenu.AddSubMenuItem("○ High", "High sensitivity")
 
 	tm.outputMenu = tm.settingsItem.AddSubMenuItem("Output", "Output settings")
 
@@ -102,45 +102,45 @@ func (tm *TrayManager) populateSettingsMenus() {
 	}()
 
 	// Handle VAD sensitivity clicks
-	if tm.audioItems["vad_low"] != nil {
-		go func() {
-			for range tm.audioItems["vad_low"].ClickedCh {
-				log.Println("VAD sensitivity switched to low (UI)")
-				tm.updateVADRadioUI("low")
-				if tm.onSelectVADSens != nil {
-					if err := tm.onSelectVADSens("low"); err != nil {
-						log.Printf("Error selecting VAD sensitivity: %v", err)
-					}
-				}
-			}
-		}()
-	}
-	if tm.audioItems["vad_medium"] != nil {
-		go func() {
-			for range tm.audioItems["vad_medium"].ClickedCh {
-				log.Println("VAD sensitivity switched to medium (UI)")
-				tm.updateVADRadioUI("medium")
-				if tm.onSelectVADSens != nil {
-					if err := tm.onSelectVADSens("medium"); err != nil {
-						log.Printf("Error selecting VAD sensitivity: %v", err)
-					}
-				}
-			}
-		}()
-	}
-	if tm.audioItems["vad_high"] != nil {
-		go func() {
-			for range tm.audioItems["vad_high"].ClickedCh {
-				log.Println("VAD sensitivity switched to high (UI)")
-				tm.updateVADRadioUI("high")
-				if tm.onSelectVADSens != nil {
-					if err := tm.onSelectVADSens("high"); err != nil {
-						log.Printf("Error selecting VAD sensitivity: %v", err)
-					}
-				}
-			}
-		}()
-	}
+	// if tm.audioItems["vad_low"] != nil {
+	// 	go func() {
+	// 		for range tm.audioItems["vad_low"].ClickedCh {
+	// 			log.Println("VAD sensitivity switched to low (UI)")
+	// 			tm.updateVADRadioUI("low")
+	// 			if tm.onSelectVADSens != nil {
+	// 				if err := tm.onSelectVADSens("low"); err != nil {
+	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 				}
+	// 			}
+	// 		}
+	// 	}()
+	// }
+	// if tm.audioItems["vad_medium"] != nil {
+	// 	go func() {
+	// 		for range tm.audioItems["vad_medium"].ClickedCh {
+	// 			log.Println("VAD sensitivity switched to medium (UI)")
+	// 			tm.updateVADRadioUI("medium")
+	// 			if tm.onSelectVADSens != nil {
+	// 				if err := tm.onSelectVADSens("medium"); err != nil {
+	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 				}
+	// 			}
+	// 		}
+	// 	}()
+	// }
+	// if tm.audioItems["vad_high"] != nil {
+	// 	go func() {
+	// 		for range tm.audioItems["vad_high"].ClickedCh {
+	// 			log.Println("VAD sensitivity switched to high (UI)")
+	// 			tm.updateVADRadioUI("high")
+	// 			if tm.onSelectVADSens != nil {
+	// 				if err := tm.onSelectVADSens("high"); err != nil {
+	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 				}
+	// 			}
+	// 		}
+	// 	}()
+	// }
 
 	// Handle workflow notifications toggle
 	if tm.audioItems["workflow_notifications"] != nil {
@@ -281,28 +281,28 @@ func (tm *TrayManager) updateRecorderRadioUI(method string) {
 }
 
 // updateVADRadioUI updates VAD sensitivity radio titles
-func (tm *TrayManager) updateVADRadioUI(level string) {
-	low := tm.audioItems["vad_low"]
-	med := tm.audioItems["vad_medium"]
-	high := tm.audioItems["vad_high"]
-	if low == nil || med == nil || high == nil {
-		return
-	}
-	switch level {
-	case "low":
-		low.SetTitle("● Low")
-		med.SetTitle("○ Medium")
-		high.SetTitle("○ High")
-	case "high":
-		high.SetTitle("● High")
-		low.SetTitle("○ Low")
-		med.SetTitle("○ Medium")
-	default:
-		med.SetTitle("● Medium")
-		low.SetTitle("○ Low")
-		high.SetTitle("○ High")
-	}
-}
+// func (tm *TrayManager) updateVADRadioUI(level string) {
+// 	low := tm.audioItems["vad_low"]
+// 	med := tm.audioItems["vad_medium"]
+// 	high := tm.audioItems["vad_high"]
+// 	if low == nil || med == nil || high == nil {
+// 		return
+// 	}
+// 	switch level {
+// 	case "low":
+// 		low.SetTitle("● Low")
+// 		med.SetTitle("○ Medium")
+// 		high.SetTitle("○ High")
+// 	case "high":
+// 		high.SetTitle("● High")
+// 		low.SetTitle("○ Low")
+// 		med.SetTitle("○ Medium")
+// 	default:
+// 		med.SetTitle("● Medium")
+// 		low.SetTitle("○ Low")
+// 		high.SetTitle("○ High")
+// 	}
+// }
 
 // updateLanguageRadioUI updates selection marks for language menu
 func (tm *TrayManager) updateLanguageRadioUI(lang string) {

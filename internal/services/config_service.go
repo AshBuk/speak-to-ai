@@ -163,15 +163,6 @@ func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	return cs.SaveConfig()
 }
 
-// ToggleStreaming implements ConfigServiceInterface
-func (cs *ConfigService) ToggleStreaming() error {
-	cs.logger.Info("Toggling streaming mode")
-
-	cs.config.Audio.EnableStreaming = !cs.config.Audio.EnableStreaming
-
-	return cs.SaveConfig()
-}
-
 // TODO: Next feature - VAD implementation
 // ToggleVAD implements ConfigServiceInterface
 // func (cs *ConfigService) ToggleVAD() error {

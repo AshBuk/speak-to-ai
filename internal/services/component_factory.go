@@ -71,17 +71,6 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 		return nil, fmt.Errorf("failed to initialize whisper engine: %w", err)
 	}
 
-	// Initialize streaming engine if enabled
-	if cf.config.Config.Audio.EnableStreaming {
-		components.StreamingEngine, err = whisper.NewStreamingWhisperEngine(cf.config.Config, modelFilePath)
-		if err != nil {
-			cf.config.Logger.Warning("Failed to initialize streaming engine: %v", err)
-			components.StreamingEngine = nil
-		} else {
-			cf.config.Logger.Info("Streaming transcription enabled")
-		}
-	}
-
 	// Initialize output manager
 	outputEnv := cf.convertEnvironmentType()
 	components.OutputManager, err = outputFactory.GetOutputterFromConfig(cf.config.Config, outputEnv)
@@ -184,8 +173,9 @@ func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
 
 	configAdapter := adapters.NewConfigAdapter(cf.config.Config.Hotkeys.StartRecording, cf.config.Config.Hotkeys.Provider).
 		WithAdditionalHotkeys(
-			cf.config.Config.Hotkeys.ToggleStreaming,
-			cf.config.Config.Hotkeys.ToggleVAD,
+			// TODO: Next feature - VAD implementation
+			// cf.config.Config.Hotkeys.ToggleVAD,
+			"", // VAD hotkey placeholder
 			cf.config.Config.Hotkeys.SwitchModel,
 			cf.config.Config.Hotkeys.ShowConfig,
 			cf.config.Config.Hotkeys.ResetToDefaults,

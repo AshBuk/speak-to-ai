@@ -19,7 +19,7 @@ type TrayManagerInterface interface {
 	SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error)
 	// SetSettingsActions sets callbacks for general settings from tray (VAD, Language, Model, Notifications)
 	SetSettingsActions(
-		onSelectVADSensitivity func(sensitivity string) error,
+		// onSelectVADSensitivity func(sensitivity string) error,
 		onSelectLanguage func(language string) error,
 		onSelectModelType func(modelType string) error,
 		onToggleWorkflowNotifications func() error,

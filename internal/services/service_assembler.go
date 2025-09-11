@@ -79,7 +79,6 @@ func (sa *ServiceAssembler) createAudioService(components *Components) *AudioSer
 		sa.factoryConfig.Config,
 		components.Recorder,
 		components.WhisperEngine,
-		components.StreamingEngine,
 		components.ModelManager,
 	)
 }

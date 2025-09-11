@@ -5,8 +5,6 @@ package interfaces_test
 
 import (
 	"errors"
-	"io"
-	"strings"
 	"testing"
 	"time"
 
@@ -59,23 +57,6 @@ func TestAudioRecorderInterface_MockCompliance(t *testing.T) {
 		}
 		if !mock.WasCleanupCalled() {
 			t.Error("expected cleanup to be called")
-		}
-	})
-
-	t.Run("UseStreaming", func(t *testing.T) {
-		streaming := mock.UseStreaming()
-		if streaming {
-			t.Error("expected streaming to be false by default")
-		}
-	})
-
-	t.Run("GetAudioStream", func(t *testing.T) {
-		stream, err := mock.GetAudioStream()
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if stream == nil {
-			t.Error("expected non-nil stream")
 		}
 	})
 
@@ -152,22 +133,6 @@ func TestAudioRecorderInterface_ErrorHandling(t *testing.T) {
 		}
 	})
 
-	t.Run("GetAudioStream_Error", func(t *testing.T) {
-		mock.Reset()
-		expectedError := errors.New("stream error")
-		mock.SetGetStreamError(expectedError)
-
-		stream, err := mock.GetAudioStream()
-		if err == nil {
-			t.Error("expected error but got none")
-		}
-		if stream != nil {
-			t.Error("expected nil stream on error")
-		}
-		if err.Error() != expectedError.Error() {
-			t.Errorf("expected error %q, got %q", expectedError.Error(), err.Error())
-		}
-	})
 }
 
 func TestAudioRecorderInterface_StateValidation(t *testing.T) {
@@ -221,68 +186,6 @@ func TestAudioRecorderInterface_StateValidation(t *testing.T) {
 		}
 		if mock.IsRecording() {
 			t.Error("expected recording to be false after stop")
-		}
-	})
-}
-
-func TestAudioRecorderInterface_StreamingMode(t *testing.T) {
-	mock := mocks.NewMockAudioRecorder()
-
-	t.Run("DefaultStreamingMode", func(t *testing.T) {
-		if mock.UseStreaming() {
-			t.Error("expected streaming to be false by default")
-		}
-	})
-
-	t.Run("EnableStreaming", func(t *testing.T) {
-		mock.SetStreaming(true)
-		if !mock.UseStreaming() {
-			t.Error("expected streaming to be true after enabling")
-		}
-	})
-
-	t.Run("StreamData", func(t *testing.T) {
-		testData := []byte("test audio data")
-		mock.SetStreamData(testData)
-
-		stream, err := mock.GetAudioStream()
-		if err != nil {
-			t.Fatalf("get stream failed: %v", err)
-		}
-
-		buffer := make([]byte, len(testData))
-		n, err := stream.Read(buffer)
-		if err != nil && err != io.EOF {
-			t.Fatalf("read stream failed: %v", err)
-		}
-
-		if n != len(testData) {
-			t.Errorf("expected to read %d bytes, got %d", len(testData), n)
-		}
-
-		if string(buffer) != string(testData) {
-			t.Errorf("expected %q, got %q", string(testData), string(buffer))
-		}
-	})
-
-	t.Run("CustomStreamReader", func(t *testing.T) {
-		testData := "custom stream data"
-		customReader := strings.NewReader(testData)
-		mock.SetStreamReader(customReader)
-
-		stream, err := mock.GetAudioStream()
-		if err != nil {
-			t.Fatalf("get stream failed: %v", err)
-		}
-
-		buffer := make([]byte, len(testData))
-		n, err := stream.Read(buffer)
-		if err != nil && err != io.EOF {
-			t.Fatalf("read stream failed: %v", err)
-		}
-
-		if string(buffer[:n]) != testData {
-			t.Errorf("expected %q, got %q", testData, string(buffer[:n]))
 		}
 	})
 }

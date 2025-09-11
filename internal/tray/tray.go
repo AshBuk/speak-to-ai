@@ -48,7 +48,8 @@ type TrayManager struct {
 	onSelectRecorder func(method string) error
 	onTestRecording  func() error
 	// Settings callbacks
-	onSelectVADSens        func(sensitivity string) error
+	// onSelectVADSens sets the callback for VAD sensitivity selection.
+	// onSelectVADSens        func(sensitivity string) error
 	onSelectLang           func(language string) error
 	onSelectModel          func(modelType string) error
 	onToggleWorkflowNotify func() error
@@ -216,12 +217,12 @@ func (tm *TrayManager) SetExitAction(onExit func()) {
 
 // SetSettingsActions sets callbacks for general settings
 func (tm *TrayManager) SetSettingsActions(
-	onSelectVADSensitivity func(sensitivity string) error,
+	// onSelectVADSensitivity func(sensitivity string) error,
 	onSelectLanguage func(language string) error,
 	onSelectModelType func(modelType string) error,
 	onToggleWorkflowNotifications func() error,
 ) {
-	tm.onSelectVADSens = onSelectVADSensitivity
+	// tm.onSelectVADSens = onSelectVADSensitivity
 	tm.onSelectLang = onSelectLanguage
 	tm.onSelectModel = onSelectModelType
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications

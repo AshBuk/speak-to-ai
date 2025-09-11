@@ -32,7 +32,6 @@ type Components struct {
 	ModelManager    whisper.ModelManager
 	Recorder        interfaces.AudioRecorder
 	WhisperEngine   *whisper.WhisperEngine
-	StreamingEngine *whisper.StreamingWhisperEngine
 	OutputManager   outputInterfaces.Outputter
 	HotkeyManager   *manager.HotkeyManager
 	WebSocketServer *websocket.WebSocketServer

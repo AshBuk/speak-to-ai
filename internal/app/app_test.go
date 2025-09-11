@@ -217,11 +217,6 @@ func TestApp_HandlerMethods(t *testing.T) {
 			t.Error("handleStopRecordingAndTranscribe should fail with nil services")
 		}
 
-		err = app.handleToggleStreaming()
-		if err == nil {
-			t.Error("handleToggleStreaming should fail with nil services")
-		}
-
 		// TODO: Next feature - VAD implementation
 		// err = app.handleToggleVAD()
 		// if err == nil {
@@ -256,11 +251,6 @@ func TestApp_HandlerMethods(t *testing.T) {
 		err = app.handleStopRecordingAndTranscribe()
 		if err == nil {
 			t.Error("handleStopRecordingAndTranscribe should fail with nil audio service")
-		}
-
-		err = app.handleToggleStreaming()
-		if err == nil {
-			t.Error("handleToggleStreaming should fail with nil config service")
 		}
 
 		// TODO: Next feature - VAD implementation

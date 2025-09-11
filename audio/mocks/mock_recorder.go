@@ -5,8 +5,6 @@ package mocks
 
 import (
 	"errors"
-	"io"
-	"strings"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -17,16 +15,12 @@ type MockAudioRecorder struct {
 	isRecording         bool
 	outputFile          string
 	cleanupCalled       bool
-	streaming           bool
 	audioLevel          float64
 	audioLevelCallback  interfaces.AudioLevelCallback
 	startError          error
 	stopError           error
-	getStreamError      error
 	cleanupError        error
 	recordingResult     string
-	streamData          []byte
-	streamReader        io.Reader
 	recordingDuration   time.Duration
 	simulateAudioLevels bool
 	audioLevelSequence  []float64
@@ -39,7 +33,6 @@ func NewMockAudioRecorder() *MockAudioRecorder {
 		outputFile:         "/tmp/test_audio.wav",
 		audioLevel:         0.0,
 		recordingResult:    "Test transcription result",
-		streamData:         []byte("mock audio data"),
 		recordingDuration:  time.Second * 3,
 		audioLevelSequence: []float64{0.1, 0.3, 0.5, 0.7, 0.4, 0.2},
 	}
@@ -94,24 +87,6 @@ func (m *MockAudioRecorder) CleanupFile() error {
 	return nil
 }
 
-// UseStreaming returns whether streaming mode is enabled
-func (m *MockAudioRecorder) UseStreaming() bool {
-	return m.streaming
-}
-
-// GetAudioStream returns a mock audio stream
-func (m *MockAudioRecorder) GetAudioStream() (io.Reader, error) {
-	if m.getStreamError != nil {
-		return nil, m.getStreamError
-	}
-
-	if m.streamReader != nil {
-		return m.streamReader, nil
-	}
-
-	return strings.NewReader(string(m.streamData)), nil
-}
-
 // SetAudioLevelCallback sets the callback for audio level monitoring
 func (m *MockAudioRecorder) SetAudioLevelCallback(callback interfaces.AudioLevelCallback) {
 	m.audioLevelCallback = callback
@@ -139,29 +114,9 @@ func (m *MockAudioRecorder) SetCleanupError(err error) {
 	m.cleanupError = err
 }
 
-// SetGetStreamError configures the mock to return an error on GetAudioStream
-func (m *MockAudioRecorder) SetGetStreamError(err error) {
-	m.getStreamError = err
-}
-
 // SetRecordingResult sets the mock transcription result
 func (m *MockAudioRecorder) SetRecordingResult(result string) {
 	m.recordingResult = result
-}
-
-// SetStreaming enables or disables streaming mode
-func (m *MockAudioRecorder) SetStreaming(streaming bool) {
-	m.streaming = streaming
-}
-
-// SetStreamData sets the mock stream data
-func (m *MockAudioRecorder) SetStreamData(data []byte) {
-	m.streamData = data
-}
-
-// SetStreamReader sets a custom stream reader
-func (m *MockAudioRecorder) SetStreamReader(reader io.Reader) {
-	m.streamReader = reader
 }
 
 // SetOutputFile sets the mock output file path
@@ -218,50 +173,17 @@ func (m *MockAudioRecorder) SetAudioLevel(level float64) {
 	}
 }
 
-// StartStreamingRecording simulates starting streaming recording
-func (m *MockAudioRecorder) StartStreamingRecording() (<-chan []float32, error) {
-	if !m.streaming {
-		return nil, errors.New("streaming not enabled")
-	}
-
-	// Create a channel and simulate some audio chunks
-	chunks := make(chan []float32, 5)
-	go func() {
-		defer close(chunks)
-		// Send some mock chunks
-		for i := 0; i < 3; i++ {
-			chunk := make([]float32, 1024)
-			for j := range chunk {
-				chunk[j] = float32(i) * 0.1 // Simple test data
-			}
-			chunks <- chunk
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-
-	return chunks, nil
-}
-
-// StopStreamingRecording simulates stopping streaming recording
-func (m *MockAudioRecorder) StopStreamingRecording() error {
-	return nil // Mock implementation, always succeeds
-}
-
 // Reset clears all mock state
 func (m *MockAudioRecorder) Reset() {
 	m.isRecording = false
 	m.outputFile = "/tmp/test_audio.wav"
 	m.cleanupCalled = false
-	m.streaming = false
 	m.audioLevel = 0.0
 	m.audioLevelCallback = nil
 	m.startError = nil
 	m.stopError = nil
-	m.getStreamError = nil
 	m.cleanupError = nil
 	m.recordingResult = "Test transcription result"
-	m.streamData = []byte("mock audio data")
-	m.streamReader = nil
 	m.recordingDuration = time.Second * 3
 	m.simulateAudioLevels = false
 	m.audioLevelSequence = []float64{0.1, 0.3, 0.5, 0.7, 0.4, 0.2}

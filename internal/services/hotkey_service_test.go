@@ -92,14 +92,12 @@ func TestHotkeyService(t *testing.T) {
 		var callbacksCalled []string
 		startRecording := func() error { callbacksCalled = append(callbacksCalled, "startRecording"); return nil }
 		stopRecording := func() error { callbacksCalled = append(callbacksCalled, "stopRecording"); return nil }
-		toggleStreaming := func() error { callbacksCalled = append(callbacksCalled, "toggleStreaming"); return nil }
-		toggleVAD := func() error { callbacksCalled = append(callbacksCalled, "toggleVAD"); return nil }
 		switchModel := func() error { callbacksCalled = append(callbacksCalled, "switchModel"); return nil }
 		showConfig := func() error { callbacksCalled = append(callbacksCalled, "showConfig"); return nil }
 		reloadConfig := func() error { callbacksCalled = append(callbacksCalled, "reloadConfig"); return nil }
 
 		err := service.SetupHotkeyCallbacks(
-			startRecording, stopRecording, toggleStreaming, toggleVAD,
+			startRecording, stopRecording,
 			switchModel, showConfig, reloadConfig,
 		)
 		if err != nil {
@@ -112,7 +110,7 @@ func TestHotkeyService(t *testing.T) {
 		}
 
 		// Verify all hotkey actions were registered
-		expectedActions := []string{"toggle_streaming", "toggle_vad", "switch_model", "show_config", "reset_to_defaults"}
+		expectedActions := []string{"switch_model", "show_config", "reset_to_defaults"}
 		for _, action := range expectedActions {
 			if !mockManager.WasHotkeyActionRegistered(action) {
 				t.Errorf("RegisterHotkeyAction was not called for action: %s", action)
@@ -121,12 +119,12 @@ func TestHotkeyService(t *testing.T) {
 
 		// Test that callbacks work
 		mockManager.TriggerCallback("startRecording")
-		mockManager.TriggerCallback("toggleStreaming")
+		mockManager.TriggerCallback("switchModel")
 
 		if len(callbacksCalled) != 2 {
 			t.Errorf("Expected 2 callbacks to be called, got %d", len(callbacksCalled))
 		}
-		if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "toggleStreaming" {
+		if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "switchModel" {
 			t.Errorf("Unexpected callbacks called: %v", callbacksCalled)
 		}
 	})
@@ -135,8 +133,6 @@ func TestHotkeyService(t *testing.T) {
 		service := NewHotkeyService(mockLogger, nil)
 
 		err := service.SetupHotkeyCallbacks(
-			func() error { return nil },
-			func() error { return nil },
 			func() error { return nil },
 			func() error { return nil },
 			func() error { return nil },

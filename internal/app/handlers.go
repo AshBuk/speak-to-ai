@@ -23,14 +23,6 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	return a.Services.Audio.HandleStopRecording()
 }
 
-// handleToggleStreaming handles streaming toggle hotkey
-func (a *App) handleToggleStreaming() error {
-	if a.Services == nil || a.Services.Config == nil {
-		return fmt.Errorf("config service not available")
-	}
-	return a.Services.Config.ToggleStreaming()
-}
-
 // handleToggleVAD handles VAD toggle hotkey
 // TODO: Next feature - VAD implementation
 // func (a *App) handleToggleVAD() error {

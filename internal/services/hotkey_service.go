@@ -39,8 +39,8 @@ func NewHotkeyService(
 func (hs *HotkeyService) SetupHotkeyCallbacks(
 	startRecording func() error,
 	stopRecording func() error,
-	toggleStreaming func() error,
-	toggleVAD func() error,
+	// toggleVAD is the callback for toggling VAD
+	// toggleVAD func() error,
 	switchModel func() error,
 	showConfig func() error,
 	resetToDefaults func() error,
@@ -55,8 +55,8 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	hs.hotkeyManager.RegisterCallbacks(startRecording, stopRecording)
 
 	// Register additional hotkey actions
-	hs.hotkeyManager.RegisterHotkeyAction("toggle_streaming", toggleStreaming)
-	hs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
+	// TODO: Next feature - VAD implementation
+	// hs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
 	hs.hotkeyManager.RegisterHotkeyAction("switch_model", switchModel)
 	hs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
 	hs.hotkeyManager.RegisterHotkeyAction("reset_to_defaults", resetToDefaults)

@@ -16,12 +16,10 @@ func (m *MockAudioService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockAudioService) HandleStartRecording() error                     { return nil }
-func (m *MockAudioService) HandleStopRecording() error                      { return nil }
-func (m *MockAudioService) IsRecording() bool                               { return false }
-func (m *MockAudioService) GetLastTranscript() string                       { return "" }
-func (m *MockAudioService) HandleStartStreamingRecording() error            { return nil }
-func (m *MockAudioService) HandleStreamingResult(text string, isFinal bool) {}
+func (m *MockAudioService) HandleStartRecording() error { return nil }
+func (m *MockAudioService) HandleStopRecording() error  { return nil }
+func (m *MockAudioService) IsRecording() bool           { return false }
+func (m *MockAudioService) GetLastTranscript() string   { return "" }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
@@ -115,7 +113,6 @@ func (m *MockConfigService) GetConfig() interface{}             { return nil }
 func (m *MockConfigService) UpdateLanguage(language string) error   { return nil }
 func (m *MockConfigService) UpdateModelType(modelType string) error { return nil }
 func (m *MockConfigService) ToggleWorkflowNotifications() error     { return nil }
-func (m *MockConfigService) ToggleStreaming() error                 { return nil }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) ToggleVAD() error                              { return nil }
@@ -144,8 +141,8 @@ func (m *MockHotkeyService) Shutdown() error {
 func (m *MockHotkeyService) SetupHotkeyCallbacks(
 	startRecording func() error,
 	stopRecording func() error,
-	toggleStreaming func() error,
-	toggleVAD func() error,
+	// TODO: Next feature - VAD implementation
+	// toggleVAD func() error,
 	switchModel func() error,
 	showConfig func() error,
 	resetToDefaults func() error,

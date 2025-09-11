@@ -20,12 +20,11 @@ import (
 
 // AudioService implements AudioServiceInterface with full functionality
 type AudioService struct {
-	logger          logger.Logger
-	config          *config.Config
-	recorder        interfaces.AudioRecorder
-	whisperEngine   *whisper.WhisperEngine
-	streamingEngine *whisper.StreamingWhisperEngine
-	modelManager    whisper.ModelManager
+	logger        logger.Logger
+	config        *config.Config
+	recorder      interfaces.AudioRecorder
+	whisperEngine *whisper.WhisperEngine
+	modelManager  whisper.ModelManager
 
 	// State management
 	mu                       sync.RWMutex
@@ -49,20 +48,18 @@ func NewAudioService(
 	config *config.Config,
 	recorder interfaces.AudioRecorder,
 	whisperEngine *whisper.WhisperEngine,
-	streamingEngine *whisper.StreamingWhisperEngine,
 	modelManager whisper.ModelManager,
 ) *AudioService {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &AudioService{
-		logger:          logger,
-		config:          config,
-		recorder:        recorder,
-		whisperEngine:   whisperEngine,
-		streamingEngine: streamingEngine,
-		modelManager:    modelManager,
-		ctx:             ctx,
-		cancel:          cancel,
+		logger:        logger,
+		config:        config,
+		recorder:      recorder,
+		whisperEngine: whisperEngine,
+		modelManager:  modelManager,
+		ctx:           ctx,
+		cancel:        cancel,
 	}
 }
 
@@ -101,10 +98,6 @@ func (as *AudioService) HandleStartRecording() error {
 	// if as.config.Audio.EnableVAD && as.config.Audio.AutoStartStop {
 	//	return as.HandleStartVADRecording()
 	// }
-
-	if as.config.Audio.EnableStreaming && as.streamingEngine != nil {
-		return as.HandleStartStreamingRecording()
-	}
 
 	// Standard recording
 	return as.startStandardRecording()
@@ -181,41 +174,6 @@ func (as *AudioService) GetLastTranscript() string {
 	return as.lastTranscript
 }
 
-// HandleStartStreamingRecording starts streaming transcription
-func (as *AudioService) HandleStartStreamingRecording() error {
-	as.logger.Info("Starting streaming recording...")
-
-	if as.streamingEngine == nil {
-		return fmt.Errorf("streaming engine not available")
-	}
-
-	// Start recording with streaming
-	if err := as.recorder.StartRecording(); err != nil {
-		return fmt.Errorf("failed to start recording: %w", err)
-	}
-
-	as.isRecording = true
-
-	// Update UI
-	if as.ui != nil {
-		as.ui.SetRecordingState(true)
-		as.ui.SetTooltip("Streaming recording... Press hotkey to stop")
-	}
-
-	return nil
-}
-
-// HandleStreamingResult processes streaming transcription results
-func (as *AudioService) HandleStreamingResult(text string, isFinal bool) {
-	if as.io != nil {
-		as.io.BroadcastTranscription(text, isFinal)
-	}
-
-	if isFinal {
-		as.handleTranscriptionResult(text, nil)
-	}
-}
-
 // TODO: Next feature - VAD implementation
 // HandleStartVADRecording starts VAD-based recording
 // func (as *AudioService) HandleStartVADRecording() error {
@@ -283,17 +241,6 @@ func (as *AudioService) SwitchModel(modelType string) error {
 	}
 
 	as.whisperEngine = newEngine
-
-	// Recreate streaming engine if needed
-	if as.config.Audio.EnableStreaming {
-		newStreamingEngine, err := whisper.NewStreamingWhisperEngine(as.config, modelPath)
-		if err != nil {
-			as.logger.Warning("Failed to reinitialize streaming engine: %v", err)
-			as.streamingEngine = nil
-		} else {
-			as.streamingEngine = newStreamingEngine
-		}
-	}
 
 	return nil
 }

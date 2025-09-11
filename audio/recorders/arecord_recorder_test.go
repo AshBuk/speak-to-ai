@@ -111,32 +111,6 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	}
 }
 
-// TestArecordRecorder_StreamingConfiguration tests streaming mode setup
-func TestArecordRecorder_StreamingConfiguration(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	cfg.Audio.EnableStreaming = true
-
-	mockLogger := &mocks.MockLogger{}
-	recorder := NewArecordRecorder(cfg, mockLogger)
-
-	// Should inherit streaming setting from config
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled from config")
-	}
-
-	// Test manual streaming toggle
-	recorder.streamingEnabled = false
-	if recorder.UseStreaming() {
-		t.Error("Expected streaming to be disabled after manual toggle")
-	}
-
-	recorder.streamingEnabled = true
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled after manual toggle")
-	}
-}
-
 // TestArecordRecorder_InvalidConfiguration tests error handling with bad configs
 func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 	tests := []struct {
@@ -295,13 +269,4 @@ func TestArecordRecorder_BufferMode(t *testing.T) {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
 
-	// Test buffer access
-	stream, err := recorder.GetAudioStream()
-	if err != nil {
-		t.Errorf("GetAudioStream returned error: %v", err)
-	}
-
-	if stream == nil {
-		t.Error("Expected audio stream to be available")
-	}
 }

@@ -149,10 +149,8 @@ func (a *App) setupHotkeyCallbacks() error {
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
 		a.handleStartRecording,
 		a.handleStopRecordingAndTranscribe,
-		a.handleToggleStreaming,
 		// TODO: Next feature - VAD implementation
 		// a.handleToggleVAD,
-		nil, // VAD toggle temporarily disabled
 		a.handleSwitchModel,
 		a.handleShowConfig,
 		a.handleResetToDefaults,

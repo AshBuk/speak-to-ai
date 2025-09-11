@@ -23,7 +23,8 @@ The application follows a **modular daemon architecture** with clear separation 
 │                      Internal Utilities                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  internal/logger/ │ internal/notify/ │ internal/platform/       │
-│  internal/tray/   │ internal/utils/  │                          │
+│  internal/tray/   │ internal/utils/  │ internal/constants/      │
+│  internal/services/                                              │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                       System Integration                        │
@@ -56,7 +57,7 @@ The application follows a **modular daemon architecture** with clear separation 
 - **`service_assembler.go`**: Services assembly and cross-dependencies
 - **`callback_wirer.go`**: Tray menu callbacks wiring
 - **`factory.go`**: Facade delegating to ComponentFactory, ServiceAssembler, CallbackWirer
-- **`audio_service.go`**: Audio recording, Whisper transcription, streaming, VAD
+- **`audio_service.go`**: Audio recording, Whisper transcription
 - **`ui_service.go`**: System tray, notifications, UI state
 - **`io_service.go`**: Text output, WebSocket server
 - **`config_service.go`**: Configuration file operations
@@ -75,9 +76,7 @@ Related constants:
   - `ffmpeg_recorder.go`: FFmpeg-based recording implementation
 - **`factory/factory.go`**: Factory pattern for creating appropriate recorders
 
-#### Streaming & Processing (`processing/`)
-- **`chunk_processor.go`**: Real-time audio chunk processing
-- **`vad.go`**: Voice Activity Detection implementation
+#### Processing (`processing/`)
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
 #### Testing & Mocking
@@ -111,8 +110,6 @@ Related constants:
 #### Engine Components
 - **`engine.go`**: Main Whisper engine using CGO bindings
 - **`engine_stub.go`**: Stub implementation when CGO is disabled
-- **`processing/streaming_engine.go`**: Real-time streaming transcription
-- **`processing/streaming_engine_stub.go`**: Stub for streaming when CGO disabled
 - **`manager/model_manager.go`**: Whisper model lifecycle management
 - **`providers/model_path_resolver.go`**: Model path resolution for bundled/user models
 - **`providers/model_downloader.go`**: Model download with progress
@@ -195,4 +192,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-09*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-11-09*

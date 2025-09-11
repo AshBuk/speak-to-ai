@@ -37,15 +37,6 @@ type BaseRecorder struct {
 	currentAudioLevel  float64                       // Current audio level (0.0 to 1.0)
 	levelMutex         sync.RWMutex                  // Mutex for audio level access
 
-	// Streaming support
-	streamingEnabled bool
-	pipeReader       *io.PipeReader
-	pipeWriter       *io.PipeWriter
-	stdoutPipe       io.ReadCloser
-	chunkProcessor   *processing.ChunkProcessor
-	audioChunks      chan []float32
-	streamingActive  bool
-
 	// Diagnostics
 	stderrBuf bytes.Buffer
 
@@ -72,34 +63,18 @@ func NewBaseRecorder(config *config.Config, logger logger.Logger) BaseRecorder {
 	}
 
 	return BaseRecorder{
-		config:           config,
-		cmdTimeout:       maxTime,
-		useBuffer:        useBuffer,
-		buffer:           bytes.NewBuffer(nil),
-		tempManager:      processing.GetTempFileManager(), // Use the global temp file manager
-		streamingEnabled: config.Audio.EnableStreaming,
-		audioChunks:      make(chan []float32, 10), // Buffer for 10 chunks
-		streamingActive:  false,
-		logger:           logger,
+		config:      config,
+		cmdTimeout:  maxTime,
+		useBuffer:   useBuffer,
+		buffer:      bytes.NewBuffer(nil),
+		tempManager: processing.GetTempFileManager(), // Use the global temp file manager
+		logger:      logger,
 	}
 }
 
 // GetOutputFile returns the path to the recorded audio file
 func (b *BaseRecorder) GetOutputFile() string {
 	return b.outputFile
-}
-
-// UseStreaming indicates if this recorder supports streaming mode
-func (b *BaseRecorder) UseStreaming() bool {
-	return b.streamingEnabled
-}
-
-// GetAudioStream returns the audio stream for streaming mode
-func (b *BaseRecorder) GetAudioStream() (io.Reader, error) {
-	if b.streamingEnabled && b.pipeReader != nil {
-		return b.pipeReader, nil
-	}
-	return b.buffer, nil
 }
 
 // SetAudioLevelCallback sets the callback for audio level monitoring
@@ -196,92 +171,8 @@ func (b *BaseRecorder) createTempFile() error {
 	return nil
 }
 
-// StartStreamingRecording starts streaming recording and returns audio chunks channel
-func (b *BaseRecorder) StartStreamingRecording() (<-chan []float32, error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if b.streamingActive {
-		return nil, fmt.Errorf("streaming recording already active")
-	}
-
-	if !b.streamingEnabled {
-		return nil, fmt.Errorf("streaming not enabled for this recorder")
-	}
-
-	// Initialize chunk processor
-	processorConfig := processing.ChunkProcessorConfig{
-		ChunkDurationMs: 1000, // 1 second chunks
-		SampleRate:      b.config.Audio.SampleRate,
-		UseVAD:          true,
-		OnSpeech: func(chunk []float32) error {
-			select {
-			case b.audioChunks <- chunk:
-				return nil
-			default:
-				// Channel full, skip this chunk
-				return nil
-			}
-		},
-	}
-
-	b.chunkProcessor = processing.NewChunkProcessor(processorConfig)
-	b.streamingActive = true
-
-	// Start processing audio stream
-	go func() {
-		defer func() {
-			b.mutex.Lock()
-			b.streamingActive = false
-			close(b.audioChunks)
-			b.mutex.Unlock()
-		}()
-
-		// Get audio stream
-		stream, err := b.GetAudioStream()
-		if err != nil {
-			return
-		}
-
-		// Process stream
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		if err := b.chunkProcessor.ProcessStream(ctx, stream); err != nil {
-			log.Printf("Error processing audio stream: %v", err)
-		}
-	}()
-
-	return b.audioChunks, nil
-}
-
-// StopStreamingRecording stops streaming recording
-func (b *BaseRecorder) StopStreamingRecording() error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if !b.streamingActive {
-		return nil // Already stopped
-	}
-
-	if b.chunkProcessor != nil {
-		b.chunkProcessor.Reset()
-	}
-
-	b.streamingActive = false
-	return nil
-}
-
 // StopRecording provides common StopRecording implementation for all recorders
 func (b *BaseRecorder) StopRecording() (string, error) {
-	// Close streaming pipe if enabled
-	if b.streamingEnabled && b.pipeWriter != nil {
-		defer func() {
-			if err := b.pipeWriter.Close(); err != nil {
-				log.Printf("failed to close pipe writer: %v", err)
-			}
-		}()
-	}
 
 	// Stop the recording process
 	if err := b.StopProcess(); err != nil {
@@ -424,8 +315,8 @@ func (b *BaseRecorder) StopProcess() error {
 		log.Printf("%s stderr: %s", cmdName, b.stderrBuf.String())
 	}
 
-	// If we're using a file and not streaming, verify it was created
-	if !b.useBuffer && !b.streamingEnabled {
+	// If we're using a file, verify it was created
+	if !b.useBuffer {
 		// Small delay to ensure buffers are flushed to disk
 		time.Sleep(50 * time.Millisecond)
 		b.logger.Debug("Checking audio file: %s", b.outputFile)
@@ -451,7 +342,7 @@ func (b *BaseRecorder) StopProcess() error {
 	return nil
 }
 
-// ExecuteRecordingCommand executes a recording command with proper setup for streaming or file output
+// ExecuteRecordingCommand executes a recording command with proper setup for file output
 // This is the main method that inheritors should use instead of StartProcessTemplate
 func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) error {
 	b.mutex.Lock()
@@ -465,11 +356,6 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	// Create context with timeout
 	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
 
-	// Setup streaming pipe if needed
-	if b.streamingEnabled {
-		b.pipeReader, b.pipeWriter = io.Pipe()
-	}
-
 	// Setup output file or buffer
 	if b.useBuffer {
 		b.buffer.Reset()
@@ -481,7 +367,7 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 
 	// Add output file to args if needed (for file output mode)
 	finalArgs := args
-	if !b.useBuffer && !b.streamingEnabled {
+	if !b.useBuffer {
 		finalArgs = append(args, b.outputFile)
 	}
 
@@ -500,53 +386,19 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	b.stderrBuf.Reset()
 	b.cmd.Stderr = &b.stderrBuf
 
-	// Handle streaming mode
-	if b.streamingEnabled {
-		// Get stdout pipe before starting the command
-		var err error
-		b.stdoutPipe, err = b.cmd.StdoutPipe()
-		if err != nil {
-			return fmt.Errorf("failed to create stdout pipe: %w", err)
-		}
-
-		// Start the command
-		if err := b.cmd.Start(); err != nil {
-			return fmt.Errorf("failed to start recording: %w", err)
-		}
-
-		// Setup goroutine to copy from stdout pipe to our pipe writer
-		go func() {
-			defer func() {
-				if err := b.pipeWriter.Close(); err != nil {
-					log.Printf("failed to close pipe writer in goroutine: %v", err)
-				}
-			}()
-			buf := make([]byte, 4096)
-			for {
-				n, err := b.stdoutPipe.Read(buf)
-				if n > 0 {
-					if _, err := b.pipeWriter.Write(buf[:n]); err != nil {
-						log.Printf("audio stream pipe write error: %v", err)
-						break
-					}
-				}
-				if err != nil {
-					break
-				}
-			}
-		}()
-
-		// Log stderr after start in background for visibility
-		go func(name string) {
-			// Wait for process end to flush stderr
-			_ = b.waitForProcess()
-			if b.stderrBuf.Len() > 0 {
-				log.Printf("%s stderr: %s", name, b.stderrBuf.String())
-			}
-		}(cmdName)
-
-		return nil
+	// Start the command
+	if err := b.cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start recording: %w", err)
 	}
+
+	// Log stderr after start in background for visibility
+	go func(name string) {
+		// Wait for process end to flush stderr
+		_ = b.waitForProcess()
+		if b.stderrBuf.Len() > 0 {
+			log.Printf("%s stderr: %s", name, b.stderrBuf.String())
+		}
+	}(cmdName)
 
 	// Handle buffer mode
 	if b.useBuffer {

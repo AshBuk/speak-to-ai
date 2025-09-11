@@ -66,7 +66,7 @@ GitHub Actions handle complex builds, releases, and distribution.
 
 | Module | Coverage | Test Files | Integration Tests |
 |--------|----------|------------|-------------------|
-| **audio** | 57.1% | `*_test.go` | Audio devices, streaming |
+| **audio** | 57.1% | `*_test.go` | Audio devices, recording |
 | **output** | 68.3% | `*_test.go` | Clipboard, typing tools |
 | **hotkeys** | 57.4% | `*_test.go` | D-Bus, evdev fallback providers |
 | **config** | 84.9% | `*_test.go` | File loading, validation |

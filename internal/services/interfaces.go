@@ -13,10 +13,6 @@ type AudioServiceInterface interface {
 	IsRecording() bool
 	GetLastTranscript() string
 
-	// Streaming operations
-	HandleStartStreamingRecording() error
-	HandleStreamingResult(text string, isFinal bool)
-
 	// TODO: Next feature - VAD implementation
 	// VAD (Voice Activity Detection) operations
 	// HandleStartVADRecording() error
@@ -79,12 +75,10 @@ type ConfigServiceInterface interface {
 	// Settings updates
 	// TODO: Next feature - VAD implementation
 	// UpdateVADSensitivity(sensitivity string) error
+	// ToggleVAD() error
 	UpdateLanguage(language string) error
 	UpdateModelType(modelType string) error
 	ToggleWorkflowNotifications() error
-	ToggleStreaming() error
-	// TODO: Next feature - VAD implementation
-	// ToggleVAD() error
 	UpdateRecordingMethod(method string) error
 
 	// Cleanup
@@ -97,8 +91,7 @@ type HotkeyServiceInterface interface {
 	SetupHotkeyCallbacks(
 		startRecording func() error,
 		stopRecording func() error,
-		toggleStreaming func() error,
-		toggleVAD func() error,
+		// toggleVAD func() error,
 		switchModel func() error,
 		showConfig func() error,
 		reloadConfig func() error,

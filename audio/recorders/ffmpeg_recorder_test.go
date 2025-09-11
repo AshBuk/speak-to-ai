@@ -40,40 +40,28 @@ func TestNewFFmpegRecorder(t *testing.T) {
 // TestFFmpegRecorder_buildBaseCommandArgs tests command argument building with real scenarios
 func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 	tests := []struct {
-		name          string
-		device        string
-		sampleRate    int
-		useBuffer     bool
-		streamingMode bool
-		expectDevice  string
-		expectRate    string
+		name         string
+		device       string
+		sampleRate   int
+		useBuffer    bool
+		expectDevice string
+		expectRate   string
 	}{
 		{
-			name:          "basic file output",
-			device:        "hw:0,0",
-			sampleRate:    44100,
-			useBuffer:     false,
-			streamingMode: false,
-			expectDevice:  "hw:0,0",
-			expectRate:    "44100",
+			name:         "basic file output",
+			device:       "hw:0,0",
+			sampleRate:   44100,
+			useBuffer:    false,
+			expectDevice: "hw:0,0",
+			expectRate:   "44100",
 		},
 		{
-			name:          "streaming mode should output to stdout",
-			device:        "default",
-			sampleRate:    16000,
-			useBuffer:     false,
-			streamingMode: true,
-			expectDevice:  "default",
-			expectRate:    "16000",
-		},
-		{
-			name:          "buffer mode should output to stdout",
-			device:        "plughw:1,0",
-			sampleRate:    48000,
-			useBuffer:     true,
-			streamingMode: false,
-			expectDevice:  "plughw:1,0",
-			expectRate:    "48000",
+			name:         "buffer mode should output to stdout",
+			device:       "plughw:1,0",
+			sampleRate:   48000,
+			useBuffer:    true,
+			expectDevice: "plughw:1,0",
+			expectRate:   "48000",
 		},
 	}
 
@@ -86,7 +74,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			mockLogger := &mocks.MockLogger{}
 			recorder := NewFFmpegRecorder(cfg, mockLogger)
 			recorder.useBuffer = tt.useBuffer
-			recorder.streamingEnabled = tt.streamingMode
 			recorder.outputFile = "/tmp/test.wav"
 
 			args := recorder.buildBaseCommandArgs()
@@ -117,15 +104,11 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 
 			// Check for correct output format and destination
 			hasWavMode := false
-			hasF32leMode := false
 			hasStdout := false
 			for i, arg := range args {
 				if arg == "-f" && i+1 < len(args) {
-					switch args[i+1] {
-					case "wav":
+					if args[i+1] == "wav" {
 						hasWavMode = true
-					case "f32le":
-						hasF32leMode = true
 					}
 				}
 				if arg == "-" {
@@ -133,11 +116,7 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 				}
 			}
 
-			if tt.streamingMode {
-				if !hasF32leMode || !hasStdout {
-					t.Error("Expected f32le stdout mode (-f f32le -) in streaming mode")
-				}
-			} else if tt.useBuffer {
+			if tt.useBuffer {
 				if !hasWavMode || !hasStdout {
 					t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
 				}
@@ -219,32 +198,6 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 		if outputFile != expectedFile {
 			t.Errorf("Expected output file %s, got %s", expectedFile, outputFile)
 		}
-	}
-}
-
-// TestFFmpegRecorder_StreamingConfiguration tests streaming mode setup
-func TestFFmpegRecorder_StreamingConfiguration(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	cfg.Audio.EnableStreaming = true
-
-	mockLogger := &mocks.MockLogger{}
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
-
-	// Should inherit streaming setting from config
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled from config")
-	}
-
-	// Test manual streaming toggle
-	recorder.streamingEnabled = false
-	if recorder.UseStreaming() {
-		t.Error("Expected streaming to be disabled after manual toggle")
-	}
-
-	recorder.streamingEnabled = true
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled after manual toggle")
 	}
 }
 
@@ -389,13 +342,4 @@ func TestFFmpegRecorder_BufferMode(t *testing.T) {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
 
-	// Test buffer access
-	stream, err := recorder.GetAudioStream()
-	if err != nil {
-		t.Errorf("GetAudioStream returned error: %v", err)
-	}
-
-	if stream == nil {
-		t.Error("Expected audio stream to be available")
-	}
 }

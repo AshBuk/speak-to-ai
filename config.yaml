@@ -20,9 +20,8 @@ general:
 hotkeys:
   start_recording: "ctrl+alt+r"       # Universal default
   stop_recording: "ctrl+alt+r"        # Same combination for start/stop
-  toggle_streaming: "altgr+shift+s"    # Toggle streaming transcription
   switch_model: "altgr+shift+m"        # Switch between models
-  toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
+  # toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
   show_config: "altgr+shift+c"         # Open configuration file
   reset_to_defaults: "altgr+shift+r"   # Reset all settings to defaults
 
@@ -36,8 +35,6 @@ audio:
   # enable_vad: false           # Enable Voice Activity Detection
   # vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
   # auto_start_stop: false      # Auto start/stop recording based on VAD
-  enable_streaming: false     # Enable streaming transcription
-  streaming_buffer_ms: 1000   # Streaming buffer size in milliseconds
 
 # Text output settings
 output:

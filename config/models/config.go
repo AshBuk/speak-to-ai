@@ -28,12 +28,12 @@ type Config struct {
 	// Hotkey settings
 	Hotkeys struct {
 		// Provider override: "auto" | "dbus" | "evdev"
-		Provider        string `yaml:"provider"`
-		StartRecording  string `yaml:"start_recording"`
-		StopRecording   string `yaml:"stop_recording"`
-		ToggleStreaming string `yaml:"toggle_streaming"`
-		SwitchModel     string `yaml:"switch_model"`
-		ToggleVAD       string `yaml:"toggle_vad"`
+		Provider       string `yaml:"provider"`
+		StartRecording string `yaml:"start_recording"`
+		StopRecording  string `yaml:"stop_recording"`
+		SwitchModel    string `yaml:"switch_model"`
+		// Hotkey to toggle VAD on/off
+		// ToggleVAD       string `yaml:"toggle_vad"`
 		ShowConfig      string `yaml:"show_config"`
 		ResetToDefaults string `yaml:"reset_to_defaults"`
 	} `yaml:"hotkeys"`
@@ -45,13 +45,11 @@ type Config struct {
 		Format           string `yaml:"format"`
 		RecordingMethod  string `yaml:"recording_method"`   // 'arecord', 'ffmpeg'
 		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds
-		EnableStreaming  bool   `yaml:"enable_streaming"`   // Whether to enable streaming transcription
 		MaxRecordingTime int    `yaml:"max_recording_time"` // Max recording time in seconds
 		// TODO: Next feature - VAD implementation
 		// EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
 		// VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
 		// AutoStartStop     bool   `yaml:"auto_start_stop"`     // Auto start/stop recording based on VAD
-		StreamingBufferMs int `yaml:"streaming_buffer_ms"` // Streaming buffer size in milliseconds
 	} `yaml:"audio"`
 
 	// Text output settings

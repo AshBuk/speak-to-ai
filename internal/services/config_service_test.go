@@ -23,7 +23,6 @@ func TestConfigService(t *testing.T) {
 	testConfig.General.ModelType = "base"
 	// TODO: Next feature - VAD implementation
 	// testConfig.Audio.VADSensitivity = "medium"
-	testConfig.Audio.EnableStreaming = false
 	// testConfig.Audio.EnableVAD = false
 	testConfig.Notifications.EnableWorkflowNotifications = true
 
@@ -163,32 +162,6 @@ func TestConfigService(t *testing.T) {
 		}
 		if !service.config.Notifications.EnableWorkflowNotifications {
 			t.Error("Workflow notifications should be toggled to true")
-		}
-	})
-
-	t.Run("ToggleStreaming", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
-
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
-
-		service := NewConfigService(mockLogger, testConfig, configPath)
-
-		// Initial state should be false
-		if service.config.Audio.EnableStreaming {
-			t.Error("Initial streaming state should be false")
-		}
-
-		// Toggle to true
-		err = service.ToggleStreaming()
-		if err != nil {
-			t.Errorf("ToggleStreaming failed: %v", err)
-		}
-		if !service.config.Audio.EnableStreaming {
-			t.Error("Streaming should be toggled to true")
 		}
 	})
 

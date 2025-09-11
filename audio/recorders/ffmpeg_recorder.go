@@ -64,11 +64,7 @@ func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	args = append(args, "-q:a", "0")
 
 	// Configure output format
-	if f.streamingEnabled {
-		// Stream raw float32 for easier chunk decoding in streaming mode
-		args = append(args, "-acodec", "pcm_f32le")
-		args = append(args, "-f", "f32le", "-")
-	} else if f.useBuffer {
+	if f.useBuffer {
 		// Keep WAV header in buffer mode to avoid breaking audio level monitor
 		args = append(args, "-acodec", "pcm_s16le")
 		args = append(args, "-f", "wav", "-")
