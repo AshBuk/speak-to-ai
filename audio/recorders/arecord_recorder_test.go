@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 // TestNewArecordRecorder tests the creation of ArecordRecorder
@@ -20,7 +20,7 @@ func TestNewArecordRecorder(t *testing.T) {
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
 
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	if recorder == nil {
@@ -75,7 +75,7 @@ func TestArecordRecorder_getArecordFormat(t *testing.T) {
 			cfg := &config.Config{}
 			cfg.Audio.Format = tt.inputFormat
 
-			mockLogger := &mocks.MockLogger{}
+			mockLogger := testutils.NewMockLogger()
 			recorder := NewArecordRecorder(cfg, mockLogger)
 			format := recorder.getArecordFormat()
 
@@ -93,7 +93,7 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
 
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Initially, no output file should be set
@@ -158,7 +158,7 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.setupConfig()
-			mockLogger := &mocks.MockLogger{}
+			mockLogger := testutils.NewMockLogger()
 			recorder := NewArecordRecorder(cfg, mockLogger)
 
 			// Test format conversion instead of building args
@@ -184,7 +184,7 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Test initial audio level
@@ -224,7 +224,7 @@ func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 // TestArecordRecorder_CleanupFile tests file cleanup functionality
 func TestArecordRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Create a temporary file to test cleanup
@@ -261,7 +261,7 @@ func TestArecordRecorder_BufferMode(t *testing.T) {
 	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
 	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
 
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Should be using buffer mode for short, low-quality recordings

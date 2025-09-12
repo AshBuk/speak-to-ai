@@ -20,6 +20,7 @@ import (
 	hotkeyinterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
 )
 
@@ -162,7 +163,7 @@ func TestApplicationInitializationFlow(t *testing.T) {
 		// Test hotkey system
 		t.Log("Testing hotkey system...")
 		hotkeyConfig := adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, "auto")
-		hotkeyManager := manager.NewHotkeyManager(hotkeyConfig, hotkeyinterfaces.EnvironmentUnknown, newMockLogger())
+		hotkeyManager := manager.NewHotkeyManager(hotkeyConfig, hotkeyinterfaces.EnvironmentUnknown, testutils.NewMockLogger())
 		if hotkeyManager != nil {
 			t.Log("Hotkey system initialized successfully")
 		}

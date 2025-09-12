@@ -10,12 +10,12 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestConfigService(t *testing.T) {
 	// Create mock logger
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	// Create test config
 	testConfig := &models.Config{}

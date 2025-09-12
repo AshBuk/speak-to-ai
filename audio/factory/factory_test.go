@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestNewAudioRecorderFactory(t *testing.T) {
 	config := &config.Config{}
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 	factory := NewAudioRecorderFactory(config, mockLogger)
 
 	if factory.config != config {
@@ -58,7 +58,7 @@ func TestAudioRecorderFactory_CreateRecorder(t *testing.T) {
 			config := &config.Config{}
 			config.Audio.RecordingMethod = tt.recordingMethod
 
-			mockLogger := &mocks.MockLogger{}
+			mockLogger := testutils.NewMockLogger()
 			factory := NewAudioRecorderFactory(config, mockLogger)
 			recorder, err := factory.CreateRecorder()
 
@@ -103,7 +103,7 @@ func TestGetRecorder(t *testing.T) {
 			config := &config.Config{}
 			config.Audio.RecordingMethod = tt.recordingMethod
 
-			mockLogger := &mocks.MockLogger{}
+			mockLogger := testutils.NewMockLogger()
 			recorder, err := GetRecorder(config, mockLogger)
 
 			if tt.expectError && err == nil {

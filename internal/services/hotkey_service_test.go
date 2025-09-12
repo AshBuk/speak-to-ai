@@ -7,11 +7,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 	"github.com/AshBuk/speak-to-ai/tests/mocks"
 )
 
 func TestHotkeyService(t *testing.T) {
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	t.Run("NewHotkeyService", func(t *testing.T) {
 		mockManager := &mocks.MockHotkeyManager{}

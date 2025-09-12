@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/internal/services"
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestRuntimeContext(t *testing.T) {
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	t.Run("NewRuntimeContext", func(t *testing.T) {
 		runtime := NewRuntimeContext(mockLogger)
@@ -62,7 +62,7 @@ func TestRuntimeContext(t *testing.T) {
 }
 
 func TestApp(t *testing.T) {
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	t.Run("NewApp", func(t *testing.T) {
 		app := NewApp(mockLogger)
@@ -151,7 +151,7 @@ func (m *mockServiceWithShutdown) Shutdown() error {
 }
 
 func TestApp_Integration(t *testing.T) {
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	t.Run("Shutdown_WithServices", func(t *testing.T) {
 		app := NewApp(mockLogger)
@@ -200,7 +200,7 @@ func TestApp_Integration(t *testing.T) {
 }
 
 func TestApp_HandlerMethods(t *testing.T) {
-	mockLogger := &mocks.MockLogger{}
+	mockLogger := testutils.NewMockLogger()
 
 	t.Run("Handlers_NilServices", func(t *testing.T) {
 		app := NewApp(mockLogger)

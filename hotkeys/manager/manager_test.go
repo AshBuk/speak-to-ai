@@ -10,12 +10,13 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestNewHotkeyManager(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	if manager == nil {
 		t.Fatal("NewHotkeyManager returned nil")
@@ -41,7 +42,7 @@ func TestNewHotkeyManager(t *testing.T) {
 func TestHotkeyManager_Start_Success(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider immediately after creation
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -62,7 +63,7 @@ func TestHotkeyManager_Start_Success(t *testing.T) {
 func TestHotkeyManager_Start_ProviderError(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider that returns error
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -81,7 +82,7 @@ func TestHotkeyManager_Start_ProviderError(t *testing.T) {
 func TestHotkeyManager_Stop(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider immediately after creation
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -99,7 +100,7 @@ func TestHotkeyManager_Stop(t *testing.T) {
 func TestHotkeyManager_RegisterCallbacks(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -141,7 +142,7 @@ func TestHotkeyManager_RegisterCallbacks(t *testing.T) {
 func TestHotkeyManager_IsRecording(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -170,7 +171,7 @@ func TestHotkeyManager_IsRecording(t *testing.T) {
 func TestHotkeyManager_SimulateHotkeyPress_StartRecording(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -212,7 +213,7 @@ func TestHotkeyManager_SimulateHotkeyPress_StartRecording(t *testing.T) {
 func TestHotkeyManager_SimulateHotkeyPress_StopRecording(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -257,7 +258,7 @@ func TestHotkeyManager_SimulateHotkeyPress_StopRecording(t *testing.T) {
 func TestHotkeyManager_SimulateHotkeyPress_InvalidAction(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -273,7 +274,7 @@ func TestHotkeyManager_SimulateHotkeyPress_InvalidAction(t *testing.T) {
 func TestHotkeyManager_SimulateHotkeyPress_CallbackError(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -325,7 +326,7 @@ func TestHotkeyManager_EnvironmentTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manager := NewHotkeyManager(config, tt.environment, newMockLogger())
+			manager := NewHotkeyManager(config, tt.environment, testutils.NewMockLogger())
 
 			// Replace with mock provider
 			mockProvider := mocks.NewMockHotkeyProvider()
@@ -375,7 +376,7 @@ func TestHotkeyManager_ConfigAdapter(t *testing.T) {
 func TestHotkeyManager_ConcurrentAccess(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, newMockLogger())
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with mock provider
 	mockProvider := mocks.NewMockHotkeyProvider()
