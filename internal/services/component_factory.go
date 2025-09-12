@@ -181,7 +181,7 @@ func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
 			cf.config.Config.Hotkeys.ResetToDefaults,
 		)
 
-	return manager.NewHotkeyManager(configAdapter, hotkeyEnv)
+	return manager.NewHotkeyManager(configAdapter, hotkeyEnv, cf.config.Logger)
 }
 
 // createWebSocketServer creates WebSocket server
@@ -193,6 +193,7 @@ func (cf *ComponentFactory) createWebSocketServer(recorder interfaces.AudioRecor
 func (cf *ComponentFactory) createTrayManager() tray.TrayManagerInterface {
 	// Create tray manager with placeholder callbacks (will be set later)
 	return tray.CreateTrayManagerWithConfig(cf.config.Config,
+		cf.config.Logger,
 		func() { // onExit
 			cf.config.Logger.Info("Exit requested from tray")
 		},

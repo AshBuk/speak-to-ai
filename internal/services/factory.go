@@ -65,7 +65,7 @@ func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
 	container := assembler.Assemble(components)
 
 	// Wire tray callbacks
-	wirer := NewCallbackWirer()
+	wirer := NewCallbackWirer(sf.config.Logger)
 	wirer.Wire(container, components)
 
 	return container, nil

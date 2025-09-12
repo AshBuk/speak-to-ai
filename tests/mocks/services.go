@@ -3,7 +3,10 @@
 
 package mocks
 
-import "github.com/AshBuk/speak-to-ai/config"
+import (
+	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+)
 
 // MockAudioService implements AudioServiceInterface for testing
 type MockAudioService struct {
@@ -28,13 +31,9 @@ func (m *MockAudioService) EnsureAudioRecorderAvailable() error { return nil }
 func (m *MockAudioService) SwitchModel(modelType string) error  { return nil }
 
 // Test helper methods
-func (m *MockAudioService) WasShutdownCalled() bool {
-	return m.shutdownCalled
-}
+func (m *MockAudioService) WasShutdownCalled() bool { return m.shutdownCalled }
 
-func (m *MockAudioService) SetShutdownError(err error) {
-	m.shutdownError = err
-}
+func (m *MockAudioService) SetShutdownError(err error) { m.shutdownError = err }
 
 // MockUIService implements UIServiceInterface for testing
 type MockUIService struct {
@@ -57,13 +56,9 @@ func (m *MockUIService) ShowConfigFile() error                             { ret
 func (m *MockUIService) UpdateSettings(cfg *config.Config)                 {}
 
 // Test helper methods
-func (m *MockUIService) WasShutdownCalled() bool {
-	return m.shutdownCalled
-}
+func (m *MockUIService) WasShutdownCalled() bool { return m.shutdownCalled }
 
-func (m *MockUIService) SetShutdownError(err error) {
-	m.shutdownError = err
-}
+func (m *MockUIService) SetShutdownError(err error) { m.shutdownError = err }
 
 // MockIOService implements IOServiceInterface for testing
 type MockIOService struct {
@@ -84,13 +79,9 @@ func (m *MockIOService) StopWebSocketServer() error                       { retu
 func (m *MockIOService) HandleTypingFallback(text string) error           { return nil }
 
 // Test helper methods
-func (m *MockIOService) WasShutdownCalled() bool {
-	return m.shutdownCalled
-}
+func (m *MockIOService) WasShutdownCalled() bool { return m.shutdownCalled }
 
-func (m *MockIOService) SetShutdownError(err error) {
-	m.shutdownError = err
-}
+func (m *MockIOService) SetShutdownError(err error) { m.shutdownError = err }
 
 // MockConfigService implements ConfigServiceInterface for testing
 type MockConfigService struct {
@@ -106,7 +97,7 @@ func (m *MockConfigService) Shutdown() error {
 func (m *MockConfigService) LoadConfig(configFile string) error { return nil }
 func (m *MockConfigService) SaveConfig() error                  { return nil }
 func (m *MockConfigService) ResetToDefaults() error             { return nil }
-func (m *MockConfigService) GetConfig() interface{}             { return nil }
+func (m *MockConfigService) GetConfig() interface{}             { return &config.Config{} }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
@@ -118,15 +109,12 @@ func (m *MockConfigService) ToggleWorkflowNotifications() error     { return nil
 // func (m *MockConfigService) ToggleVAD() error                              { return nil }
 func (m *MockConfigService) UpdateRecordingMethod(method string) error { return nil }
 func (m *MockConfigService) UpdateOutputMode(mode string) error        { return nil }
+func (m *MockConfigService) UpdateHotkey(action, combo string) error   { return nil }
 
 // Test helper methods
-func (m *MockConfigService) WasShutdownCalled() bool {
-	return m.shutdownCalled
-}
+func (m *MockConfigService) WasShutdownCalled() bool { return m.shutdownCalled }
 
-func (m *MockConfigService) SetShutdownError(err error) {
-	m.shutdownError = err
-}
+func (m *MockConfigService) SetShutdownError(err error) { m.shutdownError = err }
 
 // MockHotkeyService implements HotkeyServiceInterface for testing
 type MockHotkeyService struct {
@@ -152,12 +140,14 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 }
 func (m *MockHotkeyService) RegisterHotkeys() error   { return nil }
 func (m *MockHotkeyService) UnregisterHotkeys() error { return nil }
+func (m *MockHotkeyService) ReloadFromConfig(startRecording, stopRecording func() error, _ func() adapters.HotkeyConfig) error {
+	return nil
+}
+
+// CaptureOnce mock implementation
+func (m *MockHotkeyService) CaptureOnce(timeoutMs int) (string, error) { return "ctrl+alt+r", nil }
 
 // Test helper methods
-func (m *MockHotkeyService) WasShutdownCalled() bool {
-	return m.shutdownCalled
-}
+func (m *MockHotkeyService) WasShutdownCalled() bool { return m.shutdownCalled }
 
-func (m *MockHotkeyService) SetShutdownError(err error) {
-	m.shutdownError = err
-}
+func (m *MockHotkeyService) SetShutdownError(err error) { m.shutdownError = err }

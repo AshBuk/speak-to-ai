@@ -45,7 +45,7 @@ func TestWaylandCompatibility(t *testing.T) {
 	t.Run("wayland_hotkeys", func(t *testing.T) {
 		// Test DBus hotkey provider
 		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma", "auto")
-		provider := providers.NewDbusKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentWayland)
+		provider := providers.NewDbusKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentWayland, newMockLogger())
 
 		if provider.IsSupported() {
 			t.Log("DBus GlobalShortcuts portal is available")
@@ -91,7 +91,7 @@ func TestX11Compatibility(t *testing.T) {
 	t.Run("x11_hotkeys", func(t *testing.T) {
 		// Test evdev hotkey provider
 		hotkeyConfig := adapters.NewConfigAdapter("altgr+comma", "auto")
-		provider := providers.NewEvdevKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentX11)
+		provider := providers.NewEvdevKeyboardProvider(hotkeyConfig, hotkeyinterfaces.EnvironmentX11, newMockLogger())
 
 		if provider.IsSupported() {
 			t.Log("Evdev input devices are available")

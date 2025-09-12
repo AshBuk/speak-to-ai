@@ -3,7 +3,11 @@
 
 package app
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/AshBuk/speak-to-ai/config"
+)
 
 // Hotkey handler methods that delegate to services
 
@@ -34,18 +38,33 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 
 // handleSwitchModel handles model switching hotkey
 func (a *App) handleSwitchModel() error {
-	if a.Services == nil || a.Services.Audio == nil {
-		return fmt.Errorf("audio service not available")
+	if a.Services == nil || a.Services.Config == nil || a.Services.Audio == nil {
+		return fmt.Errorf("services not available")
 	}
 
-	// Cycle through available models (simplified implementation)
-	currentModel := "base" // Default
-	nextModel := "small"
-	if currentModel == "small" {
-		nextModel = "base"
+	cfgIface := a.Services.Config.GetConfig()
+	cfg, ok := cfgIface.(*config.Config)
+	if !ok || cfg == nil {
+		return fmt.Errorf("config not available")
 	}
 
-	return a.Services.Audio.SwitchModel(nextModel)
+	order := []string{"tiny", "base", "small", "medium", "large"}
+	current := cfg.General.ModelType
+	idx := 0
+	for i, m := range order {
+		if m == current {
+			idx = i
+			break
+		}
+	}
+	next := order[(idx+1)%len(order)]
+
+	// Persist in config first
+	if err := a.Services.Config.UpdateModelType(next); err != nil {
+		return err
+	}
+	// Switch model in audio service (ensures model availability/init)
+	return a.Services.Audio.SwitchModel(next)
 }
 
 // handleShowConfig handles show config hotkey

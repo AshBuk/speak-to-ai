@@ -14,7 +14,7 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	env := interfaces.EnvironmentWayland
 
-	provider := NewDbusKeyboardProvider(config, env)
+	provider := NewDbusKeyboardProvider(config, env, newMockLogger())
 
 	if provider == nil {
 		t.Fatal("NewDbusKeyboardProvider returned nil")
@@ -36,7 +36,7 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 
 func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	// Test IsSupported - this will likely return false in test environment
 	supported := provider.IsSupported()
@@ -52,7 +52,7 @@ func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
 
 func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	callbackCalled := false
 	callback := func() error {
@@ -90,7 +90,7 @@ func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	callback := func() error { return nil }
 
@@ -112,7 +112,7 @@ func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 
 func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	// Set isListening to true to simulate already started
 	provider.isListening = true
@@ -128,7 +128,7 @@ func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 
 func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	// Stop should not panic even if not started
 	provider.Stop()
@@ -141,7 +141,7 @@ func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
 
 func TestDbusKeyboardProvider_Stop_WhenStarted(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland)
+	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, newMockLogger())
 
 	// Simulate started state
 	provider.isListening = true

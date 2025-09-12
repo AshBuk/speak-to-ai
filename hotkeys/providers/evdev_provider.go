@@ -7,14 +7,15 @@ package providers
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	evdev "github.com/holoplot/go-evdev"
 )
 
@@ -28,10 +29,11 @@ type EvdevKeyboardProvider struct {
 	isListening   bool
 	modifierState map[string]bool // For tracking modifier keys state
 	mutex         sync.RWMutex
+	logger        logger.Logger
 }
 
 // NewEvdevKeyboardProvider creates a new EvdevKeyboardProvider instance
-func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *EvdevKeyboardProvider {
+func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *EvdevKeyboardProvider {
 	return &EvdevKeyboardProvider{
 		config:        config,
 		environment:   environment,
@@ -39,6 +41,7 @@ func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfac
 		stopListening: make(chan bool),
 		isListening:   false,
 		modifierState: make(map[string]bool),
+		logger:        logger,
 	}
 }
 
@@ -53,7 +56,7 @@ func (p *EvdevKeyboardProvider) IsSupported() bool {
 	// Close devices since we're just testing
 	for _, dev := range devices {
 		if err := dev.Close(); err != nil {
-			log.Printf("Failed to close evdev device: %v", err)
+			p.logger.Error("Failed to close evdev device: %v", err)
 		}
 	}
 
@@ -74,18 +77,18 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 	for _, path := range devicePaths {
 		dev, err := evdev.Open(path)
 		if err != nil {
-			log.Printf("Warning: could not open input device %s: %v", path, err)
+			p.logger.Warning("Could not open input device %s: %v", path, err)
 			continue
 		}
 
-		// Check if this device is a keyboard
+		// Check if this device is a keyboard (avoid mice/gamepads)
 		devName, _ := dev.Name()
 		if strings.Contains(strings.ToLower(devName), "keyboard") ||
-			hasKeyEvents(dev) {
+			isKeyboardDevice(dev) {
 			devices = append(devices, dev)
 		} else {
 			if err := dev.Close(); err != nil {
-				log.Printf("Failed to close evdev device: %v", err)
+				p.logger.Error("Failed to close evdev device: %v", err)
 			}
 		}
 	}
@@ -93,15 +96,25 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 	return devices, nil
 }
 
-// hasKeyEvents checks if a device has key events
-func hasKeyEvents(dev *evdev.InputDevice) bool {
-	// Check if the device supports key events (EV_KEY)
+// isKeyboardDevice checks if device exposes typical keyboard key codes (letters)
+func isKeyboardDevice(dev *evdev.InputDevice) bool {
 	types := dev.CapableTypes()
+	isKey := false
 	for _, evType := range types {
 		if evType == evdev.EV_KEY {
-			// Check if it has key events
-			events := dev.CapableEvents(evdev.EV_KEY)
-			return len(events) > 0
+			isKey = true
+			break
+		}
+	}
+	if !isKey {
+		return false
+	}
+	// Presence of common letter key codes strongly indicates a keyboard
+	events := dev.CapableEvents(evdev.EV_KEY)
+	common := map[uint16]bool{16: true, 30: true, 44: true, 57: true} // q, a, z, space
+	for _, code := range events {
+		if common[uint16(code)] {
+			return true
 		}
 	}
 	return false
@@ -166,7 +179,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	}
 
 	// Track modifier key state
-	if utils.IsModifier(keyName) {
+	if utils.IsModifier(keyName) || keyName == "leftmeta" || keyName == "rightmeta" {
 		// Value 1 = key down, 0 = key up
 		p.mutex.Lock()
 		p.modifierState[strings.ToLower(keyName)] = (event.Value == 1)
@@ -199,9 +212,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 			// Check if all required modifiers are pressed
 			allModifiersPressed := true
 			for _, mod := range hotkey.Modifiers {
-				// Convert general modifier names to specific ones
-				evdevModifier := utils.ConvertModifierToEvdev(mod)
-				if !modState[evdevModifier] {
+				if !modifierPressed(mod, modState) {
 					allModifiersPressed = false
 					break
 				}
@@ -211,11 +222,45 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 			if allModifiersPressed {
 				go func(cb func() error) {
 					if err := cb(); err != nil {
-						log.Printf("Hotkey callback error: %v", err)
+						p.logger.Error("Hotkey callback error: %v", err)
 					}
 				}(callback)
 			}
 		}
+	}
+}
+
+// modifierPressed determines if a modifier (generic or side-specific) is pressed
+func modifierPressed(mod string, state map[string]bool) bool {
+	m := strings.ToLower(mod)
+	switch m {
+	case "ctrl":
+		return state["leftctrl"] || state["rightctrl"]
+	case "leftctrl":
+		return state["leftctrl"]
+	case "rightctrl":
+		return state["rightctrl"]
+	case "alt":
+		return state["leftalt"] || state["rightalt"]
+	case "leftalt":
+		return state["leftalt"]
+	case "rightalt", "altgr":
+		return state["rightalt"]
+	case "shift":
+		return state["leftshift"] || state["rightshift"]
+	case "leftshift":
+		return state["leftshift"]
+	case "rightshift":
+		return state["rightshift"]
+	case "super", "meta", "win":
+		return state["leftmeta"] || state["rightmeta"]
+	case "leftmeta":
+		return state["leftmeta"]
+	case "rightmeta":
+		return state["rightmeta"]
+	default:
+		// Fallback to simple mapping for any other names
+		return state[utils.ConvertModifierToEvdev(m)]
 	}
 }
 
@@ -337,10 +382,140 @@ func (p *EvdevKeyboardProvider) Stop() {
 	// Close all devices
 	for _, dev := range p.devices {
 		if err := dev.Close(); err != nil {
-			log.Printf("Failed to close evdev device: %v", err)
+			p.logger.Error("Failed to close evdev device: %v", err)
 		}
 	}
 
 	p.devices = nil
 	p.isListening = false
+}
+
+// CaptureOnce starts a short-lived capture session and returns a single normalized hotkey string
+// or an error on timeout/cancel. It does not depend on Start/Stop lifecycle.
+func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
+	devices, err := p.findKeyboardDevices()
+	if err != nil {
+		return "", fmt.Errorf("failed to find keyboard devices: %w", err)
+	}
+	if len(devices) == 0 {
+		return "", fmt.Errorf("no keyboard devices found")
+	}
+
+	defer func() {
+		for _, d := range devices {
+			if closeErr := d.Close(); closeErr != nil {
+				p.logger.Error("Failed to close evdev device: %v", closeErr)
+			}
+		}
+	}()
+
+	// Local modifier state independent from main listener
+	modState := map[string]bool{}
+	resultCh := make(chan string, 1)
+	stopCh := make(chan struct{})
+
+	for i := range devices {
+		idx := i
+		go func() {
+			for {
+				select {
+				case <-stopCh:
+					return
+				default:
+				}
+				ev, err := devices[idx].ReadOne()
+				if err != nil {
+					return
+				}
+				if ev.Type != evdev.EV_KEY {
+					continue
+				}
+
+				keyCode := int(ev.Code)
+				keyName := getKeyName(keyCode)
+				if keyName == "" {
+					keyName = fmt.Sprintf("KEY_%d", keyCode)
+				}
+
+				// Ignore non-keyboard buttons (e.g., mouse BTN_* produce KEY_### fallback)
+				if strings.HasPrefix(keyName, "KEY_") {
+					continue
+				}
+
+				// Track modifiers (down/up)
+				if utils.IsModifier(keyName) || keyName == "leftmeta" || keyName == "rightmeta" || keyName == "leftctrl" || keyName == "rightctrl" || keyName == "leftalt" || keyName == "rightalt" || keyName == "leftshift" || keyName == "rightshift" {
+					modState[strings.ToLower(keyName)] = (ev.Value == 1)
+					continue
+				}
+
+				// Only consider key down for main key
+				if ev.Value != 1 {
+					continue
+				}
+
+				// Cancel if Esc pressed without modifiers
+				noMods := !modState["leftctrl"] && !modState["rightctrl"] &&
+					!modState["leftshift"] && !modState["rightshift"] &&
+					!modState["leftalt"] && !modState["rightalt"] &&
+					!modState["leftmeta"] && !modState["rightmeta"]
+				if strings.EqualFold(keyName, "esc") && noMods {
+					select {
+					case resultCh <- "":
+					default:
+					}
+					return
+				}
+
+				mods := make([]string, 0, 5)
+				if modState["leftctrl"] || modState["rightctrl"] {
+					mods = append(mods, "ctrl")
+				}
+				if modState["leftshift"] || modState["rightshift"] {
+					mods = append(mods, "shift")
+				}
+				if modState["leftalt"] || modState["rightalt"] {
+					mods = append(mods, "alt")
+				}
+				if modState["rightalt"] {
+					mods = append(mods, "altgr")
+				}
+				if modState["leftmeta"] || modState["rightmeta"] {
+					mods = append(mods, "super")
+				}
+
+				combo := strings.ToLower(keyName)
+				if len(mods) > 0 {
+					combo = strings.Join(mods, "+") + "+" + combo
+				}
+				combo = utils.NormalizeHotkey(combo)
+				// Basic validation; skip if invalid
+				if err := utils.ValidateHotkey(combo); err != nil {
+					continue
+				}
+
+				select {
+				case resultCh <- combo:
+				default:
+				}
+				return
+			}
+		}()
+	}
+
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	var result string
+	select {
+	case result = <-resultCh:
+		close(stopCh)
+	case <-timer.C:
+		close(stopCh)
+		return "", fmt.Errorf("capture timeout")
+	}
+
+	if strings.TrimSpace(result) == "" {
+		return "", fmt.Errorf("capture cancelled")
+	}
+	return result, nil
 }

@@ -7,10 +7,10 @@ package tray
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/getlantern/systray"
 )
 
@@ -24,6 +24,7 @@ type TrayManager struct {
 	onShowConfig      func() error
 	onResetToDefaults func() error
 	config            *config.Config
+	logger            logger.Logger
 
 	// Menu items
 	toggleItem       *systray.MenuItem
@@ -55,10 +56,11 @@ type TrayManager struct {
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
 	onSelectOutputMode     func(mode string) error
+	onRebindHotkey         func(action string) error
 }
 
 // NewTrayManager creates a new tray manager instance
-func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) *TrayManager {
+func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error, logger logger.Logger) *TrayManager {
 	return &TrayManager{
 		isRecording:       false,
 		iconMicOff:        iconMicOff,
@@ -71,6 +73,7 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 		audioItems:        make(map[string]*systray.MenuItem),
 		modelItems:        make(map[string]*systray.MenuItem),
 		outputItems:       make(map[string]*systray.MenuItem),
+		logger:            logger,
 	}
 }
 
@@ -131,6 +134,8 @@ func (tm *TrayManager) onReady() {
 func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	// Store and delegate all UI updates to helpers in settings_menu.go
 	tm.config = config
+	// Ensure hotkeys UI reflects latest config
+	tm.updateHotkeysMenuUI()
 	// The helpers gracefully no-op if items are not yet created
 	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
 	// TODO: Next feature - VAD implementation
@@ -146,26 +151,26 @@ func (tm *TrayManager) handleMenuClicks() {
 	for {
 		select {
 		case <-tm.toggleItem.ClickedCh:
-			log.Println("Toggle recording clicked")
+			tm.logger.Info("Toggle recording clicked")
 			if err := tm.onToggle(); err != nil {
-				log.Printf("Error toggling recording: %v", err)
+				tm.logger.Error("Error toggling recording: %v", err)
 			}
 		case <-tm.showConfigItem.ClickedCh:
-			log.Println("Show config clicked")
+			tm.logger.Info("Show config clicked")
 			if tm.onShowConfig != nil {
 				if err := tm.onShowConfig(); err != nil {
-					log.Printf("Error showing config: %v", err)
+					tm.logger.Error("Error showing config: %v", err)
 				}
 			}
 		case <-tm.reloadConfigItem.ClickedCh:
-			log.Println("Reset to defaults clicked")
+			tm.logger.Info("Reset to defaults clicked")
 			if tm.onResetToDefaults != nil {
 				if err := tm.onResetToDefaults(); err != nil {
-					log.Printf("Error resetting to defaults: %v", err)
+					tm.logger.Error("Error resetting to defaults: %v", err)
 				}
 			}
 		case <-tm.exitItem.ClickedCh:
-			log.Println("Exit clicked")
+			tm.logger.Info("Exit clicked")
 			// Quit systray first to ensure UI responds
 			systray.Quit()
 			// Then trigger application shutdown
@@ -231,6 +236,11 @@ func (tm *TrayManager) SetSettingsActions(
 	tm.onSelectModel = onSelectModelType
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode
+}
+
+// SetHotkeyRebindAction sets callback for hotkey rebind action
+func (tm *TrayManager) SetHotkeyRebindAction(onRebind func(action string) error) {
+	tm.onRebindHotkey = onRebind
 }
 
 // SetGetOutputToolsCallback sets the callback for getting actual output tool names

@@ -5,7 +5,9 @@ package services
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
@@ -16,6 +18,7 @@ type HotkeyManagerInterface interface {
 	Stop()
 	RegisterCallbacks(startRecording, stopRecording func() error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
+	ReloadConfig(newConfig adapters.HotkeyConfig) error
 }
 
 // HotkeyService implements HotkeyServiceInterface
@@ -98,4 +101,29 @@ func (hs *HotkeyService) Shutdown() error {
 
 	hs.logger.Info("HotkeyService shutdown complete")
 	return nil
+}
+
+// ReloadFromConfig rebuilds hotkey configuration in the underlying manager
+func (hs *HotkeyService) ReloadFromConfig(startRecording, stopRecording func() error, configProvider func() adapters.HotkeyConfig) error {
+	if hs.hotkeyManager == nil {
+		return fmt.Errorf("hotkey manager not available")
+	}
+	cfg := configProvider()
+	// ensure callbacks are set (in case of provider swap)
+	hs.hotkeyManager.RegisterCallbacks(startRecording, stopRecording)
+	return hs.hotkeyManager.ReloadConfig(cfg)
+}
+
+// CaptureOnce proxies one-shot capture to the underlying hotkey manager
+func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
+	if hs.hotkeyManager == nil {
+		return "", fmt.Errorf("hotkey manager not available")
+	}
+	if timeoutMs <= 0 {
+		timeoutMs = 3000
+	}
+	if hm, ok := hs.hotkeyManager.(*manager.HotkeyManager); ok {
+		return hm.CaptureOnce(time.Duration(timeoutMs) * time.Millisecond)
+	}
+	return "", fmt.Errorf("capture not supported by manager")
 }

@@ -5,10 +5,6 @@
 
 package tray
 
-import (
-	"log"
-)
-
 // createSettingsSubmenus creates the settings submenus
 func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
@@ -36,12 +32,8 @@ func (tm *TrayManager) populateSettingsMenus() {
 		return
 	}
 
-	// Populate Hotkeys menu
-	tm.hotkeyItems["start_recording"] = tm.hotkeysMenu.AddSubMenuItem(
-		"Start Recording: "+tm.config.Hotkeys.StartRecording,
-		"Current start recording hotkey",
-	)
-	tm.hotkeyItems["start_recording"].Disable()
+	// Populate Hotkeys menu (display + rebind)
+	tm.updateHotkeysMenuUI()
 
 	// Populate Audio Recorder submenu with selectable items
 	tm.audioItems["recorder_arecord"] = tm.audioRecorderMenu.AddSubMenuItem(
@@ -67,22 +59,22 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// Handle clicks for recorder selection
 	go func() {
 		for range tm.audioItems["recorder_arecord"].ClickedCh {
-			log.Println("Audio recorder switched to arecord (UI)")
+			tm.logger.Info("Audio recorder switched to arecord (UI)")
 			tm.updateRecorderRadioUI("arecord")
 			if tm.onSelectRecorder != nil {
 				if err := tm.onSelectRecorder("arecord"); err != nil {
-					log.Printf("Error selecting recorder: %v", err)
+					tm.logger.Error("Error selecting recorder: %v", err)
 				}
 			}
 		}
 	}()
 	go func() {
 		for range tm.audioItems["recorder_ffmpeg"].ClickedCh {
-			log.Println("Audio recorder switched to ffmpeg (UI)")
+			tm.logger.Info("Audio recorder switched to ffmpeg (UI)")
 			tm.updateRecorderRadioUI("ffmpeg")
 			if tm.onSelectRecorder != nil {
 				if err := tm.onSelectRecorder("ffmpeg"); err != nil {
-					log.Printf("Error selecting recorder: %v", err)
+					tm.logger.Error("Error selecting recorder: %v", err)
 				}
 			}
 		}
@@ -91,10 +83,10 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// Handle test recording
 	go func() {
 		for range tm.audioItems["recorder_test"].ClickedCh {
-			log.Println("Test recording clicked")
+			tm.logger.Info("Test recording clicked")
 			if tm.onTestRecording != nil {
 				if err := tm.onTestRecording(); err != nil {
-					log.Printf("Test recording failed: %v", err)
+					tm.logger.Error("Test recording failed: %v", err)
 				}
 			}
 		}
@@ -104,11 +96,11 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// if tm.audioItems["vad_low"] != nil {
 	// 	go func() {
 	// 		for range tm.audioItems["vad_low"].ClickedCh {
-	// 			log.Println("VAD sensitivity switched to low (UI)")
+	// 			tm.logger.Info("VAD sensitivity switched to low (UI)")
 	// 			tm.updateVADRadioUI("low")
 	// 			if tm.onSelectVADSens != nil {
 	// 				if err := tm.onSelectVADSens("low"); err != nil {
-	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
 	// 				}
 	// 			}
 	// 		}
@@ -117,11 +109,11 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// if tm.audioItems["vad_medium"] != nil {
 	// 	go func() {
 	// 		for range tm.audioItems["vad_medium"].ClickedCh {
-	// 			log.Println("VAD sensitivity switched to medium (UI)")
+	// 			tm.logger.Info("VAD sensitivity switched to medium (UI)")
 	// 			tm.updateVADRadioUI("medium")
 	// 			if tm.onSelectVADSens != nil {
 	// 				if err := tm.onSelectVADSens("medium"); err != nil {
-	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
 	// 				}
 	// 			}
 	// 		}
@@ -130,11 +122,11 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// if tm.audioItems["vad_high"] != nil {
 	// 	go func() {
 	// 		for range tm.audioItems["vad_high"].ClickedCh {
-	// 			log.Println("VAD sensitivity switched to high (UI)")
+	// 			tm.logger.Info("VAD sensitivity switched to high (UI)")
 	// 			tm.updateVADRadioUI("high")
 	// 			if tm.onSelectVADSens != nil {
 	// 				if err := tm.onSelectVADSens("high"); err != nil {
-	// 					log.Printf("Error selecting VAD sensitivity: %v", err)
+	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
 	// 				}
 	// 			}
 	// 		}
@@ -145,10 +137,10 @@ func (tm *TrayManager) populateSettingsMenus() {
 	if tm.audioItems["workflow_notifications"] != nil {
 		go func() {
 			for range tm.audioItems["workflow_notifications"].ClickedCh {
-				log.Println("Workflow notifications toggle clicked")
+				tm.logger.Info("Workflow notifications toggle clicked")
 				if tm.onToggleWorkflowNotify != nil {
 					if err := tm.onToggleWorkflowNotify(); err != nil {
-						log.Printf("Error toggling workflow notifications: %v", err)
+						tm.logger.Error("Error toggling workflow notifications: %v", err)
 					}
 					// Reflect new state in UI using updated config
 					if tm.config != nil {
@@ -208,11 +200,11 @@ func (tm *TrayManager) populateSettingsMenus() {
 			key := k
 			go func() {
 				for range itm.ClickedCh {
-					log.Printf("Language switched to %s (UI)", key)
+					tm.logger.Info("Language switched to %s (UI)", key)
 					tm.updateLanguageRadioUI(key)
 					if tm.onSelectLang != nil {
 						if err := tm.onSelectLang(key); err != nil {
-							log.Printf("Error selecting language: %v", err)
+							tm.logger.Error("Error selecting language: %v", err)
 						}
 					}
 				}
@@ -226,11 +218,11 @@ func (tm *TrayManager) populateSettingsMenus() {
 			mm := m
 			go func() {
 				for range itm.ClickedCh {
-					log.Printf("Model switched to %s (UI)", mm)
+					tm.logger.Info("Model switched to %s (UI)", mm)
 					tm.updateModelRadioUI(mm)
 					if tm.onSelectModel != nil {
 						if err := tm.onSelectModel(mm); err != nil {
-							log.Printf("Error selecting model: %v", err)
+							tm.logger.Error("Error selecting model: %v", err)
 						}
 					}
 				}
@@ -277,16 +269,115 @@ func (tm *TrayManager) populateSettingsMenus() {
 			key := k
 			go func() {
 				for range itm.ClickedCh {
-					log.Printf("Output mode switched to %s (UI)", key)
+					tm.logger.Info("Output mode switched to %s (UI)", key)
 					tm.updateOutputModeRadioUI(key)
 					if tm.onSelectOutputMode != nil {
 						if err := tm.onSelectOutputMode(key); err != nil {
-							log.Printf("Error selecting output mode: %v", err)
+							tm.logger.Error("Error selecting output mode: %v", err)
 						}
 					}
 				}
 			}()
 		}
+	}
+}
+
+// updateHotkeysMenuUI ensures hotkeys items exist and reflect current config
+func (tm *TrayManager) updateHotkeysMenuUI() {
+	if tm.hotkeysMenu == nil || tm.config == nil {
+		return
+	}
+	// Start/Stop
+	if tm.hotkeyItems["rebind_start_stop"] == nil {
+		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Start/Stop…", "Change start/stop hotkey")
+		tm.hotkeyItems["rebind_start_stop"] = reb
+		go func() {
+			for range reb.ClickedCh {
+				if tm.onRebindHotkey != nil {
+					if err := tm.onRebindHotkey("start_recording"); err != nil {
+						tm.logger.Error("Error rebinding start/stop: %v", err)
+					}
+				}
+			}
+		}()
+	}
+	if tm.hotkeyItems["display_start_stop"] == nil {
+		tm.hotkeyItems["display_start_stop"] = tm.hotkeysMenu.AddSubMenuItem(
+			"Start/Stop Recording: "+tm.config.Hotkeys.StartRecording,
+			"Current start/stop recording hotkey",
+		)
+		tm.hotkeyItems["display_start_stop"].Disable()
+	} else {
+		tm.hotkeyItems["display_start_stop"].SetTitle("Start/Stop Recording: " + tm.config.Hotkeys.StartRecording)
+	}
+	// Switch model
+	if tm.hotkeyItems["rebind_switch_model"] == nil {
+		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Switch Model…", "Change switch model hotkey")
+		tm.hotkeyItems["rebind_switch_model"] = reb
+		go func() {
+			for range reb.ClickedCh {
+				if tm.onRebindHotkey != nil {
+					if err := tm.onRebindHotkey("switch_model"); err != nil {
+						tm.logger.Error("Error rebinding switch model: %v", err)
+					}
+				}
+			}
+		}()
+	}
+	if tm.hotkeyItems["display_switch_model"] == nil {
+		tm.hotkeyItems["display_switch_model"] = tm.hotkeysMenu.AddSubMenuItem(
+			"Switch Model: "+tm.config.Hotkeys.SwitchModel,
+			"Current switch model hotkey",
+		)
+		tm.hotkeyItems["display_switch_model"].Disable()
+	} else {
+		tm.hotkeyItems["display_switch_model"].SetTitle("Switch Model: " + tm.config.Hotkeys.SwitchModel)
+	}
+	// Show config
+	if tm.hotkeyItems["rebind_show_config"] == nil {
+		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Show Config…", "Change show config hotkey")
+		tm.hotkeyItems["rebind_show_config"] = reb
+		go func() {
+			for range reb.ClickedCh {
+				if tm.onRebindHotkey != nil {
+					if err := tm.onRebindHotkey("show_config"); err != nil {
+						tm.logger.Error("Error rebinding show config: %v", err)
+					}
+				}
+			}
+		}()
+	}
+	if tm.hotkeyItems["display_show_config"] == nil {
+		tm.hotkeyItems["display_show_config"] = tm.hotkeysMenu.AddSubMenuItem(
+			"Show Config: "+tm.config.Hotkeys.ShowConfig,
+			"Current show config hotkey",
+		)
+		tm.hotkeyItems["display_show_config"].Disable()
+	} else {
+		tm.hotkeyItems["display_show_config"].SetTitle("Show Config: " + tm.config.Hotkeys.ShowConfig)
+	}
+	// Reset defaults
+	if tm.hotkeyItems["rebind_reset_defaults"] == nil {
+		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Reset to Defaults…", "Change reset defaults hotkey")
+		tm.hotkeyItems["rebind_reset_defaults"] = reb
+		go func() {
+			for range reb.ClickedCh {
+				if tm.onRebindHotkey != nil {
+					if err := tm.onRebindHotkey("reset_to_defaults"); err != nil {
+						tm.logger.Error("Error rebinding reset defaults: %v", err)
+					}
+				}
+			}
+		}()
+	}
+	if tm.hotkeyItems["display_reset_defaults"] == nil {
+		tm.hotkeyItems["display_reset_defaults"] = tm.hotkeysMenu.AddSubMenuItem(
+			"Reset to Defaults: "+tm.config.Hotkeys.ResetToDefaults,
+			"Current reset to defaults hotkey",
+		)
+		tm.hotkeyItems["display_reset_defaults"].Disable()
+	} else {
+		tm.hotkeyItems["display_reset_defaults"].SetTitle("Reset to Defaults: " + tm.config.Hotkeys.ResetToDefaults)
 	}
 }
 

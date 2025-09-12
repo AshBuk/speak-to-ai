@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewDummyKeyboardProvider(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	if provider == nil {
 		t.Fatal("NewDummyKeyboardProvider returned nil")
@@ -29,7 +29,7 @@ func TestNewDummyKeyboardProvider(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_IsSupported(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	// Dummy provider should always be supported
 	if !provider.IsSupported() {
@@ -45,7 +45,7 @@ func TestDummyKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_Start(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	// Initial state
 	if provider.isListening {
@@ -75,7 +75,7 @@ func TestDummyKeyboardProvider_Start(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_Stop(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	// Stop without starting should be safe
 	provider.Stop()
@@ -103,7 +103,7 @@ func TestDummyKeyboardProvider_Stop(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 	callbackCalled := false
 
 	callback := func() error {
@@ -139,7 +139,7 @@ func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	hotkeys := []string{
 		"ctrl+r",
@@ -193,7 +193,7 @@ func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	firstCallbackCalled := false
 	secondCallbackCalled := false
@@ -242,7 +242,7 @@ func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_StartStopCycle(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	// Start -> Stop -> Start cycle
 	err := provider.Start()
@@ -268,7 +268,7 @@ func TestDummyKeyboardProvider_StartStopCycle(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_StateConsistency(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(newMockLogger())
 
 	// Test various state combinations
 	scenarios := []struct {

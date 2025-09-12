@@ -5,11 +5,13 @@ package manager
 
 import (
 	"fmt"
-	"log"
 	"sync"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // HotkeyAction represents a hotkey action callback
@@ -28,10 +30,11 @@ type HotkeyManager struct {
 	environment      interfaces.EnvironmentType
 	provider         interfaces.KeyboardEventProvider
 	modifierState    map[string]bool // Track state of modifier keys
+	logger           logger.Logger
 }
 
 // NewHotkeyManager creates a new instance of HotkeyManager
-func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *HotkeyManager {
+func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *HotkeyManager {
 	manager := &HotkeyManager{
 		config:        config,
 		isListening:   false,
@@ -40,10 +43,11 @@ func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.Envir
 		environment:   environment,
 		modifierState: make(map[string]bool),
 		hotkeyActions: make(map[string]HotkeyAction),
+		logger:        logger,
 	}
 
 	// Initialize the appropriate keyboard provider based on environment and privileges
-	manager.provider = selectProviderForEnvironment(manager.config, manager.environment)
+	manager.provider = selectProviderForEnvironment(manager.config, manager.environment, manager.logger)
 
 	return manager
 }
@@ -103,8 +107,8 @@ func (h *HotkeyManager) Start() error {
 
 	h.isListening = true
 
-	log.Println("Starting hotkey manager...")
-	log.Printf("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
+	h.logger.Info("Starting hotkey manager...")
+	h.logger.Info("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
 
 	// Register all hotkeys using helper
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
@@ -169,4 +173,50 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	}
 
 	return nil
+}
+
+// ReloadConfig stops current listener, updates config/provider, re-registers and restarts
+func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
+	if h.isListening && h.provider != nil {
+		h.provider.Stop()
+		h.isListening = false
+	}
+
+	h.config = newConfig
+	h.provider = selectProviderForEnvironment(h.config, h.environment, h.logger)
+	if h.provider == nil {
+		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
+	}
+
+	// Register all hotkeys using helper
+	if err := h.registerAllHotkeysOn(h.provider); err != nil {
+		return err
+	}
+
+	// Start the provider
+	if err := h.provider.Start(); err != nil {
+		return startFallbackAfterRegistration(h, err)
+	}
+
+	h.isListening = true
+	return nil
+}
+
+// CaptureOnce attempts to capture a single hotkey combination using the active provider.
+// If the active provider does not support capture, it falls back to a temporary evdev provider.
+func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
+	if h.provider == nil {
+		return "", fmt.Errorf("no keyboard provider available")
+	}
+	combo, err := h.provider.CaptureOnce(timeout)
+	if err == nil && combo != "" {
+		return combo, nil
+	}
+	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
+		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
+		if fallback != nil && fallback.IsSupported() {
+			return fallback.CaptureOnce(timeout)
+		}
+	}
+	return "", err
 }

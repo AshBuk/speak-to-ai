@@ -212,6 +212,48 @@ func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	return nil
 }
 
+// UpdateHotkey updates a hotkey action string and persists config
+func (cs *ConfigService) UpdateHotkey(action, combo string) error {
+	if cs == nil || cs.config == nil {
+		return fmt.Errorf("config service not available")
+	}
+	oldStart := cs.config.Hotkeys.StartRecording
+	oldStop := cs.config.Hotkeys.StopRecording
+	oldSwitch := cs.config.Hotkeys.SwitchModel
+	oldShow := cs.config.Hotkeys.ShowConfig
+	oldReset := cs.config.Hotkeys.ResetToDefaults
+
+	switch action {
+	case "start_recording", "stop_recording":
+		cs.config.Hotkeys.StartRecording = combo
+		cs.config.Hotkeys.StopRecording = combo
+	case "switch_model":
+		cs.config.Hotkeys.SwitchModel = combo
+	case "show_config":
+		cs.config.Hotkeys.ShowConfig = combo
+	case "reset_to_defaults":
+		cs.config.Hotkeys.ResetToDefaults = combo
+	default:
+		return fmt.Errorf("unknown hotkey action: %s", action)
+	}
+
+	if err := cs.SaveConfig(); err != nil {
+		// rollback
+		cs.config.Hotkeys.StartRecording = oldStart
+		cs.config.Hotkeys.StopRecording = oldStop
+		cs.config.Hotkeys.SwitchModel = oldSwitch
+		cs.config.Hotkeys.ShowConfig = oldShow
+		cs.config.Hotkeys.ResetToDefaults = oldReset
+		return fmt.Errorf("failed to save hotkey: %w", err)
+	}
+
+	// Refresh UI display
+	if cs.uiService != nil {
+		cs.uiService.UpdateSettings(cs.config)
+	}
+	return nil
+}
+
 // Shutdown implements ConfigServiceInterface
 func (cs *ConfigService) Shutdown() error {
 	// Save final configuration state

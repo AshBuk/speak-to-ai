@@ -78,10 +78,6 @@ func TestIsValidFile(t *testing.T) {
 	}
 }
 
-// TestIsValidExecutable removed - function no longer exists in new implementation
-
-// TestWhisperEngine_validatePaths removed - method no longer exists in new implementation
-
 func TestGetFileSize(t *testing.T) {
 	// Create a temporary file with known content
 	tempFile, err := os.CreateTemp("", "test_size")

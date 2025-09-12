@@ -5,7 +5,9 @@ package providers
 
 import (
 	"fmt"
-	"log"
+	"time"
+
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // DummyKeyboardProvider implements KeyboardEventProvider with no actual functionality
@@ -13,13 +15,15 @@ import (
 type DummyKeyboardProvider struct {
 	callbacks   map[string]func() error
 	isListening bool
+	logger      logger.Logger
 }
 
 // NewDummyKeyboardProvider creates a new DummyKeyboardProvider
-func NewDummyKeyboardProvider() *DummyKeyboardProvider {
+func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	return &DummyKeyboardProvider{
 		callbacks:   make(map[string]func() error),
 		isListening: false,
+		logger:      logger,
 	}
 }
 
@@ -35,24 +39,24 @@ func (p *DummyKeyboardProvider) Start() error {
 	}
 
 	p.isListening = true
-	log.Println("Warning: Using dummy keyboard provider. Hotkeys will not be functional.")
-	log.Println("")
-	log.Println("To enable hotkeys, try one of these solutions:")
-	log.Println("")
-	log.Println("🔧 Modern Desktop Environments (GNOME/KDE):")
-	log.Println("   - Ensure D-Bus session is running")
-	log.Println("   - Check if 'dbus-daemon --session' is active")
-	log.Println("")
-	log.Println("🔧 Other Desktop Environments (XFCE/i3/sway):")
-	log.Println("   - Add your user to 'input' group: sudo usermod -a -G input $USER")
-	log.Println("   - Then logout and login again")
-	log.Println("   - Or run the application with sudo (not recommended)")
-	log.Println("")
-	log.Println("🔧 Alternative Solutions:")
-	log.Println("   - Use system hotkey tools like 'sxhkd' or 'xbindkeys'")
-	log.Println("   - Configure DE-specific keyboard shortcuts")
-	log.Println("   - Use the WebSocket interface for remote control")
-	log.Println("")
+	p.logger.Warning("Using dummy keyboard provider. Hotkeys will not be functional.")
+	p.logger.Info("")
+	p.logger.Info("To enable hotkeys, try one of these solutions:")
+	p.logger.Info("")
+	p.logger.Info("🔧 Modern Desktop Environments (GNOME/KDE):")
+	p.logger.Info("   - Ensure D-Bus session is running")
+	p.logger.Info("   - Check if 'dbus-daemon --session' is active")
+	p.logger.Info("")
+	p.logger.Info("🔧 Other Desktop Environments (XFCE/i3/sway):")
+	p.logger.Info("   - Add your user to 'input' group: sudo usermod -a -G input $USER")
+	p.logger.Info("   - Then logout and login again")
+	p.logger.Info("   - Or run the application with sudo (not recommended)")
+	p.logger.Info("")
+	p.logger.Info("🔧 Alternative Solutions:")
+	p.logger.Info("   - Use system hotkey tools like 'sxhkd' or 'xbindkeys'")
+	p.logger.Info("   - Configure DE-specific keyboard shortcuts")
+	p.logger.Info("   - Use the WebSocket interface for remote control")
+	p.logger.Info("")
 
 	return nil
 }
@@ -64,7 +68,12 @@ func (p *DummyKeyboardProvider) Stop() {
 
 // RegisterHotkey just stores the callback but never calls it
 func (p *DummyKeyboardProvider) RegisterHotkey(hotkey string, callback func() error) error {
-	log.Printf("Registered hotkey: %s (but it will not function with dummy provider)", hotkey)
+	p.logger.Info("Registered hotkey: %s (but it will not function with dummy provider)", hotkey)
 	p.callbacks[hotkey] = callback
 	return nil
+}
+
+// CaptureOnce is not supported in dummy provider
+func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
+	return "", fmt.Errorf("captureOnce not supported in dummy provider")
 }

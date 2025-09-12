@@ -3,12 +3,17 @@
 
 package interfaces
 
+import "time"
+
 // KeyboardEventProvider defines an interface for keyboard event sources
 type KeyboardEventProvider interface {
 	Start() error
 	Stop()
 	RegisterHotkey(hotkey string, callback func() error) error
 	IsSupported() bool
+	// CaptureOnce starts a short-lived capture session and returns a single
+	// normalized hotkey string (e.g., "ctrl+alt+r") or an error on timeout/cancel.
+	CaptureOnce(timeout time.Duration) (string, error)
 }
 
 // KeyCombination represents a hotkey combination

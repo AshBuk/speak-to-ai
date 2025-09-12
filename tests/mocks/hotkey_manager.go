@@ -3,7 +3,10 @@
 
 package mocks
 
-import "github.com/AshBuk/speak-to-ai/hotkeys/manager"
+import (
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
+)
 
 // HotkeyManagerInterface defines the interface that MockHotkeyManager implements
 type HotkeyManagerInterface interface {
@@ -11,6 +14,7 @@ type HotkeyManagerInterface interface {
 	Stop()
 	RegisterCallbacks(startRecording, stopRecording func() error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
+	ReloadConfig(newConfig adapters.HotkeyConfig) error
 }
 
 // MockHotkeyManager implements HotkeyManagerInterface for testing
@@ -65,18 +69,14 @@ func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager
 	}
 }
 
+func (m *MockHotkeyManager) ReloadConfig(_ adapters.HotkeyConfig) error { return nil }
+
 // Test helper methods
-func (m *MockHotkeyManager) WasStartCalled() bool {
-	return m.startCalled
-}
+func (m *MockHotkeyManager) WasStartCalled() bool { return m.startCalled }
 
-func (m *MockHotkeyManager) WasStopCalled() bool {
-	return m.stopCalled
-}
+func (m *MockHotkeyManager) WasStopCalled() bool { return m.stopCalled }
 
-func (m *MockHotkeyManager) WereCallbacksRegistered() bool {
-	return m.registerCallbacksCalled
-}
+func (m *MockHotkeyManager) WereCallbacksRegistered() bool { return m.registerCallbacksCalled }
 
 func (m *MockHotkeyManager) WasHotkeyActionRegistered(action string) bool {
 	return m.registerHotkeyActionCalled[action]
@@ -110,6 +110,4 @@ func (m *MockHotkeyManager) TriggerCallback(callbackType string) error {
 }
 
 // SetStartError sets the error that will be returned by Start method
-func (m *MockHotkeyManager) SetStartError(err error) {
-	m.startError = err
-}
+func (m *MockHotkeyManager) SetStartError(err error) { m.startError = err }

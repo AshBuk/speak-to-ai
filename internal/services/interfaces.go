@@ -3,7 +3,10 @@
 
 package services
 
-import "github.com/AshBuk/speak-to-ai/config"
+import (
+	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+)
 
 // AudioServiceInterface defines the contract for audio-related operations
 type AudioServiceInterface interface {
@@ -81,6 +84,7 @@ type ConfigServiceInterface interface {
 	ToggleWorkflowNotifications() error
 	UpdateRecordingMethod(method string) error
 	UpdateOutputMode(mode string) error
+	UpdateHotkey(action, combo string) error
 
 	// Cleanup
 	Shutdown() error
@@ -101,6 +105,12 @@ type HotkeyServiceInterface interface {
 	// Hotkey lifecycle
 	RegisterHotkeys() error
 	UnregisterHotkeys() error
+
+	// Hotkey reloading
+	ReloadFromConfig(startRecording, stopRecording func() error, configProvider func() adapters.HotkeyConfig) error
+
+	// One-shot capture for rebind flow
+	CaptureOnce(timeoutMs int) (string, error)
 
 	// Cleanup
 	Shutdown() error

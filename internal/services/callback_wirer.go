@@ -6,16 +6,23 @@ package services
 import (
 	"fmt"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // CallbackWirer wires the callbacks to the tray manager
-type CallbackWirer struct{}
+type CallbackWirer struct {
+	logger logger.Logger
+}
 
-func NewCallbackWirer() *CallbackWirer { return &CallbackWirer{} }
+func NewCallbackWirer(logger logger.Logger) *CallbackWirer {
+	return &CallbackWirer{logger: logger}
+}
 
 func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Components) {
 	if components == nil || components.TrayManager == nil {
@@ -169,6 +176,63 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			}
 		}
 	}
+
+	// Hotkeys rebind wiring
+	components.TrayManager.SetHotkeyRebindAction(func(action string) error {
+		if container == nil || container.UI == nil || container.Config == nil || container.Hotkeys == nil {
+			return fmt.Errorf("services not available")
+		}
+
+		// Show prompt and capture through provider
+		if container.UI != nil {
+			container.UI.ShowNotification("Rebind Hotkey", "Press new hotkey… (Esc to cancel)")
+		}
+		combo, err := container.Hotkeys.CaptureOnce(3000)
+		if err != nil || strings.TrimSpace(combo) == "" {
+			if container.UI != nil {
+				container.UI.ShowNotification("Rebind Hotkey", "Cancelled or timeout")
+			}
+			return nil
+		}
+
+		// Persist in config
+		if err := container.Config.UpdateHotkey(action, combo); err != nil {
+			return err
+		}
+
+		// Reload hotkeys in manager from updated config
+		cfgProvider := func() adapters.HotkeyConfig {
+			if cfgSvc, ok := container.Config.(*ConfigService); ok && cfgSvc != nil {
+				if cfg, ok2 := cfgSvc.GetConfig().(*config.Config); ok2 && cfg != nil {
+					return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
+						WithAdditionalHotkeys(
+							"",
+							cfg.Hotkeys.SwitchModel,
+							cfg.Hotkeys.ShowConfig,
+							cfg.Hotkeys.ResetToDefaults,
+						)
+				}
+			}
+			return adapters.NewConfigAdapter("", "auto")
+		}
+
+		// Ensure callbacks preserved
+		if err := container.Hotkeys.ReloadFromConfig(
+			func() error { return container.Audio.HandleStartRecording() },
+			func() error { return container.Audio.HandleStopRecording() },
+			cfgProvider,
+		); err != nil {
+			return err
+		}
+
+		// Notify user about successful rebind
+		if container.UI != nil {
+			title := "Hotkey Updated"
+			msg := fmt.Sprintf("%s -> %s", action, combo)
+			container.UI.ShowNotification(title, msg)
+		}
+		return nil
+	})
 
 	// Ensure Quit exits app cleanly
 	components.TrayManager.SetExitAction(func() {
