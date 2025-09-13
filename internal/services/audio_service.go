@@ -80,14 +80,14 @@ func (as *AudioService) HandleStartRecording() error {
 	as.logger.Info("Starting recording...")
 
 	// Ensure model is available
-	if err := as.EnsureModelAvailable(); err != nil {
+	if err := as.ensureModelAvailable(); err != nil {
 		as.logger.Error("Model not available: %v", err)
 		as.setUIError(constants.MsgModelUnavailable)
 		return fmt.Errorf("model not available: %w", err)
 	}
 
 	// Ensure audio recorder is available
-	if err := as.EnsureAudioRecorderAvailable(); err != nil {
+	if err := as.ensureAudioRecorderAvailable(); err != nil {
 		as.logger.Error("Audio recorder not available: %v", err)
 		as.setUIError(constants.MsgRecorderUnavailable)
 		return fmt.Errorf("audio recorder not available: %w", err)
@@ -184,8 +184,8 @@ func (as *AudioService) GetLastTranscript() string {
 //	return as.startStandardRecording()
 // }
 
-// EnsureModelAvailable ensures whisper model is ready
-func (as *AudioService) EnsureModelAvailable() error {
+// ensureModelAvailable ensures whisper model is ready
+func (as *AudioService) ensureModelAvailable() error {
 	if as.modelManager == nil {
 		return fmt.Errorf("model manager not available")
 	}
@@ -200,8 +200,8 @@ func (as *AudioService) EnsureModelAvailable() error {
 	return nil
 }
 
-// EnsureAudioRecorderAvailable ensures audio recorder is ready
-func (as *AudioService) EnsureAudioRecorderAvailable() error {
+// ensureAudioRecorderAvailable ensures audio recorder is ready
+func (as *AudioService) ensureAudioRecorderAvailable() error {
 	if as.audioRecorderNeedsReinit || as.recorder == nil {
 		as.logger.Info("Reinitializing audio recorder...")
 
