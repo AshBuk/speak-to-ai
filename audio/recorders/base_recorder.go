@@ -301,11 +301,7 @@ func (b *BaseRecorder) StopProcess() error {
 		}
 	}
 
-	// Clean up process state after termination
-	b.cmd = nil
-	b.cancel = nil
-
-	// Log any stderr captured for diagnostics
+	// Log any stderr captured for diagnostics before cleanup
 	if b.stderrBuf.Len() > 0 {
 		cmdName := "recorder"
 		if b.cmd != nil && b.cmd.Path != "" {
@@ -313,6 +309,10 @@ func (b *BaseRecorder) StopProcess() error {
 		}
 		b.logger.Debug("%s stderr: %s", cmdName, b.stderrBuf.String())
 	}
+
+	// Clean up process state after termination
+	b.cmd = nil
+	b.cancel = nil
 
 	// If we're using a file, verify it was created
 	if !b.useBuffer {
@@ -403,28 +403,6 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
-	// Background diagnostics
-	go func(name string) {
-		defer func() {
-			if r := recover(); r != nil {
-				b.logger.Error("Panic in %s monitoring: %v", name, r)
-			}
-		}()
-		_ = b.waitForProcess()
-		if b.stderrBuf.Len() > 0 {
-			b.logger.Debug("%s stderr: %s", name, b.stderrBuf.String())
-		}
-		if b.processErr != nil {
-			b.logger.Debug("%s exited with error: %v", name, b.processErr)
-			switch name {
-			case "ffmpeg":
-				b.logger.Info("FFmpeg failed - try switching to arecord via tray menu")
-				b.logger.Info("Common cause: PulseAudio sources SUSPENDED in PipeWire")
-			case "arecord":
-				b.logger.Info("arecord failed - check microphone permissions and hardware")
-			}
-		}
-	}(cmdName)
 
 	return nil
 }
