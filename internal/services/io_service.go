@@ -91,23 +91,6 @@ func (ios *IOService) SetOutputMethod(method string) error {
 	return nil
 }
 
-// BroadcastTranscription implements IOServiceInterface
-func (ios *IOService) BroadcastTranscription(text string, isFinal bool) {
-	if ios.webSocketServer == nil {
-		ios.logger.Debug("WebSocket server not available, skipping broadcast")
-		return
-	}
-
-	ios.logger.Debug("Broadcasting transcription: %s (final: %t)", text, isFinal)
-
-	// Send transcription update via WebSocket
-	payload := map[string]interface{}{
-		"text":    text,
-		"isFinal": isFinal,
-	}
-	ios.webSocketServer.BroadcastMessage("transcription", payload)
-}
-
 // StartWebSocketServer implements IOServiceInterface
 func (ios *IOService) StartWebSocketServer() error {
 	if ios.webSocketServer == nil {

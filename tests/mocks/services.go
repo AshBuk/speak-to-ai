@@ -22,12 +22,9 @@ func (m *MockAudioService) Shutdown() error {
 func (m *MockAudioService) HandleStartRecording() error { return nil }
 func (m *MockAudioService) HandleStopRecording() error  { return nil }
 func (m *MockAudioService) IsRecording() bool           { return false }
-func (m *MockAudioService) GetLastTranscript() string   { return "" }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
-func (m *MockAudioService) EnsureModelAvailable() error         { return nil }
-func (m *MockAudioService) EnsureAudioRecorderAvailable() error { return nil }
 func (m *MockAudioService) SwitchModel(modelType string) error  { return nil }
 
 // Test helper methods
@@ -73,7 +70,6 @@ func (m *MockIOService) Shutdown() error {
 
 func (m *MockIOService) OutputText(text string) error                     { return nil }
 func (m *MockIOService) SetOutputMethod(method string) error              { return nil }
-func (m *MockIOService) BroadcastTranscription(text string, isFinal bool) {}
 func (m *MockIOService) StartWebSocketServer() error                      { return nil }
 func (m *MockIOService) StopWebSocketServer() error                       { return nil }
 func (m *MockIOService) HandleTypingFallback(text string) error           { return nil }
