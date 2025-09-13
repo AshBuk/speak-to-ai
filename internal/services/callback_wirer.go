@@ -138,10 +138,14 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			return nil
 		},
 		func(mode string) error {
-			if container == nil || container.Config == nil {
-				return fmt.Errorf("config service not available")
+			if container == nil || container.Config == nil || container.IO == nil {
+				return fmt.Errorf("services not available")
 			}
 			if err := container.Config.UpdateOutputMode(mode); err != nil {
+				return err
+			}
+			// Apply the output method change to IOService
+			if err := container.IO.SetOutputMethod(mode); err != nil {
 				return err
 			}
 			// Update tray to reflect new selection immediately

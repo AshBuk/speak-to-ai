@@ -25,7 +25,6 @@ type Config = models.Config
 const (
 	OutputModeClipboard    = models.OutputModeClipboard
 	OutputModeActiveWindow = models.OutputModeActiveWindow
-	OutputModeCombined     = models.OutputModeCombined
 )
 
 // LoadConfig loads configuration from file

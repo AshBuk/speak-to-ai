@@ -6,8 +6,6 @@ package outputters
 import (
 	"errors"
 	"strings"
-
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
 // MockOutputter implements interfaces.Outputter interface for testing
@@ -159,33 +157,6 @@ func (m *MockOutputter) ContainsTypeText(text string) bool {
 		}
 	}
 	return false
-}
-
-// MockCombinedOutputter implements both clipboard and typing functionality
-type MockCombinedOutputter struct {
-	*MockOutputter
-	clipboardOutputter interfaces.Outputter
-	typeOutputter      interfaces.Outputter
-}
-
-// NewMockCombinedOutputter creates a new mock combined outputter
-func NewMockCombinedOutputter() *MockCombinedOutputter {
-	mockOutputter := NewMockOutputter()
-	return &MockCombinedOutputter{
-		MockOutputter:      mockOutputter,
-		clipboardOutputter: mockOutputter,
-		typeOutputter:      mockOutputter,
-	}
-}
-
-// CopyToClipboard delegates to clipboard outputter
-func (m *MockCombinedOutputter) CopyToClipboard(text string) error {
-	return m.clipboardOutputter.CopyToClipboard(text)
-}
-
-// TypeToActiveWindow delegates to type outputter
-func (m *MockCombinedOutputter) TypeToActiveWindow(text string) error {
-	return m.typeOutputter.TypeToActiveWindow(text)
 }
 
 // MockOutputterWithErrors provides pre-configured error scenarios

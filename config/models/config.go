@@ -7,7 +7,6 @@ package models
 const (
 	OutputModeClipboard    = "clipboard"
 	OutputModeActiveWindow = "active_window"
-	OutputModeCombined     = "combined"
 )
 
 // Config structure for storing application configuration

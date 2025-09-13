@@ -50,25 +50,13 @@ func TestFactory_GetOutputter(t *testing.T) {
 			expectError: true, // External tools not available in test environment
 		},
 		{
-			name:        "X11 combined mode",
-			env:         EnvironmentX11,
-			defaultMode: "combined",
-			expectError: true, // External tools not available in test environment
-		},
-		{
-			name:        "Wayland combined mode",
-			env:         EnvironmentWayland,
-			defaultMode: "combined",
-			expectError: true, // External tools not available in test environment
-		},
-		{
 			name:        "Unknown environment default mode",
 			env:         EnvironmentUnknown,
 			defaultMode: "clipboard",
 			expectError: true, // External tools not available in test environment
 		},
 		{
-			name:        "empty default mode falls back to combined",
+			name:        "empty default mode falls back to clipboard",
 			env:         EnvironmentX11,
 			defaultMode: "",
 			expectError: true, // External tools not available in test environment
@@ -149,7 +137,7 @@ func TestFactory_GetOutputter_ToolSelection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := &config.Config{}
-			config.Output.DefaultMode = "combined"
+			config.Output.DefaultMode = "clipboard"
 			config.Output.ClipboardTool = tt.clipboardTool
 			config.Output.TypeTool = tt.typeTool
 
@@ -194,7 +182,7 @@ func TestGetOutputterFromConfig(t *testing.T) {
 		{
 			name:        "unknown environment",
 			env:         EnvironmentUnknown,
-			defaultMode: "combined",
+			defaultMode: "clipboard",
 			expectError: true, // External tools not available
 		},
 	}
