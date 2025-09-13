@@ -145,7 +145,7 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	}
 
 	p.callbacks[hotkey] = callback
-	p.logger.Error("D-Bus hotkey registered: %s", hotkey)
+	p.logger.Info("D-Bus hotkey registered: %s", hotkey)
 	return nil
 }
 
@@ -244,7 +244,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	for hotkey := range p.callbacks {
 		accel := convertHotkeyToAccelerator(hotkey)
-		p.logger.Error("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
+		p.logger.Info("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
 
 		shortcutData := map[string]dbus.Variant{
 			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
@@ -261,7 +261,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	// Step 3: Bind shortcuts to the session
 	bindOptions := map[string]dbus.Variant{}
-	p.logger.Error("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
+	p.logger.Info("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
 
 	call = obj.Call("org.freedesktop.portal.GlobalShortcuts.BindShortcuts", 0,
 		dbus.ObjectPath(sessionHandle), shortcuts, "", bindOptions)
@@ -269,7 +269,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 		return fmt.Errorf("failed to bind shortcuts: %w", call.Err)
 	}
 
-	p.logger.Error("DBus: Successfully bound shortcuts")
+	p.logger.Info("DBus: Successfully bound shortcuts")
 
 	// Step 4: Start listening for shortcut activations
 	go p.listenForShortcuts()
@@ -343,7 +343,7 @@ func (p *DbusKeyboardProvider) listenForShortcuts() {
 				if sessionHandle, ok := sig.Body[0].(dbus.ObjectPath); ok && string(sessionHandle) == p.sessionHandle {
 					if shortcutId, ok := sig.Body[1].(string); ok {
 						if callback, exists := p.callbacks[shortcutId]; exists {
-							p.logger.Error("Hotkey activated: %s", shortcutId)
+							p.logger.Info("Hotkey activated: %s", shortcutId)
 							if err := callback(); err != nil {
 								p.logger.Error("Error executing hotkey callback: %v", err)
 							}

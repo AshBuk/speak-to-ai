@@ -73,7 +73,7 @@ type ConfigServiceInterface interface {
 	LoadConfig(configFile string) error
 	SaveConfig() error
 	ResetToDefaults() error
-	GetConfig() interface{}
+	GetConfig() *config.Config
 
 	// Settings updates
 	// TODO: Next feature - VAD implementation

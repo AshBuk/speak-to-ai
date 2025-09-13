@@ -13,17 +13,11 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/whisper"
 	"github.com/gorilla/websocket"
 )
 
-// Logger interface for logging
-type Logger interface {
-	Info(format string, args ...interface{})
-	Debug(format string, args ...interface{})
-	Warning(format string, args ...interface{})
-	Error(format string, args ...interface{})
-}
 
 // WebSocketServer represents a WebSocket server
 type WebSocketServer struct {
@@ -36,7 +30,7 @@ type WebSocketServer struct {
 	server      *http.Server
 	started     bool
 	retryCount  map[*websocket.Conn]int // Track retry attempts
-	logger      Logger
+	logger      logger.Logger
 }
 
 // Message represents a message for exchange via WebSocket
@@ -50,7 +44,7 @@ type Message struct {
 }
 
 // NewWebSocketServer creates a new instance of WebSocketServer
-func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger Logger) *WebSocketServer {
+func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
 		clients: make(map[*websocket.Conn]bool),

@@ -5,8 +5,6 @@ package app
 
 import (
 	"fmt"
-
-	"github.com/AshBuk/speak-to-ai/config"
 )
 
 // Hotkey handler methods that delegate to services
@@ -42,9 +40,8 @@ func (a *App) handleSwitchModel() error {
 		return fmt.Errorf("services not available")
 	}
 
-	cfgIface := a.Services.Config.GetConfig()
-	cfg, ok := cfgIface.(*config.Config)
-	if !ok || cfg == nil {
+	cfg := a.Services.Config.GetConfig()
+	if cfg == nil {
 		return fmt.Errorf("config not available")
 	}
 
