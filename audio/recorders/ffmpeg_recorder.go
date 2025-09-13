@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // FFmpegRecorder implements AudioRecorder using ffmpeg
@@ -15,9 +16,9 @@ type FFmpegRecorder struct {
 }
 
 // NewFFmpegRecorder creates a new instance of FFmpegRecorder
-func NewFFmpegRecorder(config *config.Config) *FFmpegRecorder {
+func NewFFmpegRecorder(config *config.Config, logger logger.Logger) *FFmpegRecorder {
 	return &FFmpegRecorder{
-		BaseRecorder: NewBaseRecorder(config),
+		BaseRecorder: NewBaseRecorder(config, logger),
 	}
 }
 
@@ -34,9 +35,12 @@ func (f *FFmpegRecorder) StartRecording() error {
 func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	// Basic arguments with improved PipeWire compatibility
 	args := []string{
-		"-y",          // overwrite if temp file pre-created
+		"-y", // overwrite if temp file pre-created
+		"-nostdin",
+		"-hide_banner",
+		"-loglevel", "error",
 		"-f", "pulse", // Use pulse for PipeWire compatibility
-		"-thread_queue_size", "64",
+		"-thread_queue_size", "256",
 		"-probesize", "32", // Reduce probing time
 		"-analyzeduration", "0", // Skip analysis phase
 	}
@@ -60,11 +64,7 @@ func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	args = append(args, "-q:a", "0")
 
 	// Configure output format
-	if f.streamingEnabled {
-		// Stream raw float32 for easier chunk decoding in streaming mode
-		args = append(args, "-acodec", "pcm_f32le")
-		args = append(args, "-f", "f32le", "-")
-	} else if f.useBuffer {
+	if f.useBuffer {
 		// Keep WAV header in buffer mode to avoid breaking audio level monitor
 		args = append(args, "-acodec", "pcm_s16le")
 		args = append(args, "-f", "wav", "-")

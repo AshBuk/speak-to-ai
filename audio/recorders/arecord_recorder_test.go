@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 // TestNewArecordRecorder tests the creation of ArecordRecorder
@@ -19,7 +20,8 @@ func TestNewArecordRecorder(t *testing.T) {
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
 
-	recorder := NewArecordRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	if recorder == nil {
 		t.Fatal("Expected recorder to be created, got nil")
@@ -73,7 +75,8 @@ func TestArecordRecorder_getArecordFormat(t *testing.T) {
 			cfg := &config.Config{}
 			cfg.Audio.Format = tt.inputFormat
 
-			recorder := NewArecordRecorder(cfg)
+			mockLogger := testutils.NewMockLogger()
+			recorder := NewArecordRecorder(cfg, mockLogger)
 			format := recorder.getArecordFormat()
 
 			if format != tt.expectFormat {
@@ -90,7 +93,8 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
 
-	recorder := NewArecordRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
@@ -104,31 +108,6 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 
 	if recorder.GetOutputFile() != expectedFile {
 		t.Errorf("Expected output file %s, got %s", expectedFile, recorder.GetOutputFile())
-	}
-}
-
-// TestArecordRecorder_StreamingConfiguration tests streaming mode setup
-func TestArecordRecorder_StreamingConfiguration(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	cfg.Audio.EnableStreaming = true
-
-	recorder := NewArecordRecorder(cfg)
-
-	// Should inherit streaming setting from config
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled from config")
-	}
-
-	// Test manual streaming toggle
-	recorder.streamingEnabled = false
-	if recorder.UseStreaming() {
-		t.Error("Expected streaming to be disabled after manual toggle")
-	}
-
-	recorder.streamingEnabled = true
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled after manual toggle")
 	}
 }
 
@@ -179,7 +158,8 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.setupConfig()
-			recorder := NewArecordRecorder(cfg)
+			mockLogger := testutils.NewMockLogger()
+			recorder := NewArecordRecorder(cfg, mockLogger)
 
 			// Test format conversion instead of building args
 			format := recorder.getArecordFormat()
@@ -204,7 +184,8 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
-	recorder := NewArecordRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Test initial audio level
 	if recorder.GetAudioLevel() != 0.0 {
@@ -243,7 +224,8 @@ func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
 // TestArecordRecorder_CleanupFile tests file cleanup functionality
 func TestArecordRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
-	recorder := NewArecordRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Create a temporary file to test cleanup
 	tempFile, err := os.CreateTemp("", "arecord_test_*.wav")
@@ -279,20 +261,12 @@ func TestArecordRecorder_BufferMode(t *testing.T) {
 	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
 	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
 
-	recorder := NewArecordRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewArecordRecorder(cfg, mockLogger)
 
 	// Should be using buffer mode for short, low-quality recordings
 	if !recorder.useBuffer {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
 
-	// Test buffer access
-	stream, err := recorder.GetAudioStream()
-	if err != nil {
-		t.Errorf("GetAudioStream returned error: %v", err)
-	}
-
-	if stream == nil {
-		t.Error("Expected audio stream to be available")
-	}
 }

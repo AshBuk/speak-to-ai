@@ -8,6 +8,6 @@
 //   - interfaces: AudioRecorder interface and related types
 //   - recorders: Implementation of audio recorders (arecord, ffmpeg, base)
 //   - factory: Factory for creating audio recorders based on configuration
-//   - processing: Audio processing utilities (VAD, chunk processing, temp file management)
+//   - processing: Audio processing utilities (temp file management)
 //   - mocks: Mock implementations for testing
 package audio

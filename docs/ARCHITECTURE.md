@@ -23,7 +23,8 @@ The application follows a **modular daemon architecture** with clear separation 
 │                      Internal Utilities                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  internal/logger/ │ internal/notify/ │ internal/platform/       │
-│  internal/tray/   │ internal/utils/  │                          │
+│  internal/tray/   │ internal/utils/  │ internal/constants/      │
+│  internal/services/                                              │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                       System Integration                        │
@@ -47,19 +48,25 @@ The application follows a **modular daemon architecture** with clear separation 
   - Application initialization and lifecycle management
 
 #### `internal/app/` - Application Core
-- **`app.go`**: Main application struct and lifecycle management
-- **`initialization.go`**: Component initialization and dependency injection
-- **`init_components.go`**: Individual component setup (tray, hotkeys, etc.)
-- **`init_model.go`**: Whisper model initialization and validation
-- **`runtime.go`**: Application runtime loop and shutdown handling
-- **`handlers_*.go`**: Event handlers for different subsystems
-  - `handlers_config.go`: Configuration management
-  - `handlers_hotkeys.go`: Global hotkey processing
-  - `handlers_recording.go`: Audio recording lifecycle
-  - `handlers_streaming.go`: Real-time transcription
-  - `handlers_vad.go`: Voice activity detection
+- **`app.go`**: Application orchestrator with ServiceContainer and RuntimeContext
+- **`handlers.go`**: Hotkey handlers that delegate to services
 
-### 🎤 **Audio Processing Module** (`audio/`)
+### **Service Layer** (`internal/services/`)
+- **`interfaces.go`**: Service contracts and ServiceContainer definition
+- **`component_factory.go`**: Components initialization (recorder, whisper, output, hotkeys, tray, notify, websocket)
+- **`service_assembler.go`**: Services assembly and cross-dependencies
+- **`callback_wirer.go`**: Tray menu callbacks wiring
+- **`factory.go`**: Facade delegating to ComponentFactory, ServiceAssembler, CallbackWirer
+- **`audio_service.go`**: Audio recording, Whisper transcription
+- **`ui_service.go`**: System tray, notifications, UI state
+- **`io_service.go`**: Text output, WebSocket server
+- **`config_service.go`**: Configuration file operations
+- **`hotkey_service.go`**: Hotkey registration and callbacks
+
+Related constants:
+- **`internal/constants/ui.go`**: UI icons/messages/titles centralization
+
+### **Audio Processing Module** (`audio/`)
 
 #### Core Audio Components
 - **`interfaces/recorder.go`**: AudioRecorder interface definition
@@ -69,9 +76,7 @@ The application follows a **modular daemon architecture** with clear separation 
   - `ffmpeg_recorder.go`: FFmpeg-based recording implementation
 - **`factory/factory.go`**: Factory pattern for creating appropriate recorders
 
-#### Streaming & Processing (`processing/`)
-- **`chunk_processor.go`**: Real-time audio chunk processing
-- **`vad.go`**: Voice Activity Detection implementation
+#### Processing (`processing/`)
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
 #### Testing & Mocking
@@ -79,7 +84,7 @@ The application follows a **modular daemon architecture** with clear separation 
 - **`interfaces/interface_validation_test.go`**: Interface compliance tests
 - **`*_test.go`**: Comprehensive unit tests for all components
 
-### ⌨️ **Hotkey Management** (`hotkeys/`)
+### **Hotkey Management** (`hotkeys/`)
 
 #### Core Hotkey System
 - **`interfaces/provider.go`**: KeyboardEventProvider interface and types
@@ -90,28 +95,27 @@ The application follows a **modular daemon architecture** with clear separation 
 
 #### Provider Implementations
 - **`providers/dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
-- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs)
+- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs, often preferred in AppImage)
 - **`manager/provider_fallback.go`**: Fallback logic and hotkey re-registration
 - **`providers/dummy_provider.go`**: Dummy provider for testing
 
-#### Fallback Strategy
-- **GNOME/KDE**: No fallback - D-Bus portal
-- **i3/XFCE/MATE**: Auto-fallback from D-Bus to evdev on provider failure
-- **Failover**: Seamless hotkey re-registration on provider switching
+#### Provider Override & Fallback
+- **Override** (config): `hotkeys.provider: auto | dbus | evdev` (default: `auto`)
+- **GNOME/KDE**: Prefer D‑Bus portal
+- **i3/XFCE/MATE/AppImage**: Auto‑fallback to evdev on portal failure
+- **Failover**: Seamless re‑registration on provider switching
 
-### 🗣️ **Speech Recognition** (`whisper/`)
+### **Speech Recognition** (`whisper/`)
 
 #### Engine Components
 - **`engine.go`**: Main Whisper engine using CGO bindings
 - **`engine_stub.go`**: Stub implementation when CGO is disabled
-- **`processing/streaming_engine.go`**: Real-time streaming transcription
-- **`processing/streaming_engine_stub.go`**: Stub for streaming when CGO disabled
 - **`manager/model_manager.go`**: Whisper model lifecycle management
 - **`providers/model_path_resolver.go`**: Model path resolution for bundled/user models
 - **`providers/model_downloader.go`**: Model download with progress
 - **`whisper.go`**: Public facade and type re-exports for external use
 
-### 📤 **Output Management** (`output/`)
+### **Output Management** (`output/`)
 
 #### Output Implementations
 - **`interfaces/outputter.go`**: Outputter interface definition
@@ -122,14 +126,14 @@ The application follows a **modular daemon architecture** with clear separation 
   - `combined_outputter.go`: Combined clipboard + typing output
   - `mock_outputter.go`: Mock implementation for testing
 
-### 🌐 **WebSocket API** (`websocket/`)
+### **WebSocket API** (`websocket/`)
 
 - **`server.go`**: WebSocket server for external integrations
 - **`message_handler.go`**: WebSocket message processing
 - **`authentication.go`**: API authentication and authorization
 - **`retry_manager.go`**: Connection retry logic
 
-### ⚙️ **Configuration System** (`config/`)
+### **Configuration System** (`config/`)
 
 #### Configuration Management
 - **`models/config.go`**: Configuration data structures and constants
@@ -137,7 +141,7 @@ The application follows a **modular daemon architecture** with clear separation 
 - **`validators/standard_validator.go`**: Configuration validation and sanitization
 - **`security/utils.go`**: Configuration security and integrity checks
 
-### 🔧 **Internal Utilities** (`internal/`)
+### **Internal Utilities** (`internal/`)
 
 #### System Integration
 - **`logger/logger.go`**: Structured logging with levels
@@ -154,7 +158,7 @@ The application follows a **modular daemon architecture** with clear separation 
   - `disk_stub.go`: Stub implementation
   - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
 
-### 🏗️ **Build & Packaging**
+### **Build & Packaging**
 
 #### Bash Scripts (`bash-scripts/`)
 - **`build-appimage.sh`**: AppImage creation with dependencies
@@ -174,7 +178,7 @@ The application follows a **modular daemon architecture** with clear separation 
 - **`io.github.ashbuk.speak-to-ai.desktop`**: Desktop entry
 - **`io.github.ashbuk.speak-to-ai.appdata.xml`**: AppStream metadata
 
-### 🧪 **Testing Infrastructure** (`tests/`)
+###  **Testing Infrastructure** (`tests/`)
 
 #### Integration Tests (`tests/integration/`)
 - **`integration_test.go`**: Main integration test suite
@@ -188,4 +192,4 @@ The application follows a **modular daemon architecture** with clear separation 
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-09*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-11-09*

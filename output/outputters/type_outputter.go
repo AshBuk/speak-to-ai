@@ -72,3 +72,8 @@ func (o *TypeOutputter) CopyToClipboard(text string) error {
 	// Not supported by type outputter
 	return fmt.Errorf("copying to clipboard not supported by type outputter")
 }
+
+// GetToolNames returns the actual tool names being used
+func (o *TypeOutputter) GetToolNames() (clipboardTool, typeTool string) {
+	return "", o.typeTool
+}

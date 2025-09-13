@@ -1,4 +1,4 @@
-.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint docker-% docker-build docker-dev docker-lint docker-clean
+.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint test-integration test-integration-full docker-% docker-build docker-dev docker-lint docker-clean
 
 # Variables
 GO_VERSION := 1.24.1
@@ -23,38 +23,43 @@ export CGO_LDFLAGS := -L$(PWD)/$(LIB_DIR) -lwhisper -lggml-cpu -lggml
 export LD_LIBRARY_PATH := $(PWD)/$(LIB_DIR):$(LD_LIBRARY_PATH)
 export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 
+# ============================================================================
+# Formatting & Lint
+# ============================================================================
+
+# Format source code (full: go fmt + goimports)
+fmt:
+	@echo "=== Running go fmt and goimports in Docker ==="
+	docker compose --profile dev run --rm dev sh -c "go fmt ./... && go install golang.org/x/tools/cmd/goimports@latest && goimports -w ."
+
+# Lint source code
+lint:
+	@echo "=== Running linter in Docker ==="
+	docker compose --profile lint run --rm lint
+
+# -----------------------------------------------------------------------------
+# Test targets
+# -----------------------------------------------------------------------------
+
+# Run tests via Docker (reuses dev image with CGO + whisper.cpp)
+test:
+	@echo "=== Running tests via Docker ==="
+	docker compose --profile dev run --rm dev go test -v -cover ./...
+
+test-integration:
+	@echo "=== Running integration tests (fast mode) via Docker ==="
+	docker compose --profile dev run --rm -e CGO_ENABLED=0 dev go test -tags=integration ./tests/integration/... -short -v
+
+test-integration-full:
+	@echo "=== Running full integration tests via Docker ==="
+	docker compose --profile dev run --rm dev go test -tags=integration ./tests/integration/... -v
+
+# ============================================================================
+# Build & Dependencies
+# ============================================================================
+
 # Default target (with systray support for desktop usage)
 all: deps whisper-libs build-systray
-# Format source code (local)
-fmt:
-	@echo "=== Formatting Go sources (gofmt -s -w) ==="
-	@files=$$(find . -name '*.go' -type f | grep -v vendor/); if [ -n "$$files" ]; then gofmt -s -w $$files; fi
-	@echo "Format completed"
-
-# Lint alias (Docker)
-lint: docker-lint
-
-
-# Help target
-help:
-	@echo "Available targets:"
-	@echo "  all               - Build everything (deps + whisper + binary)"
-	@echo "  build             - Build Go binary only"
-	@echo "  build-systray     - Build with systray support"
-	@echo "  test              - Run unit tests"
-	@echo "  test-integration  - Run integration tests (fast mode)"
-	@echo "  test-integration-full - Run full integration tests (with CGO)"
-	@echo "  clean             - Clean build artifacts"
-	@echo "  deps              - Download Go dependencies"
-	@echo "  whisper-libs      - Build whisper.cpp libraries"
-	@echo "  appimage          - Build AppImage"
-	@echo "  flatpak           - Build Flatpak"
-	@echo ""
-	@echo "Docker targets:"
-	@echo "  docker-up    - Start development services (docker compose up -d)"
-	@echo "  docker-down  - Stop all services (docker compose down)"
-	@echo "  docker-dev   - Start and enter development environment"
-	@echo "  docker-help  - Show Docker-specific help"
 
 # Download Go dependencies
 deps:
@@ -106,13 +111,10 @@ build-systray: deps whisper-libs
 	@echo "Build completed: $(BINARY_NAME)"
 	@ls -lh $(BINARY_NAME)
 
-# Run tests
-# It is important to use `make test` instead of `go test ./...` directly.
-# This target ensures that the CGO environment variables are set correctly before running the tests.
-# It also ensures that the whisper.cpp libraries are built and available.
-test: deps whisper-libs
-	@echo "=== Running tests ==="
-	go test -v -cover ./...
+
+# ============================================================================
+# Packaging
+# ============================================================================
 
 # Build AppImage
 appimage: build
@@ -134,20 +136,9 @@ clean:
 	go clean -cache
 	@echo "Clean completed"
 
-# -----------------------------------------------------------------------------
-# Test targets
-# -----------------------------------------------------------------------------
-
-.PHONY: test-integration test-integration-full test-integration-fast
-test-integration: test-integration-fast
-
-test-integration-fast: deps
-	@echo "=== Running integration tests (fast mode, no CGO dependencies) ==="
-	go test -tags=integration ./tests/integration/... -short -v
-
-test-integration-full: deps whisper-libs
-	@echo "=== Running full integration tests (build tag: integration) ==="
-	go test -tags=integration ./tests/integration/... -v
+# ============================================================================
+# Utilities
+# ============================================================================
 
 # Check if required tools are available
 check-tools:
@@ -191,25 +182,12 @@ docker-dev-stop:
 
 docker-down:
 	@echo "=== Stopping all Docker services ==="
-	docker compose down
+	docker compose down -v --remove-orphans
 
 # Docker whisper.cpp setup
 docker-whisper:
 	@echo "=== Building whisper.cpp libraries in Docker ==="
 	docker compose --profile init up whisper-builder
-
-# Docker linting
-docker-lint:
-	@echo "=== Running linter in Docker ==="
-	docker compose --profile lint run --rm lint
-
-docker-fmt:
-	@echo "=== Running go fmt in Docker ==="
-	docker compose --profile dev run --rm dev go fmt ./...
-
-docker-vet:
-	@echo "=== Running go vet in Docker ==="
-	docker compose --profile dev run --rm dev bash -c "source bash-scripts/dev-env.sh && go vet ./..."
 
 # Docker building packages
 docker-appimage:
@@ -219,11 +197,6 @@ docker-appimage:
 docker-flatpak:
 	@echo "=== Building Flatpak via docker build (multi-stage) ==="
 	docker build -f docker/Dockerfile.flatpak --target artifacts --output type=local,dest=$(DIST_DIR)/flatpak .
-
-docker-build-all:
-	@echo "=== Building all packages in Docker (multi-stage) ==="
-	$(MAKE) docker-appimage
-	$(MAKE) docker-flatpak
 
 # Docker CI pipeline
 docker-ci:
@@ -259,32 +232,46 @@ docker-shell:
 	@echo "=== Opening shell in development container ==="
 	docker compose --profile dev run --rm dev bash
 
-# Help for Docker commands
-docker-help:
-	@echo "Available Docker targets:"
+# ============================================================================
+# Help
+# ============================================================================
+
+help:
+	@echo "Available targets:"
 	@echo ""
-	@echo "Quick commands:"
-	@echo "  docker-up         - Start development services (docker compose up -d)"
-	@echo "  docker-down       - Stop all services (docker compose down)"
-	@echo "  docker-dev        - Start and enter development environment"
+	@echo "General:"
+	@echo "  all                   - Build everything (deps + whisper + binary)"
+	@echo "  build                 - Build Go binary only"
+	@echo "  build-systray         - Build with systray support"
+	@echo "  deps                  - Download Go dependencies"
+	@echo "  whisper-libs          - Build whisper.cpp libraries"
+	@echo "  fmt                   - Format Go code (go fmt + goimports)"
+	@echo "  lint                  - Run linter and code quality checks"
+	@echo "  clean                 - Clean build artifacts"
 	@echo ""
-	@echo "Build commands:"
-	@echo "  docker-build      - Build all Docker images"
-	@echo "  docker-whisper    - Build whisper.cpp in Docker"
+	@echo "Tests:"
+	@echo "  test                  - Run unit tests"
+	@echo "  test-integration      - Run integration tests (fast mode)"
+	@echo "  test-integration-full - Run full integration tests (with CGO)"
 	@echo ""
-	@echo "Development commands:"
-	@echo "  docker-lint       - Run linter in Docker"
-	@echo "  docker-fmt        - Run go fmt in Docker"
-	@echo "  docker-vet        - Run go vet in Docker"
-	@echo "  docker-shell      - Open shell in dev container"
+	@echo "Packaging:"
+	@echo "  appimage              - Build AppImage"
+	@echo "  flatpak               - Build Flatpak"
 	@echo ""
-	@echo "Package building:"
-	@echo "  docker-appimage   - Build AppImage in Docker"
-	@echo "  docker-flatpak    - Build Flatpak in Docker"
-	@echo ""
-	@echo "CI/CD:"
-	@echo "  docker-ci         - Run full CI pipeline"
-	@echo ""
-	@echo "Cleanup:"
-	@echo "  docker-clean      - Clean Docker resources"
-	@echo "  docker-clean-all  - Clean everything including images"
+	@echo "Docker:"
+	@echo "  docker-up             - Start development services (docker compose up -d)"
+	@echo "  docker-down           - Stop all services (docker compose down)"
+	@echo "  docker-dev            - Start and enter development environment"
+	@echo "  docker-dev-stop       - Stop development environment"
+	@echo "  docker-shell          - Open shell in dev container"
+	@echo "  docker-build          - Build all Docker images"
+	@echo "  docker-build-dev      - Build development Docker image"
+	@echo "  docker-build-lint     - Skipping build: using official golangci-lint image"
+	@echo "  docker-whisper        - Build whisper.cpp libraries in Docker"
+	@echo "  docker-appimage       - Build AppImage in Docker"
+	@echo "  docker-flatpak        - Build Flatpak in Docker"
+	@echo "  docker-ci             - Run full CI pipeline"
+	@echo "  docker-logs           - Show Docker logs"
+	@echo "  docker-ps             - Show Docker containers"
+	@echo "  docker-clean          - Clean Docker resources"
+	@echo "  docker-clean-all      - Clean everything including images"

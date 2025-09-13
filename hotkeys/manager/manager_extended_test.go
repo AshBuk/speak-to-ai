@@ -13,6 +13,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestParseHotkey(t *testing.T) {
@@ -166,10 +167,10 @@ func TestConvertModifierToEvdev(t *testing.T) {
 
 func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 	// Create a simple config adapter for testing
-	config := adapters.NewConfigAdapter("ctrl+r")
+	config := adapters.NewConfigAdapter("ctrl+r", "auto")
 
 	// Test when provider fails to start
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Replace with a mock that always fails
 	mockProvider := mocks.NewMockHotkeyProvider()
@@ -188,7 +189,7 @@ func TestHotkeyManager_StartWithProviderFailure(t *testing.T) {
 
 func TestHotkeyManager_StartWithNoProvider(t *testing.T) {
 	// Create a simple config adapter for testing
-	config := adapters.NewConfigAdapter("ctrl+r")
+	config := adapters.NewConfigAdapter("ctrl+r", "auto")
 
 	// Test when no provider is available
 	manager := &HotkeyManager{
@@ -217,8 +218,8 @@ func TestSelectKeyboardProvider(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := adapters.NewConfigAdapter("ctrl+r")
-			manager := NewHotkeyManager(config, tt.environment)
+			config := adapters.NewConfigAdapter("ctrl+r", "auto")
+			manager := NewHotkeyManager(config, tt.environment, testutils.NewMockLogger())
 
 			if manager == nil {
 				t.Fatal("NewHotkeyManager returned nil")
@@ -236,8 +237,8 @@ func TestSelectKeyboardProvider(t *testing.T) {
 }
 
 func TestHotkeyManager_StopWithoutStart(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	config := adapters.NewConfigAdapter("ctrl+r", "auto")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 
 	// Stop without start should be safe
 	manager.Stop()
@@ -248,8 +249,8 @@ func TestHotkeyManager_StopWithoutStart(t *testing.T) {
 }
 
 func TestHotkeyManager_MultipleStartStop(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	config := adapters.NewConfigAdapter("ctrl+r", "auto")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 
@@ -283,8 +284,8 @@ func TestHotkeyManager_MultipleStartStop(t *testing.T) {
 }
 
 func TestHotkeyManager_ConcurrentAccess_Extended(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+r")
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11)
+	config := adapters.NewConfigAdapter("ctrl+r", "auto")
+	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 

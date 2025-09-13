@@ -8,5 +8,5 @@
 - I have added license headers to new Go files
 - I have updated documentation as needed
 - All new and existing tests pass - run `make test`
-- Linter and formatter pass - run `make lint && make fmt`
+- Formatter and Linter pass - run `make fmt && make lint`
 - CI green

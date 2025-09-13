@@ -56,6 +56,11 @@ func (m *MockOutputter) TypeToActiveWindow(text string) error {
 	return nil
 }
 
+// GetToolNames returns mock tool names
+func (m *MockOutputter) GetToolNames() (clipboardTool, typeTool string) {
+	return "mock-clipboard", "mock-type"
+}
+
 // Test helper methods
 
 // SetClipboardError configures the mock to return an error on CopyToClipboard

@@ -6,13 +6,19 @@ package utils
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // IsValidFile checks if a file exists and is accessible
 func IsValidFile(path string) bool {
+	// Reject empty paths
+	if path == "" {
+		return false
+	}
+
 	// Check for path traversal attempts
 	clean := filepath.Clean(path)
-	if clean != path {
+	if clean != path || filepath.Base(clean) == ".." || strings.Contains(clean, "..") {
 		return false
 	}
 

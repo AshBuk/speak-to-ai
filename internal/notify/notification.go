@@ -8,6 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 )
 
 // NotificationManager handles desktop notifications
@@ -29,7 +30,7 @@ func (nm *NotificationManager) NotifyStartRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip workflow notification
 	}
-	return nm.sendNotification("🎤 Speak-to-AI", "Recording started", "notification-microphone-sensitivity-high")
+	return nm.sendNotification(constants.NotifyTitleRecordingStart, constants.NotifyRecordingStartMsg, "notification-microphone-sensitivity-high")
 }
 
 // NotifyStopRecording shows a notification when recording stops
@@ -37,7 +38,7 @@ func (nm *NotificationManager) NotifyStopRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip workflow notification
 	}
-	return nm.sendNotification("🛑 Recording stopped", "Transcribing audio...", "notification-microphone-sensitivity-muted")
+	return nm.sendNotification(constants.NotifyTitleRecordingStop, constants.NotifyRecordingStopMsg, "notification-microphone-sensitivity-muted")
 }
 
 // NotifyTranscriptionComplete shows a notification when transcription is complete
@@ -45,12 +46,17 @@ func (nm *NotificationManager) NotifyTranscriptionComplete() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip workflow notification
 	}
-	return nm.sendNotification("✅ Transcription complete", "Text copied to clipboard", "edit-copy")
+	return nm.sendNotification(constants.NotifyTitleTranscription, constants.NotifyTranscriptionMsg, "edit-copy")
 }
 
 // NotifyError shows an error notification
 func (nm *NotificationManager) NotifyError(errMsg string) error {
-	return nm.sendNotification("❌ Error", errMsg, "dialog-error")
+	return nm.sendNotification(constants.NotifyTitleError, errMsg, "dialog-error")
+}
+
+// NotifyConfigurationReset shows a notification when configuration is reset to defaults
+func (nm *NotificationManager) NotifyConfigurationReset() error {
+	return nm.sendNotification(constants.NotifyTitleConfigReset, constants.NotifyConfigResetSuccess, "preferences-system")
 }
 
 // ShowNotification shows a generic notification

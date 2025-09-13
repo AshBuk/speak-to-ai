@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 // TestNewFFmpegRecorder tests the creation of FFmpegRecorder
@@ -19,7 +20,8 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	cfg.Audio.Format = "S16_LE"
 	cfg.Audio.SampleRate = 16000
 
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	if recorder == nil {
 		t.Fatal("Expected recorder to be created, got nil")
@@ -38,40 +40,28 @@ func TestNewFFmpegRecorder(t *testing.T) {
 // TestFFmpegRecorder_buildBaseCommandArgs tests command argument building with real scenarios
 func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 	tests := []struct {
-		name          string
-		device        string
-		sampleRate    int
-		useBuffer     bool
-		streamingMode bool
-		expectDevice  string
-		expectRate    string
+		name         string
+		device       string
+		sampleRate   int
+		useBuffer    bool
+		expectDevice string
+		expectRate   string
 	}{
 		{
-			name:          "basic file output",
-			device:        "hw:0,0",
-			sampleRate:    44100,
-			useBuffer:     false,
-			streamingMode: false,
-			expectDevice:  "hw:0,0",
-			expectRate:    "44100",
+			name:         "basic file output",
+			device:       "hw:0,0",
+			sampleRate:   44100,
+			useBuffer:    false,
+			expectDevice: "hw:0,0",
+			expectRate:   "44100",
 		},
 		{
-			name:          "streaming mode should output to stdout",
-			device:        "default",
-			sampleRate:    16000,
-			useBuffer:     false,
-			streamingMode: true,
-			expectDevice:  "default",
-			expectRate:    "16000",
-		},
-		{
-			name:          "buffer mode should output to stdout",
-			device:        "plughw:1,0",
-			sampleRate:    48000,
-			useBuffer:     true,
-			streamingMode: false,
-			expectDevice:  "plughw:1,0",
-			expectRate:    "48000",
+			name:         "buffer mode should output to stdout",
+			device:       "plughw:1,0",
+			sampleRate:   48000,
+			useBuffer:    true,
+			expectDevice: "plughw:1,0",
+			expectRate:   "48000",
 		},
 	}
 
@@ -81,9 +71,9 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			cfg.Audio.Device = tt.device
 			cfg.Audio.SampleRate = tt.sampleRate
 
-			recorder := NewFFmpegRecorder(cfg)
+			mockLogger := testutils.NewMockLogger()
+			recorder := NewFFmpegRecorder(cfg, mockLogger)
 			recorder.useBuffer = tt.useBuffer
-			recorder.streamingEnabled = tt.streamingMode
 			recorder.outputFile = "/tmp/test.wav"
 
 			args := recorder.buildBaseCommandArgs()
@@ -114,15 +104,11 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 
 			// Check for correct output format and destination
 			hasWavMode := false
-			hasF32leMode := false
 			hasStdout := false
 			for i, arg := range args {
 				if arg == "-f" && i+1 < len(args) {
-					switch args[i+1] {
-					case "wav":
+					if args[i+1] == "wav" {
 						hasWavMode = true
-					case "f32le":
-						hasF32leMode = true
 					}
 				}
 				if arg == "-" {
@@ -130,11 +116,7 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 				}
 			}
 
-			if tt.streamingMode {
-				if !hasF32leMode || !hasStdout {
-					t.Error("Expected f32le stdout mode (-f f32le -) in streaming mode")
-				}
-			} else if tt.useBuffer {
+			if tt.useBuffer {
 				if !hasWavMode || !hasStdout {
 					t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
 				}
@@ -168,7 +150,8 @@ func TestFFmpegRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.Device = "default"
 	cfg.Audio.SampleRate = 16000
 
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
@@ -191,7 +174,8 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 	cfg.Audio.Device = "default"
 	cfg.Audio.SampleRate = 16000
 
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	// Set up output file before testing stop
 	tempDir := t.TempDir()
@@ -214,31 +198,6 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 		if outputFile != expectedFile {
 			t.Errorf("Expected output file %s, got %s", expectedFile, outputFile)
 		}
-	}
-}
-
-// TestFFmpegRecorder_StreamingConfiguration tests streaming mode setup
-func TestFFmpegRecorder_StreamingConfiguration(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	cfg.Audio.EnableStreaming = true
-
-	recorder := NewFFmpegRecorder(cfg)
-
-	// Should inherit streaming setting from config
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled from config")
-	}
-
-	// Test manual streaming toggle
-	recorder.streamingEnabled = false
-	if recorder.UseStreaming() {
-		t.Error("Expected streaming to be disabled after manual toggle")
-	}
-
-	recorder.streamingEnabled = true
-	if !recorder.UseStreaming() {
-		t.Error("Expected streaming to be enabled after manual toggle")
 	}
 }
 
@@ -274,7 +233,8 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.setupConfig()
-			recorder := NewFFmpegRecorder(cfg)
+			mockLogger := testutils.NewMockLogger()
+			recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 			// Build args to see if they're reasonable
 			args := recorder.buildBaseCommandArgs()
@@ -297,7 +257,8 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 func TestFFmpegRecorder_AudioLevelCallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	// Test initial audio level
 	if recorder.GetAudioLevel() != 0.0 {
@@ -336,7 +297,8 @@ func TestFFmpegRecorder_AudioLevelCallbacks(t *testing.T) {
 // TestFFmpegRecorder_CleanupFile tests file cleanup functionality
 func TestFFmpegRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	// Create a temporary file to test cleanup
 	tempFile, err := os.CreateTemp("", "ffmpeg_test_*.wav")
@@ -372,20 +334,12 @@ func TestFFmpegRecorder_BufferMode(t *testing.T) {
 	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
 	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
 
-	recorder := NewFFmpegRecorder(cfg)
+	mockLogger := testutils.NewMockLogger()
+	recorder := NewFFmpegRecorder(cfg, mockLogger)
 
 	// Should be using buffer mode for short, low-quality recordings
 	if !recorder.useBuffer {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
 
-	// Test buffer access
-	stream, err := recorder.GetAudioStream()
-	if err != nil {
-		t.Errorf("GetAudioStream returned error: %v", err)
-	}
-
-	if stream == nil {
-		t.Error("Expected audio stream to be available")
-	}
 }

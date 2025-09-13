@@ -16,7 +16,7 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.General.TempAudioPath = "/tmp"
 	config.General.ModelType = "base"
 	config.General.ModelPrecision = "f16"
-	config.General.Language = "auto"
+	config.General.Language = "en"
 	config.General.LogFile = ""
 
 	config.General.Models = []string{
@@ -31,12 +31,11 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.Audio.Format = "s16le"
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0
-	config.Audio.EnableStreaming = false
 	config.Audio.MaxRecordingTime = 300
-	config.Audio.EnableVAD = false
-	config.Audio.VADSensitivity = "medium"
-	config.Audio.AutoStartStop = false
-	config.Audio.StreamingBufferMs = 1000
+	// TODO: Next feature - VAD implementation
+	// config.Audio.EnableVAD = false
+	// config.Audio.VADSensitivity = "medium"
+	// config.Audio.AutoStartStop = false
 
 	config.Output.DefaultMode = models.OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto"

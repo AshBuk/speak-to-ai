@@ -5,7 +5,6 @@ package manager
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -21,16 +20,16 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 		defer h.hotkeysMutex.Unlock()
 
 		if !h.isRecording && h.recordingStarted != nil {
-			log.Println("Start recording hotkey detected")
+			h.logger.Info("Start recording hotkey detected")
 			if err := h.recordingStarted(); err != nil {
-				log.Printf("Error starting recording: %v", err)
+				h.logger.Error("Error starting recording: %v", err)
 				return err
 			}
 			h.isRecording = true
 		} else if h.isRecording && h.recordingStopped != nil {
-			log.Println("Stop recording hotkey detected")
+			h.logger.Info("Stop recording hotkey detected")
 			if err := h.recordingStopped(); err != nil {
-				log.Printf("Error stopping recording: %v", err)
+				h.logger.Error("Error stopping recording: %v", err)
 				return err
 			}
 			h.isRecording = false
@@ -40,21 +39,26 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
 	}
 
-	// Register additional hotkeys
+	// Register additional hotkeys (action -> configured hotkey string)
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
-	for hotkey, action := range h.hotkeyActions {
-		hk := hotkey
+	for actionName, action := range h.hotkeyActions {
+		hk := h.config.GetActionHotkey(actionName)
+		if strings.TrimSpace(hk) == "" {
+			// Skip actions without configured hotkey
+			continue
+		}
+
 		act := action
 		if err := provider.RegisterHotkey(hk, func() error {
-			log.Printf("Custom hotkey detected: %s", hk)
+			h.logger.Info("Custom hotkey detected: %s (%s)", actionName, hk)
 			if err := act(); err != nil {
-				log.Printf("Error executing hotkey action for %s: %v", hk, err)
+				h.logger.Error("Error executing hotkey action for %s: %v", actionName, err)
 				return err
 			}
 			return nil
 		}); err != nil {
-			return fmt.Errorf("failed to register hotkey %s: %w", hk, err)
+			return fmt.Errorf("failed to register hotkey %s for action %s: %w", hk, actionName, err)
 		}
 	}
 
@@ -64,27 +68,27 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 // startFallbackAfterRegistration attempts to switch to a fallback provider (evdev)
 // Allows fallback on GNOME/KDE when running in AppImage due to portal sandboxing issues.
 func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
-	log.Printf("Primary keyboard provider failed to start: %v", startErr)
+	h.logger.Error("Primary keyboard provider failed to start: %v", startErr)
 
 	// Check if running in AppImage - allow fallback even on GNOME/KDE
 	de := strings.ToLower(os.Getenv("XDG_CURRENT_DESKTOP"))
 	isAppImage := os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != ""
 
 	if (strings.Contains(de, "gnome") || strings.Contains(de, "kde")) && !isAppImage {
-		log.Println("Skipping evdev fallback on GNOME/KDE; please check portal permissions")
+		h.logger.Info("Skipping evdev fallback on GNOME/KDE; please check portal permissions")
 		return fmt.Errorf("failed to start keyboard provider: %w", startErr)
 	}
 
 	if isAppImage {
-		log.Println("AppImage detected - allowing evdev fallback for better hotkey compatibility")
+		h.logger.Info("AppImage detected - allowing evdev fallback for better hotkey compatibility")
 	}
 
 	// Only fallback when current provider is DBus and evdev is supported
 	switch h.provider.(type) {
 	case *providers.DbusKeyboardProvider:
-		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment)
+		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
 		if fallback != nil && fallback.IsSupported() {
-			log.Println("Falling back to evdev keyboard provider")
+			h.logger.Info("Falling back to evdev keyboard provider")
 			// Swap provider
 			h.provider = fallback
 
@@ -98,7 +102,11 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 				return fmt.Errorf("failed to start fallback keyboard provider: %w", err)
 			}
 
-			log.Println("Fallback keyboard provider started successfully")
+			h.logger.Info("Fallback keyboard provider started successfully")
+			if isAppImage {
+				h.logger.Info("AppImage hint: add user to 'input' group for evdev hotkeys:")
+				h.logger.Info("sudo usermod -a -G input $USER && reboot")
+			}
 			return nil
 		}
 	}

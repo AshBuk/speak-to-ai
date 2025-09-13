@@ -7,7 +7,6 @@
 package integration
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +15,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 func TestAudioRecordingIntegration(t *testing.T) {
@@ -37,7 +37,8 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.SampleRate = 16000
 		// channels removed (mono enforced internally)
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("Audio recorder not available: %v", err)
 		}
@@ -74,7 +75,8 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		cfg.Audio.RecordingMethod = "ffmpeg"
 		cfg.Audio.Device = "default"
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("FFmpeg recorder not available: %v", err)
 		}
@@ -105,87 +107,6 @@ func TestAudioRecordingIntegration(t *testing.T) {
 	})
 }
 
-func TestAudioStreamingIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
-	cfg := &config.Config{}
-	config.SetDefaultConfig(cfg)
-	cfg.Audio.RecordingMethod = "arecord"
-	cfg.Audio.Device = "default"
-
-	t.Run("streaming_with_vad", func(t *testing.T) {
-		recorder, err := factory.GetRecorder(cfg)
-		if err != nil {
-			t.Skipf("Audio recorder not available: %v", err)
-		}
-
-		// Check if streaming is supported
-		if !recorder.UseStreaming() {
-			t.Skip("Streaming not supported by this recorder")
-		}
-
-		chunkCount := 0
-		speechCount := 0
-
-		// Create chunk processor with VAD
-		processor := processing.NewChunkProcessor(processing.ChunkProcessorConfig{
-			ChunkDurationMs: 64,
-			SampleRate:      16000,
-			OnChunk: func(chunk []float32) error {
-				chunkCount++
-				return nil
-			},
-			OnSpeech: func(chunk []float32) error {
-				speechCount++
-				t.Logf("Speech detected in chunk %d", speechCount)
-				return nil
-			},
-			UseVAD:         true,
-			VADSensitivity: processing.VADMedium,
-		})
-
-		// Start streaming
-		err = recorder.StartRecording()
-		if err != nil {
-			t.Skipf("Could not start streaming: %v", err)
-		}
-
-		stream, err := recorder.GetAudioStream()
-		if err != nil {
-			t.Skipf("Could not get audio stream: %v", err)
-		}
-
-		// Process stream for short time
-		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-
-		go func() {
-			err := processor.ProcessStream(ctx, stream)
-			if err != nil && err != context.DeadlineExceeded {
-				t.Logf("Stream processing error: %v", err)
-			}
-		}()
-
-		<-ctx.Done()
-
-		// Ensure cleanup happens even if test fails
-		defer func() {
-			recorder.StopRecording()
-			recorder.CleanupFile()
-		}()
-
-		recorder.StopRecording()
-
-		t.Logf("Processed %d chunks, detected %d speech chunks", chunkCount, speechCount)
-
-		if chunkCount == 0 {
-			t.Error("No audio chunks were processed")
-		}
-	})
-}
-
 func TestAudioDeviceDetection(t *testing.T) {
 	// Test that audio devices can be detected and configured
 	cfg := &config.Config{}
@@ -195,7 +116,8 @@ func TestAudioDeviceDetection(t *testing.T) {
 		cfg.Audio.Device = "default"
 		cfg.Audio.RecordingMethod = "arecord"
 
-		recorder, err := factory.GetRecorder(cfg)
+		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+		recorder, err := factory.GetRecorder(cfg, testLogger)
 		if err != nil {
 			t.Skipf("Default audio device not available: %v", err)
 		}
@@ -221,7 +143,8 @@ func TestAudioDeviceDetection(t *testing.T) {
 
 		for _, method := range methods {
 			cfg.Audio.RecordingMethod = method
-			_, err := factory.GetRecorder(cfg)
+			testLogger := logger.NewDefaultLogger(logger.InfoLevel)
+			_, err := factory.GetRecorder(cfg, testLogger)
 			if err == nil {
 				workingMethods++
 				t.Logf("Recording method %s is available", method)

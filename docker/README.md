@@ -8,15 +8,18 @@ This directory contains Docker infrastructure for the speak-to-ai project, provi
 # Dev shell
 make docker-dev
 
-# Lint (Docker)
+# Format & Lint (Docker)
+make fmt
 make lint
 
-# Tests (local)
-make test
+# Tests (Docker) - reuses dev image
+make test                 # Unit tests
+make test-integration     # Integration tests (fast)
+make test-integration-full # Full integration tests
 
 # Build packages (multi-stage docker build)
-make docker-appimage
-make docker-flatpak
+make docker-appimage #fully functional in containers
+make docker-flatpak #complex in containers, mainly for validation
 ```
 
 ## Services
@@ -27,14 +30,20 @@ make docker-flatpak
 - **Includes**: Go, golangci-lint, GUI libraries for systray
 - **Usage**: `make docker-dev`
 
+### `fmt` - Code Formatting (Docker)
+- **Image**: `docker/Dockerfile.dev` (reused)
+- **Purpose**: Format Go code with go fmt and goimports
+- **Usage**: `make fmt`
+
 ### `lint` - Linting (Docker)
-- **Image**: `golang:1.24-alpine` (runtime installs golangci-lint)
+- **Image**: `golang:1.24.1-alpine` (runtime installs golangci-lint)
 - **Usage**: `make lint`
 
-### `test` - Testing Service
-- **Image**: `docker/Dockerfile.dev` (reused)
-- **Purpose**: Run tests with all dependencies
-- **Usage**: `make docker-test`
+### `test` - Testing Services
+- **Image**: `docker/Dockerfile.dev` (reused for all test types)
+- **Purpose**: Run tests with consistent Docker environment
+- **Usage**: `make test`, `make test-integration`, `make test-integration-full`
+- **Benefits**: No local CGO/whisper.cpp dependencies required
 
 ### `build-appimage` - AppImage Builder
 - **Image**: `docker/Dockerfile.appimage`
@@ -51,6 +60,11 @@ make docker-flatpak
 - **Purpose**: Build whisper.cpp libraries shared between services
 - **Usage**: `make docker-whisper`
 
+### `ci` - CI Pipeline
+- **Profile**: `ci` (combines lint + test services)
+- **Purpose**: Full CI/CD pipeline with whisper.cpp libs, linting, testing, and package building
+- **Usage**: `make docker-ci`
+
 ## Docker Profiles
 
 Services are organized into profiles for efficient resource usage:
@@ -58,8 +72,7 @@ Services are organized into profiles for efficient resource usage:
 - **`dev`**: Development environment
 - **`lint`**: Linting only
 - **`test`**: Testing only
-- **`ci`**: CI pipeline (lint + test)
-- **`build`**: Package building (AppImage + Flatpak)
+- **`ci`**: CI pipeline (lint + test + flatpak/appimage builds)
 - **`appimage`**: AppImage building only
 - **`flatpak`**: Flatpak building only
 - **`init`**: Whisper.cpp initialization
@@ -85,6 +98,18 @@ make docker-dev
 source bash-scripts/dev-env.sh
 make build-systray
 make test
+```
+
+### Alternative Development Access
+```bash
+# Start services in background
+make docker-up
+
+# Open shell in running container
+make docker-shell
+
+# Stop development environment only
+make docker-dev-stop
 ```
 
 ### CI Pipeline

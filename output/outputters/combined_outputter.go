@@ -43,3 +43,10 @@ func (o *CombinedOutputter) CopyToClipboard(text string) error {
 func (o *CombinedOutputter) TypeToActiveWindow(text string) error {
 	return o.typeOutputter.TypeToActiveWindow(text)
 }
+
+// GetToolNames returns the actual tool names being used
+func (o *CombinedOutputter) GetToolNames() (clipboardTool, typeTool string) {
+	clipboardTool, _ = o.clipboardOutputter.GetToolNames()
+	_, typeTool = o.typeOutputter.GetToolNames()
+	return clipboardTool, typeTool
+}

@@ -7,7 +7,6 @@ package providers
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	dbus "github.com/godbus/dbus/v5"
 )
 
@@ -27,15 +27,17 @@ type DbusKeyboardProvider struct {
 	sessionHandle string
 	isListening   bool
 	mutex         sync.Mutex
+	logger        logger.Logger
 }
 
 // NewDbusKeyboardProvider creates a new D-Bus keyboard provider
-func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType) *DbusKeyboardProvider {
+func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
 		config:      config,
 		environment: environment,
 		callbacks:   make(map[string]func() error),
 		isListening: false,
+		logger:      logger,
 	}
 }
 
@@ -43,12 +45,12 @@ func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interface
 func (p *DbusKeyboardProvider) IsSupported() bool {
 	conn, err := dbus.ConnectSessionBus()
 	if err != nil {
-		log.Printf("D-Bus session bus not available: %v", err)
+		p.logger.Warning("D-Bus session bus not available: %v", err)
 		return false
 	}
 	defer func() {
 		if err := conn.Close(); err != nil {
-			log.Printf("Failed to close D-Bus connection: %v", err)
+			p.logger.Error("Failed to close D-Bus connection: %v", err)
 		}
 	}()
 
@@ -56,24 +58,24 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 	obj := conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 	call := obj.Call("org.freedesktop.DBus.Introspectable.Introspect", 0)
 	if call.Err != nil {
-		log.Printf("D-Bus portal not available: %v", call.Err)
+		p.logger.Warning("D-Bus portal not available: %v", call.Err)
 		return false
 	}
 
 	// Check if the introspection contains GlobalShortcuts interface
 	var introspectData string
 	if err := call.Store(&introspectData); err != nil {
-		log.Printf("Failed to get introspection data: %v", err)
+		p.logger.Error("Failed to get introspection data: %v", err)
 		return false
 	}
 
 	// Check for GlobalShortcuts interface in introspection data
 	if len(introspectData) > 0 && containsGlobalShortcuts(introspectData) {
-		log.Println("D-Bus portal GlobalShortcuts detected")
+		p.logger.Info("D-Bus portal GlobalShortcuts detected")
 		return true
 	}
 
-	log.Println("D-Bus portal GlobalShortcuts not available")
+	p.logger.Info("D-Bus portal GlobalShortcuts not available")
 	return false
 }
 
@@ -100,13 +102,16 @@ func (p *DbusKeyboardProvider) Start() error {
 	// Register hotkeys using GlobalShortcuts portal
 	if err := p.registerHotkeys(); err != nil {
 		if closeErr := p.conn.Close(); closeErr != nil {
-			log.Printf("Failed to close D-Bus connection: %v", closeErr)
+			p.logger.Error("Failed to close D-Bus connection: %v", closeErr)
 		}
+		p.logger.Error("DBus GlobalShortcuts binding failed: %v", err)
+		p.logger.Info("Hint: In Flatpak/AppImage, global shortcuts may require consent or permissions.")
+		p.logger.Error("If running as AppImage, consider provider override 'evdev' and adding user to 'input' group.")
 		return fmt.Errorf("failed to register hotkeys (GlobalShortcuts portal unavailable): %w", err)
 	}
 
 	p.isListening = true
-	log.Println("D-Bus hotkey provider started successfully")
+	p.logger.Info("D-Bus hotkey provider started successfully")
 	return nil
 }
 
@@ -121,13 +126,13 @@ func (p *DbusKeyboardProvider) Stop() {
 
 	if p.conn != nil {
 		if err := p.conn.Close(); err != nil {
-			log.Printf("Failed to close D-Bus connection: %v", err)
+			p.logger.Error("Failed to close D-Bus connection: %v", err)
 		}
 		p.conn = nil
 	}
 
 	p.isListening = false
-	log.Println("D-Bus hotkey provider stopped")
+	p.logger.Info("D-Bus hotkey provider stopped")
 }
 
 // RegisterHotkey registers a hotkey callback
@@ -140,8 +145,14 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	}
 
 	p.callbacks[hotkey] = callback
-	log.Printf("D-Bus hotkey registered: %s", hotkey)
+	p.logger.Error("D-Bus hotkey registered: %s", hotkey)
 	return nil
+}
+
+// CaptureOnce is currently not supported via GlobalShortcuts portal in listen-only mode.
+// The service should fallback to evdev for capture sessions when available.
+func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
+	return "", fmt.Errorf("captureOnce not supported in dbus provider")
 }
 
 // convertHotkeyToAccelerator converts our hotkey syntax to a desktop-portal accelerator string
@@ -233,7 +244,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	for hotkey := range p.callbacks {
 		accel := convertHotkeyToAccelerator(hotkey)
-		log.Printf("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
+		p.logger.Error("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
 
 		shortcutData := map[string]dbus.Variant{
 			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
@@ -250,7 +261,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	// Step 3: Bind shortcuts to the session
 	bindOptions := map[string]dbus.Variant{}
-	log.Printf("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
+	p.logger.Error("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
 
 	call = obj.Call("org.freedesktop.portal.GlobalShortcuts.BindShortcuts", 0,
 		dbus.ObjectPath(sessionHandle), shortcuts, "", bindOptions)
@@ -258,7 +269,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 		return fmt.Errorf("failed to bind shortcuts: %w", call.Err)
 	}
 
-	log.Printf("DBus: Successfully bound shortcuts")
+	p.logger.Error("DBus: Successfully bound shortcuts")
 
 	// Step 4: Start listening for shortcut activations
 	go p.listenForShortcuts()
@@ -332,9 +343,9 @@ func (p *DbusKeyboardProvider) listenForShortcuts() {
 				if sessionHandle, ok := sig.Body[0].(dbus.ObjectPath); ok && string(sessionHandle) == p.sessionHandle {
 					if shortcutId, ok := sig.Body[1].(string); ok {
 						if callback, exists := p.callbacks[shortcutId]; exists {
-							log.Printf("Hotkey activated: %s", shortcutId)
+							p.logger.Error("Hotkey activated: %s", shortcutId)
 							if err := callback(); err != nil {
-								log.Printf("Error executing hotkey callback: %v", err)
+								p.logger.Error("Error executing hotkey callback: %v", err)
 							}
 						}
 					}

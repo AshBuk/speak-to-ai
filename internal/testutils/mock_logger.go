@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-package mocks
+package testutils
 
 import "fmt"
 
@@ -35,6 +35,11 @@ func (m *MockLogger) Warning(format string, args ...interface{}) {
 // Error logs an error message
 func (m *MockLogger) Error(format string, args ...interface{}) {
 	m.messages = append(m.messages, fmt.Sprintf("[ERROR] "+format, args...))
+}
+
+// Fatal logs a fatal message
+func (m *MockLogger) Fatal(format string, args ...interface{}) {
+	m.messages = append(m.messages, fmt.Sprintf("[FATAL] "+format, args...))
 }
 
 // GetMessages returns all logged messages

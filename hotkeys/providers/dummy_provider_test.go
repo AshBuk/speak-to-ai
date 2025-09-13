@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestNewDummyKeyboardProvider(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	if provider == nil {
 		t.Fatal("NewDummyKeyboardProvider returned nil")
@@ -29,7 +30,7 @@ func TestNewDummyKeyboardProvider(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_IsSupported(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	// Dummy provider should always be supported
 	if !provider.IsSupported() {
@@ -45,7 +46,7 @@ func TestDummyKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_Start(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	// Initial state
 	if provider.isListening {
@@ -75,7 +76,7 @@ func TestDummyKeyboardProvider_Start(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_Stop(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	// Stop without starting should be safe
 	provider.Stop()
@@ -103,7 +104,7 @@ func TestDummyKeyboardProvider_Stop(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
 
 	callback := func() error {
@@ -139,7 +140,7 @@ func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	hotkeys := []string{
 		"ctrl+r",
@@ -193,7 +194,7 @@ func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	firstCallbackCalled := false
 	secondCallbackCalled := false
@@ -242,7 +243,7 @@ func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_StartStopCycle(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	// Start -> Stop -> Start cycle
 	err := provider.Start()
@@ -268,7 +269,7 @@ func TestDummyKeyboardProvider_StartStopCycle(t *testing.T) {
 }
 
 func TestDummyKeyboardProvider_StateConsistency(t *testing.T) {
-	provider := NewDummyKeyboardProvider()
+	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
 	// Test various state combinations
 	scenarios := []struct {

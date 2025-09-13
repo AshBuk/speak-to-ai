@@ -11,32 +11,38 @@ func TestNewConfigAdapter(t *testing.T) {
 	tests := []struct {
 		name           string
 		startRecording string
+		provider       string
 	}{
 		{
 			name:           "standard hotkey",
 			startRecording: "ctrl+shift+r",
+			provider:       "auto",
 		},
 		{
 			name:           "single key",
 			startRecording: "F12",
+			provider:       "dbus",
 		},
 		{
 			name:           "complex hotkey",
 			startRecording: "altgr+comma",
+			provider:       "evdev",
 		},
 		{
 			name:           "empty hotkey",
 			startRecording: "",
+			provider:       "auto",
 		},
 		{
 			name:           "special characters",
 			startRecording: "ctrl+alt+/",
+			provider:       "auto",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			adapter := NewConfigAdapter(tt.startRecording)
+			adapter := NewConfigAdapter(tt.startRecording, tt.provider)
 
 			if adapter == nil {
 				t.Fatalf("NewConfigAdapter returned nil")
@@ -44,6 +50,9 @@ func TestNewConfigAdapter(t *testing.T) {
 
 			if adapter.startRecording != tt.startRecording {
 				t.Errorf("Expected startRecording '%s', got '%s'", tt.startRecording, adapter.startRecording)
+			}
+			if adapter.provider != tt.provider {
+				t.Errorf("Expected provider '%s', got '%s'", tt.provider, adapter.provider)
 			}
 
 			// Test that the adapter implements HotkeyConfig interface
@@ -87,7 +96,7 @@ func TestConfigAdapter_GetStartRecordingHotkey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			adapter := NewConfigAdapter(tt.startRecording)
+			adapter := NewConfigAdapter(tt.startRecording, "auto")
 			result := adapter.GetStartRecordingHotkey()
 
 			if result != tt.expected {
@@ -99,7 +108,7 @@ func TestConfigAdapter_GetStartRecordingHotkey(t *testing.T) {
 
 func TestConfigAdapter_InterfaceCompliance(t *testing.T) {
 	// Test that ConfigAdapter properly implements HotkeyConfig interface
-	adapter := NewConfigAdapter("test+hotkey")
+	adapter := NewConfigAdapter("test+hotkey", "auto")
 
 	// This should compile without issues if the interface is implemented correctly
 	var config HotkeyConfig = adapter
@@ -115,7 +124,7 @@ func TestConfigAdapter_InterfaceCompliance(t *testing.T) {
 func TestConfigAdapter_Immutability(t *testing.T) {
 	// Test that the adapter's internal state cannot be modified externally
 	originalHotkey := "ctrl+r"
-	adapter := NewConfigAdapter(originalHotkey)
+	adapter := NewConfigAdapter(originalHotkey, "auto")
 
 	// Get the hotkey multiple times to ensure it doesn't change
 	first := adapter.GetStartRecordingHotkey()
@@ -130,9 +139,9 @@ func TestConfigAdapter_Immutability(t *testing.T) {
 
 func TestConfigAdapter_MultipleInstances(t *testing.T) {
 	// Test that multiple adapters are independent
-	adapter1 := NewConfigAdapter("ctrl+1")
-	adapter2 := NewConfigAdapter("ctrl+2")
-	adapter3 := NewConfigAdapter("ctrl+3")
+	adapter1 := NewConfigAdapter("ctrl+1", "auto")
+	adapter2 := NewConfigAdapter("ctrl+2", "auto")
+	adapter3 := NewConfigAdapter("ctrl+3", "auto")
 
 	if adapter1.GetStartRecordingHotkey() != "ctrl+1" {
 		t.Errorf("Adapter1 hotkey incorrect: got '%s'", adapter1.GetStartRecordingHotkey())
@@ -185,12 +194,19 @@ func TestConfigAdapter_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			adapter := NewConfigAdapter(tt.input)
+			adapter := NewConfigAdapter(tt.input, "auto")
 			result := adapter.GetStartRecordingHotkey()
 
 			if result != tt.expected {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}
 		})
+	}
+}
+
+func TestConfigAdapter_GetProvider_DefaultAuto(t *testing.T) {
+	adapter := NewConfigAdapter("ctrl+r", "")
+	if p := adapter.GetProvider(); p != "auto" {
+		t.Errorf("expected default provider 'auto', got '%s'", p)
 	}
 }

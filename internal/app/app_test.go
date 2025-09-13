@@ -4,250 +4,274 @@
 package app
 
 import (
-	"syscall"
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
+	"github.com/AshBuk/speak-to-ai/internal/services"
+	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
-func TestNewApp(t *testing.T) {
-	configFile := "config.yaml"
-	debug := true
-	modelPath := "/path/to/model"
-	quantizePath := "/path/to/quantize"
+func TestRuntimeContext(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
 
-	app := NewApp(configFile, debug, modelPath, quantizePath)
+	t.Run("NewRuntimeContext", func(t *testing.T) {
+		runtime := NewRuntimeContext(mockLogger)
 
-	if app == nil {
-		t.Fatal("NewApp returned nil")
-	}
-
-	if app.ShutdownCh == nil {
-		t.Error("ShutdownCh should be initialized")
-	}
-
-	if app.Ctx == nil {
-		t.Error("Context should be initialized")
-	}
-
-	if app.Cancel == nil {
-		t.Error("Cancel function should be initialized")
-	}
-
-	// Test that context is not cancelled initially
-	select {
-	case <-app.Ctx.Done():
-		t.Error("Context should not be cancelled initially")
-	default:
-		// Expected behavior
-	}
-}
-
-func TestApp_ContextCancellation(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
-
-	// Cancel the context
-	app.Cancel()
-
-	// Wait for context to be done
-	select {
-	case <-app.Ctx.Done():
-		// Expected behavior
-	case <-time.After(100 * time.Millisecond):
-		t.Error("Context should be cancelled after calling Cancel()")
-	}
-}
-
-func TestApp_SignalHandling(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
-
-	// Test that signal channel is properly configured
-	if cap(app.ShutdownCh) == 0 {
-		t.Error("ShutdownCh should be buffered")
-	}
-
-	// Send a signal to the channel
-	app.ShutdownCh <- syscall.SIGTERM
-
-	// Read from the channel
-	select {
-	case sig := <-app.ShutdownCh:
-		if sig != syscall.SIGTERM {
-			t.Errorf("Expected SIGTERM, got %v", sig)
+		if runtime == nil {
+			t.Fatal("NewRuntimeContext returned nil")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Error("Should receive signal from channel")
-	}
+		if runtime.Logger != mockLogger {
+			t.Error("Logger not set correctly")
+		}
+		if runtime.Ctx == nil {
+			t.Error("Context not initialized")
+		}
+		if runtime.Cancel == nil {
+			t.Error("Cancel function not initialized")
+		}
+		if runtime.ShutdownCh == nil {
+			t.Error("Shutdown channel not initialized")
+		}
+
+		// Test that context is not cancelled initially
+		select {
+		case <-runtime.Ctx.Done():
+			t.Error("Context should not be cancelled initially")
+		default:
+			// Expected behavior
+		}
+
+		// Test cancellation
+		runtime.Cancel()
+		select {
+		case <-runtime.Ctx.Done():
+			// Expected behavior
+		case <-time.After(100 * time.Millisecond):
+			t.Error("Context should be cancelled after calling Cancel()")
+		}
+	})
+
+	t.Run("ShutdownChannel", func(t *testing.T) {
+		runtime := NewRuntimeContext(mockLogger)
+
+		// Test that shutdown channel is buffered
+		if cap(runtime.ShutdownCh) == 0 {
+			t.Error("Shutdown channel should be buffered")
+		}
+	})
 }
 
-func TestApp_ComponentInitialization(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
+func TestApp(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
 
-	// Test initial state
-	if app.Logger != nil {
-		t.Error("Logger should be nil initially")
-	}
+	t.Run("NewApp", func(t *testing.T) {
+		app := NewApp(mockLogger)
 
-	if app.Config != nil {
-		t.Error("Config should be nil initially")
-	}
+		if app == nil {
+			t.Fatal("NewApp returned nil")
+		}
+		if app.Services == nil {
+			t.Error("Services container not initialized")
+		}
+		if app.Runtime == nil {
+			t.Error("Runtime context not initialized")
+		}
+		if app.Runtime.Logger != mockLogger {
+			t.Error("Runtime logger not set correctly")
+		}
+	})
 
-	if app.Recorder != nil {
-		t.Error("Recorder should be nil initially")
-	}
+	t.Run("ServiceAccessors", func(t *testing.T) {
+		app := NewApp(mockLogger)
 
-	if app.WhisperEngine != nil {
-		t.Error("WhisperEngine should be nil initially")
-	}
+		// Test accessor methods with nil services
+		if app.Audio() != nil {
+			t.Error("Audio() should return nil when service is not set")
+		}
+		if app.UI() != nil {
+			t.Error("UI() should return nil when service is not set")
+		}
+		if app.IO() != nil {
+			t.Error("IO() should return nil when service is not set")
+		}
+		if app.Config() != nil {
+			t.Error("Config() should return nil when service is not set")
+		}
+		if app.Hotkeys() != nil {
+			t.Error("Hotkeys() should return nil when service is not set")
+		}
 
-	if app.HotkeyManager != nil {
-		t.Error("HotkeyManager should be nil initially")
-	}
+		// Test accessor methods with nil Services container
+		app.Services = nil
+		if app.Audio() != nil {
+			t.Error("Audio() should return nil when Services container is nil")
+		}
+		if app.UI() != nil {
+			t.Error("UI() should return nil when Services container is nil")
+		}
+		if app.IO() != nil {
+			t.Error("IO() should return nil when Services container is nil")
+		}
+		if app.Config() != nil {
+			t.Error("Config() should return nil when Services container is nil")
+		}
+		if app.Hotkeys() != nil {
+			t.Error("Hotkeys() should return nil when Services container is nil")
+		}
+	})
 
-	if app.TrayManager != nil {
-		t.Error("TrayManager should be nil initially")
-	}
+	t.Run("Shutdown_NilServices", func(t *testing.T) {
+		app := NewApp(mockLogger)
+		app.Services = nil
 
-	if app.NotifyManager != nil {
-		t.Error("NotifyManager should be nil initially")
-	}
+		err := app.Shutdown()
+		if err != nil {
+			t.Errorf("Shutdown should not error with nil services: %v", err)
+		}
 
-	if app.WebSocketServer != nil {
-		t.Error("WebSocketServer should be nil initially")
-	}
-
-	if app.OutputManager != nil {
-		t.Error("OutputManager should be nil initially")
-	}
-
-	if app.ModelManager != nil {
-		t.Error("ModelManager should be nil initially")
-	}
+		// Verify context was cancelled
+		select {
+		case <-app.Runtime.Ctx.Done():
+			// Expected behavior
+		case <-time.After(100 * time.Millisecond):
+			t.Error("Context should be cancelled after Shutdown()")
+		}
+	})
 }
 
-func TestApp_ConfigFile(t *testing.T) {
-	configFile := "test-config.yaml"
-	app := NewApp(configFile, false, "", "")
-
-	// ConfigFile should be set after initialization
-	if app.ConfigFile != "" {
-		t.Error("ConfigFile should be empty initially")
-	}
+// Mock services for testing
+type mockServiceWithShutdown struct {
+	shutdownCalled bool
+	shutdownError  error
 }
 
-func TestApp_Environment(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
-
-	// Environment should be unknown initially
-	if app.Environment != "" {
-		t.Error("Environment should be empty initially")
-	}
+func (m *mockServiceWithShutdown) Shutdown() error {
+	m.shutdownCalled = true
+	return m.shutdownError
 }
 
-func TestApp_LastTranscript(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
+func TestApp_Integration(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
 
-	// Test LastTranscript field
-	if app.LastTranscript != "" {
-		t.Error("LastTranscript should be empty initially")
-	}
+	t.Run("Shutdown_WithServices", func(t *testing.T) {
+		app := NewApp(mockLogger)
 
-	// Test setting LastTranscript
-	testTranscript := "Hello, world!"
-	app.LastTranscript = testTranscript
+		// Create a mock service container with our mock service
+		mockServices := &services.ServiceContainer{}
 
-	if app.LastTranscript != testTranscript {
-		t.Errorf("Expected LastTranscript to be %q, got %q", testTranscript, app.LastTranscript)
-	}
+		// We'll test that the service container's Shutdown is called
+		// Since we can't easily mock the entire service container,
+		// we'll test that the method handles the nil services gracefully
+		app.Services = mockServices
+
+		err := app.Shutdown()
+		if err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+
+		// Verify context was cancelled
+		select {
+		case <-app.Runtime.Ctx.Done():
+			// Expected behavior
+		case <-time.After(100 * time.Millisecond):
+			t.Error("Context should be cancelled after Shutdown()")
+		}
+	})
+
+	t.Run("AppLifecycle", func(t *testing.T) {
+		app := NewApp(mockLogger)
+
+		// Test initial state
+		if app.Runtime.Ctx.Err() != nil {
+			t.Error("Context should not be cancelled initially")
+		}
+
+		// Test shutdown
+		err := app.Shutdown()
+		if err != nil {
+			t.Errorf("Shutdown failed: %v", err)
+		}
+
+		// Verify context was cancelled
+		if app.Runtime.Ctx.Err() == nil {
+			t.Error("Context should be cancelled after shutdown")
+		}
+	})
 }
 
-// MockComponents for testing
-type MockLogger struct {
-	messages []string
-}
+func TestApp_HandlerMethods(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
 
-func (m *MockLogger) Debug(format string, args ...interface{}) {
-	m.messages = append(m.messages, "DEBUG: "+format)
-}
+	t.Run("Handlers_NilServices", func(t *testing.T) {
+		app := NewApp(mockLogger)
+		app.Services = nil
 
-func (m *MockLogger) Info(format string, args ...interface{}) {
-	m.messages = append(m.messages, "INFO: "+format)
-}
+		// Test all handler methods with nil services
+		err := app.handleStartRecording()
+		if err == nil {
+			t.Error("handleStartRecording should fail with nil services")
+		}
 
-func (m *MockLogger) Warning(format string, args ...interface{}) {
-	m.messages = append(m.messages, "WARNING: "+format)
-}
+		err = app.handleStopRecordingAndTranscribe()
+		if err == nil {
+			t.Error("handleStopRecordingAndTranscribe should fail with nil services")
+		}
 
-func (m *MockLogger) Error(format string, args ...interface{}) {
-	m.messages = append(m.messages, "ERROR: "+format)
-}
+		// TODO: Next feature - VAD implementation
+		// err = app.handleToggleVAD()
+		// if err == nil {
+		//	t.Error("handleToggleVAD should fail with nil services")
+		// }
 
-func TestApp_ComponentAssignment(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
+		err = app.handleSwitchModel()
+		if err == nil {
+			t.Error("handleSwitchModel should fail with nil services")
+		}
 
-	// Test component assignment
-	mockLogger := &MockLogger{}
-	app.Logger = mockLogger
+		err = app.handleShowConfig()
+		if err == nil {
+			t.Error("handleShowConfig should fail with nil services")
+		}
 
-	testConfig := &config.Config{}
-	app.Config = testConfig
+		err = app.handleResetToDefaults()
+		if err == nil {
+			t.Error("handleResetToDefaults should fail with nil services")
+		}
+	})
 
-	app.Environment = platform.EnvironmentX11
-	app.ConfigFile = "test-config.yaml"
+	t.Run("Handlers_NilSpecificServices", func(t *testing.T) {
+		app := NewApp(mockLogger)
+		// Services container exists but individual services are nil
 
-	// Verify assignments
-	if app.Logger != mockLogger {
-		t.Error("Logger assignment failed")
-	}
+		err := app.handleStartRecording()
+		if err == nil {
+			t.Error("handleStartRecording should fail with nil audio service")
+		}
 
-	if app.Config != testConfig {
-		t.Error("Config assignment failed")
-	}
+		err = app.handleStopRecordingAndTranscribe()
+		if err == nil {
+			t.Error("handleStopRecordingAndTranscribe should fail with nil audio service")
+		}
 
-	if app.Environment != platform.EnvironmentX11 {
-		t.Error("Environment assignment failed")
-	}
+		// TODO: Next feature - VAD implementation
+		// err = app.handleToggleVAD()
+		// if err == nil {
+		//	t.Error("handleToggleVAD should fail with nil config service")
+		// }
 
-	if app.ConfigFile != "test-config.yaml" {
-		t.Error("ConfigFile assignment failed")
-	}
-}
+		err = app.handleSwitchModel()
+		if err == nil {
+			t.Error("handleSwitchModel should fail with nil audio service")
+		}
 
-func TestApp_ConvertEnvironmentType(t *testing.T) {
-	app := NewApp("config.yaml", false, "", "")
+		err = app.handleShowConfig()
+		if err == nil {
+			t.Error("handleShowConfig should fail with nil UI service")
+		}
 
-	tests := []struct {
-		name     string
-		input    platform.EnvironmentType
-		expected outputFactory.EnvironmentType
-	}{
-		{
-			name:     "X11 environment",
-			input:    platform.EnvironmentX11,
-			expected: outputFactory.EnvironmentX11,
-		},
-		{
-			name:     "Wayland environment",
-			input:    platform.EnvironmentWayland,
-			expected: outputFactory.EnvironmentWayland,
-		},
-		{
-			name:     "Unknown environment",
-			input:    platform.EnvironmentUnknown,
-			expected: outputFactory.EnvironmentUnknown,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			app.Environment = tt.input
-			result := app.convertEnvironmentType()
-			if result != tt.expected {
-				t.Errorf("Expected %v, got %v", tt.expected, result)
-			}
-		})
-	}
+		err = app.handleResetToDefaults()
+		if err == nil {
+			t.Error("handleResetToDefaults should fail with nil config service")
+		}
+	})
 }

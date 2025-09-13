@@ -27,28 +27,29 @@ type Config struct {
 
 	// Hotkey settings
 	Hotkeys struct {
-		StartRecording  string `yaml:"start_recording"`
-		StopRecording   string `yaml:"stop_recording"`
-		ToggleStreaming string `yaml:"toggle_streaming"`
-		SwitchModel     string `yaml:"switch_model"`
-		ToggleVAD       string `yaml:"toggle_vad"`
+		// Provider override: "auto" | "dbus" | "evdev"
+		Provider       string `yaml:"provider"`
+		StartRecording string `yaml:"start_recording"`
+		StopRecording  string `yaml:"stop_recording"`
+		SwitchModel    string `yaml:"switch_model"`
+		// Hotkey to toggle VAD on/off
+		// ToggleVAD       string `yaml:"toggle_vad"`
 		ShowConfig      string `yaml:"show_config"`
-		ReloadConfig    string `yaml:"reload_config"`
+		ResetToDefaults string `yaml:"reset_to_defaults"`
 	} `yaml:"hotkeys"`
 
 	// Audio recording settings
 	Audio struct {
-		Device            string `yaml:"device"`
-		SampleRate        int    `yaml:"sample_rate"`
-		Format            string `yaml:"format"`
-		RecordingMethod   string `yaml:"recording_method"`    // 'arecord', 'ffmpeg', 'go-native'
-		ExpectedDuration  int    `yaml:"expected_duration"`   // Expected recording duration in seconds
-		EnableStreaming   bool   `yaml:"enable_streaming"`    // Whether to enable streaming transcription
-		MaxRecordingTime  int    `yaml:"max_recording_time"`  // Max recording time in seconds
-		EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
-		VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
-		AutoStartStop     bool   `yaml:"auto_start_stop"`     // Auto start/stop recording based on VAD
-		StreamingBufferMs int    `yaml:"streaming_buffer_ms"` // Streaming buffer size in milliseconds
+		Device           string `yaml:"device"`
+		SampleRate       int    `yaml:"sample_rate"`
+		Format           string `yaml:"format"`
+		RecordingMethod  string `yaml:"recording_method"`   // 'arecord', 'ffmpeg'
+		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds
+		MaxRecordingTime int    `yaml:"max_recording_time"` // Max recording time in seconds
+		// TODO: Next feature - VAD implementation
+		// EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
+		// VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
+		// AutoStartStop     bool   `yaml:"auto_start_stop"`     // Auto start/stop recording based on VAD
 	} `yaml:"audio"`
 
 	// Text output settings
