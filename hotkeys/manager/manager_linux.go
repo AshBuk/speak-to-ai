@@ -14,48 +14,99 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
+type runtimeEnvironment int
+
+const (
+	envSystem   runtimeEnvironment = iota
+	envAppImage
+	envFlatpak
+)
+
+func detectRuntimeEnvironment() runtimeEnvironment {
+	if os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != "" {
+		return envAppImage
+	}
+	if os.Getenv("FLATPAK_ID") != "" {
+		return envFlatpak
+	}
+	return envSystem
+}
+
 func selectProviderForEnvironment(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
-	// Respect provider override from config
+	// Handle explicit provider override from config
 	switch config.GetProvider() {
 	case "evdev":
 		logger.Info("Hotkeys provider override: evdev")
-		return providers.NewEvdevKeyboardProvider(config, environment, logger)
+		return createEvdevProvider(config, environment, logger)
 	case "dbus":
 		logger.Info("Hotkeys provider override: dbus")
-		return providers.NewDbusKeyboardProvider(config, environment, logger)
-	}
-	// AppImage: Prefer evdev due to potential D-Bus portal sandbox issues
-	isAppImage := os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != ""
-	if isAppImage {
-		logger.Info("AppImage detected - checking evdev first for better compatibility")
-		evdevProvider := providers.NewEvdevKeyboardProvider(config, environment, logger)
-		if evdevProvider.IsSupported() {
-			logger.Info("Using evdev keyboard provider (AppImage mode)")
-			return evdevProvider
-		}
-		logger.Info("evdev not available in AppImage, falling back to D-Bus")
-		logger.Info("HOTKEY SETUP: For reliable hotkeys in AppImage, run:")
-		logger.Info("  sudo usermod -a -G input $USER")
-		logger.Info("  Then reboot or log out/in")
+		return createDbusProvider(config, environment, logger)
 	}
 
-	// Try D-Bus provider first (works without root permissions on modern DEs)
-	dbusProvider := providers.NewDbusKeyboardProvider(config, environment, logger)
-	if dbusProvider.IsSupported() {
+	// Auto-select provider based on runtime environment
+	switch detectRuntimeEnvironment() {
+	case envAppImage:
+		return selectAppImageProvider(config, environment, logger)
+	case envFlatpak:
+		return selectFlatpakProvider(config, environment, logger)
+	default:
+		return selectSystemProvider(config, environment, logger)
+	}
+}
+
+func selectAppImageProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
+	logger.Info("AppImage detected - checking evdev first for better compatibility")
+
+	// Try evdev first (preferred for AppImage due to D-Bus portal issues)
+	if evdevProvider := createEvdevProvider(config, environment, logger); evdevProvider.IsSupported() {
+		logger.Info("Using evdev keyboard provider (AppImage mode)")
+		return evdevProvider
+	}
+
+	logger.Info("evdev not available in AppImage, falling back to D-Bus")
+	logger.Info("HOTKEY SETUP: For reliable hotkeys in AppImage, run:")
+	logger.Info("  sudo usermod -a -G input $USER")
+	logger.Info("  Then reboot or log out/in")
+
+	// Fallback to D-Bus
+	return createDbusProvider(config, environment, logger)
+}
+
+func selectFlatpakProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
+	logger.Info("Flatpak detected - using D-Bus provider only (evdev blocked by sandbox)")
+
+	// Only D-Bus available in Flatpak sandbox
+	return createDbusProvider(config, environment, logger)
+}
+
+func selectSystemProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
+	// Try D-Bus first (works without root permissions on modern DEs)
+	if dbusProvider := createDbusProvider(config, environment, logger); dbusProvider.IsSupported() {
 		logger.Info("Using D-Bus keyboard provider (GNOME/KDE)")
 		return dbusProvider
 	}
+
 	logger.Info("D-Bus GlobalShortcuts portal not available, trying evdev...")
 
-	// Fallback to evdev provider (requires root permissions but works everywhere)
-	evdevProvider := providers.NewEvdevKeyboardProvider(config, environment, logger)
-	if evdevProvider.IsSupported() {
+	// Fallback to evdev
+	if evdevProvider := createEvdevProvider(config, environment, logger); evdevProvider.IsSupported() {
 		logger.Info("Using evdev keyboard provider (requires root permissions)")
 		return evdevProvider
 	}
-	logger.Info("evdev not available, hotkeys will be disabled")
 
-	// Final fallback to dummy provider with helpful instructions
+	logger.Info("evdev not available, hotkeys will be disabled")
+	return createFallbackProvider(logger)
+}
+
+func createEvdevProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
+	return providers.NewEvdevKeyboardProvider(config, environment, logger)
+}
+
+func createDbusProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
+	return providers.NewDbusKeyboardProvider(config, environment, logger)
+}
+
+func createFallbackProvider(logger logger.Logger) interfaces.KeyboardEventProvider {
 	logger.Warning("No supported keyboard provider available.")
 	logger.Info("For hotkeys to work:")
 	logger.Info("  - On GNOME/KDE: Ensure D-Bus session is running")
