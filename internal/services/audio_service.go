@@ -225,9 +225,6 @@ func (as *AudioService) SwitchModel(modelType string) error {
 		return fmt.Errorf("model manager not available")
 	}
 
-	// Update config
-	as.config.General.ModelType = modelType
-
 	// Reinitialize engines with new model
 	modelPath, err := as.modelManager.GetModelPathWithProgress(nil)
 	if err != nil {
