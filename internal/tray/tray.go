@@ -47,7 +47,6 @@ type TrayManager struct {
 
 	// Audio action callbacks
 	onSelectRecorder func(method string) error
-	onTestRecording  func() error
 	// Settings callbacks
 	// onSelectVADSens sets the callback for VAD sensitivity selection.
 	// onSelectVADSens        func(sensitivity string) error
@@ -212,10 +211,9 @@ func (tm *TrayManager) Stop() {
 	systray.Quit()
 }
 
-// SetAudioActions sets callbacks for audio-related actions (recorder selection, test recording)
-func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
+// SetAudioActions sets callbacks for audio-related actions (recorder selection)
+func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error) {
 	tm.onSelectRecorder = onSelectRecorder
-	tm.onTestRecording = onTestRecording
 }
 
 // SetExitAction allows overriding the exit callback (useful once services are wired)

@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -53,7 +52,7 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 		},
 	)
 
-	// Audio actions (recorder selection, test recording)
+	// Audio actions (recorder selection)
 	components.TrayManager.SetAudioActions(
 		func(method string) error {
 			// Persist method and reinit on next start
@@ -74,19 +73,6 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 					}
 				}
 			}
-			return nil
-		},
-		func() error { // test 3s recording
-			if container == nil || container.Audio == nil {
-				return fmt.Errorf("audio service not available")
-			}
-			if err := container.Audio.HandleStartRecording(); err != nil {
-				return err
-			}
-			go func() {
-				time.Sleep(3 * time.Second)
-				_ = container.Audio.HandleStopRecording()
-			}()
 			return nil
 		},
 	)
