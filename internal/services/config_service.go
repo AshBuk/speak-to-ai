@@ -82,7 +82,7 @@ func (cs *ConfigService) ResetToDefaults() error {
 }
 
 // GetConfig implements ConfigServiceInterface
-func (cs *ConfigService) GetConfig() interface{} {
+func (cs *ConfigService) GetConfig() *config.Config {
 	return cs.config
 }
 

@@ -6,7 +6,6 @@ package factory
 import (
 	"context"
 	"fmt"
-	"log"
 	"os/exec"
 	"time"
 
@@ -47,32 +46,32 @@ func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error
 
 // DiagnoseAudioSystem performs audio system diagnostics
 func (f *AudioRecorderFactory) DiagnoseAudioSystem() {
-	log.Printf("[AUDIO DIAGNOSTICS] Recording method: %s, Device: %s",
+	f.logger.Info("[AUDIO DIAGNOSTICS] Recording method: %s, Device: %s",
 		f.config.Audio.RecordingMethod, f.config.Audio.Device)
 
 	// Check if commands are available and perform method-specific diagnostics
 	switch f.config.Audio.RecordingMethod {
 	case "ffmpeg":
 		if _, err := exec.LookPath("ffmpeg"); err != nil {
-			log.Printf("[AUDIO DIAGNOSTICS] WARNING: ffmpeg not found: %v", err)
+			f.logger.Warning("[AUDIO DIAGNOSTICS] WARNING: ffmpeg not found: %v", err)
 		}
 		// Check PulseAudio sources for ffmpeg
 		if out, err := exec.Command("pactl", "list", "short", "sources").Output(); err == nil {
-			log.Printf("[AUDIO DIAGNOSTICS] PulseAudio sources available:")
-			log.Printf("%s", string(out))
+			f.logger.Info("[AUDIO DIAGNOSTICS] PulseAudio sources available:")
+			f.logger.Info("%s", string(out))
 		} else {
-			log.Printf("[AUDIO DIAGNOSTICS] WARNING: Cannot list PulseAudio sources: %v", err)
+			f.logger.Warning("[AUDIO DIAGNOSTICS] WARNING: Cannot list PulseAudio sources: %v", err)
 		}
 	case "arecord":
 		if _, err := exec.LookPath("arecord"); err != nil {
-			log.Printf("[AUDIO DIAGNOSTICS] WARNING: arecord not found: %v", err)
+			f.logger.Warning("[AUDIO DIAGNOSTICS] WARNING: arecord not found: %v", err)
 		}
 		// Check ALSA devices for arecord
 		if out, err := exec.Command("arecord", "-l").Output(); err == nil {
-			log.Printf("[AUDIO DIAGNOSTICS] ALSA capture devices:")
-			log.Printf("%s", string(out))
+			f.logger.Info("[AUDIO DIAGNOSTICS] ALSA capture devices:")
+			f.logger.Info("%s", string(out))
 		} else {
-			log.Printf("[AUDIO DIAGNOSTICS] WARNING: Cannot list ALSA devices: %v", err)
+			f.logger.Warning("[AUDIO DIAGNOSTICS] WARNING: Cannot list ALSA devices: %v", err)
 		}
 	}
 }
@@ -83,7 +82,7 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	testConfig := *f.config
 	testConfig.Audio.RecordingMethod = method
 
-	log.Printf("[AUDIO TEST] Testing %s recorder...", method)
+	f.logger.Info("[AUDIO TEST] Testing %s recorder...", method)
 
 	var testArgs []string
 	var cmdName string
@@ -119,12 +118,12 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Printf("[AUDIO TEST] %s test failed: %v", method, err)
-		log.Printf("[AUDIO TEST] %s output: %s", method, string(output))
+		f.logger.Error("[AUDIO TEST] %s test failed: %v", method, err)
+		f.logger.Info("[AUDIO TEST] %s output: %s", method, string(output))
 		return fmt.Errorf("%s test failed: %w", method, err)
 	}
 
-	log.Printf("[AUDIO TEST] %s test passed", method)
+	f.logger.Info("[AUDIO TEST] %s test passed", method)
 	return nil
 }
 
@@ -139,11 +138,11 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 	// Test if the method actually works
 	testErr := f.TestRecorderMethod(f.config.Audio.RecordingMethod)
 	if testErr == nil {
-		log.Printf("[AUDIO] Using configured recorder: %s", f.config.Audio.RecordingMethod)
+		f.logger.Info("[AUDIO] Using configured recorder: %s", f.config.Audio.RecordingMethod)
 		return recorder, nil
 	}
 
-	log.Printf("[AUDIO] Configured method %s failed test: %v", f.config.Audio.RecordingMethod, testErr)
+	f.logger.Warning("[AUDIO] Configured method %s failed test: %v", f.config.Audio.RecordingMethod, testErr)
 
 	// Try fallback methods
 	fallbacks := []string{"arecord", "ffmpeg"}
@@ -155,7 +154,7 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 		}
 
 		if f.TestRecorderMethod(method) == nil {
-			log.Printf("[AUDIO] Automatically switching to %s (fallback)", method)
+			f.logger.Info("[AUDIO] Automatically switching to %s (fallback)", method)
 			f.config.Audio.RecordingMethod = method
 			return f.CreateRecorder()
 		}

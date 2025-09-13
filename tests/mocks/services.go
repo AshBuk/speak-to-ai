@@ -97,7 +97,7 @@ func (m *MockConfigService) Shutdown() error {
 func (m *MockConfigService) LoadConfig(configFile string) error { return nil }
 func (m *MockConfigService) SaveConfig() error                  { return nil }
 func (m *MockConfigService) ResetToDefaults() error             { return nil }
-func (m *MockConfigService) GetConfig() interface{}             { return &config.Config{} }
+func (m *MockConfigService) GetConfig() *config.Config         { return &config.Config{} }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
