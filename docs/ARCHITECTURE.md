@@ -123,7 +123,6 @@ Related constants:
 - **`outputters/`**: Output implementations
   - `clipboard_outputter.go`: System clipboard integration
   - `type_outputter.go`: Active window typing simulation
-  - `combined_outputter.go`: Combined clipboard + typing output
   - `mock_outputter.go`: Mock implementation for testing
 
 ### **WebSocket API** (`websocket/`)
@@ -192,4 +191,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-11-09*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-14*

@@ -25,7 +25,7 @@ func (m *MockAudioService) IsRecording() bool           { return false }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
-func (m *MockAudioService) SwitchModel(modelType string) error  { return nil }
+func (m *MockAudioService) SwitchModel(modelType string) error { return nil }
 
 // Test helper methods
 func (m *MockAudioService) WasShutdownCalled() bool { return m.shutdownCalled }
@@ -68,11 +68,11 @@ func (m *MockIOService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockIOService) OutputText(text string) error                     { return nil }
-func (m *MockIOService) SetOutputMethod(method string) error              { return nil }
-func (m *MockIOService) StartWebSocketServer() error                      { return nil }
-func (m *MockIOService) StopWebSocketServer() error                       { return nil }
-func (m *MockIOService) HandleTypingFallback(text string) error           { return nil }
+func (m *MockIOService) OutputText(text string) error           { return nil }
+func (m *MockIOService) SetOutputMethod(method string) error    { return nil }
+func (m *MockIOService) StartWebSocketServer() error            { return nil }
+func (m *MockIOService) StopWebSocketServer() error             { return nil }
+func (m *MockIOService) HandleTypingFallback(text string) error { return nil }
 
 // Test helper methods
 func (m *MockIOService) WasShutdownCalled() bool { return m.shutdownCalled }
@@ -93,7 +93,7 @@ func (m *MockConfigService) Shutdown() error {
 func (m *MockConfigService) LoadConfig(configFile string) error { return nil }
 func (m *MockConfigService) SaveConfig() error                  { return nil }
 func (m *MockConfigService) ResetToDefaults() error             { return nil }
-func (m *MockConfigService) GetConfig() *config.Config         { return &config.Config{} }
+func (m *MockConfigService) GetConfig() *config.Config          { return &config.Config{} }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }

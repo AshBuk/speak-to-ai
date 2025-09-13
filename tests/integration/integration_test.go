@@ -135,7 +135,7 @@ func TestOutputManagerIntegration(t *testing.T) {
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
 
-	testModes := []string{"clipboard", "active_window", "combined"}
+	testModes := []string{"clipboard", "active_window"}
 
 	for _, mode := range testModes {
 		t.Run("mode_"+mode, func(t *testing.T) {

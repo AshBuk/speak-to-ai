@@ -6,6 +6,7 @@ package services
 import (
 	"fmt"
 
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
 	"github.com/AshBuk/speak-to-ai/websocket"
@@ -14,6 +15,7 @@ import (
 // IOService implements IOServiceInterface
 type IOService struct {
 	logger          logger.Logger
+	config          *config.Config
 	outputManager   outputInterfaces.Outputter
 	webSocketServer *websocket.WebSocketServer
 }
@@ -21,11 +23,13 @@ type IOService struct {
 // NewIOService creates a new IOService instance
 func NewIOService(
 	logger logger.Logger,
+	config *config.Config,
 	outputManager outputInterfaces.Outputter,
 	webSocketServer *websocket.WebSocketServer,
 ) *IOService {
 	return &IOService{
 		logger:          logger,
+		config:          config,
 		outputManager:   outputManager,
 		webSocketServer: webSocketServer,
 	}
@@ -39,15 +43,34 @@ func (ios *IOService) OutputText(text string) error {
 
 	ios.logger.Info("Outputting text: %s", text)
 
-	// Use the appropriate output method based on configuration
-	// For now, try clipboard first, then fallback to typing
-	if err := ios.outputManager.CopyToClipboard(text); err != nil {
-		// Fallback to typing if clipboard fails
-		if typeErr := ios.outputManager.TypeToActiveWindow(text); typeErr != nil {
-			return fmt.Errorf("both clipboard and typing failed - clipboard: %w, typing: %v", err, typeErr)
+	// Use the method specified in config
+	switch ios.config.Output.DefaultMode {
+	case "clipboard":
+		if err := ios.outputManager.CopyToClipboard(text); err != nil {
+			ios.logger.Warning("Clipboard method failed, trying typing fallback: %v", err)
+			return ios.HandleTypingFallback(text)
 		}
-	} else {
-		return nil
+		ios.logger.Debug("Successfully copied text to clipboard")
+	case "active_window":
+		if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
+			ios.logger.Warning("Active window method failed, trying clipboard fallback: %v", err)
+			if clipErr := ios.outputManager.CopyToClipboard(text); clipErr != nil {
+				return fmt.Errorf("both active window and clipboard failed - typing: %w, clipboard: %v", err, clipErr)
+			}
+			ios.logger.Debug("Successfully copied text to clipboard (fallback)")
+		} else {
+			ios.logger.Debug("Successfully typed text to active window")
+		}
+	default:
+		// Fallback to old behavior for unknown modes
+		ios.logger.Warning("Unknown output mode '%s', using clipboard with typing fallback", ios.config.Output.DefaultMode)
+		if err := ios.outputManager.CopyToClipboard(text); err != nil {
+			// Fallback to typing if clipboard fails
+			if typeErr := ios.outputManager.TypeToActiveWindow(text); typeErr != nil {
+				return fmt.Errorf("both clipboard and typing failed - clipboard: %w, typing: %v", err, typeErr)
+			}
+		}
+		ios.logger.Debug("Successfully output text with fallback")
 	}
 
 	return nil
@@ -85,9 +108,13 @@ func (ios *IOService) OutputByTyping(text string) error {
 func (ios *IOService) SetOutputMethod(method string) error {
 	ios.logger.Info("Setting output method to: %s", method)
 
-	// TODO: Implement output method switching logic
-	// This will depend on how output manager handles method switching
+	// Validate method
+	if method != "clipboard" && method != "active_window" {
+		return fmt.Errorf("invalid output method: %s (must be 'clipboard' or 'active_window')", method)
+	}
 
+	// Method is stored in config and used by OutputText
+	ios.logger.Info("Output method switched to: %s", method)
 	return nil
 }
 

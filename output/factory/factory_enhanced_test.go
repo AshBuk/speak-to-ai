@@ -49,12 +49,6 @@ func TestOutputFactory_ErrorHandling(t *testing.T) {
 			defaultMode: "clipboard",
 			expectError: true, // External tools not available in test environment
 		},
-		{
-			name:        "valid combined mode",
-			env:         EnvironmentX11,
-			defaultMode: "combined",
-			expectError: true, // External tools not available in test environment
-		},
 	}
 
 	for _, tt := range tests {
@@ -155,7 +149,7 @@ func TestOutputFactory_ToolSelection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := &config.Config{}
-			config.Output.DefaultMode = "combined"
+			config.Output.DefaultMode = "clipboard"
 			config.Output.ClipboardTool = tt.clipboardTool
 			config.Output.TypeTool = tt.typeTool
 

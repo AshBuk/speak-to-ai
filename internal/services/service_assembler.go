@@ -96,6 +96,7 @@ func (sa *ServiceAssembler) createUIService(trayManager tray.TrayManagerInterfac
 func (sa *ServiceAssembler) createIOService(outputManager outputInterfaces.Outputter, webSocketServer *websocket.WebSocketServer) *IOService {
 	return NewIOService(
 		sa.factoryConfig.Logger,
+		sa.factoryConfig.Config,
 		outputManager,
 		webSocketServer,
 	)

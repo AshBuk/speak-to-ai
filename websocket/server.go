@@ -18,7 +18,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-
 // WebSocketServer represents a WebSocket server
 type WebSocketServer struct {
 	config      *config.Config
