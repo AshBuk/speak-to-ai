@@ -311,7 +311,7 @@ func (b *BaseRecorder) StopProcess() error {
 		if b.cmd != nil && b.cmd.Path != "" {
 			cmdName = b.cmd.Path
 		}
-		b.logger.Error("%s stderr: %s", cmdName, b.stderrBuf.String())
+		b.logger.Debug("%s stderr: %s", cmdName, b.stderrBuf.String())
 	}
 
 	// If we're using a file, verify it was created
@@ -412,10 +412,10 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		}()
 		_ = b.waitForProcess()
 		if b.stderrBuf.Len() > 0 {
-			b.logger.Error("%s stderr: %s", name, b.stderrBuf.String())
+			b.logger.Debug("%s stderr: %s", name, b.stderrBuf.String())
 		}
 		if b.processErr != nil {
-			b.logger.Error("%s exited with error: %v", name, b.processErr)
+			b.logger.Debug("%s exited with error: %v", name, b.processErr)
 			switch name {
 			case "ffmpeg":
 				b.logger.Info("FFmpeg failed - try switching to arecord via tray menu")

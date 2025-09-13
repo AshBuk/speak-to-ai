@@ -45,12 +45,6 @@ func (tm *TrayManager) populateSettingsMenus() {
 		"Use ffmpeg (PulseAudio)",
 	)
 
-	// Add test recording item
-	tm.audioItems["recorder_test"] = tm.audioRecorderMenu.AddSubMenuItem(
-		"Test Recording",
-		"Record 3s sample to validate settings",
-	)
-
 	// Reflect current selections
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
 	// TODO: Next feature - VAD implementation
@@ -75,18 +69,6 @@ func (tm *TrayManager) populateSettingsMenus() {
 			if tm.onSelectRecorder != nil {
 				if err := tm.onSelectRecorder("ffmpeg"); err != nil {
 					tm.logger.Error("Error selecting recorder: %v", err)
-				}
-			}
-		}
-	}()
-
-	// Handle test recording
-	go func() {
-		for range tm.audioItems["recorder_test"].ClickedCh {
-			tm.logger.Info("Test recording clicked")
-			if tm.onTestRecording != nil {
-				if err := tm.onTestRecording(); err != nil {
-					tm.logger.Error("Test recording failed: %v", err)
 				}
 			}
 		}

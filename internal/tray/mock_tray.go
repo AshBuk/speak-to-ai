@@ -17,7 +17,6 @@ type MockTrayManager struct {
 	onShowConfig      func() error
 	onResetToDefaults func() error
 	onSelectRecorder  func(method string) error
-	onTestRecording   func() error
 	// onSelectVADSens is the callback for VAD sensitivity selection
 	// onSelectVADSens        func(sensitivity string) error
 	onSelectLang           func(language string) error
@@ -80,9 +79,8 @@ func (tm *MockTrayManager) SetCoreActions(onToggle func() error, onShowConfig fu
 }
 
 // SetAudioActions sets callbacks for audio-related actions (mock implementation)
-func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) error, onTestRecording func() error) {
+func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) error) {
 	tm.onSelectRecorder = onSelectRecorder
-	tm.onTestRecording = onTestRecording
 	tm.logger.Info("Mock tray: audio actions set")
 }
 
