@@ -127,3 +127,14 @@ func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 	}
 	return "", fmt.Errorf("capture not supported by manager")
 }
+
+// SupportsCaptureOnce reports whether the underlying manager supports capture once
+func (hs *HotkeyService) SupportsCaptureOnce() bool {
+	if hs.hotkeyManager == nil {
+		return false
+	}
+	if hm, ok := hs.hotkeyManager.(*manager.HotkeyManager); ok {
+		return hm.SupportsCaptureOnce()
+	}
+	return false
+}

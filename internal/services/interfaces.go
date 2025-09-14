@@ -56,9 +56,6 @@ type IOServiceInterface interface {
 	StartWebSocketServer() error
 	StopWebSocketServer() error
 
-	// Output routing
-	HandleTypingFallback(text string) error
-
 	// Cleanup
 	Shutdown() error
 }
@@ -107,6 +104,9 @@ type HotkeyServiceInterface interface {
 
 	// One-shot capture for rebind flow
 	CaptureOnce(timeoutMs int) (string, error)
+
+	// Capability flags
+	SupportsCaptureOnce() bool
 
 	// Cleanup
 	Shutdown() error

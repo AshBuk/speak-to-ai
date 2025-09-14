@@ -220,3 +220,15 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	}
 	return "", err
 }
+
+// SupportsCaptureOnce returns true if the active provider can capture once
+func (h *HotkeyManager) SupportsCaptureOnce() bool {
+	if h.provider == nil {
+		return false
+	}
+	// evdev supports capture once; dbus provider returns explicit error; dummy doesn't
+	if _, ok := h.provider.(*providers.EvdevKeyboardProvider); ok {
+		return true
+	}
+	return false
+}

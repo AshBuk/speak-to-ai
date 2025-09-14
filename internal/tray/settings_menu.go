@@ -269,19 +269,26 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 	if tm.hotkeysMenu == nil || tm.config == nil {
 		return
 	}
+	// Determine capture once support (default true if callback unset)
+	supportsCaptureOnce := true
+	if tm.getCaptureOnceSupport != nil {
+		supportsCaptureOnce = tm.getCaptureOnceSupport()
+	}
 	// Start/Stop
 	if tm.hotkeyItems["rebind_start_stop"] == nil {
-		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Start/Stop…", "Change start/stop hotkey")
-		tm.hotkeyItems["rebind_start_stop"] = reb
-		go func() {
-			for range reb.ClickedCh {
-				if tm.onRebindHotkey != nil {
-					if err := tm.onRebindHotkey("start_recording"); err != nil {
-						tm.logger.Error("Error rebinding start/stop: %v", err)
+		if supportsCaptureOnce {
+			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Start/Stop…", "Change start/stop hotkey")
+			tm.hotkeyItems["rebind_start_stop"] = reb
+			go func() {
+				for range reb.ClickedCh {
+					if tm.onRebindHotkey != nil {
+						if err := tm.onRebindHotkey("start_recording"); err != nil {
+							tm.logger.Error("Error rebinding start/stop: %v", err)
+						}
 					}
 				}
-			}
-		}()
+			}()
+		}
 	}
 	if tm.hotkeyItems["display_start_stop"] == nil {
 		tm.hotkeyItems["display_start_stop"] = tm.hotkeysMenu.AddSubMenuItem(
@@ -294,17 +301,19 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 	}
 	// Switch model
 	if tm.hotkeyItems["rebind_switch_model"] == nil {
-		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Switch Model…", "Change switch model hotkey")
-		tm.hotkeyItems["rebind_switch_model"] = reb
-		go func() {
-			for range reb.ClickedCh {
-				if tm.onRebindHotkey != nil {
-					if err := tm.onRebindHotkey("switch_model"); err != nil {
-						tm.logger.Error("Error rebinding switch model: %v", err)
+		if supportsCaptureOnce {
+			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Switch Model…", "Change switch model hotkey")
+			tm.hotkeyItems["rebind_switch_model"] = reb
+			go func() {
+				for range reb.ClickedCh {
+					if tm.onRebindHotkey != nil {
+						if err := tm.onRebindHotkey("switch_model"); err != nil {
+							tm.logger.Error("Error rebinding switch model: %v", err)
+						}
 					}
 				}
-			}
-		}()
+			}()
+		}
 	}
 	if tm.hotkeyItems["display_switch_model"] == nil {
 		tm.hotkeyItems["display_switch_model"] = tm.hotkeysMenu.AddSubMenuItem(
@@ -317,17 +326,19 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 	}
 	// Show config
 	if tm.hotkeyItems["rebind_show_config"] == nil {
-		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Show Config…", "Change show config hotkey")
-		tm.hotkeyItems["rebind_show_config"] = reb
-		go func() {
-			for range reb.ClickedCh {
-				if tm.onRebindHotkey != nil {
-					if err := tm.onRebindHotkey("show_config"); err != nil {
-						tm.logger.Error("Error rebinding show config: %v", err)
+		if supportsCaptureOnce {
+			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Show Config…", "Change show config hotkey")
+			tm.hotkeyItems["rebind_show_config"] = reb
+			go func() {
+				for range reb.ClickedCh {
+					if tm.onRebindHotkey != nil {
+						if err := tm.onRebindHotkey("show_config"); err != nil {
+							tm.logger.Error("Error rebinding show config: %v", err)
+						}
 					}
 				}
-			}
-		}()
+			}()
+		}
 	}
 	if tm.hotkeyItems["display_show_config"] == nil {
 		tm.hotkeyItems["display_show_config"] = tm.hotkeysMenu.AddSubMenuItem(
@@ -340,17 +351,19 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 	}
 	// Reset defaults
 	if tm.hotkeyItems["rebind_reset_defaults"] == nil {
-		reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Reset to Defaults…", "Change reset defaults hotkey")
-		tm.hotkeyItems["rebind_reset_defaults"] = reb
-		go func() {
-			for range reb.ClickedCh {
-				if tm.onRebindHotkey != nil {
-					if err := tm.onRebindHotkey("reset_to_defaults"); err != nil {
-						tm.logger.Error("Error rebinding reset defaults: %v", err)
+		if supportsCaptureOnce {
+			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Reset to Defaults…", "Change reset defaults hotkey")
+			tm.hotkeyItems["rebind_reset_defaults"] = reb
+			go func() {
+				for range reb.ClickedCh {
+					if tm.onRebindHotkey != nil {
+						if err := tm.onRebindHotkey("reset_to_defaults"); err != nil {
+							tm.logger.Error("Error rebinding reset defaults: %v", err)
+						}
 					}
 				}
-			}
-		}()
+			}()
+		}
 	}
 	if tm.hotkeyItems["display_reset_defaults"] == nil {
 		tm.hotkeyItems["display_reset_defaults"] = tm.hotkeysMenu.AddSubMenuItem(

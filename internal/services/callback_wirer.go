@@ -157,6 +157,14 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 		return "unknown", "unknown"
 	})
 
+	// Capture once support capability
+	components.TrayManager.SetCaptureOnceSupport(func() bool {
+		if container == nil || container.Hotkeys == nil {
+			return false
+		}
+		return container.Hotkeys.SupportsCaptureOnce()
+	})
+
 	// Force UI update after callback is set
 	if container != nil && container.Config != nil {
 		if cfgSvc, ok := container.Config.(*ConfigService); ok && cfgSvc != nil {
