@@ -33,6 +33,9 @@ func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 	configSvc.SetUIService(uiSvc)
 
 	ioSvc := sa.createIOService(components.OutputManager, components.WebSocketServer)
+	// Wire dependencies for IOService
+	ioSvc.SetUIService(uiSvc)
+	ioSvc.SetConfigService(configSvc)
 
 	// Assign to container interfaces
 	container.Config = configSvc

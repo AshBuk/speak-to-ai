@@ -56,6 +56,9 @@ type TrayManager struct {
 	onGetOutputTools       func() (clipboardTool, typeTool string)
 	onSelectOutputMode     func(mode string) error
 	onRebindHotkey         func(action string) error
+
+	// Capability callbacks
+	getCaptureOnceSupport func() bool
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -244,4 +247,9 @@ func (tm *TrayManager) SetHotkeyRebindAction(onRebind func(action string) error)
 // SetGetOutputToolsCallback sets the callback for getting actual output tool names
 func (tm *TrayManager) SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
 	tm.onGetOutputTools = callback
+}
+
+// SetCaptureOnceSupport sets a callback indicating whether capture once is supported
+func (tm *TrayManager) SetCaptureOnceSupport(callback func() bool) {
+	tm.getCaptureOnceSupport = callback
 }

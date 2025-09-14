@@ -403,6 +403,5 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
-
 	return nil
 }

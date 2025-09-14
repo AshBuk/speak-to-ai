@@ -29,5 +29,7 @@ type TrayManagerInterface interface {
 	)
 	// SetGetOutputToolsCallback sets the callback for getting actual output tool names
 	SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string))
+	// SetCaptureOnceSupport sets a callback indicating whether capture once is supported
+	SetCaptureOnceSupport(callback func() bool)
 	Stop()
 }

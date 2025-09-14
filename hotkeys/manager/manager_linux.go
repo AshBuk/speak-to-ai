@@ -17,7 +17,7 @@ import (
 type runtimeEnvironment int
 
 const (
-	envSystem   runtimeEnvironment = iota
+	envSystem runtimeEnvironment = iota
 	envAppImage
 	envFlatpak
 )

@@ -106,6 +106,11 @@ func (tm *MockTrayManager) SetGetOutputToolsCallback(callback func() (clipboardT
 	tm.logger.Info("Mock tray: get output tools callback set")
 }
 
+// SetCaptureOnceSupport sets a mock capability callback
+func (tm *MockTrayManager) SetCaptureOnceSupport(callback func() bool) {
+	tm.logger.Info("Mock tray: capture once support callback set")
+}
+
 // SetHotkeyRebindAction sets callback for hotkey rebind (mock)
 func (tm *MockTrayManager) SetHotkeyRebindAction(onRebind func(action string) error) {
 	tm.logger.Info("Mock tray: hotkey rebind action set")
