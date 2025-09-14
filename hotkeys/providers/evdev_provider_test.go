@@ -8,6 +8,7 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
@@ -222,9 +223,9 @@ func TestGetKeyName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getKeyName(tt.keyCode)
+			result := utils.GetKeyName(tt.keyCode)
 			if result != tt.expected {
-				t.Errorf("getKeyName(%d) = %q, want %q", tt.keyCode, result, tt.expected)
+				t.Errorf("GetKeyName(%d) = %q, want %q", tt.keyCode, result, tt.expected)
 			}
 		})
 	}
