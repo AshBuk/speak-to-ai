@@ -12,19 +12,17 @@ import (
 // setDefaultConfigForTest sets default values for testing
 func setDefaultConfigForTest(config *models.Config) {
 	config.General.Debug = false
-	config.General.ModelPath = "sources/language-models/base.bin"
+	config.General.ModelPath = "sources/language-models/small-q5_1.bin"
 	config.General.TempAudioPath = "/tmp"
-	config.General.ModelType = "base"
-	config.General.ModelPrecision = "f16"
+	config.General.ModelType = "small"
+	config.General.ModelPrecision = "q5_1"
 	config.General.Language = "en"
 	config.General.LogFile = ""
 
 	config.General.Models = []string{
-		"sources/language-models/base.bin",
-		"sources/language-models/small.bin",
-		"sources/language-models/tiny.bin",
+		"sources/language-models/small-q5_1.bin",
 	}
-	config.General.ActiveModel = "sources/language-models/base.bin"
+	config.General.ActiveModel = "sources/language-models/small-q5_1.bin"
 
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000
@@ -63,7 +61,7 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expectError: false,
 			expectedValues: map[string]interface{}{
-				"modelType":  "base",
+				"modelType":  "small",
 				"sampleRate": 16000,
 			},
 		},
@@ -77,7 +75,7 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expectError: true,
 			expectedValues: map[string]interface{}{
-				"modelPath": "sources/language-models/base.bin",
+				"modelPath": "sources/language-models/small-q5_1.bin",
 			},
 		},
 		{
@@ -90,7 +88,7 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expectError: true,
 			expectedValues: map[string]interface{}{
-				"modelType": "base",
+				"modelType": "small",
 			},
 		},
 		{

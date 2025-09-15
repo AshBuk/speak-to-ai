@@ -176,7 +176,6 @@ func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
 			// TODO: Next feature - VAD implementation
 			// cf.config.Config.Hotkeys.ToggleVAD,
 			"", // VAD hotkey placeholder
-			cf.config.Config.Hotkeys.SwitchModel,
 			cf.config.Config.Hotkeys.ShowConfig,
 			cf.config.Config.Hotkeys.ResetToDefaults,
 		)

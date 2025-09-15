@@ -19,9 +19,6 @@ type AudioServiceInterface interface {
 	// VAD (Voice Activity Detection) operations
 	// HandleStartVADRecording() error
 
-	// Model management
-	SwitchModel(modelType string) error
-
 	// Cleanup
 	Shutdown() error
 }
@@ -73,7 +70,6 @@ type ConfigServiceInterface interface {
 	// UpdateVADSensitivity(sensitivity string) error
 	// ToggleVAD() error
 	UpdateLanguage(language string) error
-	UpdateModelType(modelType string) error
 	ToggleWorkflowNotifications() error
 	UpdateRecordingMethod(method string) error
 	UpdateOutputMode(mode string) error
@@ -90,7 +86,6 @@ type HotkeyServiceInterface interface {
 		startRecording func() error,
 		stopRecording func() error,
 		// toggleVAD func() error,
-		switchModel func() error,
 		showConfig func() error,
 		reloadConfig func() error,
 	) error

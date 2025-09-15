@@ -93,15 +93,7 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			}
 			return container.Config.UpdateLanguage(language)
 		},
-		func(modelType string) error {
-			if container == nil || container.Audio == nil || container.Config == nil {
-				return fmt.Errorf("services not available")
-			}
-			if err := container.Config.UpdateModelType(modelType); err != nil {
-				return err
-			}
-			return container.Audio.SwitchModel(modelType)
-		},
+		nil,
 		func() error {
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")
@@ -204,7 +196,6 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 					return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
 						WithAdditionalHotkeys(
 							"",
-							cfg.Hotkeys.SwitchModel,
 							cfg.Hotkeys.ShowConfig,
 							cfg.Hotkeys.ResetToDefaults,
 						)

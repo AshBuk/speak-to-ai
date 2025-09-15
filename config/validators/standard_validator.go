@@ -22,7 +22,7 @@ func ValidateConfig(config *models.Config) error {
 		config.General.ModelPath = filepath.Clean(config.General.ModelPath)
 		if strings.Contains(config.General.ModelPath, "..") {
 			// Replace with default value if suspicious
-			config.General.ModelPath = "sources/language-models/base.bin"
+			config.General.ModelPath = "sources/language-models/small-q5_1.bin"
 			errors = append(errors, "suspicious model path sanitized")
 		}
 	}
@@ -36,18 +36,8 @@ func ValidateConfig(config *models.Config) error {
 		}
 	}
 
-	// Validate model type
-	validModelTypes := map[string]bool{
-		"tiny":   true,
-		"base":   true,
-		"small":  true,
-		"medium": true,
-		"large":  true,
-	}
-	if !validModelTypes[config.General.ModelType] {
-		config.General.ModelType = "base"
-		errors = append(errors, fmt.Sprintf("invalid model type: %s, using 'base'", config.General.ModelType))
-	}
+	// Ensure model type is always 'small' for fixed small-q5_1 model
+	config.General.ModelType = "small"
 
 	// Validate audio settings
 	if config.Audio.SampleRate < 8000 || config.Audio.SampleRate > 48000 {

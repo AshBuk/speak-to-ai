@@ -34,36 +34,6 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 //	return a.Services.Config.ToggleVAD()
 // }
 
-// handleSwitchModel handles model switching hotkey
-func (a *App) handleSwitchModel() error {
-	if a.Services == nil || a.Services.Config == nil || a.Services.Audio == nil {
-		return fmt.Errorf("services not available")
-	}
-
-	cfg := a.Services.Config.GetConfig()
-	if cfg == nil {
-		return fmt.Errorf("config not available")
-	}
-
-	order := []string{"tiny", "base", "small", "medium", "large"}
-	current := cfg.General.ModelType
-	idx := 0
-	for i, m := range order {
-		if m == current {
-			idx = i
-			break
-		}
-	}
-	next := order[(idx+1)%len(order)]
-
-	// Persist in config first
-	if err := a.Services.Config.UpdateModelType(next); err != nil {
-		return err
-	}
-	// Switch model in audio service (ensures model availability/init)
-	return a.Services.Audio.SwitchModel(next)
-}
-
 // handleShowConfig handles show config hotkey
 func (a *App) handleShowConfig() error {
 	if a.Services == nil || a.Services.UI == nil {

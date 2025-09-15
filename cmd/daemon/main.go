@@ -121,7 +121,7 @@ func adjustPathsForAppImage(logger logger.Logger) {
 
 	// If no model path specified, check built-in model
 	if modelPath == "" {
-		builtinModelPath := filepath.Join(appDir, "sources/language-models/base.bin")
+		builtinModelPath := filepath.Join(appDir, "sources/language-models/small-q5_1.bin")
 		if _, err := os.Stat(builtinModelPath); err == nil {
 			modelPath = builtinModelPath
 			logger.Info("Using built-in model: %s", modelPath)
@@ -157,7 +157,7 @@ func adjustPathsForFlatpak(logger logger.Logger) {
 
 	// If no model path specified, check built-in model
 	if modelPath == "" {
-		builtinModelPath := "/app/share/speak-to-ai/models/base.bin"
+		builtinModelPath := "/app/share/speak-to-ai/models/small-q5_1.bin"
 		if _, err := os.Stat(builtinModelPath); err == nil {
 			modelPath = builtinModelPath
 			logger.Info("Using built-in model: %s", modelPath)

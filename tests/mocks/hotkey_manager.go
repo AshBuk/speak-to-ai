@@ -29,7 +29,6 @@ type MockHotkeyManager struct {
 		stopRecording  func() error
 		// TODO: Next feature - VAD implementation
 		// toggleVAD       manager.HotkeyAction
-		switchModel     manager.HotkeyAction
 		showConfig      manager.HotkeyAction
 		resetToDefaults manager.HotkeyAction
 	}
@@ -60,8 +59,6 @@ func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager
 	// TODO: Next feature - VAD implementation
 	// case "toggle_vad":
 	//	m.callbacks.toggleVAD = callback
-	case "switch_model":
-		m.callbacks.switchModel = callback
 	case "show_config":
 		m.callbacks.showConfig = callback
 	case "reset_to_defaults":
@@ -87,10 +84,6 @@ func (m *MockHotkeyManager) TriggerCallback(callbackType string) error {
 	case "startRecording":
 		if m.callbacks.startRecording != nil {
 			return m.callbacks.startRecording()
-		}
-	case "switchModel":
-		if m.callbacks.switchModel != nil {
-			return m.callbacks.switchModel()
 		}
 	case "showConfig":
 		if m.callbacks.showConfig != nil {

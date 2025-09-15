@@ -32,7 +32,7 @@ func TestLoadConfig(t *testing.T) {
 			configContent: `
 general:
   debug: true
-  model_type: "base"
+  model_type: "small"
   language: "en"
   temp_audio_path: "/tmp"
 
@@ -56,8 +56,8 @@ hotkeys:
 				if !cfg.General.Debug {
 					t.Errorf("expected debug to be true")
 				}
-				if cfg.General.ModelType != "base" {
-					t.Errorf("expected model type to be 'base', got %s", cfg.General.ModelType)
+				if cfg.General.ModelType != "small" {
+					t.Errorf("expected model type to be 'small', got %s", cfg.General.ModelType)
 				}
 				if cfg.Audio.SampleRate != 16000 {
 					t.Errorf("expected sample rate to be 16000, got %d", cfg.Audio.SampleRate)
@@ -71,12 +71,12 @@ hotkeys:
 			name: "minimal config",
 			configContent: `
 general:
-  model_type: "tiny"
+  model_type: "small"
 `,
 			expectError: false,
 			checkValues: func(t *testing.T, cfg *models.Config) {
-				if cfg.General.ModelType != "tiny" {
-					t.Errorf("expected model type to be 'tiny', got %s", cfg.General.ModelType)
+				if cfg.General.ModelType != "small" {
+					t.Errorf("expected model type to be 'small', got %s", cfg.General.ModelType)
 				}
 				// Other fields should have default values
 			},
@@ -142,8 +142,8 @@ func TestLoadConfig_NonExistentFile(t *testing.T) {
 		return
 	}
 	// Check that default values are set
-	if config.General.ModelType != "base" {
-		t.Errorf("expected default model type to be 'base', got %s", config.General.ModelType)
+	if config.General.ModelType != "small" {
+		t.Errorf("expected default model type to be 'small', got %s", config.General.ModelType)
 	}
 }
 
@@ -171,8 +171,8 @@ func TestLoadConfig_InvalidPermissions(t *testing.T) {
 		return
 	}
 	// Check that default values are set
-	if config.General.ModelType != "base" {
-		t.Errorf("expected default model type to be 'base', got %s", config.General.ModelType)
+	if config.General.ModelType != "small" {
+		t.Errorf("expected default model type to be 'small', got %s", config.General.ModelType)
 	}
 }
 
@@ -183,15 +183,15 @@ func TestConfig_DefaultValues(t *testing.T) {
 	// Apply default values (this would typically be done in LoadConfig)
 	// For this test, we'll just verify the structure exists
 	if config.General.ModelType == "" {
-		config.General.ModelType = "base"
+		config.General.ModelType = "small"
 	}
 	if config.Audio.SampleRate == 0 {
 		config.Audio.SampleRate = 16000
 	}
 
 	// Verify defaults
-	if config.General.ModelType != "base" {
-		t.Errorf("expected default model type to be 'base', got %s", config.General.ModelType)
+	if config.General.ModelType != "small" {
+		t.Errorf("expected default model type to be 'small', got %s", config.General.ModelType)
 	}
 	if config.Audio.SampleRate != 16000 {
 		t.Errorf("expected default sample rate to be 16000, got %d", config.Audio.SampleRate)
