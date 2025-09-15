@@ -72,23 +72,10 @@ func (r *ModelPathResolver) IsBundledModelPath(modelPath string) bool {
 	return false
 }
 
-// ExtractModelTypeFromPath extracts model type from file path
+// ExtractModelTypeFromPath always returns "small" for the fixed small-q5_1 model
 func (r *ModelPathResolver) ExtractModelTypeFromPath(modelPath string) string {
-	basename := filepath.Base(modelPath)
-	name := strings.ToLower(basename)
-
-	switch {
-	case strings.Contains(name, "tiny"):
-		return "tiny"
-	case strings.Contains(name, "small"):
-		return "small"
-	case strings.Contains(name, "medium"):
-		return "medium"
-	case strings.Contains(name, "large"):
-		return "large"
-	default:
-		return "base"
-	}
+	// We only support small-q5_1 model in this simple implementation
+	return "small"
 }
 
 // GetUserModelsDirectory returns the user's models directory
@@ -110,4 +97,15 @@ func (r *ModelPathResolver) BuildModelPath(modelType, precision string) string {
 // BuildModelFileName constructs the filename for a model
 func (r *ModelPathResolver) BuildModelFileName(modelType, precision string) string {
 	return fmt.Sprintf("ggml-model-%s.%s.bin", modelType, precision)
+}
+
+// GetBundledModelPath returns the path to the bundled small-q5_1 model
+func (r *ModelPathResolver) GetBundledModelPath() string {
+	// Use the configured model path if it points to small-q5_1
+	if r.config.General.ModelPath != "" && strings.Contains(r.config.General.ModelPath, "small-q5_1") {
+		return r.config.General.ModelPath
+	}
+
+	// Build the standard path for small-q5_1 model
+	return filepath.Join(r.GetModelDir(), "ggml-model-small.q5_1.bin")
 }

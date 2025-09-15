@@ -151,7 +151,6 @@ func (a *App) setupHotkeyCallbacks() error {
 		a.handleStopRecordingAndTranscribe,
 		// TODO: Next feature - VAD implementation
 		// a.handleToggleVAD,
-		a.handleSwitchModel,
 		a.handleShowConfig,
 		a.handleResetToDefaults,
 	); err != nil {

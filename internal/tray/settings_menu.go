@@ -5,12 +5,11 @@
 
 package tray
 
-// createSettingsSubmenus creates the settings submenus
+// Create settings submenus
 func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
 	tm.audioRecorderMenu = tm.settingsItem.AddSubMenuItem("Audio Recorder", "Select audio recorder")
-
-	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("Whisper Model", "AI model settings")
+	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("Set Language", "Select recognition language")
 
 	// VAD Sensitivity submenu
 	// vadMenu := tm.settingsItem.AddSubMenuItem("VAD Sensitivity", "Select VAD sensitivity level")
@@ -136,27 +135,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// Update workflow notifications toggle
 	tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
 
-	// Populate AI Model menu
-	// Model type submenu
-	modelMenu := tm.aiModelMenu.AddSubMenuItem("Model", "Select Whisper model type")
-	for _, m := range []string{"tiny", "base", "small", "medium", "large"} {
-		indicator := "○ "
-		if tm.config.General.ModelType == m {
-			indicator = "● "
-		}
-		itm := modelMenu.AddSubMenuItem(indicator+m, "")
-		tm.modelItems["model_"+m] = itm
-	}
-
-	// Model type display (gray text under Model)
-	tm.modelItems["type"] = tm.aiModelMenu.AddSubMenuItem(
-		tm.config.General.ModelType,
-		"Current model type",
-	)
-	tm.modelItems["type"].Disable()
-
-	// Language selection submenu
-	langMenu := tm.aiModelMenu.AddSubMenuItem("Set Language", "Select recognition language")
+	// Populate Language Selection menu
 	langDefs := []struct{ key, title string }{
 		{"en", "English"}, {"de", "German"}, {"fr", "French"}, {"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
 	}
@@ -165,13 +144,13 @@ func (tm *TrayManager) populateSettingsMenus() {
 		if tm.config.General.Language == l.key {
 			indicator = "● "
 		}
-		itm := langMenu.AddSubMenuItem(indicator+l.title, "")
+		itm := tm.aiModelMenu.AddSubMenuItem(indicator+l.title, "")
 		tm.modelItems["lang_"+l.key] = itm
 	}
 
-	// Language display (gray text under Set Language)
+	// Language display (gray text)
 	tm.modelItems["language"] = tm.aiModelMenu.AddSubMenuItem(
-		tm.config.General.Language,
+		"Current: "+tm.config.General.Language,
 		"Current language setting",
 	)
 	tm.modelItems["language"].Disable()
@@ -187,24 +166,6 @@ func (tm *TrayManager) populateSettingsMenus() {
 					if tm.onSelectLang != nil {
 						if err := tm.onSelectLang(key); err != nil {
 							tm.logger.Error("Error selecting language: %v", err)
-						}
-					}
-				}
-			}()
-		}
-	}
-
-	// Handle model type clicks
-	for _, m := range []string{"tiny", "base", "small", "medium", "large"} {
-		if itm := tm.modelItems["model_"+m]; itm != nil {
-			mm := m
-			go func() {
-				for range itm.ClickedCh {
-					tm.logger.Info("Model switched to %s (UI)", mm)
-					tm.updateModelRadioUI(mm)
-					if tm.onSelectModel != nil {
-						if err := tm.onSelectModel(mm); err != nil {
-							tm.logger.Error("Error selecting model: %v", err)
 						}
 					}
 				}
@@ -298,31 +259,6 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 		tm.hotkeyItems["display_start_stop"].Disable()
 	} else {
 		tm.hotkeyItems["display_start_stop"].SetTitle("Start/Stop Recording: " + tm.config.Hotkeys.StartRecording)
-	}
-	// Switch model
-	if tm.hotkeyItems["rebind_switch_model"] == nil {
-		if supportsCaptureOnce {
-			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Switch Model…", "Change switch model hotkey")
-			tm.hotkeyItems["rebind_switch_model"] = reb
-			go func() {
-				for range reb.ClickedCh {
-					if tm.onRebindHotkey != nil {
-						if err := tm.onRebindHotkey("switch_model"); err != nil {
-							tm.logger.Error("Error rebinding switch model: %v", err)
-						}
-					}
-				}
-			}()
-		}
-	}
-	if tm.hotkeyItems["display_switch_model"] == nil {
-		tm.hotkeyItems["display_switch_model"] = tm.hotkeysMenu.AddSubMenuItem(
-			"Switch Model: "+tm.config.Hotkeys.SwitchModel,
-			"Current switch model hotkey",
-		)
-		tm.hotkeyItems["display_switch_model"].Disable()
-	} else {
-		tm.hotkeyItems["display_switch_model"].SetTitle("Switch Model: " + tm.config.Hotkeys.SwitchModel)
 	}
 	// Show config
 	if tm.hotkeyItems["rebind_show_config"] == nil {
@@ -441,25 +377,6 @@ func (tm *TrayManager) updateLanguageRadioUI(lang string) {
 	// Update the gray text display
 	if langDisplay := tm.modelItems["language"]; langDisplay != nil {
 		langDisplay.SetTitle(lang)
-	}
-}
-
-// updateModelRadioUI updates selection marks for model type
-func (tm *TrayManager) updateModelRadioUI(model string) {
-	types := []string{"tiny", "base", "small", "medium", "large"}
-	for _, t := range types {
-		if itm := tm.modelItems["model_"+t]; itm != nil {
-			if t == model {
-				itm.SetTitle("● " + t)
-			} else {
-				itm.SetTitle("○ " + t)
-			}
-		}
-	}
-
-	// Update the gray text display
-	if modelDisplay := tm.modelItems["type"]; modelDisplay != nil {
-		modelDisplay.SetTitle(model)
 	}
 }
 

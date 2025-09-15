@@ -217,31 +217,6 @@ func (as *AudioService) ensureAudioRecorderAvailable() error {
 	return nil
 }
 
-// SwitchModel switches to a different model type
-func (as *AudioService) SwitchModel(modelType string) error {
-	as.logger.Info("Switching to model: %s", modelType)
-
-	if as.modelManager == nil {
-		return fmt.Errorf("model manager not available")
-	}
-
-	// Reinitialize engines with new model
-	modelPath, err := as.modelManager.GetModelPathWithProgress(nil)
-	if err != nil {
-		return fmt.Errorf("failed to get model path: %w", err)
-	}
-
-	// Recreate whisper engine
-	newEngine, err := whisper.NewWhisperEngine(as.config, modelPath)
-	if err != nil {
-		return fmt.Errorf("failed to create new whisper engine: %w", err)
-	}
-
-	as.whisperEngine = newEngine
-
-	return nil
-}
-
 // Shutdown gracefully shuts down the audio service
 func (as *AudioService) Shutdown() error {
 	as.mu.Lock()

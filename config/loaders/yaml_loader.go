@@ -55,26 +55,23 @@ func LoadConfig(filename string) (*models.Config, error) {
 func SetDefaultConfig(config *models.Config) {
 	// General settings
 	config.General.Debug = false
-	config.General.ModelPath = "sources/language-models/base.bin" // Backward compatibility
+	config.General.ModelPath = "sources/language-models/small-q5_1.bin" // Default to small-q5_1
 	config.General.TempAudioPath = "/tmp"
-	config.General.ModelType = "base"
-	config.General.ModelPrecision = "f16"
+	config.General.ModelType = "small"
+	config.General.ModelPrecision = "q5_1"
 	config.General.Language = "en" // Default to English
 	config.General.LogFile = ""    // No log file by default
 
-	// Multiple models support
+	// Single model configuration - only small-q5_1
 	config.General.Models = []string{
-		"sources/language-models/base.bin",
-		"sources/language-models/small.bin",
-		"sources/language-models/tiny.bin",
+		"sources/language-models/small-q5_1.bin",
 	}
-	config.General.ActiveModel = "sources/language-models/base.bin" // Default to base model
+	config.General.ActiveModel = "sources/language-models/small-q5_1.bin" // Fixed model
 
 	// Hotkey settings (defaults)
 	config.Hotkeys.Provider = "auto"
 	config.Hotkeys.StartRecording = "ctrl+alt+r" // Universal default
 	config.Hotkeys.StopRecording = "ctrl+alt+r"  // Same combination for start/stop
-	config.Hotkeys.SwitchModel = "altgr+shift+m" // AltGr + Shift + M
 	// TODO: Next feature - VAD implementation
 	// config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
 	config.Hotkeys.ShowConfig = "altgr+shift+c"      // AltGr + Shift + C

@@ -20,7 +20,7 @@ func TestConfigService(t *testing.T) {
 	// Create test config
 	testConfig := &models.Config{}
 	testConfig.General.Language = "en"
-	testConfig.General.ModelType = "base"
+	testConfig.General.ModelType = "small"
 	// TODO: Next feature - VAD implementation
 	// testConfig.Audio.VADSensitivity = "medium"
 	// testConfig.Audio.EnableVAD = false
@@ -107,26 +107,6 @@ func TestConfigService(t *testing.T) {
 		err = service.UpdateLanguage("ru")
 		if err != nil {
 			t.Errorf("UpdateLanguage with same language should not error: %v", err)
-		}
-	})
-
-	t.Run("UpdateModelType", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
-
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
-
-		service := NewConfigService(mockLogger, testConfig, configPath)
-
-		err = service.UpdateModelType("small")
-		if err != nil {
-			t.Errorf("UpdateModelType failed: %v", err)
-		}
-		if service.config.General.ModelType != "small" {
-			t.Error("Model type not updated correctly")
 		}
 	})
 

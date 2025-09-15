@@ -25,7 +25,6 @@ func (m *MockAudioService) IsRecording() bool           { return false }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
-func (m *MockAudioService) SwitchModel(modelType string) error { return nil }
 
 // Test helper methods
 func (m *MockAudioService) WasShutdownCalled() bool { return m.shutdownCalled }
@@ -97,9 +96,8 @@ func (m *MockConfigService) GetConfig() *config.Config          { return &config
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) UpdateVADSensitivity(sensitivity string) error { return nil }
-func (m *MockConfigService) UpdateLanguage(language string) error   { return nil }
-func (m *MockConfigService) UpdateModelType(modelType string) error { return nil }
-func (m *MockConfigService) ToggleWorkflowNotifications() error     { return nil }
+func (m *MockConfigService) UpdateLanguage(language string) error { return nil }
+func (m *MockConfigService) ToggleWorkflowNotifications() error   { return nil }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockConfigService) ToggleVAD() error                              { return nil }
@@ -128,7 +126,6 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 	stopRecording func() error,
 	// TODO: Next feature - VAD implementation
 	// toggleVAD func() error,
-	switchModel func() error,
 	showConfig func() error,
 	resetToDefaults func() error,
 ) error {

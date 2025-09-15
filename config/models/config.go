@@ -16,7 +16,7 @@ type Config struct {
 		Debug          bool     `yaml:"debug"`
 		ModelPath      string   `yaml:"model_path"` // Primary model path (for backward compatibility)
 		TempAudioPath  string   `yaml:"temp_audio_path"`
-		ModelType      string   `yaml:"model_type"`      // 'tiny', 'base', 'small', 'medium', 'large'
+		ModelType      string   `yaml:"model_type"`      // Fixed to 'small' for small-q5_1 model
 		ModelPrecision string   `yaml:"model_precision"` // 'f16', 'q4_0', etc.
 		Language       string   `yaml:"language"`        // Language for recognition (en, ..., etc.)
 		LogFile        string   `yaml:"log_file"`        // Path to log file
@@ -30,7 +30,6 @@ type Config struct {
 		Provider       string `yaml:"provider"`
 		StartRecording string `yaml:"start_recording"`
 		StopRecording  string `yaml:"stop_recording"`
-		SwitchModel    string `yaml:"switch_model"`
 		// Hotkey to toggle VAD on/off
 		// ToggleVAD       string `yaml:"toggle_vad"`
 		ShowConfig      string `yaml:"show_config"`

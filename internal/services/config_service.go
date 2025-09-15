@@ -132,25 +132,6 @@ func (cs *ConfigService) UpdateLanguage(language string) error {
 	return nil
 }
 
-// UpdateModelType implements ConfigServiceInterface
-func (cs *ConfigService) UpdateModelType(modelType string) error {
-	cs.logger.Info("Updating model type to: %s", modelType)
-
-	if cs.config.General.ModelType == modelType {
-		return nil
-	}
-
-	old := cs.config.General.ModelType
-	cs.config.General.ModelType = modelType
-
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.General.ModelType = old
-		return fmt.Errorf("failed to save config: %w", err)
-	}
-
-	return nil
-}
-
 // UpdateOutputMode implements ConfigServiceInterface
 func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	cs.logger.Info("Updating output mode to: %s", mode)
@@ -219,7 +200,6 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	}
 	oldStart := cs.config.Hotkeys.StartRecording
 	oldStop := cs.config.Hotkeys.StopRecording
-	oldSwitch := cs.config.Hotkeys.SwitchModel
 	oldShow := cs.config.Hotkeys.ShowConfig
 	oldReset := cs.config.Hotkeys.ResetToDefaults
 
@@ -227,8 +207,6 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	case "start_recording", "stop_recording":
 		cs.config.Hotkeys.StartRecording = combo
 		cs.config.Hotkeys.StopRecording = combo
-	case "switch_model":
-		cs.config.Hotkeys.SwitchModel = combo
 	case "show_config":
 		cs.config.Hotkeys.ShowConfig = combo
 	case "reset_to_defaults":
@@ -241,7 +219,6 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 		// rollback
 		cs.config.Hotkeys.StartRecording = oldStart
 		cs.config.Hotkeys.StopRecording = oldStop
-		cs.config.Hotkeys.SwitchModel = oldSwitch
 		cs.config.Hotkeys.ShowConfig = oldShow
 		cs.config.Hotkeys.ResetToDefaults = oldReset
 		return fmt.Errorf("failed to save hotkey: %w", err)

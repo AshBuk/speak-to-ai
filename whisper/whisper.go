@@ -12,9 +12,7 @@ import (
 
 // Re-export key interfaces and types for external use
 type (
-	ModelInfo        = interfaces.ModelInfo
-	ProgressCallback = interfaces.ProgressCallback
-	ModelManager     = interfaces.ModelManager
+	ModelManager = interfaces.ModelManager
 )
 
 // NewModelManager creates a new model manager instance

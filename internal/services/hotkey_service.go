@@ -44,7 +44,6 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	stopRecording func() error,
 	// toggleVAD is the callback for toggling VAD
 	// toggleVAD func() error,
-	switchModel func() error,
 	showConfig func() error,
 	resetToDefaults func() error,
 ) error {
@@ -60,7 +59,6 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	// Register additional hotkey actions
 	// TODO: Next feature - VAD implementation
 	// hs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
-	hs.hotkeyManager.RegisterHotkeyAction("switch_model", switchModel)
 	hs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
 	hs.hotkeyManager.RegisterHotkeyAction("reset_to_defaults", resetToDefaults)
 
