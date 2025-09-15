@@ -25,14 +25,14 @@ prepare_environment() {
 }
 
 download_model() {
-    if [ ! -f "sources/language-models/base.bin" ]; then
-        echo "Downloading Whisper base model..."
+    if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
+        echo "Downloading Whisper small-q5_1 model..."
         mkdir -p sources/language-models
-        curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
-            echo "❌ Failed to download base model"; exit 1;
+        curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
+            echo "❌ Failed to download small-q5_1 model"; exit 1;
         }
-        mv ggml-base.bin "sources/language-models/base.bin"
-        echo "Model downloaded: $(ls -lh sources/language-models/base.bin)"
+        mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
+        echo "Model downloaded: $(ls -lh sources/language-models/small-q5_1.bin)"
     fi
 }
 
@@ -121,11 +121,11 @@ copy_sources() {
         echo "Warning: Whisper binaries not found in sources/core"
     fi
 
-    if [ -f "sources/language-models/base.bin" ]; then
+    if [ -f "sources/language-models/small-q5_1.bin" ]; then
         echo "Including pre-downloaded Whisper model..."
-        cp sources/language-models/base.bin "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models/"
+        cp sources/language-models/small-q5_1.bin "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/language-models/"
     else
-        echo "Warning: Whisper model not found at sources/language-models/base.bin"
+        echo "Warning: Whisper model not found at sources/language-models/small-q5_1.bin"
     fi
 }
 
@@ -147,14 +147,14 @@ mkdir -p "${CONFIG_DIR}/language-models"
 if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
     echo "First launch detected: Setting up configuration..."
     cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
-    sed -i "s|sources/language-models/base.bin|${CONFIG_DIR}/language-models/base.bin|g" "${CONFIG_DIR}/config.yaml"
+    sed -i "s|sources/language-models/small-q5_1.bin|${CONFIG_DIR}/language-models/small-q5_1.bin|g" "${CONFIG_DIR}/config.yaml"
 fi
 
 # Check if model exists in user directory, copy if not
-if [ ! -f "${CONFIG_DIR}/language-models/base.bin" ]; then
+if [ ! -f "${CONFIG_DIR}/language-models/small-q5_1.bin" ]; then
     echo "Copying Whisper model to user directory..."
-    if [ -f "${HERE}/sources/language-models/base.bin" ]; then
-        cp "${HERE}/sources/language-models/base.bin" "${CONFIG_DIR}/language-models/base.bin"
+    if [ -f "${HERE}/sources/language-models/small-q5_1.bin" ]; then
+        cp "${HERE}/sources/language-models/small-q5_1.bin" "${CONFIG_DIR}/language-models/small-q5_1.bin"
     else
         echo "Warning: Model not found in AppImage. Please download it manually."
     fi

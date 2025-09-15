@@ -116,14 +116,14 @@ jobs:
           
     - name: Download Whisper model if not present
       run: |
-        if [ ! -f "sources/language-models/base.bin" ]; then
-          echo "Downloading Whisper base model..."
+        if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
+          echo "Downloading Whisper small-q5_1 model..."
           mkdir -p sources/language-models
-          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
-            echo "❌ Failed to download base model"; exit 1;
+          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
+            echo "❌ Failed to download small-q5_1 model"; exit 1;
           }
-          mv ggml-base.bin "sources/language-models/base.bin"
-          echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
+          mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
+          echo "Model downloaded, size: $(ls -lh sources/language-models/small-q5_1.bin)"
         fi
 
 
@@ -252,14 +252,14 @@ jobs:
         
     - name: Download Whisper model if not present
       run: |
-        if [ ! -f "sources/language-models/base.bin" ]; then
-          echo "Downloading Whisper base model..."
+        if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
+          echo "Downloading Whisper small-q5_1 model..."
           mkdir -p sources/language-models
-          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s base || {
-            echo "❌ Failed to download base model"; exit 1;
+          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
+            echo "❌ Failed to download small-q5_1 model"; exit 1;
           }
-          mv ggml-base.bin "sources/language-models/base.bin"
-          echo "Model downloaded, size: $(ls -lh sources/language-models/base.bin)"
+          mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
+          echo "Model downloaded, size: $(ls -lh sources/language-models/small-q5_1.bin)"
         fi
         
     - name: Install make for Flatpak build

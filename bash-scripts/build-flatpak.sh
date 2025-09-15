@@ -77,7 +77,7 @@ check_whisper_model() {
         return
     fi
     
-    if [ ! -f "sources/language-models/base.bin" ]; then
+    if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
         echo "❌ Whisper model not found"
         echo "💡 Download the model first or let CI/CD handle it"
         exit 1

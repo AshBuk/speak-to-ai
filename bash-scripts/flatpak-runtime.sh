@@ -70,7 +70,7 @@ setup_configuration() {
         cp "/app/share/speak-to-ai/config.yaml" "${FLATPAK_CONFIG_DIR}/config.yaml"
         
         # Update config paths for Flatpak environment
-        sed -i "s|sources/language-models/base.bin|${FLATPAK_CONFIG_DIR}/models/base.bin|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
+        sed -i "s|sources/language-models/small-q5_1.bin|${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
         sed -i "s|sources/core/whisper|/app/bin/whisper|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
         
         echo "✅ Configuration created successfully"
@@ -84,10 +84,10 @@ setup_whisper_model() {
     echo "📥 Setting up Whisper model..."
     
     # Copy model to user directory if not exists
-    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/base.bin" ]; then
+    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin" ]; then
         echo "📦 Copying Whisper model to user directory..."
-        if [ -f "/app/share/speak-to-ai/models/base.bin" ]; then
-            cp "/app/share/speak-to-ai/models/base.bin" "${FLATPAK_CONFIG_DIR}/models/base.bin"
+        if [ -f "/app/share/speak-to-ai/models/small-q5_1.bin" ]; then
+            cp "/app/share/speak-to-ai/models/small-q5_1.bin" "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin"
             echo "✅ Model copied successfully"
         else
             echo "❌ Error: Model not found in Flatpak installation"
@@ -118,7 +118,7 @@ verify_installation() {
     fi
     
     # Check model
-    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/base.bin" ]; then
+    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin" ]; then
         echo "❌ Whisper model not found"
         has_errors=true
     fi
