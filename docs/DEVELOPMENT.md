@@ -112,24 +112,21 @@ hotkeys/
 # General settings
 general:
   debug: false
-  model_path: "sources/language-models/base.bin"  # Backward compatibility
+  model_path: "sources/language-models/small-q5_1.bin"  # Default small-q5_1 model
   temp_audio_path: "/tmp"
-  model_precision: "base"
+  model_precision: "q5_1"
   language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
   log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable)
-  
-  # Multiple models configuration
+
+  # Single model configuration - only small-q5_1
   models:
-    - "sources/language-models/base.bin"     # Standard quality, balanced
-    - "sources/language-models/small.bin"    # Better quality, slower
-    - "sources/language-models/tiny.bin"     # Fastest, lower quality
-  active_model: "sources/language-models/base.bin"  # Currently active
+    - "sources/language-models/small-q5_1.bin"      # Fixed model - small q5_1 quantized
+  active_model: "sources/language-models/small-q5_1.bin"  # Fixed active model
 
 # Hotkeys settings
 hotkeys:
   start_recording: "ctrl+alt+r"       # Main recording hotkey
   stop_recording: "ctrl+alt+r"        # Same combination for start/stop
-  switch_model: "altgr+shift+m"       # Switch between models
   show_config: "altgr+shift+c"        # Open configuration file
   reset_to_defaults: "altgr+shift+r"  # Reset all settings to defaults
   # toggle_vad: "altgr+shift+v"       # Toggle VAD (future feature)
