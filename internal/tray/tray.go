@@ -143,7 +143,6 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	// TODO: Next feature - VAD implementation
 	// tm.updateVADRadioUI(config.Audio.VADSensitivity)
 	tm.updateLanguageRadioUI(config.General.Language)
-	tm.updateModelRadioUI(config.General.ModelType)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
 	tm.updateOutputUI()
 }

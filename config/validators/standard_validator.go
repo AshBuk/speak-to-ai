@@ -37,6 +37,10 @@ func ValidateConfig(config *models.Config) error {
 	}
 
 	// Ensure model type is always 'small' for fixed small-q5_1 model
+	prevModelType := strings.TrimSpace(config.General.ModelType)
+	if prevModelType != "" && prevModelType != "small" {
+		errors = append(errors, fmt.Sprintf("invalid model type: %s, using 'small'", prevModelType))
+	}
 	config.General.ModelType = "small"
 
 	// Validate audio settings

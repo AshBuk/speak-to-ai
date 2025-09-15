@@ -14,8 +14,8 @@ coverage.out
 /pkg/
 /lib/
 
-# Whisper models (large files)
-/sources/language-models/*.bin
+# Whisper models (large files) and build artifacts
+/sources/
 
 # All binary files
 *.bin

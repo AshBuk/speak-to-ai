@@ -119,12 +119,12 @@ func TestHotkeyService(t *testing.T) {
 
 		// Test that callbacks work
 		mockManager.TriggerCallback("startRecording")
-		mockManager.TriggerCallback("switchModel")
+		mockManager.TriggerCallback("showConfig")
 
 		if len(callbacksCalled) != 2 {
 			t.Errorf("Expected 2 callbacks to be called, got %d", len(callbacksCalled))
 		}
-		if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "switchModel" {
+		if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "showConfig" {
 			t.Errorf("Unexpected callbacks called: %v", callbacksCalled)
 		}
 	})
