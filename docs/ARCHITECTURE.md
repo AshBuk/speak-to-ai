@@ -35,6 +35,35 @@ The application follows a **modular daemon architecture** with clear separation 
 
 ---
 
+## Service Pipelines
+
+```
+// Audio pipeline
+  AudioService -> AudioRecorder -> (arecord/ffmpeg)
+  AudioService -> TempFileManager -> cleanup logic
+  AudioService -> WhisperEngine -> transcription
+
+// Config pipeline  
+  ConfigService -> YAMLLoader -> validation
+  ConfigService -> StandardValidator -> sanitization
+
+// UI pipeline
+  UIService -> TrayManager -> systray integration
+  UIService -> NotificationManager -> system notifications
+
+// Hotkey pipeline
+  HotkeyService -> HotkeyManager -> (evdev/dbus providers)
+  HotkeyService -> ConfigAdapter -> hotkey mapping
+
+// Output pipeline
+  IOService -> OutputManager -> (clipboard/typing/websocket)
+  
+// Project Pattern
+  Service -> Manager -> Provider/Adapter
+```
+
+---
+
 ## Module Breakdown
 
 ### 📁 **Core Application**
@@ -111,8 +140,7 @@ Related constants:
 - **`engine.go`**: Main Whisper engine using CGO bindings
 - **`engine_stub.go`**: Stub implementation when CGO is disabled
 - **`manager/model_manager.go`**: Whisper model lifecycle management
-- **`providers/model_path_resolver.go`**: Model path resolution for bundled/user models
-- **`providers/model_downloader.go`**: Model download with progress
+- **`providers/model_path_resolver.go`**: Bundled model path resolution for different environments
 - **`whisper.go`**: Public facade and type re-exports for external use
 
 ### **Output Management** (`output/`)
@@ -191,4 +219,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-14*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-16*
