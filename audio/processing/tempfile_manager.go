@@ -99,6 +99,21 @@ func (t *TempFileManager) cleanupOldFiles() {
 	}
 }
 
+// CleanupAll removes all tracked temp files immediately
+func (t *TempFileManager) CleanupAll() {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	for path := range t.tempFiles {
+		if _, err := os.Stat(path); err == nil {
+			if err := os.Remove(path); err != nil {
+				log.Printf("Error removing temp file %s: %v", path, err)
+			}
+		}
+		delete(t.tempFiles, path)
+	}
+}
+
 // Stop shuts down the cleanup routine
 func (t *TempFileManager) Stop() {
 	if t.running {

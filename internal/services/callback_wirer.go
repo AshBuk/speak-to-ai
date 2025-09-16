@@ -63,7 +63,7 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 				return err
 			}
 			if audioSvc, ok := container.Audio.(*AudioService); ok {
-				audioSvc.audioRecorderNeedsReinit = true
+				audioSvc.clearSession()
 			}
 			// Update tray to reflect new selection immediately
 			if uiSvc, ok := container.UI.(*UIService); ok && uiSvc != nil {
@@ -91,7 +91,15 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")
 			}
-			return container.Config.UpdateLanguage(language)
+
+			err := container.Config.UpdateLanguage(language)
+			if err == nil && container.Audio != nil {
+				if audioSvc, ok := container.Audio.(*AudioService); ok {
+					audioSvc.clearSession()
+				}
+			}
+
+			return err
 		},
 		nil,
 		func() error {

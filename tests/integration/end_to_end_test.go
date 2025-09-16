@@ -201,6 +201,9 @@ func TestRealWorldScenarios(t *testing.T) {
 			// Ensure clean state before starting
 			forceStopRecorder(recorder)
 
+			// Clear session state between recordings for isolation
+			processing.GetTempFileManager().CleanupAll()
+
 			// Give time for cleanup to complete
 			time.Sleep(100 * time.Millisecond)
 
