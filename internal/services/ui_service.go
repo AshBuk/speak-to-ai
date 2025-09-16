@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
@@ -117,24 +118,53 @@ func (us *UIService) SetSuccess(message string) {
 func (us *UIService) ShowConfigFile() error {
 	us.logger.Info("Showing config file...")
 
-	// Try to open config file if possible
-	if path, ok := us.getConfigPath(); ok {
-		// Try to open file directly first (works on GNOME/KDE)
-		if err := us.runCommand("xdg-open", path); err != nil {
-			// Fallback: open directory for problematic desktop environments
-			dir := filepath.Dir(path)
-			_ = us.runCommand("xdg-open", dir)
+	path, ok := us.getConfigPath()
+	if !ok {
+		us.logger.Warning("Could not determine config file path")
+		return fmt.Errorf("could not determine config file path")
+	}
+
+	// Open with system handler using sanitized environment (AppImage-safe)
+	if err := us.openWithSystem(path); err != nil {
+		us.logger.Info("Config file open failed, trying directory: %v", err)
+		// As a fallback, try to open the containing directory
+		dir := filepath.Dir(path)
+		if err := us.openWithSystem(dir); err != nil {
+			us.logger.Error("Failed to open config directory as fallback: %v", err)
+			return fmt.Errorf("failed to open config file or directory: %w", err)
 		}
 	}
 
 	if us.notifyManager != nil {
 		if err := us.sendNotification("Configuration", "Config file opened", "preferences-desktop"); err != nil {
 			us.logger.Error("Failed to show config notification: %v", err)
-			return fmt.Errorf("failed to show config notification: %w", err)
 		}
 	}
 
 	return nil
+}
+
+// Open file or directory via the system default handler.
+// It strips AppImage-related environment variables to avoid host app linkage issues.
+func (us *UIService) openWithSystem(target string) error {
+	// #nosec G204 -- Safe: xdg-open is a system tool; arguments are not shell-interpreted.
+	cmd := exec.Command("xdg-open", target)
+
+	// AppImage environment cleanup for host app compatibility
+	filtered := make([]string, 0, len(os.Environ()))
+	for _, env := range os.Environ() {
+		// Skip AppImage-specific variables that break host apps
+		if !strings.HasPrefix(env, "LD_LIBRARY_PATH=") &&
+			!strings.HasPrefix(env, "LD_PRELOAD=") &&
+			!strings.HasPrefix(env, "APPIMAGE=") &&
+			!strings.HasPrefix(env, "APPDIR=") &&
+			!strings.HasPrefix(env, "ARGV0=") {
+			filtered = append(filtered, env)
+		}
+	}
+	cmd.Env = filtered
+
+	return cmd.Start()
 }
 
 // getConfigPath retrieves the effective config file path
@@ -155,13 +185,6 @@ func (us *UIService) getConfigPath() (string, bool) {
 	}
 	// Fallback to default AppImage path even if not present (opener will show dialog)
 	return appImagePath, true
-}
-
-// runCommand executes a desktop opener safely
-func (us *UIService) runCommand(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	// Use Run() to capture non-zero exit codes and trigger fallbacks when opener fails
-	return cmd.Run()
 }
 
 // sendNotification is a helper method for sending notifications
