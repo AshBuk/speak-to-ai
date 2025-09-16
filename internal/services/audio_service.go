@@ -11,6 +11,7 @@ import (
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -126,7 +127,7 @@ func (as *AudioService) HandleStopRecording() error {
 				_ = as.cfg.UpdateRecordingMethod("arecord")
 			}
 			as.config.Audio.RecordingMethod = "arecord"
-			as.audioRecorderNeedsReinit = true
+			as.clearSession()
 
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
@@ -362,6 +363,13 @@ func (as *AudioService) handleTranscriptionCancellation(err error) {
 		as.ui.SetError("Transcription cancelled")
 		as.ui.ShowNotification("Transcription Cancelled", "Operation timed out")
 	}
+}
+
+// clearSession clears audio session state and temp files
+func (as *AudioService) clearSession() {
+	processing.GetTempFileManager().CleanupAll()
+	as.audioRecorderNeedsReinit = true
+	as.lastTranscript = ""
 }
 
 // setUIError sets UI error state

@@ -192,7 +192,17 @@ func TestTemporaryFileManagement(t *testing.T) {
 		}
 	}
 
-	// Test cleanup
+	// Test immediate cleanup with CleanupAll
+	manager.CleanupAll()
+
+	// Verify files are cleaned up immediately
+	for _, file := range testFiles {
+		if _, err := os.Stat(file); !os.IsNotExist(err) {
+			t.Errorf("Test file should be cleaned up: %s", file)
+		}
+	}
+
+	// Test background cleanup
 	manager.Stop()
 
 	// Give cleanup time to run
