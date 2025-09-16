@@ -268,7 +268,13 @@ func (b *BaseRecorder) StopProcess() error {
 		case err := <-done:
 			waitDone = true
 			if err != nil {
-				b.logger.Warning("Process exited with error: %v", err)
+				// For processes like arecord that don't support graceful shutdown,
+				// "signal: killed" is expected behavior and not an error
+				if err.Error() == "signal: killed" {
+					b.logger.Debug("Process terminated via SIGKILL (expected): %v", err)
+				} else {
+					b.logger.Warning("Process exited with error: %v", err)
+				}
 			}
 		case <-time.After(500 * time.Millisecond):
 			// Timed out; escalate to SIGKILL on last attempt or continue loop

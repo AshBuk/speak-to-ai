@@ -42,7 +42,7 @@ Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak
 
 ```bash
 # Download the file, then:
-flatpak install --user io.github.ashbuk.speak-to-ai.flatpak
+flatpak install --user io.github.ashbuk.speak-to-ai.flatpak  # Replace with your downloaded version
 # Run the application
 flatpak run io.github.ashbuk.speak-to-ai
 ```
@@ -54,23 +54,13 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 ```bash
 # Download the file, then:
 chmod +x speak-to-ai-*.AppImage
-# For hotkeys to work, add user to input group:
+# Ensure user is in input group for hotkeys to work:
 sudo usermod -a -G input $USER
 # then reboot
-# Open:
-./speak-to-ai-*.AppImage
+# Open via GUI or command:
+./speak-to-ai-*.AppImage  # Replace with your downloaded version
 ```
 
-**For system tray integration on GNOME**:
-```bash
-# Ubuntu/Debian
-sudo apt install gnome-shell-extension-appindicator
-# Fedora
-sudo dnf install gnome-shell-extension-appindicator
-# Arch Linux
-sudo pacman -S gnome-shell-extension-appindicator
-```
-*KDE and other DEs have built-in system tray support*
 
 ## ✦ Configuration
 
@@ -83,6 +73,34 @@ Configuration file is automatically created at:
 GNOME (Wayland/X11) and KDE Plasma (Wayland/X11) have native support. Help us test different desktop environments:
 
 📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)**
+
+**For system tray integration on GNOME**:
+```bash
+# Ubuntu/Debian
+sudo apt install gnome-shell-extension-appindicator
+# Fedora
+sudo dnf install gnome-shell-extension-appindicator
+# Arch Linux
+sudo pacman -S gnome-shell-extension-appindicator
+```
+*KDE and other DEs have built-in system tray support*
+
+**Text typing for GNOME/Wayland**
+
+If text doesn't appear in applications automatically, the app falls back to clipboard mode. To enable direct typing:
+
+```bash
+# Install ydotool
+sudo dnf install ydotool  # Fedora
+sudo apt install ydotool  # Ubuntu/Debian
+
+# Add user to input group
+sudo usermod -a -G input $USER
+# Reboot required
+
+# Enable daemon (logout/login if required)
+sudo systemctl enable --now ydotoold
+```
 
 ## ✦ Project Status
 
