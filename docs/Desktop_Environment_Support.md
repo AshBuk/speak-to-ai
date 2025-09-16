@@ -25,8 +25,8 @@ sudo pacman -S gnome-shell-extension-appindicator
 | **🟢 Sway/i3** | wtype → ydotool → xdotool | clipboard | ✅ Works out-of-box |
 | **🟢 X11 (all DEs)** | xdotool | clipboard | ✅ Works out-of-box |
 
-*wtype doesn't work on GNOME/Wayland - compositor limitation, so use clipboard (ctrl+v) or setup ydotool
-*RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!
+ *wtype doesn't work on GNOME/Wayland - compositor limitation, so use clipboard (ctrl+v) or setup ydotool*
+ *RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!*
 
 **Outputter setup - ydotool (requires for GNOME!)**
 ```bash
@@ -47,25 +47,26 @@ sudo systemctl enable --now ydotoold      # Start daemon
 
 ## ⌨️ **Hotkey Support Status (for hotkey registration and binding)**
 
-### **GNOME (Wayland/X11)**
-- **AppImage:** D-Bus portal → evdev fallback (requires `input` group)
-- **Flatpak:** D-Bus portal → evdev fallback (may require `input` group)
-- **Experience:** Portal usually works, evdev fallback if portal unavailable
+### **Native System Install**
+- **GNOME/KDE (Wayland/X11):** D-Bus GlobalShortcuts portal → evdev fallback (requires `input` group)
+- **Other DEs (XFCE/MATE/LXQt):** D-Bus GlobalShortcuts portal → evdev fallback (requires `input` group)
+- **Tiling WMs (i3/sway/dwm):** evdev only (requires `input` group)
+- **Experience:** Modern DEs with portal support work without setup, others require `input` group
 
-### **KDE Plasma (Wayland/X11)**  
-- **AppImage:** D-Bus portal → evdev fallback (requires `input` group)
-- **Flatpak:** D-Bus portal → evdev fallback (may require `input` group)
-- **Experience:** Better portal support than GNOME, but fallbacks available
+### **AppImage Package**
+- **All DEs:** **evdev first** → D-Bus GlobalShortcuts portal fallback
+- **Optimization:** AppImage prioritizes evdev due to potential D-Bus portal limitations in sandboxed environment
+- **Setup Required:** `sudo usermod -a -G input $USER` + logout/login for reliable operation
+- **Fallback:** If evdev unavailable, attempts D-Bus GlobalShortcuts portal
 
-### **Other DEs (XFCE/MATE/LXQt)**
-- **AppImage:** evdev only (requires `input` group)
-- **Flatpak:** Limited portal support, evdev fallback available
-- **Experience:** Requires `input` group membership for reliable hotkeys
+### **Flatpak Package**
+- **All DEs:** **D-Bus GlobalShortcuts portal only** (evdev blocked by sandbox security)
+- **GNOME/KDE:** Works out-of-box via GlobalShortcuts portal
+- **Other DEs:** Limited functionality if GlobalShortcuts portal unavailable
+- **Experience:** Best on modern DEs with portal support
 
-### **Tiling WMs (i3/sway/dwm/bspwm)**
-- **AppImage:** evdev only (requires `input` group)
-- **Flatpak:** evdev only (requires `input` group)
-- **Alternative:** System hotkey tools (sxhkd, etc.) + webhook integration
+### **Alternative for Tiling WMs**
+- **System hotkey tools:** sxhkd, xbindkeys, etc. + webhook integration
 
-*Last updated: 2025-09-05*  
+*Last updated: 2025-09-16*  
 *Tested on: Fedora 42, Ubuntu 24.04*

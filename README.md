@@ -28,24 +28,13 @@
 
 ## Features
 
+- **Portable**: available as AppImage and Flatpak
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
-- **Privacy-first**: no data sent to external servers
-- **Portable**: available as AppImage and Flatpak
-- **100% Offline, Key binding support, Automatic typing, Clipboard support, WebSocket API (optional, for external integrations), Visual notifications**
+- **Privacy-first**: desktop, no data sent to external servers
+- **Key binding support, Automatic typing and Clipboard support, WebSocket API (optional, for external integrations), Visual notifications**
 
 ## ✦ Installation
-
-### Flatpak 
-
-Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
-
-```bash
-# Download the file, then:
-flatpak install --user io.github.ashbuk.speak-to-ai.flatpak  # Replace with your downloaded version
-# Run the application
-flatpak run io.github.ashbuk.speak-to-ai
-```
 
 ### AppImage
 
@@ -61,12 +50,16 @@ sudo usermod -a -G input $USER
 ./speak-to-ai-*.AppImage  # Replace with your downloaded version
 ```
 
+### Flatpak 
 
-## ✦ Configuration
+Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
 
-Configuration file is automatically created at:
-- **AppImage**: `~/.config/speak-to-ai/config.yaml`
-- **Flatpak**: `~/.var/app/io.github.ashbuk.speak-to-ai/config/speak-to-ai/config.yaml`
+```bash
+# Download the file, then:
+flatpak install --user io.github.ashbuk.speak-to-ai.flatpak  # Replace with your downloaded version
+# Run the application
+flatpak run io.github.ashbuk.speak-to-ai
+```
 
 ## Desktop Environment Compatibility
 
