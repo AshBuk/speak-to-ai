@@ -128,7 +128,7 @@ func (us *UIService) ShowConfigFile() error {
 	}
 
 	if us.notifyManager != nil {
-		if err := us.sendNotification("Configuration", "Config file location copied to clipboard", "preferences-desktop"); err != nil {
+		if err := us.sendNotification("Configuration", "Config file opened", "preferences-desktop"); err != nil {
 			us.logger.Error("Failed to show config notification: %v", err)
 			return fmt.Errorf("failed to show config notification: %w", err)
 		}
@@ -160,7 +160,8 @@ func (us *UIService) getConfigPath() (string, bool) {
 // runCommand executes a desktop opener safely
 func (us *UIService) runCommand(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	return cmd.Start()
+	// Use Run() to capture non-zero exit codes and trigger fallbacks when opener fails
+	return cmd.Run()
 }
 
 // sendNotification is a helper method for sending notifications
