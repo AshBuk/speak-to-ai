@@ -97,6 +97,7 @@ func GetKeyName(keyCode int) string {
 		100: "rightalt",
 		125: "leftmeta",
 		126: "rightmeta",
+		193: "f23",
 	}
 
 	if name, ok := keyMap[keyCode]; ok {
