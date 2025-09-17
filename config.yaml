@@ -16,11 +16,11 @@ general:
 
 # Hotkey settings
 hotkeys:
-  start_recording: "ctrl+alt+r"       # Universal default
-  stop_recording: "ctrl+alt+r"        # Same combination for start/stop
+  start_recording: "alt+r"            # Start/stop recording
+  stop_recording: "alt+r"             # Same combination for start/stop
   # toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
-  show_config: "altgr+shift+c"         # Open configuration file
-  reset_to_defaults: "altgr+shift+r"   # Reset all settings to defaults
+  show_config: "alt+c"                # Open configuration file
+  reset_to_defaults: "alt+d"          # Reset all settings to defaults
 
 # Audio recording settings
 audio:

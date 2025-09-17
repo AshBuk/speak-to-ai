@@ -81,22 +81,44 @@ sudo pacman -S gnome-shell-extension-appindicator
 ```
 *KDE and other DEs have built-in system tray support*
 
-**Text typing for GNOME/Wayland**
+**Direct typing on Wayland (GNOME and others) — ydotool (user unit, recommended)**
 
-If text doesn't appear in applications automatically, the app falls back to clipboard mode. To enable direct typing:
+If text doesn't appear automatically, the app falls back to clipboard mode. To enable direct typing on Wayland:
 
+> 1) Install ydotool:
 ```bash
-# Install ydotool:
-sudo dnf install ydotool  # Fedora
-sudo apt install ydotool  # Ubuntu/Debian
-
-# Add user to input group:
-sudo usermod -a -G input $USER
-# Reboot required
-
-# Enable daemon (logout/login if required):
-sudo systemctl enable --now ydotoold
+sudo dnf install ydotool   # Fedora
+sudo apt install ydotool   # Ubuntu/Debian
 ```
+> 2) Allow access to /dev/uinput for non-root:
+```bash
+echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' | sudo tee /etc/udev/rules.d/99-uinput.rules
+sudo udevadm control --reload && sudo udevadm trigger
+sudo usermod -a -G input $USER
+# Re-login required for group change
+```
+> 3) Run ydotool as user service (no root):
+```bash
+mkdir -p ~/.config/systemd/user
+tee ~/.config/systemd/user/ydotool.service >/dev/null <<'EOF'
+[Unit]
+Description=ydotool user daemon
+
+[Service]
+ExecStart=/usr/bin/ydotoold --socket-perm=0660
+Restart=always
+
+[Install]
+WantedBy=default.target
+EOF
+```
+> 4) Restart and run the service
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now ydotool
+```
+*This setup uses user service: safer and no root privileges needed*
+*X11 works out-of-the-box without additional setups*
 
 ## ✦ Project Status
 
