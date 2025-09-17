@@ -44,6 +44,12 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			}
 			return container.UI.ShowConfigFile()
 		},
+		func() error { // show about
+			if container == nil || container.UI == nil {
+				return fmt.Errorf("UI service not available")
+			}
+			return container.UI.ShowAboutPage()
+		},
 		func() error { // reset to defaults
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")

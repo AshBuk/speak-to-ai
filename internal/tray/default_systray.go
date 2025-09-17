@@ -15,7 +15,7 @@ import (
 
 // CreateDefaultTrayManager creates the default tray manager
 // based on available dependencies
-func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) TrayManagerInterface {
+func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
 	// Use the real systray implementation
 	iconMicOff := GetIconMicOff()
 	iconMicOn := GetIconMicOn()
@@ -24,12 +24,12 @@ func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func
 	_ = os.Getenv("APPDIR")
 	_ = filepath.Join
 
-	return NewTrayManager(iconMicOff, iconMicOn, onExit, onToggle, onShowConfig, onResetToDefaults, logger)
+	return NewTrayManager(iconMicOff, iconMicOn, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults, logger)
 }
 
 // CreateTrayManagerWithConfig creates tray manager with initial configuration
-func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) TrayManagerInterface {
-	trayManager := CreateDefaultTrayManager(logger, onExit, onToggle, onShowConfig, onResetToDefaults)
+func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
+	trayManager := CreateDefaultTrayManager(logger, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults)
 	trayManager.UpdateSettings(config)
 	return trayManager
 }

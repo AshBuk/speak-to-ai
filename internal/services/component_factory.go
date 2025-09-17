@@ -204,6 +204,10 @@ func (cf *ComponentFactory) createTrayManager() tray.TrayManagerInterface {
 			cf.config.Logger.Info("Show config requested from tray")
 			return nil
 		},
+		func() error { // onShowAbout
+			cf.config.Logger.Info("Show about requested from tray")
+			return nil
+		},
 		func() error { // onResetToDefaults
 			cf.config.Logger.Info("Reset to defaults requested from tray")
 			return nil

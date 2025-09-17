@@ -15,6 +15,7 @@ type MockTrayManager struct {
 	onExit            func()
 	onToggle          func() error
 	onShowConfig      func() error
+	onShowAbout       func() error
 	onResetToDefaults func() error
 	onSelectRecorder  func(method string) error
 	// onSelectVADSens is the callback for VAD sensitivity selection
@@ -27,13 +28,14 @@ type MockTrayManager struct {
 }
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray
-func CreateMockTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) TrayManagerInterface {
+func CreateMockTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
 	return &MockTrayManager{
 		isRecording:       false,
 		logger:            logger,
 		onExit:            onExit,
 		onToggle:          onToggle,
 		onShowConfig:      onShowConfig,
+		onShowAbout:       onShowAbout,
 		onResetToDefaults: onResetToDefaults,
 	}
 }
@@ -71,9 +73,10 @@ func (tm *MockTrayManager) SetExitAction(onExit func()) {
 }
 
 // SetCoreActions sets core callbacks (mock implementation)
-func (tm *MockTrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) {
+func (tm *MockTrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) {
 	tm.onToggle = onToggle
 	tm.onShowConfig = onShowConfig
+	tm.onShowAbout = onShowAbout
 	tm.onResetToDefaults = onResetToDefaults
 	tm.logger.Info("Mock tray: core actions set")
 }

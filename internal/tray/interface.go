@@ -13,8 +13,8 @@ type TrayManagerInterface interface {
 	UpdateSettings(config *config.Config)
 	// SetExitAction sets the callback invoked when Quit is clicked
 	SetExitAction(onExit func())
-	// SetCoreActions sets core menu callbacks (toggle, show config, reset to defaults)
-	SetCoreActions(onToggle func() error, onShowConfig func() error, onResetToDefaults func() error)
+	// SetCoreActions sets core menu callbacks (toggle, show config, show about, reset to defaults)
+	SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error)
 	// SetAudioActions sets callbacks for audio-related actions
 	SetAudioActions(onSelectRecorder func(method string) error)
 	// SetHotkeyRebindAction sets callback to rebind hotkeys by action name
