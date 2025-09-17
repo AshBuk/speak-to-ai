@@ -122,7 +122,7 @@ func (m *MockHotkeyProvider) IsSupported() bool {
 
 // CaptureOnce returns a fixed combo for tests
 func (m *MockHotkeyProvider) CaptureOnce(_ time.Duration) (string, error) {
-	return "ctrl+alt+r", nil
+	return "alt+r", nil
 }
 
 // Test helper methods

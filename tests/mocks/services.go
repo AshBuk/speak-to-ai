@@ -139,7 +139,7 @@ func (m *MockHotkeyService) ReloadFromConfig(startRecording, stopRecording func(
 }
 
 // CaptureOnce mock implementation
-func (m *MockHotkeyService) CaptureOnce(timeoutMs int) (string, error) { return "ctrl+alt+r", nil }
+func (m *MockHotkeyService) CaptureOnce(timeoutMs int) (string, error) { return "alt+r", nil }
 
 // SupportsCaptureOnce mock implementation
 func (m *MockHotkeyService) SupportsCaptureOnce() bool { return true }

@@ -70,12 +70,12 @@ func SetDefaultConfig(config *models.Config) {
 
 	// Hotkey settings (defaults)
 	config.Hotkeys.Provider = "auto"
-	config.Hotkeys.StartRecording = "ctrl+alt+r" // Universal default
-	config.Hotkeys.StopRecording = "ctrl+alt+r"  // Same combination for start/stop
+	config.Hotkeys.StartRecording = "alt+r" // Start/stop recording
+	config.Hotkeys.StopRecording = "alt+r"  // Same combination for start/stop
 	// TODO: Next feature - VAD implementation
-	// config.Hotkeys.ToggleVAD = "altgr+shift+v"       // AltGr + Shift + V
-	config.Hotkeys.ShowConfig = "altgr+shift+c"      // AltGr + Shift + C
-	config.Hotkeys.ResetToDefaults = "altgr+shift+r" // AltGr + Shift + R
+	// config.Hotkeys.ToggleVAD = "alt+v"       // Start/stop VAD
+	config.Hotkeys.ShowConfig = "alt+c"      // Show config
+	config.Hotkeys.ResetToDefaults = "alt+d" // Reset to defaults
 
 	// Audio settings
 	config.Audio.Device = "default"
