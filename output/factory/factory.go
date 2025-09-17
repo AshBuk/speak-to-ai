@@ -8,6 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/output/interfaces"
 	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
@@ -56,14 +57,26 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 	if typeTool == "auto" {
 		switch env {
 		case EnvironmentWayland:
-			// Try Wayland-compatible tools in order of preference
-			if f.isToolAvailable("wtype") {
-				typeTool = "wtype"
-			} else if f.isToolAvailable("ydotool") {
-				typeTool = "ydotool"
+			// Prefer ydotool on GNOME/Wayland; wtype is ineffective on GNOME
+			if platform.IsGNOMEWithWayland() {
+				if f.isToolAvailable("ydotool") {
+					typeTool = "ydotool"
+				} else if f.isToolAvailable("wtype") {
+					typeTool = "wtype"
+				} else {
+					// Fallback: try xdotool (might work with XWayland)
+					typeTool = "xdotool"
+				}
 			} else {
-				// Fallback: try xdotool (might work with XWayland)
-				typeTool = "xdotool"
+				// Non-GNOME Wayland: try wtype first, then ydotool
+				if f.isToolAvailable("wtype") {
+					typeTool = "wtype"
+				} else if f.isToolAvailable("ydotool") {
+					typeTool = "ydotool"
+				} else {
+					// Fallback: try xdotool (might work with XWayland)
+					typeTool = "xdotool"
+				}
 			}
 		case EnvironmentX11:
 			typeTool = "xdotool"

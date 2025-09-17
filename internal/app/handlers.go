@@ -5,6 +5,8 @@ package app
 
 import (
 	"fmt"
+
+	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
 
 // Hotkey handler methods that delegate to services
@@ -47,5 +49,29 @@ func (a *App) handleResetToDefaults() error {
 	if a.Services == nil || a.Services.Config == nil {
 		return fmt.Errorf("config service not available")
 	}
-	return a.Services.Config.ResetToDefaults()
+	if err := a.Services.Config.ResetToDefaults(); err != nil {
+		return err
+	}
+	// Reload hotkeys to apply default bindings immediately (covers hotkey-initiated reset)
+	if a.Services.Hotkeys != nil {
+		cfgProvider := func() adapters.HotkeyConfig {
+			if cfg := a.Services.Config.GetConfig(); cfg != nil {
+				return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
+					WithAdditionalHotkeys(
+						"",
+						cfg.Hotkeys.ShowConfig,
+						cfg.Hotkeys.ResetToDefaults,
+					)
+			}
+			return adapters.NewConfigAdapter("", "auto")
+		}
+		if err := a.Services.Hotkeys.ReloadFromConfig(
+			a.handleStartRecording,
+			a.handleStopRecordingAndTranscribe,
+			cfgProvider,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }

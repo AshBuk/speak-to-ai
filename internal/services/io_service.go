@@ -106,7 +106,28 @@ func (ios *IOService) SetOutputMethod(method string) error {
 		return fmt.Errorf("invalid output method: %s (must be 'clipboard' or 'active_window')", method)
 	}
 
-	// Method is stored in config by ConfigService; outputManager will be recreated on next use if needed
+	// Persist via ConfigService if available
+	if ios.cfg != nil {
+		if err := ios.cfg.UpdateOutputMode(method); err != nil {
+			return err
+		}
+	} else {
+		ios.config.Output.DefaultMode = method
+	}
+
+	// Recreate output manager immediately to reflect new mode
+	env := ios.detectOutputEnvironment()
+	out, err := outputFactory.GetOutputterFromConfig(ios.config, env)
+	if err != nil {
+		return fmt.Errorf("failed to reinitialize output manager: %w", err)
+	}
+	ios.outputManager = out
+
+	// Notify UI to refresh settings display
+	if ios.ui != nil {
+		ios.ui.UpdateSettings(ios.config)
+	}
+
 	ios.logger.Info("Output method set to: %s", method)
 	return nil
 }

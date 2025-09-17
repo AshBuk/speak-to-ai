@@ -61,6 +61,19 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	// Run the command
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		// Runtime fallback: if wtype fails, try ydotool when allowed and available
+		if o.typeTool == "wtype" && config.IsCommandAllowed(o.config, "ydotool") {
+			if _, lookErr := exec.LookPath("ydotool"); lookErr == nil {
+				fallbackArgs := config.SanitizeCommandArgs([]string{"type", text})
+				// #nosec G204 -- Safe: tool is allowlisted and arguments are sanitized.
+				fallbackCmd := exec.Command("ydotool", fallbackArgs...)
+				if fbOut, fbErr := fallbackCmd.CombinedOutput(); fbErr == nil {
+					return nil
+				} else {
+					return fmt.Errorf("wtype failed: %w (out: %s); ydotool fallback failed: %v (out: %s)", err, string(output), fbErr, string(fbOut))
+				}
+			}
+		}
 		return fmt.Errorf("failed to type text with %s: %w, output: %s", o.typeTool, err, string(output))
 	}
 

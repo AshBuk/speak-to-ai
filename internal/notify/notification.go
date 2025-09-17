@@ -46,7 +46,12 @@ func (nm *NotificationManager) NotifyTranscriptionComplete() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip workflow notification
 	}
-	return nm.sendNotification(constants.NotifyTitleTranscription, constants.NotifyTranscriptionMsg, "edit-copy")
+	// Select message based on current output mode
+	body := constants.NotifyTranscriptionMsg
+	if nm.config.Output.DefaultMode == config.OutputModeActiveWindow {
+		body = constants.NotifyTranscriptionTypedMsg
+	}
+	return nm.sendNotification(constants.NotifyTitleTranscription, body, "edit-copy")
 }
 
 // NotifyError shows an error notification

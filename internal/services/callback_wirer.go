@@ -54,7 +54,38 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 			if container == nil || container.Config == nil {
 				return fmt.Errorf("config service not available")
 			}
-			return container.Config.ResetToDefaults()
+
+			if err := container.Config.ResetToDefaults(); err != nil {
+				return err
+			}
+
+			// Hotkeys: reload manager to apply default combos immediately
+			if container.Hotkeys != nil {
+				cfgProvider := func() adapters.HotkeyConfig {
+					if cfgSvc, ok := container.Config.(*ConfigService); ok && cfgSvc != nil {
+						if cfg := cfgSvc.GetConfig(); cfg != nil {
+							return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
+								WithAdditionalHotkeys(
+									"",
+									cfg.Hotkeys.ShowConfig,
+									cfg.Hotkeys.ResetToDefaults,
+								)
+						}
+					}
+					return adapters.NewConfigAdapter("", "auto")
+				}
+
+				// Ensure callbacks preserved
+				if err := container.Hotkeys.ReloadFromConfig(
+					func() error { return container.Audio.HandleStartRecording() },
+					func() error { return container.Audio.HandleStopRecording() },
+					cfgProvider,
+				); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 	)
 

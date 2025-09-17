@@ -20,25 +20,50 @@ sudo pacman -S gnome-shell-extension-appindicator
 ***Current Implementation: Smart Auto-Selection***
 | Desktop Environment | Primary Tool | Fallback | Status |
 |---------------------|--------------|----------|--------|
-| **🟢 GNOME+Wayland** | ydotool* | clipboard | ⚠️ Requires setup |
-| **🟢 KDE+Wayland** | wtype → ydotool → xdotool | clipboard | ✅ Works out-of-box |
-| **🟢 Sway/i3** | wtype → ydotool → xdotool | clipboard | ✅ Works out-of-box |
+| **🟢 GNOME+Wayland** | ydotool | clipboard | ⚠️ Requires setup |
+| **🟢 KDE+Wayland** | wtype → ydotool | clipboard | 🧪 Needs testing |
+| **🟢 Sway/Other Wayland** | wtype → ydotool | clipboard | 🧪 Needs testing |
 | **🟢 X11 (all DEs)** | xdotool | clipboard | ✅ Works out-of-box |
 
- *wtype doesn't work on GNOME/Wayland - compositor limitation, so use clipboard (ctrl+v) or setup ydotool*
+ *GNOME/Wayland requires ydotool setup. Other Wayland compositors may work with wtype without any setup - community testing needed*
  *RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!*
 
-**Outputter setup - ydotool (requires for GNOME!)**
+**ydotool setup (recommended user-unit) — direct typing on Wayland**
+
+> 1) Install ydotool:
 ```bash
-# Fedora:
-sudo dnf install ydotool
-# Debian/Ubuntu-based:
-sudo apt install ydotool
-# Add to input group:
-sudo usermod -a -G input $USER            
-# logout → login (or reboot), then:
-sudo systemctl enable --now ydotoold      # Start daemon
+sudo dnf install ydotool   # Fedora
+sudo apt install ydotool   # Ubuntu/Debian
 ```
+> 2) Allow access to /dev/uinput for non-root:
+```bash
+echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' | sudo tee /etc/udev/rules.d/99-uinput.rules
+sudo udevadm control --reload && sudo udevadm trigger
+sudo usermod -a -G input $USER
+# Re-login required for group change
+```
+> 3) Run ydotool as user service (no root):
+```bash
+mkdir -p ~/.config/systemd/user
+tee ~/.config/systemd/user/ydotool.service >/dev/null <<'EOF'
+[Unit]
+Description=ydotool user daemon
+
+[Service]
+ExecStart=/usr/bin/ydotoold --socket-perm=0660
+Restart=always
+
+[Install]
+WantedBy=default.target
+EOF
+```
+> 4) Restart and run the service
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now ydotool
+```
+*This setup uses user service: safer and no root privileges needed*
+*X11 works out-of-the-box without additional setups*
 
 **Clipboard fallback**
 - Works on **all** desktop environments  
@@ -68,5 +93,5 @@ sudo systemctl enable --now ydotoold      # Start daemon
 ### **Alternative for Tiling WMs**
 - **System hotkey tools:** sxhkd, xbindkeys, etc. + webhook integration
 
-*Last updated: 2025-09-16*  
+*Last updated: 2025-09-17*  
 *Tested on: Fedora 42, Ubuntu 24.04*
