@@ -18,9 +18,6 @@ func TestUIConstants(t *testing.T) {
 			{"IconReady", IconReady},
 			{"IconError", IconError},
 			{"IconRecording", IconRecording},
-			{"IconProcessing", IconProcessing},
-			{"IconWarning", IconWarning},
-			{"IconDownload", IconDownload},
 			{"IconConfig", IconConfig},
 			{"IconStop", IconStop},
 		}
@@ -123,14 +120,11 @@ func TestConstantUniqueness(t *testing.T) {
 	// This helps prevent confusion in the UI
 
 	allConstants := map[string]string{
-		"IconReady":      IconReady,
-		"IconError":      IconError,
-		"IconRecording":  IconRecording,
-		"IconProcessing": IconProcessing,
-		"IconWarning":    IconWarning,
-		"IconDownload":   IconDownload,
-		"IconConfig":     IconConfig,
-		"IconStop":       IconStop,
+		"IconReady":     IconReady,
+		"IconError":     IconError,
+		"IconRecording": IconRecording,
+		"IconConfig":    IconConfig,
+		"IconStop":      IconStop,
 	}
 
 	// Icons should be unique (different emojis)
