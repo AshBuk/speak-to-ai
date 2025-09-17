@@ -49,6 +49,7 @@ func (m *MockUIService) UpdateRecordingUI(isRecording bool, level float64) {}
 func (m *MockUIService) SetError(message string)                           {}
 func (m *MockUIService) SetSuccess(message string)                         {}
 func (m *MockUIService) ShowConfigFile() error                             { return nil }
+func (m *MockUIService) ShowAboutPage() error                              { return nil }
 func (m *MockUIService) UpdateSettings(cfg *config.Config)                 {}
 
 // Test helper methods

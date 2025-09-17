@@ -22,6 +22,7 @@ type TrayManager struct {
 	onExit            func()
 	onToggle          func() error
 	onShowConfig      func() error
+	onShowAbout       func() error
 	onResetToDefaults func() error
 	config            *config.Config
 	logger            logger.Logger
@@ -30,6 +31,7 @@ type TrayManager struct {
 	toggleItem       *systray.MenuItem
 	settingsItem     *systray.MenuItem
 	showConfigItem   *systray.MenuItem
+	aboutItem        *systray.MenuItem
 	reloadConfigItem *systray.MenuItem
 	exitItem         *systray.MenuItem
 
@@ -62,7 +64,7 @@ type TrayManager struct {
 }
 
 // NewTrayManager creates a new tray manager instance
-func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onResetToDefaults func() error, logger logger.Logger) *TrayManager {
+func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error, logger logger.Logger) *TrayManager {
 	return &TrayManager{
 		isRecording:       false,
 		iconMicOff:        iconMicOff,
@@ -70,6 +72,7 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 		onExit:            onExit,
 		onToggle:          onToggle,
 		onShowConfig:      onShowConfig,
+		onShowAbout:       onShowAbout,
 		onResetToDefaults: onResetToDefaults,
 		hotkeyItems:       make(map[string]*systray.MenuItem),
 		audioItems:        make(map[string]*systray.MenuItem),
@@ -80,9 +83,10 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 }
 
 // SetCoreActions allows wiring core menu callbacks after construction
-func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onResetToDefaults func() error) {
+func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) {
 	tm.onToggle = onToggle
 	tm.onShowConfig = onShowConfig
+	tm.onShowAbout = onShowAbout
 	tm.onResetToDefaults = onResetToDefaults
 }
 
@@ -117,6 +121,7 @@ func (tm *TrayManager) onReady() {
 	// Config actions
 	tm.showConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Show Config File", constants.TrayShowConfig), "Open configuration file")
 	tm.reloadConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Reset to Defaults", constants.IconConfig), "Reset all settings to default values")
+	tm.aboutItem = systray.AddMenuItem("ℹ️ About", "About Speak-to-AI")
 
 	systray.AddSeparator()
 
@@ -161,6 +166,13 @@ func (tm *TrayManager) handleMenuClicks() {
 			if tm.onShowConfig != nil {
 				if err := tm.onShowConfig(); err != nil {
 					tm.logger.Error("Error showing config: %v", err)
+				}
+			}
+		case <-tm.aboutItem.ClickedCh:
+			tm.logger.Info("About clicked")
+			if tm.onShowAbout != nil {
+				if err := tm.onShowAbout(); err != nil {
+					tm.logger.Error("Error showing about: %v", err)
 				}
 			}
 		case <-tm.reloadConfigItem.ClickedCh:

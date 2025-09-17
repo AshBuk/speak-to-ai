@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Speak-to-AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin-right: 20px;
+        }
+        .header-text h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #ffffff;
+        }
+        .header-text p {
+            margin: 5px 0 0 0;
+            color: #cccccc;
+            font-size: 1.1em;
+        }
+        h2 {
+            color: #4a90e2;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #4a90e2;
+            font-size: 1.2em;
+        }
+        .planned-features {
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        li:before {
+            content: "▶";
+            color: #4a90e2;
+            position: absolute;
+            left: 0;
+        }
+        a {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #7b68ee;
+            text-decoration: underline;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .link-group {
+            background-color: #111;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        .link-group p {
+            margin: 0 0 10px 0;
+            color: #ccc;
+            font-size: 0.95em;
+        }
+        .link-large {
+            display: block;
+            margin: 15px 0;
+            font-size: 1.3em;
+        }
+        .link-large.inline {
+            display: inline-block;
+            margin: 8px 15px 8px 0;
+        }
+        .sponsor-buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .sponsor-btn {
+            display: inline-block;
+            margin: 10px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .sponsor-btn.github {
+            background-color: #24292f;
+            color: white;
+        }
+        .sponsor-btn.paypal {
+            background-color: #00457C;
+            color: white;
+        }
+        .sponsor-btn:hover {
+            opacity: 0.8;
+        }
+        .copyright {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg class="logo" width="64" height="64" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="64" cy="64" r="60" fill="#2563eb" stroke="#1e40af" stroke-width="2"/>
+            <rect x="54" y="35" width="20" height="30" rx="10" fill="white"/>
+            <rect x="59" y="65" width="10" height="15" fill="white"/>
+            <path d="M 45 55 Q 45 75 64 75 Q 83 75 83 55" stroke="white" stroke-width="3" fill="none"/>
+            <line x1="49" y1="85" x2="79" y2="85" stroke="white" stroke-width="3"/>
+            <path d="M 25 50 Q 20 64 25 78" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
+            <path d="M 103 50 Q 108 64 103 78" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
+            <path d="M 30 45 Q 22 64 30 83" stroke="white" stroke-width="2" fill="none" opacity="0.5"/>
+            <path d="M 98 45 Q 106 64 98 83" stroke="white" stroke-width="2" fill="none" opacity="0.5"/>
+        </svg>
+        <div class="header-text">
+            <h1>Speak-to-AI</h1>
+            <p>Voice-to-text Linux application with offline speech recognition</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>About</h2>
+        <p>Speak to AI is a voice-to-text app that provides offline speech recognition using Whisper.cpp. Features include system tray integration, hotkeys, and support for multiple languages.</p>
+    </div>
+
+    <div class="section">
+        <h2>Features</h2>
+        <ul>
+            <li>Cross-platform support for X11 and Wayland</li>
+            <li>Desktop Environment Support: Native integration with GNOME, KDE, and other Linux DEs</li>
+            <li>Privacy-first: no data sent to external servers</li>
+            <li>Portable: available as AppImage and Flatpak</li>
+            <li>Multiple language support, 100% Offline, Key binding support, Automatic typing, Clipboard support, WebSocket API (optional, for external integrations), Visual notifications</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Background</h2>
+        <p>Despite the existence of various voice-to-text applications, I couldn't find a suitable solution for my daily use on my Linux OS. Therefore, I decided to create and share my open-source project with the community:</p>
+
+        <div class="link-group">
+            <p>This is the project repository where you can track the latest updates:</p>
+            <a class="link-large" href="https://github.com/AshBuk/speak-to-ai" target="_blank"><strong>GitHub Repository:</strong> https://github.com/AshBuk/speak-to-ai</a>
+        </div>
+
+        <div class="link-group">
+            <p>I would be grateful if you test it on your Linux environment:</p>
+            <a class="link-large" href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/Desktop_Environment_Support.md" target="_blank"><strong>Desktop Environment Support</strong></a>
+        </div>
+
+        <div class="link-group">
+            <p>If something doesn't work, or doesn't work the way you want... please contribute to the project by opening a bug report:</p>
+            <a class="link-large" href="https://github.com/AshBuk/speak-to-ai/issues" target="_blank"><strong>Issues: Report bugs or request features</strong></a>
+        </div>
+
+        <div class="link-group">
+            <p>I would be happy to collaborate with developers! You might be interested in:</p>
+            <a class="link-large inline" href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/ARCHITECTURE.md" target="_blank"><strong>ARCHITECTURE.md</strong></a>
+            <a class="link-large inline" href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/DEVELOPMENT.md" target="_blank"><strong>DEVELOPMENT.md</strong></a>
+            <a class="link-large inline" href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/CONTRIBUTING.md" target="_blank"><strong>CONTRIBUTING.md</strong></a>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="planned-features"></div>
+        <p><strong>Current version: 1.0.0</strong></p>
+        <p><strong>Next feature:</strong> VAD (Voice Activity Detection) with enable/disable option and sensitivity settings via menu</p>
+    </div>
+
+    <div class="section sponsor-buttons">
+        <h3>Consider supporting development</h3>
+        <a href="https://github.com/sponsors/AshBuk" target="_blank" class="sponsor-btn github">💖 GitHub Sponsors</a>
+        <a href="https://www.paypal.com/donate/?hosted_button_id=R3HZH8DX7SCJG" target="_blank" class="sponsor-btn paypal">PayPal Donate</a>
+    </div>
+
+    <div class="copyright">
+        <p>© 2025 Asher Buk — MIT</p>
+        <p>Sharing with the community for privacy-conscious Linux users</p>
+    </div>
+</body>
+</html>

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/assets"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
@@ -112,6 +113,26 @@ func (us *UIService) SetSuccess(message string) {
 			us.logger.Warning("Failed to show success notification: %v", err)
 		}
 	}
+}
+
+// ShowAboutPage opens the About page in the default browser
+func (us *UIService) ShowAboutPage() error {
+	us.logger.Info("Showing about page...")
+
+	tmpFile, err := os.CreateTemp("", "speak-to-ai-about-*.html")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	// Note: temp file for browser access
+
+	if _, err := tmpFile.WriteString(assets.AboutHTML); err != nil {
+		return fmt.Errorf("failed to write HTML content: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	return us.openWithSystem(tmpFile.Name())
 }
 
 // ShowConfigFile implements UIServiceInterface

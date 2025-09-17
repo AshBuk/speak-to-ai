@@ -38,6 +38,7 @@ type UIServiceInterface interface {
 
 	// Menu actions
 	ShowConfigFile() error
+	ShowAboutPage() error
 
 	// Cleanup
 	Shutdown() error
