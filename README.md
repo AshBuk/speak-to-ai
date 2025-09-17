@@ -24,7 +24,10 @@
 
 </div>
 
- **A minimalist, privacy-focused desktop application that enables voice input (speech to text) for redactors, IDE or AI assistants without sending your voice to the cloud. Uses the Whisper model locally for speech recognition. Written in Go, an optimized desktop application for Linux.**
+ **A minimalist, privacy-focused desktop application for offline speech-to-text.
+  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants) 
+  Uses the Whisper model locally for speech recognition. 
+  Written in Go, an optimized desktop application for Linux.**
 
 ## Features
 
@@ -32,7 +35,7 @@
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: desktop, no data sent to external servers
-- **Key binding support, Automatic typing and Clipboard support, WebSocket API (optional, for external integrations), Visual notifications**
+- **Support: multi-language, global hotkeys, automatic typing & clipboard, system tray integration, visual notifications, WebSocket API (optional)**
 
 ## ✦ Installation
 
