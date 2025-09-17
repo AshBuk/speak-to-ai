@@ -5,16 +5,12 @@ package constants
 
 // UI Icons used throughout the application
 const (
-	IconReady      = "✅"
-	IconError      = "❌"
-	IconRecording  = "🔴"
-	IconStop       = "🟥"
-	IconProcessing = "🔄"
-	IconWarning    = "⚠️"
-	IconDownload   = "📥"
-	IconConfig     = "↺"
-	TraySettings   = "⚙️"
-	TrayShowConfig = "📄"
+	IconReady     = "✅"
+	IconError     = "❌"
+	IconRecording = "🔴"
+	IconStop      = "🟥"
+	IconConfig    = "↺"
+	TraySettings  = "⚙️"
 )
 
 // Common UI Messages

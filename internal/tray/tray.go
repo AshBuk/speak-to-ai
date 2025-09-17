@@ -119,7 +119,7 @@ func (tm *TrayManager) onReady() {
 	systray.AddSeparator()
 
 	// Config actions
-	tm.showConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Show Config File", constants.TrayShowConfig), "Open configuration file")
+	tm.showConfigItem = systray.AddMenuItem("📄 Show Config File", "Open configuration file")
 	tm.reloadConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Reset to Defaults", constants.IconConfig), "Reset all settings to default values")
 	tm.aboutItem = systray.AddMenuItem("ℹ️ About", "About Speak-to-AI")
 
