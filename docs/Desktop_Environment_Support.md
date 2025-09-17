@@ -6,11 +6,11 @@
 
 ### **For system tray on GNOME - to have full-featured UX with menu**:
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian:
 sudo apt install gnome-shell-extension-appindicator
-# Fedora
+# Fedora:
 sudo dnf install gnome-shell-extension-appindicator
-# Arch Linux
+# Arch Linux:
 sudo pacman -S gnome-shell-extension-appindicator
 ```
 *KDE and other DEs have built-in system tray support, no need for appindicator*
@@ -30,11 +30,11 @@ sudo pacman -S gnome-shell-extension-appindicator
 
 **Outputter setup - ydotool (requires for GNOME!)**
 ```bash
-# Fedora
+# Fedora:
 sudo dnf install ydotool
-# Debian/Ubuntu-based
+# Debian/Ubuntu-based:
 sudo apt install ydotool
-# Add to input group
+# Add to input group:
 sudo usermod -a -G input $USER            
 # logout → login (or reboot), then:
 sudo systemctl enable --now ydotoold      # Start daemon

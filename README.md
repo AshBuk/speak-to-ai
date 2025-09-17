@@ -60,7 +60,7 @@ Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak
 ```bash
 # Download the file, then:
 flatpak install --user io.github.ashbuk.speak-to-ai.flatpak  # Replace with your downloaded version
-# Run the application
+# Run the application:
 flatpak run io.github.ashbuk.speak-to-ai
 ```
 
@@ -72,11 +72,11 @@ GNOME (Wayland/X11) and KDE Plasma (Wayland/X11) have native support. Help us te
 
 **For system tray integration on GNOME**:
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian:
 sudo apt install gnome-shell-extension-appindicator
-# Fedora
+# Fedora:
 sudo dnf install gnome-shell-extension-appindicator
-# Arch Linux
+# Arch Linux:
 sudo pacman -S gnome-shell-extension-appindicator
 ```
 *KDE and other DEs have built-in system tray support*
@@ -86,15 +86,15 @@ sudo pacman -S gnome-shell-extension-appindicator
 If text doesn't appear in applications automatically, the app falls back to clipboard mode. To enable direct typing:
 
 ```bash
-# Install ydotool
+# Install ydotool:
 sudo dnf install ydotool  # Fedora
 sudo apt install ydotool  # Ubuntu/Debian
 
-# Add user to input group
+# Add user to input group:
 sudo usermod -a -G input $USER
 # Reboot required
 
-# Enable daemon (logout/login if required)
+# Enable daemon (logout/login if required):
 sudo systemctl enable --now ydotoold
 ```
 
