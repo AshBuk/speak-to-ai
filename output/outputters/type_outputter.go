@@ -8,6 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/output/interfaces"
 )
 
@@ -35,6 +36,11 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	// Security: validate command before execution
 	if !config.IsCommandAllowed(o.config, o.typeTool) {
 		return fmt.Errorf("typing tool not allowed: %s", o.typeTool)
+	}
+
+	// Proactive fallback: ydotool on Wayland doesn't support non-ASCII characters
+	if platform.DetectEnvironment() == platform.EnvironmentWayland && o.typeTool == "ydotool" && isNonASCII(text) {
+		return fmt.Errorf("ydotool on Wayland doesn't support non-ASCII characters, use clipboard fallback")
 	}
 
 	var cmd *exec.Cmd
@@ -89,4 +95,14 @@ func (o *TypeOutputter) CopyToClipboard(text string) error {
 // GetToolNames returns the actual tool names being used
 func (o *TypeOutputter) GetToolNames() (clipboardTool, typeTool string) {
 	return "", o.typeTool
+}
+
+// isNonASCII checks if text contains non-ASCII characters (> 127)
+func isNonASCII(text string) bool {
+	for _, r := range text {
+		if r > 127 {
+			return true
+		}
+	}
+	return false
 }
