@@ -61,6 +61,12 @@ func IsGNOMEWithWayland() bool {
 	return (de == "GNOME" || de == "ubuntu:GNOME") && env == EnvironmentWayland
 }
 
+// IsGNOME checks if running GNOME desktop environment (any protocol)
+func IsGNOME() bool {
+	de := DetectDesktopEnvironment()
+	return de == "GNOME" || de == "ubuntu:GNOME"
+}
+
 // HasStatusNotifierWatcher checks if a StatusNotifier watcher is present on the session D-Bus
 func HasStatusNotifierWatcher() bool {
 	conn, err := dbus.SessionBus()

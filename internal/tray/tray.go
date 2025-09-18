@@ -8,10 +8,10 @@ package tray
 import (
 	"fmt"
 
+	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/getlantern/systray"
 )
 
 // TrayManager manages the system tray icon and menu

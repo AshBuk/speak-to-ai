@@ -15,6 +15,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
+	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
 
@@ -23,6 +24,7 @@ type UIService struct {
 	logger        logger.Logger
 	trayManager   tray.TrayManagerInterface
 	notifyManager *notify.NotificationManager
+	config        *config.Config
 }
 
 // NewUIService creates a new UIService instance
@@ -30,11 +32,13 @@ func NewUIService(
 	logger logger.Logger,
 	trayManager tray.TrayManagerInterface,
 	notifyManager *notify.NotificationManager,
+	config *config.Config,
 ) *UIService {
 	return &UIService{
 		logger:        logger,
 		trayManager:   trayManager,
 		notifyManager: notifyManager,
+		config:        config,
 	}
 }
 
@@ -74,7 +78,13 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 func (us *UIService) UpdateRecordingUI(isRecording bool, level float64) {
 	us.SetRecordingState(isRecording)
 
-	if isRecording && us.trayManager != nil {
+	// Check audio level display setting
+	audioLevelDisplay := us.getAudioLevelDisplay()
+	if audioLevelDisplay == "disabled" {
+		return
+	}
+
+	if isRecording && us.trayManager != nil && audioLevelDisplay == "tooltip" {
 		levelPercentage := int(level * 100)
 		if levelPercentage > 100 {
 			levelPercentage = 100
@@ -231,6 +241,23 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 		us.logger.Info("Notification: %s - %s", title, message)
 		return us.notifyManager.ShowNotification(title, message)
 	}
+}
+
+// getAudioLevelDisplay determines how to display audio level based on config and environment
+func (us *UIService) getAudioLevelDisplay() string {
+	if us.config == nil {
+		return "disabled"
+	}
+
+	audioLevelDisplay := us.config.Notifications.AudioLevelDisplay
+	if audioLevelDisplay == "auto" {
+		if platform.IsGNOME() {
+			return "disabled" // GNOME doesn't support tooltips
+		} else {
+			return "tooltip" // KDE, XFCE, others support tooltips
+		}
+	}
+	return audioLevelDisplay
 }
 
 // Shutdown implements UIServiceInterface

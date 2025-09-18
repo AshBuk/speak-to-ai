@@ -92,6 +92,7 @@ func (sa *ServiceAssembler) createUIService(trayManager tray.TrayManagerInterfac
 		sa.factoryConfig.Logger,
 		trayManager,
 		notifyManager,
+		sa.factoryConfig.Config,
 	)
 }
 

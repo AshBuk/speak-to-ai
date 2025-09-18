@@ -56,7 +56,8 @@ type Config struct {
 
 	// Notification settings
 	Notifications struct {
-		EnableWorkflowNotifications bool `yaml:"enable_workflow_notifications"` // Enable workflow notifications (recording, transcription)
+		EnableWorkflowNotifications bool   `yaml:"enable_workflow_notifications"` // Enable workflow notifications (recording, transcription)
+		AudioLevelDisplay           string `yaml:"audio_level_display"`           // 'auto', 'tooltip', 'disabled'
 	} `yaml:"notifications"`
 
 	// Web server settings
