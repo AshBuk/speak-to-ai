@@ -129,14 +129,7 @@ func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Component
 				return fmt.Errorf("config service not available")
 			}
 
-			err := container.Config.UpdateLanguage(language)
-			if err == nil && container.Audio != nil {
-				if audioSvc, ok := container.Audio.(*AudioService); ok {
-					audioSvc.clearSession()
-				}
-			}
-
-			return err
+			return container.Config.UpdateLanguage(language)
 		},
 		func() error {
 			if container == nil || container.Config == nil {
