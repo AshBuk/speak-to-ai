@@ -12,17 +12,11 @@ import (
 // setDefaultConfigForTest sets default values for testing
 func setDefaultConfigForTest(config *models.Config) {
 	config.General.Debug = false
+	config.General.WhisperModel = "small-q5_1"
 	config.General.ModelPath = "sources/language-models/small-q5_1.bin"
 	config.General.TempAudioPath = "/tmp"
-	config.General.ModelType = "small"
-	config.General.ModelPrecision = "q5_1"
 	config.General.Language = "en"
 	config.General.LogFile = ""
-
-	config.General.Models = []string{
-		"sources/language-models/small-q5_1.bin",
-	}
-	config.General.ActiveModel = "sources/language-models/small-q5_1.bin"
 
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000
@@ -79,16 +73,16 @@ func TestValidateConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid model type",
+			name: "invalid whisper model",
 			setupConfig: func() *models.Config {
 				config := &models.Config{}
 				setDefaultConfigForTest(config)
-				config.General.ModelType = "invalid"
+				config.General.WhisperModel = "invalid"
 				return config
 			},
 			expectError: true,
 			expectedValues: map[string]interface{}{
-				"modelType": "small",
+				"whisperModel": "small-q5_1",
 			},
 		},
 		{
@@ -145,9 +139,14 @@ func TestValidateConfig(t *testing.T) {
 			}
 
 			// Check expected values
-			if modelType, ok := tt.expectedValues["modelType"]; ok {
-				if config.General.ModelType != modelType {
-					t.Errorf("expected ModelType %v, got %v", modelType, config.General.ModelType)
+			if whisperModel, ok := tt.expectedValues["whisperModel"]; ok {
+				if config.General.WhisperModel != whisperModel {
+					t.Errorf("expected WhisperModel %v, got %v", whisperModel, config.General.WhisperModel)
+				}
+			}
+			if modelPath, ok := tt.expectedValues["modelPath"]; ok {
+				if config.General.ModelPath != modelPath {
+					t.Errorf("expected ModelPath %v, got %v", modelPath, config.General.ModelPath)
 				}
 			}
 			if sampleRate, ok := tt.expectedValues["sampleRate"]; ok {

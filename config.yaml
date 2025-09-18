@@ -3,16 +3,11 @@
 # General settings
 general:
   debug: false
-  model_path: "sources/language-models/small-q5_1.bin"  # Default small-q5_1 model
+  whisper_model: "small-q5_1"  # Fixed whisper model
+  model_path: "sources/language-models/small-q5_1.bin"  # Model file path
   temp_audio_path: "/tmp"
-  model_precision: "q5_1"
   language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
   log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable file logging)
-  
-  # Single model configuration - only small-q5_1
-  models:
-    - "sources/language-models/small-q5_1.bin"      # Fixed model - small q5_1 quantized
-  active_model: "sources/language-models/small-q5_1.bin"  # Fixed active model
 
 # Hotkey settings
 hotkeys:
@@ -37,7 +32,7 @@ audio:
 output:
   default_mode: "active_window"  # Options: "clipboard", "active_window", "web" - Fixed: was clipboard
   clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xclip"
-  type_tool: "auto"  # Options: "auto", "xdotool", "wl-clipboard", "dbus"
+  type_tool: "auto"  # Options: "auto", "ydotool", "xdotool", "wl-clipboard", "dbus"
 
 # Web server settings
 web_server:

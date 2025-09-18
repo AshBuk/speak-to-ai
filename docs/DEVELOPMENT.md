@@ -106,50 +106,6 @@ hotkeys/
 └── hotkeys.go          # Main entry point
 ```
 
-### Example Configuration
+### Configuration Reference
 
-```yaml
-# General settings
-general:
-  debug: false
-  model_path: "sources/language-models/small-q5_1.bin"  # Default small-q5_1 model
-  temp_audio_path: "/tmp"
-  model_precision: "q5_1"
-  language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
-  log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable)
-
-  # Single model configuration - only small-q5_1
-  models:
-    - "sources/language-models/small-q5_1.bin"      # Fixed model - small q5_1 quantized
-  active_model: "sources/language-models/small-q5_1.bin"  # Fixed active model
-
-# Hotkeys settings
-hotkeys:
-  start_recording: "ctrl+alt+r"       # Main recording hotkey
-  stop_recording: "ctrl+alt+r"        # Same combination for start/stop
-  show_config: "altgr+shift+c"        # Open configuration file
-  reset_to_defaults: "altgr+shift+r"  # Reset all settings to defaults
-  # toggle_vad: "altgr+shift+v"       # Toggle VAD (future feature)
-
-# Audio settings
-audio:
-  device: "default"
-  sample_rate: 16000            # Optimal for speech recognition
-  format: "s16le"               # Audio recorded in mono (1 channel)
-  recording_method: "arecord"   # Options: "arecord", "ffmpeg"
-  # Future VAD implementation
-  # enable_vad: false           # Enable Voice Activity Detection
-  # vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
-
-# Output settings
-output:
-  default_mode: "active_window"  # Options: "clipboard", "active_window", "web"
-  clipboard_tool: "auto"        # Options: "auto", "wl-copy", "xclip"
-  type_tool: "auto"             # Options: "auto", "xdotool", "wl-clipboard", "dbus"
-
-# WebSocket server settings
-web_server:
-  enabled: false  # Disabled by default - enable only if needed
-  port: 8080
-  host: "localhost"
-```
+See [`config.yaml`](../config.yaml) for the complete configuration file with all available options and detailed comments.

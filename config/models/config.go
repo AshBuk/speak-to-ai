@@ -13,15 +13,12 @@ const (
 type Config struct {
 	// General settings
 	General struct {
-		Debug          bool     `yaml:"debug"`
-		ModelPath      string   `yaml:"model_path"` // Primary model path (for backward compatibility)
-		TempAudioPath  string   `yaml:"temp_audio_path"`
-		ModelType      string   `yaml:"model_type"`      // Fixed to 'small' for small-q5_1 model
-		ModelPrecision string   `yaml:"model_precision"` // 'f16', 'q4_0', etc.
-		Language       string   `yaml:"language"`        // Language for recognition (en, ..., etc.)
-		LogFile        string   `yaml:"log_file"`        // Path to log file
-		Models         []string `yaml:"models"`          // Array of available model paths
-		ActiveModel    string   `yaml:"active_model"`    // Currently active model
+		Debug         bool   `yaml:"debug"`
+		WhisperModel  string `yaml:"whisper_model"` // Fixed whisper model: "small-q5_1"
+		ModelPath     string `yaml:"model_path"`    // Path to model file (for different builds)
+		TempAudioPath string `yaml:"temp_audio_path"`
+		Language      string `yaml:"language"` // Language for recognition (en, ..., etc.)
+		LogFile       string `yaml:"log_file"` // Path to log file
 	} `yaml:"general"`
 
 	// Hotkey settings

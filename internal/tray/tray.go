@@ -53,7 +53,6 @@ type TrayManager struct {
 	// onSelectVADSens sets the callback for VAD sensitivity selection.
 	// onSelectVADSens        func(sensitivity string) error
 	onSelectLang           func(language string) error
-	onSelectModel          func(modelType string) error
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
 	onSelectOutputMode     func(mode string) error
@@ -239,13 +238,11 @@ func (tm *TrayManager) SetExitAction(onExit func()) {
 func (tm *TrayManager) SetSettingsActions(
 	// onSelectVADSensitivity func(sensitivity string) error,
 	onSelectLanguage func(language string) error,
-	onSelectModelType func(modelType string) error,
 	onToggleWorkflowNotifications func() error,
 	onSelectOutputMode func(mode string) error,
 ) {
 	// tm.onSelectVADSens = onSelectVADSensitivity
 	tm.onSelectLang = onSelectLanguage
-	tm.onSelectModel = onSelectModelType
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode
 }
