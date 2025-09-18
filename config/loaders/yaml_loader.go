@@ -55,18 +55,11 @@ func LoadConfig(filename string) (*models.Config, error) {
 func SetDefaultConfig(config *models.Config) {
 	// General settings
 	config.General.Debug = false
-	config.General.ModelPath = "sources/language-models/small-q5_1.bin" // Default to small-q5_1
+	config.General.WhisperModel = "small-q5_1"                          // Fixed whisper model
+	config.General.ModelPath = "sources/language-models/small-q5_1.bin" // Fixed model path
 	config.General.TempAudioPath = "/tmp"
-	config.General.ModelType = "small"
-	config.General.ModelPrecision = "q5_1"
 	config.General.Language = "en" // Default to English
 	config.General.LogFile = ""    // No log file by default
-
-	// Single model configuration - only small-q5_1
-	config.General.Models = []string{
-		"sources/language-models/small-q5_1.bin",
-	}
-	config.General.ActiveModel = "sources/language-models/small-q5_1.bin" // Fixed model
 
 	// Hotkey settings (defaults)
 	config.Hotkeys.Provider = "auto"

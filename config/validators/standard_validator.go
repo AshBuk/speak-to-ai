@@ -16,7 +16,13 @@ import (
 func ValidateConfig(config *models.Config) error {
 	var errors []string
 
-	// Validate general settings
+	// Validate general settings - ensure whisper model is fixed
+	if config.General.WhisperModel != "small-q5_1" {
+		errors = append(errors, fmt.Sprintf("invalid whisper model: %s, using 'small-q5_1'", config.General.WhisperModel))
+		config.General.WhisperModel = "small-q5_1"
+	}
+
+	// Validate model path
 	if config.General.ModelPath != "" {
 		// Sanitize path to avoid path traversal
 		config.General.ModelPath = filepath.Clean(config.General.ModelPath)
@@ -35,13 +41,6 @@ func ValidateConfig(config *models.Config) error {
 			errors = append(errors, "suspicious temp audio path sanitized")
 		}
 	}
-
-	// Ensure model type is always 'small' for fixed small-q5_1 model
-	prevModelType := strings.TrimSpace(config.General.ModelType)
-	if prevModelType != "" && prevModelType != "small" {
-		errors = append(errors, fmt.Sprintf("invalid model type: %s, using 'small'", prevModelType))
-	}
-	config.General.ModelType = "small"
 
 	// Validate audio settings
 	if config.Audio.SampleRate < 8000 || config.Audio.SampleRate > 48000 {

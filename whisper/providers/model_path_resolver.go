@@ -46,16 +46,8 @@ func (r *ModelPathResolver) GetModelDir() string {
 
 // ShouldUseUserDirectory determines if we should use user directory for models
 func (r *ModelPathResolver) ShouldUseUserDirectory() bool {
-	// If ModelPath points to a bundled model but ModelType doesn't match, use user directory
-	if r.config.General.ModelPath != "" {
-		// Check if this is a bundled model path
-		if r.IsBundledModelPath(r.config.General.ModelPath) {
-			// Extract model type from bundled path
-			bundledType := r.ExtractModelTypeFromPath(r.config.General.ModelPath)
-			// If requested type differs from bundled type, use user directory
-			return bundledType != r.config.General.ModelType
-		}
-	}
+	// Always use bundled model since we only support small-q5_1
+	// No need to check compatibility since whisper_model is fixed
 	return false
 }
 

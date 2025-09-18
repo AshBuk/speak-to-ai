@@ -20,7 +20,7 @@ func TestConfigService(t *testing.T) {
 	// Create test config
 	testConfig := &models.Config{}
 	testConfig.General.Language = "en"
-	testConfig.General.ModelType = "small"
+	testConfig.General.WhisperModel = "small-q5_1"
 	// TODO: Next feature - VAD implementation
 	// testConfig.Audio.VADSensitivity = "medium"
 	// testConfig.Audio.EnableVAD = false
