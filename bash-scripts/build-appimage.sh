@@ -116,7 +116,6 @@ copy_sources() {
     if [ -d "sources/core" ] && [ -f "sources/core/whisper" ]; then
         echo "Copying whisper binaries..."
         cp sources/core/whisper "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/"
-        cp sources/core/quantize "${OUTPUT_DIR}/${APP_NAME}.AppDir/sources/core/" || true
     else
         echo "Warning: Whisper binaries not found in sources/core"
     fi

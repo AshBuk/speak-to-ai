@@ -58,7 +58,7 @@ check_whisper_cpp() {
         return
     fi
     
-    if [ ! -f "sources/core/whisper" ] || [ ! -f "sources/core/quantize" ]; then
+    if [ ! -f "sources/core/whisper" ]; then
         echo "❌ whisper.cpp not found"
         echo "💡 Run whisper.cpp build first or let CI/CD handle it"
         exit 1

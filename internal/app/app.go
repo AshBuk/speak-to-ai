@@ -53,7 +53,7 @@ func NewApp(logger logger.Logger) *App {
 }
 
 // Initialize sets up all services with dependency injection
-func (a *App) Initialize(configFile string, debug bool, modelPath, quantizePath string) error {
+func (a *App) Initialize(configFile string, debug bool, modelPath string) error {
 	a.Runtime.Logger.Info("Initializing application...")
 
 	// Load configuration

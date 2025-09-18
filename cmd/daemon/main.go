@@ -17,17 +17,15 @@ import (
 
 // Command-line flags
 var (
-	configFile   string
-	modelPath    string
-	quantizePath string
-	debug        bool
+	configFile string
+	modelPath  string
+	debug      bool
 )
 
 func init() {
 	// Parse command-line arguments
 	flag.StringVar(&configFile, "config", "config.yaml", "Path to configuration file")
 	flag.StringVar(&modelPath, "model", "", "Path to whisper model file")
-	flag.StringVar(&quantizePath, "quantize", "sources/core/quantize", "Path to quantize binary")
 	flag.BoolVar(&debug, "debug", false, "Enable debug mode")
 	flag.Parse()
 }
@@ -73,7 +71,7 @@ func main() {
 	application := app.NewApp(appLogger)
 
 	// Initialize the application
-	if err := application.Initialize(configFile, debug, modelPath, quantizePath); err != nil {
+	if err := application.Initialize(configFile, debug, modelPath); err != nil {
 		appLogger.Error("Failed to initialize application: %v", err)
 		os.Exit(1)
 	}
@@ -113,12 +111,6 @@ func adjustPathsForAppImage(logger logger.Logger) {
 
 	logger.Info("Running inside AppImage, base path: %s", appDir)
 
-	// Adjust paths for AppImage
-	if quantizePath == "sources/core/quantize" {
-		quantizePath = filepath.Join(appDir, "sources/core/quantize")
-		logger.Info("Adjusted quantize path: %s", quantizePath)
-	}
-
 	// If no model path specified, check built-in model
 	if modelPath == "" {
 		builtinModelPath := filepath.Join(appDir, "sources/language-models/small-q5_1.bin")
@@ -148,12 +140,6 @@ func adjustPathsForFlatpak(logger logger.Logger) {
 	}
 
 	logger.Info("Running inside Flatpak: %s", flatpakInfo)
-
-	// Adjust paths for Flatpak
-	if quantizePath == "sources/core/quantize" {
-		quantizePath = "/app/bin/quantize"
-		logger.Info("Adjusted quantize path: %s", quantizePath)
-	}
 
 	// If no model path specified, check built-in model
 	if modelPath == "" {
