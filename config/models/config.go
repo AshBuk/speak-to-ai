@@ -18,7 +18,6 @@ type Config struct {
 		ModelPath     string `yaml:"model_path"`    // Path to model file (for different builds)
 		TempAudioPath string `yaml:"temp_audio_path"`
 		Language      string `yaml:"language"` // Language for recognition (en, ..., etc.)
-		LogFile       string `yaml:"log_file"` // Path to log file
 	} `yaml:"general"`
 
 	// Hotkey settings

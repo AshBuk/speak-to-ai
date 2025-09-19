@@ -7,7 +7,6 @@ general:
   model_path: "sources/language-models/small-q5_1.bin"  # Model file path
   temp_audio_path: "/tmp"
   language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
-  log_file: "logs/speak-to-ai.log"  # Log file path (empty to disable file logging)
 
 # Hotkey settings
 hotkeys:

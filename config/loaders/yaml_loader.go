@@ -59,7 +59,6 @@ func SetDefaultConfig(config *models.Config) {
 	config.General.ModelPath = "sources/language-models/small-q5_1.bin" // Fixed model path
 	config.General.TempAudioPath = "/tmp"
 	config.General.Language = "en" // Default to English
-	config.General.LogFile = ""    // No log file by default
 
 	// Hotkey settings (defaults)
 	config.Hotkeys.Provider = "auto"

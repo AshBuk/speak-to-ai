@@ -4,10 +4,7 @@
 package logger
 
 import (
-	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 )
 
 // LogLevel represents the level of logging
@@ -35,7 +32,6 @@ type Logger interface {
 // Config contains logger configuration
 type Config struct {
 	Level LogLevel
-	File  string
 }
 
 // DefaultLogger implements the Logger interface using the standard log package
@@ -56,22 +52,6 @@ func NewDefaultLogger(level LogLevel) *DefaultLogger {
 func Configure(config Config) (*DefaultLogger, error) {
 	logger := NewDefaultLogger(config.Level)
 	log.SetFlags(logger.stdFlags)
-
-	// If log file is specified, set up file logging
-	if config.File != "" {
-		// Create directory if it doesn't exist
-		dir := filepath.Dir(config.File)
-		if err := os.MkdirAll(dir, 0700); err != nil {
-			return nil, fmt.Errorf("failed to create log directory %s: %w", dir, err)
-		}
-		// Try to open the log file
-		f, err := os.OpenFile(config.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open log file %s: %w", config.File, err)
-		}
-		log.SetOutput(f)
-	}
-
 	return logger, nil
 }
 

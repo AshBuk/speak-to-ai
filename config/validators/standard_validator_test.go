@@ -16,7 +16,6 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.General.ModelPath = "sources/language-models/small-q5_1.bin"
 	config.General.TempAudioPath = "/tmp"
 	config.General.Language = "en"
-	config.General.LogFile = ""
 
 	config.Audio.Device = "default"
 	config.Audio.SampleRate = 16000

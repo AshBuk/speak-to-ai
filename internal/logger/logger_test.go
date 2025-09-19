@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestNewDefaultLogger(t *testing.T) {
@@ -188,10 +187,9 @@ func TestDefaultLogger_LogFormatting(t *testing.T) {
 	}
 }
 
-func TestConfigure_WithoutFile(t *testing.T) {
+func TestConfigure(t *testing.T) {
 	config := Config{
 		Level: InfoLevel,
-		File:  "",
 	}
 
 	logger, err := Configure(config)
@@ -206,73 +204,6 @@ func TestConfigure_WithoutFile(t *testing.T) {
 
 	if logger.level != InfoLevel {
 		t.Errorf("Expected level %v, got %v", InfoLevel, logger.level)
-	}
-}
-
-func TestConfigure_WithFile(t *testing.T) {
-	// Create temporary file
-	tempFile, err := os.CreateTemp("", "test_log_*.log")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tempFile.Name())
-	tempFile.Close()
-
-	config := Config{
-		Level: DebugLevel,
-		File:  tempFile.Name(),
-	}
-
-	logger, err := Configure(config)
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-
-	if logger == nil {
-		t.Fatal("Expected logger to be returned")
-	}
-
-	if logger.level != DebugLevel {
-		t.Errorf("Expected level %v, got %v", DebugLevel, logger.level)
-	}
-
-	// Test that log output goes to file
-	logger.Info("test message")
-
-	// Give some time for the log to be written
-	time.Sleep(10 * time.Millisecond)
-
-	// Read file content
-	content, err := os.ReadFile(tempFile.Name())
-	if err != nil {
-		t.Fatalf("Failed to read log file: %v", err)
-	}
-
-	if !strings.Contains(string(content), "test message") {
-		t.Errorf("Expected log file to contain 'test message', got %q", string(content))
-	}
-
-	if !strings.Contains(string(content), "[INFO]") {
-		t.Errorf("Expected log file to contain '[INFO]', got %q", string(content))
-	}
-}
-
-func TestConfigure_WithInvalidFile(t *testing.T) {
-	config := Config{
-		Level: InfoLevel,
-		// Use a path that is very likely invalid in containers and hosts
-		File: "/etc/hosts/log.txt",
-	}
-
-	logger, err := Configure(config)
-
-	if err == nil {
-		t.Error("Expected error when file path is invalid")
-	}
-
-	if logger != nil {
-		t.Error("Expected logger to be nil when error occurs")
 	}
 }
 
