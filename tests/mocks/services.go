@@ -43,7 +43,6 @@ func (m *MockUIService) Shutdown() error {
 }
 
 func (m *MockUIService) SetRecordingState(isRecording bool)                {}
-func (m *MockUIService) SetTooltip(tooltip string)                         {}
 func (m *MockUIService) ShowNotification(title, message string)            {}
 func (m *MockUIService) UpdateRecordingUI(isRecording bool, level float64) {}
 func (m *MockUIService) SetError(message string)                           {}

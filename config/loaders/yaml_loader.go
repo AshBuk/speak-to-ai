@@ -88,7 +88,6 @@ func SetDefaultConfig(config *models.Config) {
 
 	// Notification settings
 	config.Notifications.EnableWorkflowNotifications = true // Enable workflow notifications by default
-	config.Notifications.AudioLevelDisplay = "auto"         // auto-detect
 
 	// Web server settings
 	config.WebServer.Enabled = false

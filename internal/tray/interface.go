@@ -9,7 +9,6 @@ import "github.com/AshBuk/speak-to-ai/config"
 type TrayManagerInterface interface {
 	Start()
 	SetRecordingState(isRecording bool)
-	SetTooltip(tooltip string)
 	UpdateSettings(config *config.Config)
 	// SetExitAction sets the callback invoked when Quit is clicked
 	SetExitAction(onExit func())

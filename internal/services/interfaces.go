@@ -27,7 +27,6 @@ type AudioServiceInterface interface {
 type UIServiceInterface interface {
 	// Tray management
 	SetRecordingState(isRecording bool)
-	SetTooltip(tooltip string)
 	ShowNotification(title, message string)
 	UpdateSettings(config *config.Config)
 

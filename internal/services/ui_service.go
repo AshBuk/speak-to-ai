@@ -15,7 +15,6 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
 
@@ -49,13 +48,6 @@ func (us *UIService) SetRecordingState(isRecording bool) {
 	}
 }
 
-// SetTooltip implements UIServiceInterface
-func (us *UIService) SetTooltip(tooltip string) {
-	if us.trayManager != nil {
-		us.trayManager.SetTooltip(tooltip)
-	}
-}
-
 // ShowNotification implements UIServiceInterface
 func (us *UIService) ShowNotification(title, message string) {
 	if us.notifyManager != nil {
@@ -78,30 +70,11 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 func (us *UIService) UpdateRecordingUI(isRecording bool, level float64) {
 	us.SetRecordingState(isRecording)
 
-	// Check audio level display setting
-	audioLevelDisplay := us.getAudioLevelDisplay()
-	if audioLevelDisplay == "disabled" {
-		return
-	}
-
-	if isRecording && us.trayManager != nil && audioLevelDisplay == "tooltip" {
-		levelPercentage := int(level * 100)
-		if levelPercentage > 100 {
-			levelPercentage = 100
-		}
-
-		tooltip := fmt.Sprintf("Recording... Level: %d%%", levelPercentage)
-		us.SetTooltip(tooltip)
-	}
 }
 
 // SetError implements UIServiceInterface
 func (us *UIService) SetError(message string) {
 	us.logger.Error("UI Error: %s", message)
-
-	if us.trayManager != nil {
-		us.trayManager.SetTooltip(fmt.Sprintf("Error: %s", message))
-	}
 
 	if us.notifyManager != nil {
 		if err := us.sendNotification(constants.NotifyError, message, "dialog-error"); err != nil {
@@ -113,10 +86,6 @@ func (us *UIService) SetError(message string) {
 // SetSuccess implements UIServiceInterface
 func (us *UIService) SetSuccess(message string) {
 	us.logger.Info("UI Success: %s", message)
-
-	if us.trayManager != nil {
-		us.trayManager.SetTooltip(constants.MsgReady)
-	}
 
 	if us.notifyManager != nil {
 		if err := us.sendNotification(constants.NotifySuccess, message, "dialog-ok-apply"); err != nil {
@@ -241,23 +210,6 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 		us.logger.Info("Notification: %s - %s", title, message)
 		return us.notifyManager.ShowNotification(title, message)
 	}
-}
-
-// getAudioLevelDisplay determines how to display audio level based on config and environment
-func (us *UIService) getAudioLevelDisplay() string {
-	if us.config == nil {
-		return "disabled"
-	}
-
-	audioLevelDisplay := us.config.Notifications.AudioLevelDisplay
-	if audioLevelDisplay == "auto" {
-		if platform.IsGNOME() {
-			return "disabled" // GNOME doesn't support tooltips
-		} else {
-			return "tooltip" // KDE, XFCE, others support tooltips
-		}
-	}
-	return audioLevelDisplay
 }
 
 // Shutdown implements UIServiceInterface
