@@ -7,22 +7,30 @@
   <summary>Offline speech-to-text for AI assistants</summary>
   <description>
     <p>
-      A minimalist, privacy-focused desktop application that enables voice input for AI assistants 
-      without sending your voice to the cloud. Uses the Whisper model locally for speech recognition.
+      A minimalist, privacy-focused desktop application for offline speech-to-text.
+      Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants)
+      using the Whisper model locally for speech recognition.
       Licensed under MIT License - free and open source software.
     </p>
     <p>Features:</p>
     <ul>
       <li>100% offline speech recognition using Whisper.cpp</li>
-      <li>System tray integration with recording status</li>
-      <li>Configurable hotkeys including Microsoft Copilot key support</li>
-      <li>Multiple output modes: clipboard, direct typing simulation</li>
+      <li>Portable: available as AppImage and Flatpak</li>
       <li>Cross-platform support for X11 and Wayland</li>
+      <li>Desktop Environment Support: Native integration with GNOME, KDE, and other Linux DEs</li>
+      <li>Multi-language support with global hotkeys</li>
+      <li>Automatic typing and clipboard output modes</li>
+      <li>System tray integration with visual notifications</li>
+      <li>WebSocket API (optional) for advanced integrations</li>
       <li>Privacy-first: no data sent to external servers</li>
     </ul>
   </description>
   <screenshots>
     <screenshot type="default">
+      <caption>Quick demo: Voice recording and automatic text output</caption>
+      <video>https://github.com/user-attachments/assets/ff2ef633-40df-46be-b9c8-ab8ae16e0101</video>
+    </screenshot>
+    <screenshot>
       <caption>System tray integration with recording status indicators</caption>
       <image>https://raw.githubusercontent.com/AshBuk/speak-to-ai/main/icons/io.github.ashbuk.speak-to-ai.png</image>
     </screenshot>
@@ -38,6 +46,20 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.0.0" date="2025-01-15">
+      <description>
+        <p>First stable release with full functionality:</p>
+        <ul>
+          <li>Complete desktop environment support (GNOME, KDE, others)</li>
+          <li>Improved Wayland and X11 compatibility</li>
+          <li>Enhanced system tray integration with visual notifications</li>
+          <li>Multi-language support and global hotkeys</li>
+          <li>Optimized storage requirements (277.5MB total)</li>
+          <li>WebSocket API for advanced integrations</li>
+          <li>Tested on Fedora 42 and Ubuntu 24</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.1" date="2024-12-20">
       <description>
         <p>Bug fixes and improvements:</p>

@@ -85,6 +85,7 @@ Help us test different desktop environments:
 [v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) with working functionality, tested on my Fedora 42 (GNOME/Wayland) and Ubuntu 24. I'd appreciate feedback about your experience on your system!
 
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
+
 See changes: [CHANGELOG.md](CHANGELOG.md)
 
 
@@ -126,4 +127,3 @@ MIT — see `LICENSE`.
 [![Sponsor](https://img.shields.io/badge/Sponsor-💖-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/AshBuk) [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R3HZH8DX7SCJG)
 
 If you find Speak-to-AI useful, please consider supporting development.
-

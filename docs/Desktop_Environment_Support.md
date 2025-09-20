@@ -72,17 +72,15 @@ systemctl --user enable --now ydotool
 
 ## ⌨️ **Hotkey Support Status (for hotkey registration and binding)**
 
-### **Native System Install**
-- **GNOME/KDE (Wayland/X11):** D-Bus GlobalShortcuts portal → evdev fallback (requires `input` group)
-- **Other DEs (XFCE/MATE/LXQt):** D-Bus GlobalShortcuts portal → evdev fallback (requires `input` group)
-- **Tiling WMs (i3/sway/dwm):** evdev only (requires `input` group)
-- **Experience:** Modern DEs with portal support work without setup, others require `input` group
-
 ### **AppImage Package**
 - **All DEs:** **evdev first** → D-Bus GlobalShortcuts portal fallback
 - **Optimization:** AppImage prioritizes evdev due to potential D-Bus portal limitations in sandboxed environment
-- **Setup Required:** `sudo usermod -a -G input $USER` + logout/login for reliable operation
 - **Fallback:** If evdev unavailable, attempts D-Bus GlobalShortcuts portal
+- **Setup input group:** 
+```bash
+sudo usermod -a -G input $USER
+# Log out and log back in for changes to take effect
+```
 
 ### **Flatpak Package**
 - **All DEs:** **D-Bus GlobalShortcuts portal only** (evdev blocked by sandbox security)
