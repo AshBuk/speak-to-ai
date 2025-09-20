@@ -15,7 +15,7 @@ sudo pacman -S gnome-shell-extension-appindicator
 ```
 *KDE and other DEs have built-in system tray support, no need for appindicator*
 
-### **Text output status (outputter, for automatic insertion of speech-to-text into active window)**
+### **Text output status (outputter, for automatic text insertion into active window)**
 
 ***Current Implementation: Smart Auto-Selection***
 | Desktop Environment | Primary Tool | Fallback | Status |
@@ -28,7 +28,7 @@ sudo pacman -S gnome-shell-extension-appindicator
  *GNOME/Wayland requires ydotool setup. Other Wayland compositors may work with wtype without any setup - community testing needed*
  *RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!*
 
-**ydotool setup (recommended user-unit) — direct typing on Wayland**
+**Direct typing on Wayland - ydotool setup (recommended user-unit)**
 
 > 1) Install ydotool:
 ```bash
