@@ -5,6 +5,8 @@ package services
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -23,6 +25,11 @@ type IOService struct {
 	// Dependencies
 	ui  UIServiceInterface
 	cfg ConfigServiceInterface
+
+	// Transcription synchronization
+	mu                      sync.Mutex
+	transcriptionInProgress bool
+	transcriptionResultChan chan string
 }
 
 // NewIOService creates a new IOService instance
@@ -37,6 +44,62 @@ func NewIOService(
 		config:          config,
 		outputManager:   outputManager,
 		webSocketServer: webSocketServer,
+	}
+}
+
+// BeginTranscription marks start of transcription to protect clipboard reads
+func (ios *IOService) BeginTranscription() {
+	ios.mu.Lock()
+	defer ios.mu.Unlock()
+	ios.transcriptionInProgress = true
+	// Reset result channel for a new transcription session
+	ios.transcriptionResultChan = make(chan string, 1)
+
+	// Clear clipboard to prevent race condition with old content
+	// Only when clipboard mode is active to avoid unnecessary side-effects
+	if ios.outputManager != nil && ios.config.Output.DefaultMode == "clipboard" {
+		if err := ios.outputManager.CopyToClipboard(""); err != nil {
+			ios.logger.Debug("Failed to clear clipboard: %v", err)
+		}
+	}
+}
+
+// CompleteTranscription publishes result and clears protection
+func (ios *IOService) CompleteTranscription(result string) {
+	ios.mu.Lock()
+	inProgress := ios.transcriptionInProgress
+	ch := ios.transcriptionResultChan
+	ios.transcriptionInProgress = false
+	ios.mu.Unlock()
+
+	if inProgress && ch != nil {
+		select {
+		case ch <- result:
+		default:
+		}
+	}
+}
+
+// WaitForTranscription waits up to timeout for a result if protection is active
+func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error) {
+	ios.mu.Lock()
+	inProgress := ios.transcriptionInProgress
+	ch := ios.transcriptionResultChan
+	ios.mu.Unlock()
+
+	if !inProgress || ch == nil {
+		return "", nil
+	}
+
+	select {
+	case res := <-ch:
+		return res, nil
+	case <-time.After(timeout):
+		// Auto-cleanup on timeout
+		ios.mu.Lock()
+		ios.transcriptionInProgress = false
+		ios.mu.Unlock()
+		return "", fmt.Errorf("timeout waiting for transcription result")
 	}
 }
 

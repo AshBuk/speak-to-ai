@@ -155,6 +155,13 @@ func (as *AudioService) HandleStopRecording() error {
 		as.ui.ShowNotification(constants.NotifyRecordingStopped, constants.NotifyRecordingStopMsg)
 	}
 
+	// Signal IO that transcription is starting to protect clipboard reads
+	if as.io != nil {
+		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
+			ioSvc.BeginTranscription()
+		}
+	}
+
 	// Start async transcription
 	go as.transcribeAsync(audioFile)
 
@@ -322,6 +329,13 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 		}
 	}
 
+	// Notify IO about completion for clipboard protection release
+	if as.io != nil {
+		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
+			ioSvc.CompleteTranscription(sanitized)
+		}
+	}
+
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetSuccess(constants.MsgTranscriptionComplete)
@@ -334,6 +348,12 @@ func (as *AudioService) handleTranscriptionError(err error) {
 	if as.ui != nil {
 		as.ui.SetError(constants.MsgTranscriptionFailed)
 		as.ui.ShowNotification(constants.NotifyTranscriptionErr, err.Error())
+	}
+	// Release clipboard protection
+	if as.io != nil {
+		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
+			ioSvc.CompleteTranscription("")
+		}
 	}
 }
 
@@ -361,6 +381,12 @@ func (as *AudioService) handleTranscriptionCancellation(err error) {
 	if as.ui != nil {
 		as.ui.SetError("Transcription cancelled")
 		as.ui.ShowNotification("Transcription Cancelled", "Operation timed out")
+	}
+	// Release clipboard protection
+	if as.io != nil {
+		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
+			ioSvc.CompleteTranscription("")
+		}
 	}
 }
 
