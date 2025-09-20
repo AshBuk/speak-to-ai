@@ -258,7 +258,6 @@ func (as *AudioService) startStandardRecording() error {
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetRecordingState(true)
-		as.ui.SetTooltip("Recording... Press hotkey to stop")
 		as.ui.ShowNotification(constants.NotifyRecordingStarted, "Speak now...")
 	}
 

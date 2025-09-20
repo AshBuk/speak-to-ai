@@ -24,9 +24,6 @@ type MockTrayManager struct {
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
 	onSelectOutputMode     func(mode string) error
-	// Testing helpers
-	setTooltipCalled bool
-	lastTooltipValue string
 }
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray
@@ -54,12 +51,6 @@ func (tm *MockTrayManager) SetRecordingState(isRecording bool) {
 	} else {
 		tm.logger.Info("Mock tray: Recording OFF")
 	}
-}
-
-func (tm *MockTrayManager) SetTooltip(tooltip string) {
-	tm.setTooltipCalled = true
-	tm.lastTooltipValue = tooltip
-	tm.logger.Info("Mock tray tooltip: %s", tooltip)
 }
 
 func (tm *MockTrayManager) UpdateSettings(config *config.Config) {
@@ -119,18 +110,4 @@ func (tm *MockTrayManager) SetCaptureOnceSupport(callback func() bool) {
 // SetHotkeyRebindAction sets callback for hotkey rebind (mock)
 func (tm *MockTrayManager) SetHotkeyRebindAction(onRebind func(action string) error) {
 	tm.logger.Info("Mock tray: hotkey rebind action set")
-}
-
-// Testing helper methods
-func (tm *MockTrayManager) WasSetTooltipCalled() bool {
-	return tm.setTooltipCalled
-}
-
-func (tm *MockTrayManager) GetLastTooltipValue() string {
-	return tm.lastTooltipValue
-}
-
-func (tm *MockTrayManager) Reset() {
-	tm.setTooltipCalled = false
-	tm.lastTooltipValue = ""
 }

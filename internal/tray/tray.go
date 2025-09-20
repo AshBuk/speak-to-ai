@@ -98,7 +98,6 @@ func (tm *TrayManager) Start() {
 func (tm *TrayManager) onReady() {
 	systray.SetIcon(tm.iconMicOff)
 	systray.SetTitle("Speak-to-AI")
-	systray.SetTooltip("Speak-to-AI: Offline Speech-to-Text")
 
 	// Create main menu items
 	tm.toggleItem = systray.AddMenuItem(fmt.Sprintf("%s Start Recording", constants.IconRecording), "Start/Stop recording")
@@ -205,18 +204,11 @@ func (tm *TrayManager) SetRecordingState(isRecording bool) {
 
 	if isRecording {
 		systray.SetIcon(tm.iconMicOn)
-		systray.SetTooltip("Speak-to-AI: Recording...")
 		tm.toggleItem.SetTitle(fmt.Sprintf("%s Stop Recording", constants.IconStop))
 	} else {
 		systray.SetIcon(tm.iconMicOff)
-		systray.SetTooltip("Speak-to-AI: Ready")
 		tm.toggleItem.SetTitle(fmt.Sprintf("%s Start Recording", constants.IconRecording))
 	}
-}
-
-// SetTooltip sets the tooltip text for the tray icon
-func (tm *TrayManager) SetTooltip(tooltip string) {
-	systray.SetTooltip(tooltip)
 }
 
 // Stop stops the tray manager
