@@ -29,6 +29,8 @@
   Uses the Whisper model locally for speech recognition. 
   Written in Go, an optimized desktop application for Linux.**
 
+https://github.com/user-attachments/assets/ff2ef633-40df-46be-b9c8-ab8ae16e0101
+
 ## Features
 
 - **Portable**: available as AppImage and Flatpak
@@ -66,66 +68,28 @@ flatpak run io.github.ashbuk.speak-to-ai
 
 ## Desktop Environment Compatibility
 
-GNOME (Wayland/X11) and KDE Plasma (Wayland/X11) have native support. Help us test different desktop environments:
+Help us test different desktop environments:
 
 📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)**
 
-**For system tray integration on GNOME**:
-```bash
-# Ubuntu/Debian:
-sudo apt install gnome-shell-extension-appindicator
-# Fedora:
-sudo dnf install gnome-shell-extension-appindicator
-# Arch Linux:
-sudo pacman -S gnome-shell-extension-appindicator
-```
-*KDE and other DEs have built-in system tray support*
+**For system tray integration on GNOME, [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
+> KDE and other DEs have built-in system tray support out of the box
 
-**Direct typing on Wayland (GNOME and others) — ydotool (user unit, recommended)**
+**For automatic typing on Wayland (GNOME and others) — [set up ydotool](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---ydotool-setup-recommended-user-unit) ↑**
+> X11 has native typing support with xdotool out of the box
 
-If text doesn't appear automatically, the app falls back to clipboard mode. To enable direct typing on Wayland:
-
-> 1) Install ydotool:
-```bash
-sudo dnf install ydotool   # Fedora
-sudo apt install ydotool   # Ubuntu/Debian
-```
-> 2) Allow access to /dev/uinput for non-root:
-```bash
-echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' | sudo tee /etc/udev/rules.d/99-uinput.rules
-sudo udevadm control --reload && sudo udevadm trigger
-sudo usermod -a -G input $USER
-# Re-login required for group change
-```
-> 3) Run ydotool as user service (no root):
-```bash
-mkdir -p ~/.config/systemd/user
-tee ~/.config/systemd/user/ydotool.service >/dev/null <<'EOF'
-[Unit]
-Description=ydotool user daemon
-
-[Service]
-ExecStart=/usr/bin/ydotoold --socket-perm=0660
-Restart=always
-
-[Install]
-WantedBy=default.target
-EOF
-```
-> 4) Restart and run the service
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now ydotool
-```
-*This setup uses user service: safer and no root privileges needed*
-*X11 works out-of-the-box without additional setups*
+> If automatic typing doesn't appear automatically, the app falls back to clipboard (Ctrl + V) mode
 
 ## ✦ Project Status
 
-Functionality and Go code are ready. Currently improving UI/UX as for now it's more geek-friendly than user-friendly. Working on quality AppImage and Flatpak builds.
+[v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) with working functionality, tested on my Fedora 42 (GNOME/Wayland) and Ubuntu 24. I'd appreciate feedback about your experience on your system!
+
+For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
+
+See changes: [CHANGELOG.md](CHANGELOG.md)
 
 
-## ✦ For Developers
+## For Developers
 
 Start onboarding with:
 
@@ -135,18 +99,18 @@ Start onboarding with:
 - [docker/README.md](docker/README.md) — Docker-based development
 
 
-## ✦ System Requirements
+## System Requirements
 
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
 - **Audio**: Microphone/recording capability
-- **Storage**: ~200MB for model and dependencies
+- **Storage**: 277.5MB (whisper small q5 model, dependencies, go-binary)
 - **Memory**: ~500MB RAM during operation
 
 ## ✦ Acknowledgments
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
-- [getlantern/systray](https://github.com/getlantern/systray) for cross-platform system tray support
+- [fyne.io/systray](https://github.com/fyne-io/systray) for cross-platform system tray support
 - OpenAI for the original Whisper model
 
 ---
@@ -162,5 +126,5 @@ MIT — see `LICENSE`.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-💖-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/AshBuk) [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R3HZH8DX7SCJG)
 
-If you find Speak-to-AI useful, please consider supporting development. Your support helps improve the app, real-time streaming, and security hardening.
+If you find Speak-to-AI useful, please consider supporting development.
 
