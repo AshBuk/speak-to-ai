@@ -42,7 +42,7 @@ sudo udevadm control --reload && sudo udevadm trigger
 sudo usermod -a -G input $USER
 # Re-login required for group change
 ```
-> 3) Run ydotool as user service (no root):
+> 3) Run ydotool as user-unit service (no root):
 ```bash
 mkdir -p ~/.config/systemd/user
 tee ~/.config/systemd/user/ydotool.service >/dev/null <<'EOF'
