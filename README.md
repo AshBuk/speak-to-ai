@@ -85,7 +85,6 @@ Help us test different desktop environments:
 [v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) with working functionality, tested on my Fedora 42 (GNOME/Wayland) and Ubuntu 24. I'd appreciate feedback about your experience on your system!
 
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
-
 See changes: [CHANGELOG.md](CHANGELOG.md)
 
 
