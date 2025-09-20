@@ -109,7 +109,10 @@ build_flatpak_package() {
     
     BUILDER_FLAGS="--force-clean --install-deps-from=flathub --ccache --repo=dist/flatpak/repo"
     if [ -f "/.dockerenv" ]; then
-        BUILDER_FLAGS="${BUILDER_FLAGS} --disable-sandbox"
+        # In Docker, disable sandbox and rofiles-fuse (kernel usually lacks fuse in CI containers)
+        BUILDER_FLAGS="${BUILDER_FLAGS} --disable-sandbox --disable-rofiles-fuse"
+        # Fallback for older flatpak-builder versions without --disable-rofiles-fuse
+        export FLATPAK_BUILDER_NOROFILES=1
     fi
     
     # shellcheck disable=SC2086
