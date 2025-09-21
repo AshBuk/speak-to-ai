@@ -1,5 +1,5 @@
 # Lean Flatpak builder - downloads runtimes at build time, not in image
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # Avoid timezone interaction
 ENV DEBIAN_FRONTEND=noninteractive
@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     flatpak \
     flatpak-builder \
+    appstream-glib \
+    appstream-compose \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -71,8 +73,7 @@ ENV CGO_ENABLED=1 \
 
 # Pre-install Flatpak runtimes/extensions required by manifest
 RUN flatpak install -y flathub org.gnome.Platform//47 org.gnome.Sdk//47 \
- && flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//24.08 \
- && flatpak install -y flathub org.freedesktop.Sdk.Extension.vala//24.08
+ && flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//24.08
 
 # Build Flatpak bundle at image build time (script installs deps and bundles)
 RUN /usr/local/bin/build-flatpak.sh --build
