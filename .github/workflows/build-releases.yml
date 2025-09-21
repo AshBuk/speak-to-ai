@@ -169,189 +169,189 @@ jobs:
           dist/*.AppImage
           !dist/tools/
         
-  build-flatpak:
-    strategy:
-      matrix:
-        os: [ubuntu-24.04]
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.24.1'
-        
-    - name: Export CGO environment for Flatpak
-      run: |
-        echo "=== Setting up CGO environment for Flatpak ==="
-        echo "CGO_ENABLED=1" >> $GITHUB_ENV
-        echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
-        echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
-        echo "PKG_CONFIG_PATH=$PWD/lib" >> $GITHUB_ENV
-        
-    # Temporarily disable Go modules cache due to tar extraction issues
-    # - name: Cache Go modules  
+  # build-flatpak:
+    # strategy:
+    #   matrix:
+    #     os: [ubuntu-24.04]
+    # runs-on: ${{ matrix.os }}
+    #
+    # steps:
+    # - name: Checkout code
+    #   uses: actions/checkout@v4
+    #
+    # - name: Set up Go
+    #   uses: actions/setup-go@v4
+    #   with:
+    #     go-version: '1.24.1'
+    #
+    # - name: Export CGO environment for Flatpak
+    #   run: |
+    #     echo "=== Setting up CGO environment for Flatpak ==="
+    #     echo "CGO_ENABLED=1" >> $GITHUB_ENV
+    #     echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
+    #     echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
+    #     echo "LD_LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
+    #     echo "PKG_CONFIG_PATH=$PWD/lib" >> $GITHUB_ENV
+    #
+    # # Temporarily disable Go modules cache due to tar extraction issues
+    # # - name: Cache Go modules
+    # #   uses: actions/cache@v4
+    # #   with:
+    # #     path: |
+    # #       ~/.cache/go-build
+    # #       ~/go/pkg/mod
+    # #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    # #     restore-keys: |
+    # #       ${{ runner.os }}-go-
+    #
+    # - name: Cache Flatpak builder
     #   uses: actions/cache@v4
     #   with:
     #     path: |
-    #       ~/.cache/go-build
-    #       ~/go/pkg/mod
-    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    #       .flatpak-builder
+    #       dist/flatpak/.flatpak-builder
+    #     key: ${{ runner.os }}-flatpak-${{ hashFiles('io.github.ashbuk.speak-to-ai.json') }}
     #     restore-keys: |
-    #       ${{ runner.os }}-go-
-          
-    - name: Cache Flatpak builder
-      uses: actions/cache@v4
-      with:
-        path: |
-          .flatpak-builder
-          dist/flatpak/.flatpak-builder
-        key: ${{ runner.os }}-flatpak-${{ hashFiles('io.github.ashbuk.speak-to-ai.json') }}
-        restore-keys: |
-          ${{ runner.os }}-flatpak-
-      
-    - name: Debug - Show environment
-      run: |
-        echo "=== Flatpak Environment Debug ==="
-        echo "Working directory: $(pwd)"
-        echo "Flatpak manifest exists:"
-        ls -la io.github.ashbuk.speak-to-ai.json
-        echo "Flatpak script exists:"
-        ls -la bash-scripts/build-flatpak.sh
-        echo "========================"
-      
-    - name: Install Flatpak and dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          flatpak \
-          flatpak-builder \
-          cmake \
-          build-essential \
-          libayatana-appindicator3-dev \
-          libgtk-3-dev \
-          libglib2.0-dev \
-          libdbus-1-dev \
-          libdbus-glib-1-dev \
-          ninja-build \
-          autotools-dev \
-          automake \
-          autoconf \
-          libtool \
-          valgrind \
-          valac \
-          appstream-compose
-        # Use user remote instead of system remote
-        flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
-        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//24.08
-        flatpak install --user -y flathub org.freedesktop.Sdk.Extension.vala//24.08
-        
-    - name: Download Whisper model if not present
-      run: |
-        if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
-          echo "Downloading Whisper small-q5_1 model..."
-          mkdir -p sources/language-models
-          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
-            echo "❌ Failed to download small-q5_1 model"; exit 1;
-          }
-          mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
-          echo "Model downloaded, size: $(ls -lh sources/language-models/small-q5_1.bin)"
-        fi
-        
-    - name: Install make for Flatpak build
-      run: |
-        sudo apt-get install -y make
-        
-    - name: Pre-download Go modules for Flatpak
-      run: |
-        echo "Pre-downloading Go modules..."
-        go mod download
-        go mod verify
-    
-    - name: Configure git for authenticated GitHub clones
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "Configuring git to use token for https://github.com clones"
-        git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf "x-access-token:%s" "$GH_TOKEN" | base64 -w0)"
-        git config --global url."https://github.com/".insteadof "git@github.com:"
-        
-    - name: Verify manifest checksums
-      run: |
-        echo "Verifying manifest checksums are correct..."
-        grep -q "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847" io.github.ashbuk.speak-to-ai.json && echo "✅ xdotool SHA256 correct" || echo "❌ xdotool SHA256 incorrect"
-        grep -q "da91786d828b6a6e29b884bc510473939eda052658ebef87d7bdeafa6a8746f9" io.github.ashbuk.speak-to-ai.json && echo "✅ wtype SHA256 correct" || echo "❌ wtype SHA256 incorrect"
-        
-    - name: Build Flatpak package
-      run: |
-        mkdir -p dist/flatpak
-        
-        # Build with dependencies
-        flatpak-builder \
-          --force-clean \
-          --user \
-          --install-deps-from=flathub \
-          --install-deps-only \
-          --ccache \
-          --repo=dist/flatpak/repo \
-          dist/flatpak/build-dir \
-          io.github.ashbuk.speak-to-ai.json
-          
-        # Build the actual package
-        flatpak-builder \
-          --force-clean \
-          --user \
-          --ccache \
-          --repo=dist/flatpak/repo \
-          dist/flatpak/build-dir \
-          io.github.ashbuk.speak-to-ai.json
-          
-    - name: Create flatpak bundle
-      env:
-        APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
-      run: |
-        OUT_NAME="speak-to-ai-${APP_VERSION}.flatpak"
-        flatpak build-bundle \
-          --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
-          dist/flatpak/repo \
-          "dist/${OUT_NAME}" \
-          io.github.ashbuk.speak-to-ai
-          
-    - name: Verify Flatpak
-      run: |
-        # Check flatpak file size and structure
-        echo "Checking Flatpak artifact..."
-        ls -lh dist/*.flatpak
-        file dist/*.flatpak
-        
-        # Verify it's a valid flatpak bundle
-        if file dist/*.flatpak | grep -q "Squashfs filesystem"; then
-          echo "✅ Valid Flatpak bundle structure"
-        else
-          echo "⚠️ Flatpak bundle validation failed"
-        fi
-        
-        # Check file size (should be reasonable, not too small or huge)
-        SIZE=$(stat -c%s dist/*.flatpak | head -n1 | awk '{print $1}')
-        if [ $SIZE -gt 10485760 ] && [ $SIZE -lt 524288000 ]; then  # 10MB < size < 500MB
-          echo "✅ Flatpak size is reasonable: $(numfmt --to=iec $SIZE)"
-        else
-          echo "⚠️ Flatpak size seems unusual: $(numfmt --to=iec $SIZE)"
-        fi
-          
-    - name: Upload Flatpak artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: speak-to-ai-flatpak-${{ matrix.os }}
-        path: dist/*.flatpak
+    #       ${{ runner.os }}-flatpak-
+    #
+    # - name: Debug - Show environment
+    #   run: |
+    #     echo "=== Flatpak Environment Debug ==="
+    #     echo "Working directory: $(pwd)"
+    #     echo "Flatpak manifest exists:"
+    #     ls -la io.github.ashbuk.speak-to-ai.json
+    #     echo "Flatpak script exists:"
+    #     ls -la bash-scripts/build-flatpak.sh
+    #     echo "========================"
+    #
+    # - name: Install Flatpak and dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y \
+    #       flatpak \
+    #       flatpak-builder \
+    #       cmake \
+    #       build-essential \
+    #       libayatana-appindicator3-dev \
+    #       libgtk-3-dev \
+    #       libglib2.0-dev \
+    #       libdbus-1-dev \
+    #       libdbus-glib-1-dev \
+    #       ninja-build \
+    #       autotools-dev \
+    #       automake \
+    #       autoconf \
+    #       libtool \
+    #       valgrind \
+    #       valac \
+    #       appstream-compose
+    #     # Use user remote instead of system remote
+    #     flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    #     flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
+    #     flatpak install --user -y flathub org.freedesktop.Sdk.Extension.golang//24.08
+    #     flatpak install --user -y flathub org.freedesktop.Sdk.Extension.vala//24.08
+    #
+    # - name: Download Whisper model if not present
+    #   run: |
+    #     if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
+    #       echo "Downloading Whisper small-q5_1 model..."
+    #       mkdir -p sources/language-models
+    #       curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
+    #         echo "❌ Failed to download small-q5_1 model"; exit 1;
+    #       }
+    #       mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
+    #       echo "Model downloaded, size: $(ls -lh sources/language-models/small-q5_1.bin)"
+    #     fi
+    #
+    # - name: Install make for Flatpak build
+    #   run: |
+    #     sudo apt-get install -y make
+    #
+    # - name: Pre-download Go modules for Flatpak
+    #   run: |
+    #     echo "Pre-downloading Go modules..."
+    #     go mod download
+    #     go mod verify
+    #
+    # - name: Configure git for authenticated GitHub clones
+    #   env:
+    #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: |
+    #     echo "Configuring git to use token for https://github.com clones"
+    #     git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf "x-access-token:%s" "$GH_TOKEN" | base64 -w0)"
+    #     git config --global url."https://github.com/".insteadof "git@github.com:"
+    #
+    # - name: Verify manifest checksums
+    #   run: |
+    #     echo "Verifying manifest checksums are correct..."
+    #     grep -q "82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847" io.github.ashbuk.speak-to-ai.json && echo "✅ xdotool SHA256 correct" || echo "❌ xdotool SHA256 incorrect"
+    #     grep -q "da91786d828b6a6e29b884bc510473939eda052658ebef87d7bdeafa6a8746f9" io.github.ashbuk.speak-to-ai.json && echo "✅ wtype SHA256 correct" || echo "❌ wtype SHA256 incorrect"
+    #
+    # - name: Build Flatpak package
+    #   run: |
+    #     mkdir -p dist/flatpak
+    #
+    #     # Build with dependencies
+    #     flatpak-builder \
+    #       --force-clean \
+    #       --user \
+    #       --install-deps-from=flathub \
+    #       --install-deps-only \
+    #       --ccache \
+    #       --repo=dist/flatpak/repo \
+    #       dist/flatpak/build-dir \
+    #       io.github.ashbuk.speak-to-ai.json
+    #
+    #     # Build the actual package
+    #     flatpak-builder \
+    #       --force-clean \
+    #       --user \
+    #       --ccache \
+    #       --repo=dist/flatpak/repo \
+    #       dist/flatpak/build-dir \
+    #       io.github.ashbuk.speak-to-ai.json
+    #
+    # - name: Create flatpak bundle
+    #   env:
+    #     APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+    #   run: |
+    #     OUT_NAME="speak-to-ai-${APP_VERSION}.flatpak"
+    #     flatpak build-bundle \
+    #       --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+    #       dist/flatpak/repo \
+    #       "dist/${OUT_NAME}" \
+    #       io.github.ashbuk.speak-to-ai
+    #
+    # - name: Verify Flatpak
+    #   run: |
+    #     # Check flatpak file size and structure
+    #     echo "Checking Flatpak artifact..."
+    #     ls -lh dist/*.flatpak
+    #     file dist/*.flatpak
+    #
+    #     # Verify it's a valid flatpak bundle
+    #     if file dist/*.flatpak | grep -q "Squashfs filesystem"; then
+    #       echo "✅ Valid Flatpak bundle structure"
+    #     else
+    #       echo "⚠️ Flatpak bundle validation failed"
+    #     fi
+    #
+    #     # Check file size (should be reasonable, not too small or huge)
+    #     SIZE=$(stat -c%s dist/*.flatpak | head -n1 | awk '{print $1}')
+    #     if [ $SIZE -gt 10485760 ] && [ $SIZE -lt 524288000 ]; then  # 10MB < size < 500MB
+    #       echo "✅ Flatpak size is reasonable: $(numfmt --to=iec $SIZE)"
+    #     else
+    #       echo "⚠️ Flatpak size seems unusual: $(numfmt --to=iec $SIZE)"
+    #     fi
+    #
+    # - name: Upload Flatpak artifact
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: speak-to-ai-flatpak-${{ matrix.os }}
+    #     path: dist/*.flatpak
         
   create-release:
-    needs: [build-appimage, build-flatpak]
+    needs: [build-appimage] # , build-flatpak
     runs-on: ubuntu-24.04
     if: startsWith(github.ref, 'refs/tags/')
     
@@ -366,19 +366,19 @@ jobs:
         path: ./artifacts/
         merge-multiple: true
         
-    - name: Download Flatpak artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: speak-to-ai-flatpak-*
-        path: ./artifacts/
-        merge-multiple: true
+    # - name: Download Flatpak artifacts
+    #   uses: actions/download-artifact@v4
+    #   with:
+    #     pattern: speak-to-ai-flatpak-*
+    #     path: ./artifacts/
+    #     merge-multiple: true
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
           ./artifacts/*.AppImage
-          ./artifacts/*.flatpak
+          # ./artifacts/*.flatpak
         body: |
           ## Speak-to-AI Release ${{ github.ref_name }}
           
