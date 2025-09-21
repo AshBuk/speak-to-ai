@@ -73,7 +73,7 @@ systemctl --user enable --now ydotool
 ## ⌨️ **Hotkey Support Status (for hotkey registration and binding)**
 
 ### **AppImage Package**
-- **All DEs:** **evdev first** → D-Bus GlobalShortcuts portal fallback
+- **All DEs:** **evdev first (requires input group)** → D-Bus GlobalShortcuts portal fallback
 - **Optimization:** AppImage prioritizes evdev due to potential D-Bus portal limitations in sandboxed environment
 - **Fallback:** If evdev unavailable, attempts D-Bus GlobalShortcuts portal
 - **Setup input group:** 
@@ -82,14 +82,14 @@ sudo usermod -a -G input $USER
 # Log out and log back in for changes to take effect
 ```
 
-### **Flatpak Package**
+<!-- ### **Flatpak Package - upcoming feature!**
 - **All DEs:** **D-Bus GlobalShortcuts portal only** (evdev blocked by sandbox security)
 - **GNOME/KDE:** Works out-of-box via GlobalShortcuts portal
 - **Other DEs:** Limited functionality if GlobalShortcuts portal unavailable
-- **Experience:** Best on modern DEs with portal support
+- **Experience:** Best on modern DEs with portal support -->
 
 ### **Alternative for Tiling WMs**
 - **System hotkey tools:** sxhkd, xbindkeys, etc. + webhook integration
 
-*Last updated: 2025-09-17*  
+*Last updated: 2025-09-22*  
 *Tested on: Fedora 42, Ubuntu 24.04*
