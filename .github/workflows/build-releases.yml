@@ -19,7 +19,7 @@ jobs:
   build-appimage:
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -172,7 +172,7 @@ jobs:
   build-flatpak:
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -243,7 +243,8 @@ jobs:
           autoconf \
           libtool \
           valgrind \
-          valac
+          valac \
+          appstream-compose
         # Use user remote instead of system remote
         flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
@@ -351,7 +352,7 @@ jobs:
         
   create-release:
     needs: [build-appimage, build-flatpak]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:

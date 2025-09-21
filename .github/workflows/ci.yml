@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
           golangci-lint run -v --build-tags=systray --timeout=5m
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: lint
     steps:
       - name: Checkout code

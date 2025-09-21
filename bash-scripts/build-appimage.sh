@@ -91,7 +91,6 @@ copy_binaries() {
     echo "Copying system dependencies..."
     copy_binary_if_exists "xsel"
     copy_binary_if_exists "wl-copy"
-    copy_binary_if_exists "wl-paste"
     copy_binary_if_exists "wtype"
     copy_binary_if_exists "ydotool"
     copy_binary_if_exists "notify-send"
@@ -170,7 +169,7 @@ else
     # No hotkey support detected
     echo "Warning: Hotkeys may not work without additional setup."
     echo "For hotkeys on GNOME/KDE: Ensure D-Bus session is running"
-    echo "For hotkeys on other DEs: sudo usermod -a -G input \$USER"
+    echo "For hotkeys on other DEs: sudo usermod -a -G input $USER"
     echo "Then log out and log back in."
     echo ""
 fi
@@ -332,7 +331,6 @@ build_appimage() {
       "usr/bin/wtype" \
       "usr/bin/ydotool" \
       "usr/bin/wl-copy" \
-      "usr/bin/wl-paste" \
       "usr/bin/xsel" \
       "usr/bin/arecord" \
       "usr/bin/notify-send"; do
