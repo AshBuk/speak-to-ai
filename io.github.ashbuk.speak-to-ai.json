@@ -29,6 +29,8 @@
         "--talk-name=org.ayatana.indicator.location",
         "--system-talk-name=org.freedesktop.UPower",
         "--own-name=org.mpris.MediaPlayer2.speak-to-ai",
+        "--own-name=org.kde.StatusNotifierItem.*",
+        "--own-name=org.freedesktop.StatusNotifierItem.*",
         "--talk-name=org.gnome.Shell",
         "--talk-name=org.kde.kglobalaccel",
         "--talk-name=org.freedesktop.portal.Desktop",

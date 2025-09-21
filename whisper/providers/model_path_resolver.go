@@ -93,6 +93,14 @@ func (r *ModelPathResolver) BuildModelFileName(modelType, precision string) stri
 
 // GetBundledModelPath returns the path to the bundled small-q5_1 model
 func (r *ModelPathResolver) GetBundledModelPath() string {
+	// Check if running in Flatpak and use the built-in model path
+	if os.Getenv("FLATPAK_ID") != "" {
+		flatpakModelPath := "/app/share/speak-to-ai/models/small-q5_1.bin"
+		if _, err := os.Stat(flatpakModelPath); err == nil {
+			return flatpakModelPath
+		}
+	}
+
 	// Use the configured model path if it points to small-q5_1
 	if r.config.General.ModelPath != "" && strings.Contains(r.config.General.ModelPath, "small-q5_1") {
 		return r.config.General.ModelPath
