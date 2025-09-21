@@ -9,9 +9,11 @@ package integration
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // Integration tests for complete user scenarios
@@ -28,20 +30,12 @@ func TestApplicationInitialization(t *testing.T) {
 	// Create test config
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-	cfg.General.ModelPath = filepath.Join(tempDir, "test-model.bin")
 	cfg.General.TempAudioPath = tempDir
 	cfg.Output.DefaultMode = "clipboard" // Safe for testing
 	cfg.WebServer.Enabled = false
 
-	// Create mock model file
-	modelFile, err := os.Create(cfg.General.ModelPath)
-	if err != nil {
-		t.Fatalf("Failed to create mock model: %v", err)
-	}
-	modelFile.Close()
-
 	// Test config validation
-	err = config.ValidateConfig(cfg)
+	err := config.ValidateConfig(cfg)
 	if err != nil {
 		t.Logf("Config validation failed (expected in test environment): %v", err)
 	}
@@ -60,7 +54,6 @@ func TestConfigurationLoading(t *testing.T) {
 			configData: `
 general:
   debug: false
-  model_path: "test-model.bin"
   language: "en"
 hotkeys:
   start_recording: "altgr+comma"
@@ -162,45 +155,46 @@ func TestModelManagement(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	tempDir := t.TempDir()
+	// Test bundled model path resolution
+	t.Run("bundled_model_resolution", func(t *testing.T) {
+		cfg := &config.Config{}
+		config.SetDefaultConfig(cfg)
 
-	// Test model path validation
-	validPath := filepath.Join(tempDir, "valid-model.bin")
-	invalidPath := filepath.Join(tempDir, "nonexistent.bin")
+		// Test ModelManager's bundled model resolution
+		modelManager := whisper.NewModelManager(cfg)
 
-	// Create a dummy model file
-	err := os.WriteFile(validPath, []byte("dummy model data"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create dummy model: %v", err)
-	}
+		// This should always return a path (even if file doesn't exist in dev)
+		modelPath, err := modelManager.GetModelPath()
 
-	// Test various model paths
-	testCases := []struct {
-		name      string
-		path      string
-		expectErr bool
-	}{
-		{"valid_model", validPath, false},
-		{"nonexistent_model", invalidPath, true},
-		{"empty_path", "", true},
-	}
+		if err != nil {
+			t.Logf("Bundled model not found (expected in development): %v", err)
+			// In development this is expected - bundled models only exist in AppImage/Flatpak
+		} else {
+			t.Logf("Bundled model path resolved to: %s", modelPath)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			cfg := &config.Config{}
-			config.SetDefaultConfig(cfg)
-			cfg.General.ModelPath = tc.path
+			// Verify the path is one of the expected bundled paths
+			expectedPaths := []string{
+				"/app/share/speak-to-ai/models/small-q5_1.bin", // Flatpak
+			}
 
-			// Validate the model path
-			if tc.path != "" {
-				_, err := os.Stat(tc.path)
-				hasErr := err != nil
-				if tc.expectErr != hasErr {
-					t.Errorf("Expected error: %v, got error: %v", tc.expectErr, hasErr)
+			isValidPath := false
+			for _, expected := range expectedPaths {
+				if modelPath == expected {
+					isValidPath = true
+					break
 				}
 			}
-		})
-	}
+
+			// Also check for AppImage pattern (contains sources/language-models)
+			if !isValidPath && strings.Contains(modelPath, "sources/language-models/small-q5_1.bin") {
+				isValidPath = true
+			}
+
+			if !isValidPath {
+				t.Errorf("Unexpected bundled model path: %s", modelPath)
+			}
+		}
+	})
 }
 
 func TestConcurrentOperations(t *testing.T) {
@@ -216,7 +210,6 @@ func TestConcurrentOperations(t *testing.T) {
 	configContent := `
 general:
   debug: false
-  model_path: "test-model.bin"
 output:
   default_mode: "clipboard"
 `

@@ -59,43 +59,32 @@ check_permissions() {
 # Function to set up configuration on first launch
 setup_configuration() {
     echo "🔧 Setting up configuration..."
-    
+
     # Create configuration directory structure
-    mkdir -p "${FLATPAK_CONFIG_DIR}/models"
     mkdir -p "${FLATPAK_CONFIG_DIR}/logs"
-    
+
     # Copy default config if not exists
     if [ ! -f "${FLATPAK_CONFIG_DIR}/config.yaml" ]; then
         echo "📋 Creating default configuration..."
         cp "/app/share/speak-to-ai/config.yaml" "${FLATPAK_CONFIG_DIR}/config.yaml"
-        
-        # Update config paths for Flatpak environment
-        sed -i "s|sources/language-models/small-q5_1.bin|${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
-        # Note: whisper library is used via Go bindings, not CLI binary
-        
+
         echo "✅ Configuration created successfully"
     else
         echo "✅ Configuration already exists"
     fi
 }
 
-# Function to set up Whisper model on first launch
-setup_whisper_model() {
-    echo "📥 Setting up Whisper model..."
-    
-    # Copy model to user directory if not exists
-    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin" ]; then
-        echo "📦 Copying Whisper model to user directory..."
-        if [ -f "/app/share/speak-to-ai/models/small-q5_1.bin" ]; then
-            cp "/app/share/speak-to-ai/models/small-q5_1.bin" "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin"
-            echo "✅ Model copied successfully"
-        else
-            echo "❌ Error: Model not found in Flatpak installation"
-            echo "   Please check the Flatpak build includes the model"
-            return 1
-        fi
+# Function to verify Whisper model exists in Flatpak
+verify_whisper_model() {
+    echo "📥 Verifying Whisper model..."
+
+    # Check bundled model exists
+    if [ -f "/app/share/speak-to-ai/models/small-q5_1.bin" ]; then
+        echo "✅ Bundled model found"
     else
-        echo "✅ Model already exists"
+        echo "❌ Error: Bundled model not found in Flatpak installation"
+        echo "   Please check the Flatpak build includes the model"
+        return 1
     fi
 }
 
@@ -117,9 +106,9 @@ verify_installation() {
         has_errors=true
     fi
     
-    # Check model
-    if [ ! -f "${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin" ]; then
-        echo "❌ Whisper model not found"
+    # Check bundled model
+    if [ ! -f "/app/share/speak-to-ai/models/small-q5_1.bin" ]; then
+        echo "❌ Bundled Whisper model not found"
         has_errors=true
     fi
     
@@ -143,9 +132,9 @@ echo "🚀 Initializing Speak-to-AI..."
 # Check permissions and show warnings
 check_permissions
 
-# Set up configuration and model
+# Set up configuration and verify model
 setup_configuration
-setup_whisper_model
+verify_whisper_model
 
 # Verify installation
 if ! verify_installation; then

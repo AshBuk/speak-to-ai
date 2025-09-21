@@ -42,11 +42,6 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 		cf.config.Logger.Warning("Failed to initialize model manager: %v", err)
 	}
 
-	// Override model path if provided
-	if cf.config.ModelPath != "" {
-		cf.config.Config.General.ModelPath = cf.config.ModelPath
-	}
-
 	// Ensure model is available
 	if err := cf.ensureModelAvailable(components.ModelManager); err != nil {
 		return nil, fmt.Errorf("failed to ensure model availability: %w", err)

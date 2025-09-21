@@ -17,6 +17,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // Platform-specific integration tests
@@ -177,16 +178,18 @@ func TestSecurityValidation(t *testing.T) {
 }
 
 func TestModelAvailability(t *testing.T) {
-	// Test model file handling
-	t.Run("default_model_path", func(t *testing.T) {
+	// Test bundled model path handling
+	t.Run("bundled_model_path", func(t *testing.T) {
 		cfg := &config.Config{}
 		config.SetDefaultConfig(cfg)
 
-		// Check if default model path exists
-		if _, err := os.Stat(cfg.General.ModelPath); err != nil {
-			t.Logf("Default model not found at %s (expected for fresh install)", cfg.General.ModelPath)
+		// Test ModelManager's bundled model path resolution
+		modelManager := whisper.NewModelManager(cfg)
+		modelPath, err := modelManager.GetModelPath()
+		if err != nil {
+			t.Logf("Bundled model not found (expected for development): %v", err)
 		} else {
-			t.Logf("Default model found at %s", cfg.General.ModelPath)
+			t.Logf("Bundled model found at %s", modelPath)
 		}
 	})
 

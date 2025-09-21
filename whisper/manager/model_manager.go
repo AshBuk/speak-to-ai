@@ -42,12 +42,7 @@ func (m *ModelManager) Initialize() error {
 
 // GetModelPath returns the path to the bundled small-q5_1 model
 func (m *ModelManager) GetModelPath() (string, error) {
-	// If model path is specified directly and exists, use it
-	if m.config.General.ModelPath != "" && utils.IsValidFile(m.config.General.ModelPath) {
-		return m.config.General.ModelPath, nil
-	}
-
-	// Use the bundled small-q5_1 model path
+	// Always use bundled model path - no config path fallback
 	modelPath := m.pathResolver.GetBundledModelPath()
 
 	// Verify the bundled model exists

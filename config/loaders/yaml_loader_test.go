@@ -33,7 +33,6 @@ func TestLoadConfig(t *testing.T) {
 general:
   debug: true
   whisper_model: "small-q5_1"
-  model_path: "sources/language-models/small-q5_1.bin"
   language: "en"
   temp_audio_path: "/tmp"
 

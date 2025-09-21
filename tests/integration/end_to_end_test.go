@@ -22,6 +22,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // setupRecorderWithCleanup creates a recorder and ensures cleanup on test completion
@@ -168,12 +169,13 @@ func TestApplicationInitializationFlow(t *testing.T) {
 			t.Log("Hotkey system initialized successfully")
 		}
 
-		// Test whisper system (if model available)
+		// Test whisper system (if bundled model available)
 		t.Log("Testing whisper system...")
-		if _, err := os.Stat(cfg.General.ModelPath); err == nil {
-			t.Log("Whisper model found but skipping engine test (requires CGO)")
+		modelManager := whisper.NewModelManager(cfg)
+		if modelPath, err := modelManager.GetModelPath(); err == nil {
+			t.Logf("Bundled whisper model found at %s but skipping engine test (requires CGO)", modelPath)
 		} else {
-			t.Log("Whisper model not available for testing")
+			t.Log("Bundled whisper model not available for testing")
 		}
 
 		t.Log("Application initialization flow test completed")

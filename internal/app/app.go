@@ -53,7 +53,7 @@ func NewApp(logger logger.Logger) *App {
 }
 
 // Initialize sets up all services with dependency injection
-func (a *App) Initialize(configFile string, debug bool, modelPath string) error {
+func (a *App) Initialize(configFile string, debug bool) error {
 	a.Runtime.Logger.Info("Initializing application...")
 
 	// Load configuration
@@ -63,7 +63,7 @@ func (a *App) Initialize(configFile string, debug bool, modelPath string) error 
 	}
 
 	// Initialize services with dependency injection
-	if err := a.initializeServices(config, modelPath, configFile); err != nil {
+	if err := a.initializeServices(config, configFile); err != nil {
 		return fmt.Errorf("failed to initialize services: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, e
 }
 
 // initializeServices creates and configures all services
-func (a *App) initializeServices(cfg *config.Config, modelPath string, cfgFilePath string) error {
+func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	a.Runtime.Logger.Info("Initializing services with dependency injection...")
 
 	// Detect environment
@@ -107,7 +107,6 @@ func (a *App) initializeServices(cfg *config.Config, modelPath string, cfgFilePa
 		Config:      cfg,
 		ConfigFile:  cfgFilePath,
 		Environment: environment,
-		ModelPath:   modelPath,
 	})
 
 	// Create services

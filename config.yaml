@@ -3,8 +3,7 @@
 # General settings
 general:
   debug: false
-  whisper_model: "small-q5_1"  # Fixed whisper model
-  model_path: "sources/language-models/small-q5_1.bin"  # Model file path
+  whisper_model: "small-q5_1"
   temp_audio_path: "/tmp"
   language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
 

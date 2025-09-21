@@ -55,8 +55,7 @@ func LoadConfig(filename string) (*models.Config, error) {
 func SetDefaultConfig(config *models.Config) {
 	// General settings
 	config.General.Debug = false
-	config.General.WhisperModel = "small-q5_1"                          // Fixed whisper model
-	config.General.ModelPath = "sources/language-models/small-q5_1.bin" // Fixed model path
+	config.General.WhisperModel = "small-q5_1" // Fixed whisper model
 	config.General.TempAudioPath = "/tmp"
 	config.General.Language = "en" // Default to English
 

@@ -18,14 +18,12 @@ import (
 // Command-line flags
 var (
 	configFile string
-	modelPath  string
 	debug      bool
 )
 
 func init() {
 	// Parse command-line arguments
 	flag.StringVar(&configFile, "config", "config.yaml", "Path to configuration file")
-	flag.StringVar(&modelPath, "model", "", "Path to whisper model file")
 	flag.BoolVar(&debug, "debug", false, "Enable debug mode")
 	flag.Parse()
 }
@@ -71,7 +69,7 @@ func main() {
 	application := app.NewApp(appLogger)
 
 	// Initialize the application
-	if err := application.Initialize(configFile, debug, modelPath); err != nil {
+	if err := application.Initialize(configFile, debug); err != nil {
 		appLogger.Error("Failed to initialize application: %v", err)
 		os.Exit(1)
 	}
@@ -111,15 +109,6 @@ func adjustPathsForAppImage(logger logger.Logger) {
 
 	logger.Info("Running inside AppImage, base path: %s", appDir)
 
-	// If no model path specified, check built-in model
-	if modelPath == "" {
-		builtinModelPath := filepath.Join(appDir, "sources/language-models/small-q5_1.bin")
-		if _, err := os.Stat(builtinModelPath); err == nil {
-			modelPath = builtinModelPath
-			logger.Info("Using built-in model: %s", modelPath)
-		}
-	}
-
 	// If default config path is used, prefer bundled config if present
 	if configFile == "config.yaml" {
 		bundledConfig := filepath.Join(appDir, "config.yaml")
@@ -140,15 +129,6 @@ func adjustPathsForFlatpak(logger logger.Logger) {
 	}
 
 	logger.Info("Running inside Flatpak: %s", flatpakInfo)
-
-	// If no model path specified, check built-in model
-	if modelPath == "" {
-		builtinModelPath := "/app/share/speak-to-ai/models/small-q5_1.bin"
-		if _, err := os.Stat(builtinModelPath); err == nil {
-			modelPath = builtinModelPath
-			logger.Info("Using built-in model: %s", modelPath)
-		}
-	}
 
 	// Adjust config file path for Flatpak if not specified
 	if configFile == "config.yaml" {
