@@ -13,7 +13,6 @@ import (
 func setDefaultConfigForTest(config *models.Config) {
 	config.General.Debug = false
 	config.General.WhisperModel = "small-q5_1"
-	config.General.ModelPath = "sources/language-models/small-q5_1.bin"
 	config.General.TempAudioPath = "/tmp"
 	config.General.Language = "en"
 
@@ -56,19 +55,6 @@ func TestValidateConfig(t *testing.T) {
 			expectedValues: map[string]interface{}{
 				"modelType":  "small",
 				"sampleRate": 16000,
-			},
-		},
-		{
-			name: "path traversal attack in model path",
-			setupConfig: func() *models.Config {
-				config := &models.Config{}
-				setDefaultConfigForTest(config)
-				config.General.ModelPath = "../../../etc/passwd"
-				return config
-			},
-			expectError: true,
-			expectedValues: map[string]interface{}{
-				"modelPath": "sources/language-models/small-q5_1.bin",
 			},
 		},
 		{
@@ -143,19 +129,9 @@ func TestValidateConfig(t *testing.T) {
 					t.Errorf("expected WhisperModel %v, got %v", whisperModel, config.General.WhisperModel)
 				}
 			}
-			if modelPath, ok := tt.expectedValues["modelPath"]; ok {
-				if config.General.ModelPath != modelPath {
-					t.Errorf("expected ModelPath %v, got %v", modelPath, config.General.ModelPath)
-				}
-			}
 			if sampleRate, ok := tt.expectedValues["sampleRate"]; ok {
 				if config.Audio.SampleRate != sampleRate {
 					t.Errorf("expected SampleRate %v, got %v", sampleRate, config.Audio.SampleRate)
-				}
-			}
-			if modelPath, ok := tt.expectedValues["modelPath"]; ok {
-				if config.General.ModelPath != modelPath {
-					t.Errorf("expected ModelPath %v, got %v", modelPath, config.General.ModelPath)
 				}
 			}
 			// channels removed

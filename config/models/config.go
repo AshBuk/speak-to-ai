@@ -15,7 +15,6 @@ type Config struct {
 	General struct {
 		Debug         bool   `yaml:"debug"`
 		WhisperModel  string `yaml:"whisper_model"` // Fixed whisper model: "small-q5_1"
-		ModelPath     string `yaml:"model_path"`    // Path to model file (for different builds)
 		TempAudioPath string `yaml:"temp_audio_path"`
 		Language      string `yaml:"language"` // Language for recognition (en, ..., etc.)
 	} `yaml:"general"`

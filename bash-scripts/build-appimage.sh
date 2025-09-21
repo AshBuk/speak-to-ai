@@ -139,23 +139,11 @@ export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 # Create user config directory
 CONFIG_DIR="${HOME}/.config/speak-to-ai"
 mkdir -p "${CONFIG_DIR}"
-mkdir -p "${CONFIG_DIR}/language-models"
 
-# First launch checks
+# First launch config setup
 if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
     echo "First launch detected: Setting up configuration..."
     cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
-    sed -i "s|sources/language-models/small-q5_1.bin|${CONFIG_DIR}/language-models/small-q5_1.bin|g" "${CONFIG_DIR}/config.yaml"
-fi
-
-# Check if model exists in user directory, copy if not
-if [ ! -f "${CONFIG_DIR}/language-models/small-q5_1.bin" ]; then
-    echo "Copying Whisper model to user directory..."
-    if [ -f "${HERE}/sources/language-models/small-q5_1.bin" ]; then
-        cp "${HERE}/sources/language-models/small-q5_1.bin" "${CONFIG_DIR}/language-models/small-q5_1.bin"
-    else
-        echo "Warning: Model not found in AppImage. Please download it manually."
-    fi
 fi
 
 # Check hotkey support (prioritize D-Bus over input devices)

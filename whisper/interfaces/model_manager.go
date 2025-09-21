@@ -16,10 +16,6 @@ type ModelManager interface {
 
 // ModelPathResolver defines the interface for resolving the small-q5_1 model path
 type ModelPathResolver interface {
-	GetModelDir() string
-	ShouldUseUserDirectory() bool
-	IsBundledModelPath(modelPath string) bool
-	GetUserModelsDirectory() string
 	GetBundledModelPath() string
 }
 

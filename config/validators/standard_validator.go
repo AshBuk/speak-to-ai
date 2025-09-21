@@ -22,17 +22,6 @@ func ValidateConfig(config *models.Config) error {
 		config.General.WhisperModel = "small-q5_1"
 	}
 
-	// Validate model path
-	if config.General.ModelPath != "" {
-		// Sanitize path to avoid path traversal
-		config.General.ModelPath = filepath.Clean(config.General.ModelPath)
-		if strings.Contains(config.General.ModelPath, "..") {
-			// Replace with default value if suspicious
-			config.General.ModelPath = "sources/language-models/small-q5_1.bin"
-			errors = append(errors, "suspicious model path sanitized")
-		}
-	}
-
 	if config.General.TempAudioPath != "" {
 		// Sanitize path
 		config.General.TempAudioPath = filepath.Clean(config.General.TempAudioPath)

@@ -24,7 +24,6 @@ type ServiceFactoryConfig struct {
 	Config      *config.Config
 	ConfigFile  string
 	Environment platform.EnvironmentType
-	ModelPath   string
 }
 
 // Components holds all initialized application components
