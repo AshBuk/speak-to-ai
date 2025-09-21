@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -129,15 +130,42 @@ func (lf *LockFile) CheckExistingInstance() (bool, int, error) {
 		return false, 0, nil // Invalid PID
 	}
 
-	// Check if process with this PID is still running
-	if process, err := os.FindProcess(pid); err == nil {
-		// On Unix, FindProcess always succeeds, so we need to actually test
-		if err := process.Signal(syscall.Signal(0)); err == nil {
-			return true, pid, nil // Process is running
-		}
+	// Check if process with this PID is still running and is our application
+	if isOurProcess(pid) {
+		return true, pid, nil // Process is running and is speak-to-ai
 	}
 
 	return false, pid, nil // Process is not running
+}
+
+// isOurProcess checks if the given PID belongs to a speak-to-ai process
+func isOurProcess(pid int) bool {
+	// First check if process exists using syscall.Kill with signal 0
+	if err := syscall.Kill(pid, 0); err != nil {
+		return false // Process doesn't exist or no permission
+	}
+
+	// Check if the process is actually speak-to-ai by reading cmdline
+	// Validate PID to prevent path traversal
+	if pid <= 0 || pid > 4194304 { // Reasonable PID range
+		return false
+	}
+	cmdlinePath := fmt.Sprintf("/proc/%d/cmdline", pid)
+	cmdlineData, err := os.ReadFile(cmdlinePath) // #nosec G304 - PID is validated to be in safe range above
+	if err != nil {
+		return false // Can't read cmdline
+	}
+
+	// Convert null-terminated string to regular string
+	cmdline := string(cmdlineData)
+	cmdline = strings.ReplaceAll(cmdline, "\x00", " ")
+	cmdline = strings.TrimSpace(cmdline)
+
+	// Check if this is our speak-to-ai process
+	// Handle direct execution, Flatpak, and AppImage cases
+	return (strings.Contains(cmdline, "speak-to-ai") ||
+		strings.Contains(cmdline, "AppRun")) &&
+		!strings.Contains(cmdline, "flatpak-runtime.sh") // Exclude wrapper script
 }
 
 // GetLockFilePath returns the path to the lock file

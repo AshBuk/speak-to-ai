@@ -71,7 +71,7 @@ setup_configuration() {
         
         # Update config paths for Flatpak environment
         sed -i "s|sources/language-models/small-q5_1.bin|${FLATPAK_CONFIG_DIR}/models/small-q5_1.bin|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
-        sed -i "s|sources/core/whisper|/app/bin/whisper|g" "${FLATPAK_CONFIG_DIR}/config.yaml"
+        # Note: whisper library is used via Go bindings, not CLI binary
         
         echo "✅ Configuration created successfully"
     else
@@ -111,9 +111,9 @@ verify_installation() {
         has_errors=true
     fi
     
-    # Check whisper binary
-    if [ ! -f "/app/bin/whisper" ]; then
-        echo "❌ Whisper binary not found"
+    # Check whisper library (we use library bindings, not CLI binary)
+    if [ ! -f "/app/lib/libwhisper.so" ] && ! ls /app/lib/libwhisper.so* >/dev/null 2>&1; then
+        echo "❌ Whisper library not found"
         has_errors=true
     fi
     

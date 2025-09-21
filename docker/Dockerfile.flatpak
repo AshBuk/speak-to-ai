@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
     flatpak \
     flatpak-builder \
     appstream-glib \
-    appstream-compose \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

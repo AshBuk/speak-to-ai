@@ -31,7 +31,17 @@
         "--own-name=org.mpris.MediaPlayer2.speak-to-ai",
         "--talk-name=org.gnome.Shell",
         "--talk-name=org.kde.kglobalaccel",
-        "--talk-name=org.freedesktop.portal.Desktop"
+        "--talk-name=org.freedesktop.portal.Desktop",
+        "--talk-name=com.canonical.indicator.application",
+        "--talk-name=com.canonical.AppMenu.Registrar",
+        "--talk-name=org.kde.StatusNotifierItem",
+        "--talk-name=org.freedesktop.StatusNotifierWatcher",
+        "--talk-name=org.freedesktop.StatusNotifierItem",
+        "--talk-name=org.xfce.Panel",
+        "--talk-name=org.mate.panel.applet.MateIndicatorAppletFactory",
+        "--filesystem=xdg-data/icons:ro",
+        "--filesystem=/tmp/.ydotool_socket:rw",
+        "--env=GDK_BACKEND=x11,wayland"
     ],
     "build-options": {
         "append-path": "/app/share/gnome-common:/app/bin:/usr/lib/sdk/golang/bin",
