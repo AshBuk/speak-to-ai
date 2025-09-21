@@ -49,7 +49,7 @@ type Config struct {
 	// Text output settings
 	Output struct {
 		DefaultMode   string `yaml:"default_mode"`   // 'clipboard', 'active_window', 'web'
-		ClipboardTool string `yaml:"clipboard_tool"` // 'wl-copy', 'xclip'
+		ClipboardTool string `yaml:"clipboard_tool"` // 'wl-copy', 'xsel'
 		TypeTool      string `yaml:"type_tool"`      // 'xdotool', 'wl-clipboard', 'dbus'
 	} `yaml:"output"`
 

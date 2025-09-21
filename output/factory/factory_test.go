@@ -101,7 +101,7 @@ func TestFactory_GetOutputter_ToolSelection(t *testing.T) {
 			env:               EnvironmentX11,
 			clipboardTool:     "auto",
 			typeTool:          "auto",
-			expectedClipboard: "xclip",
+			expectedClipboard: "xsel",
 			expectedType:      "xdotool",
 			expectError:       true, // External tools not available
 		},
@@ -119,7 +119,7 @@ func TestFactory_GetOutputter_ToolSelection(t *testing.T) {
 			env:               EnvironmentUnknown,
 			clipboardTool:     "auto",
 			typeTool:          "auto",
-			expectedClipboard: "xclip",
+			expectedClipboard: "xsel",
 			expectedType:      "xdotool",
 			expectError:       true, // External tools not available
 		},

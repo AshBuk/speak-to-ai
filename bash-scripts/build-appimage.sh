@@ -89,7 +89,7 @@ copy_system_lib() {
 
 copy_binaries() {
     echo "Copying system dependencies..."
-    copy_binary_if_exists "xclip"
+    copy_binary_if_exists "xsel"
     copy_binary_if_exists "wl-copy"
     copy_binary_if_exists "wl-paste"
     copy_binary_if_exists "wtype"
@@ -333,7 +333,7 @@ build_appimage() {
       "usr/bin/ydotool" \
       "usr/bin/wl-copy" \
       "usr/bin/wl-paste" \
-      "usr/bin/xclip" \
+      "usr/bin/xsel" \
       "usr/bin/arecord" \
       "usr/bin/notify-send"; do
       if [ -f "${APP_NAME}.AppDir/${exe}" ]; then

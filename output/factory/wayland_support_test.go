@@ -82,7 +82,7 @@ func TestSecurityAllowedCommands(t *testing.T) {
 	}
 
 	// Test that traditional tools are still allowed
-	traditionalTools := []string{"xdotool", "xclip", "wl-copy"}
+	traditionalTools := []string{"xdotool", "xsel", "wl-copy"}
 
 	for _, tool := range traditionalTools {
 		if !config.IsCommandAllowed(cfg, tool) {

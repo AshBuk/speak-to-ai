@@ -46,9 +46,9 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 		case EnvironmentWayland:
 			clipboardTool = "wl-copy"
 		case EnvironmentX11:
-			clipboardTool = "xclip"
+			clipboardTool = "xsel"
 		default:
-			clipboardTool = "xclip" // Default to xclip
+			clipboardTool = "xsel" // Default to xsel
 		}
 	}
 

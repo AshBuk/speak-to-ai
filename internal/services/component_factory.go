@@ -136,8 +136,8 @@ func (cf *ComponentFactory) createFallbackOutputManager(outputEnv outputFactory.
 		}
 	}
 	if clipboardTool == "" {
-		if _, err := exec.LookPath("xclip"); err == nil {
-			clipboardTool = "xclip"
+		if _, err := exec.LookPath("xsel"); err == nil {
+			clipboardTool = "xsel"
 		}
 	}
 

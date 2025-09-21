@@ -30,7 +30,7 @@ audio:
 # Text output settings
 output:
   default_mode: "active_window"  # Options: "clipboard", "active_window"
-  clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xclip"
+  clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xsel"
   type_tool: "auto"  # Options: "auto", "ydotool", "xdotool", "wl-clipboard", "dbus"
 
 # Web server settings

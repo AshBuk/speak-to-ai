@@ -87,7 +87,7 @@ func ValidateConfig(config *models.Config) error {
 	// Validate security settings
 	if len(config.Security.AllowedCommands) == 0 {
 		// Set default allowed commands
-		config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wl-copy", "xclip"}
+		config.Security.AllowedCommands = []string{"arecord", "ffmpeg", "whisper", "xdotool", "wl-copy", "xsel"}
 	}
 
 	// Return combined errors or nil if none

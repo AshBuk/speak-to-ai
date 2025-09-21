@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y \
     alsa-utils \
     file \
     desktop-file-utils \
-    xclip \
+    xsel \
     wl-clipboard \
     xdotool \
     ydotool \
