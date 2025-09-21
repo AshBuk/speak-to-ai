@@ -55,17 +55,6 @@ sudo usermod -a -G input $USER
 ./speak-to-ai-v1.0.0.AppImage
 ```
 
-### Flatpak 
-
-Download and install the Flatpak from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
-
-```bash
-# Download the file, then:
-flatpak install --user speak-to-ai-v1.0.0.flatpak  # Replace with your downloaded version
-# Run the application:
-flatpak run io.github.ashbuk.speak-to-ai
-```
-
 ## Desktop Environment Compatibility
 
 Help us test different desktop environments:
@@ -82,7 +71,9 @@ Help us test different desktop environments:
 
 ## ✦ Project Status
 
-[v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) with working functionality, tested on my Fedora 42 (GNOME/Wayland) and Ubuntu 24. I'd appreciate feedback about your experience on your system!
+**AppImage** [v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. I'd appreciate feedback about your experience on your system!
+
+**Flatpak** bundle is planned.
 
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
 
@@ -104,8 +95,8 @@ Start onboarding with:
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
 - **Audio**: Microphone/recording capability
-- **Storage**: 277.5MB (whisper small q5 model, dependencies, go-binary)
-- **Memory**: ~500MB RAM during operation
+- **Storage**: 293.5MB (whisper small q5 model, dependencies, go-binary)
+- **Memory**: ~300MB RAM during operation
 
 ## ✦ Acknowledgments
 
