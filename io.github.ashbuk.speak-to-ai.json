@@ -181,20 +181,6 @@
             ]
         },
         {
-            "name": "xclip",
-            "buildsystem": "autotools",
-            "config-opts": [
-                "--disable-man"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://github.com/astrand/xclip/archive/refs/tags/0.13.tar.gz",
-                    "sha256": "ca5b8804e3c910a66423a882d79bf3c9450b875ac8528791fb60ec9de667f758"
-                }
-            ]
-        },
-        {
             "name": "ffmpeg",
             "buildsystem": "simple",
             "build-commands": [
@@ -269,6 +255,17 @@
             ]
         },
         {
+            "name": "xsel",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/kfish/xsel.git",
+                    "branch": "master"
+                }
+            ]
+        },
+        {
             "name": "wtype",
             "buildsystem": "meson",
             "sources": [
@@ -283,7 +280,13 @@
             "name": "ydotool",
             "buildsystem": "cmake-ninja",
             "config-opts": [
-                "-DCMAKE_BUILD_TYPE=Release"
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DBUILD_MANPAGES=OFF",
+                "-DSCDOC=OFF"
+            ],
+            "post-extract": [
+                "sed -i 's/^\\s*add_subdirectory(\\s*manpage\\s*)/## disabled manpage by flatpak manifest/' CMakeLists.txt",
+                "rm -rf manpage || true"
             ],
             "sources": [
                 {

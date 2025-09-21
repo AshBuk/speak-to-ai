@@ -90,7 +90,7 @@ func TestClipboardOutputter_CopyToClipboard_CommandNotAllowed(t *testing.T) {
 	cfg.Security.AllowedCommands = []string{} // Empty list means no commands allowed
 
 	outputter := &ClipboardOutputter{
-		clipboardTool: "xclip",
+		clipboardTool: "xsel",
 		config:        cfg,
 	}
 
@@ -98,7 +98,7 @@ func TestClipboardOutputter_CopyToClipboard_CommandNotAllowed(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for disallowed command")
 	}
-	if err != nil && err.Error() != "clipboard tool not allowed: xclip" {
+	if err != nil && err.Error() != "clipboard tool not allowed: xsel" {
 		t.Errorf("unexpected error message: %v", err)
 	}
 }
@@ -127,8 +127,8 @@ func TestClipboardOutputter_CopyToClipboard_SupportedTools(t *testing.T) {
 		tool string
 	}{
 		{
-			name: "xclip",
-			tool: "xclip",
+			name: "xsel",
+			tool: "xsel",
 		},
 		{
 			name: "wl-copy",
@@ -159,7 +159,7 @@ func TestClipboardOutputter_CopyToClipboard_SupportedTools(t *testing.T) {
 func TestClipboardOutputter_TypeToActiveWindow(t *testing.T) {
 	cfg := &config.Config{}
 	outputter := &ClipboardOutputter{
-		clipboardTool: "xclip",
+		clipboardTool: "xsel",
 		config:        cfg,
 	}
 

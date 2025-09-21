@@ -42,8 +42,8 @@ func (o *ClipboardOutputter) CopyToClipboard(text string) error {
 	var args []string
 
 	switch o.clipboardTool {
-	case "xclip":
-		args = []string{"-selection", "clipboard"}
+	case "xsel":
+		args = []string{"--clipboard", "--input"}
 	case "wl-copy":
 		args = []string{} // wl-copy takes no additional args for basic operation
 	default:

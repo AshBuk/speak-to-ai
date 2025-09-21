@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     desktop-file-utils \
     fuse \
     libfuse2 \
-    xclip \
+    xsel \
     wl-clipboard \
     xdotool \
     ydotool \

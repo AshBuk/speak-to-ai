@@ -117,7 +117,7 @@ func TestOutputFactory_ToolSelection(t *testing.T) {
 			env:               EnvironmentX11,
 			clipboardTool:     "auto",
 			typeTool:          "auto",
-			expectedClipboard: "xclip",
+			expectedClipboard: "xsel",
 			expectedType:      "xdotool",
 		},
 		{
@@ -125,7 +125,7 @@ func TestOutputFactory_ToolSelection(t *testing.T) {
 			env:               EnvironmentWayland,
 			clipboardTool:     "auto",
 			typeTool:          "auto",
-			expectedClipboard: "wl-copy",
+			expectedClipboard: "xsel",
 			expectedType:      "wl-keyboard",
 		},
 		{
@@ -133,7 +133,7 @@ func TestOutputFactory_ToolSelection(t *testing.T) {
 			env:               EnvironmentUnknown,
 			clipboardTool:     "auto",
 			typeTool:          "auto",
-			expectedClipboard: "xclip",
+			expectedClipboard: "xsel",
 			expectedType:      "xdotool",
 		},
 		{
@@ -230,7 +230,7 @@ func TestOutputFactory_ConfigImmutability(t *testing.T) {
 	// Test that factory doesn't modify the original config
 	originalConfig := &config.Config{}
 	originalConfig.Output.DefaultMode = "clipboard"
-	originalConfig.Output.ClipboardTool = "xclip"
+	originalConfig.Output.ClipboardTool = "xsel"
 	originalConfig.Output.TypeTool = "xdotool"
 
 	factory := NewFactory(originalConfig)
@@ -245,7 +245,7 @@ func TestOutputFactory_ConfigImmutability(t *testing.T) {
 	if originalConfig.Output.DefaultMode != "clipboard" {
 		t.Errorf("original config default mode changed")
 	}
-	if originalConfig.Output.ClipboardTool != "xclip" {
+	if originalConfig.Output.ClipboardTool != "xsel" {
 		t.Errorf("original config clipboard tool changed")
 	}
 	if originalConfig.Output.TypeTool != "xdotool" {
@@ -266,7 +266,7 @@ func TestOutputFactory_EdgeCases(t *testing.T) {
 			setupConfig: func() *config.Config {
 				cfg := &config.Config{}
 				cfg.Output.DefaultMode = "clipboard"
-				cfg.Output.ClipboardTool = "xclip\n"
+				cfg.Output.ClipboardTool = "xsel\n"
 				cfg.Output.TypeTool = "xdotool"
 				return cfg
 			},
