@@ -20,7 +20,6 @@
 [![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
 [![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
 [![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
-[![Flatpak](https://img.shields.io/badge/Flatpak-available-4a90e2?logo=flatpak)](https://github.com/AshBuk/speak-to-ai/releases)
 
 </div>
 
@@ -33,7 +32,7 @@ https://github.com/user-attachments/assets/ff2ef633-40df-46be-b9c8-ab8ae16e0101
 
 ## Features
 
-- **Portable**: available as AppImage and Flatpak
+- **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: desktop, no data sent to external servers
