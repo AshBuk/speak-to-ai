@@ -46,12 +46,12 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 
 ```bash
 # Download the file, then:
-chmod +x speak-to-ai-v1.0.0.AppImage  # Replace with your downloaded version
-# Ensure user is in input group for hotkeys to work:
-sudo usermod -a -G input $USER
-# then reboot
-# Open via GUI or command:
-./speak-to-ai-v1.0.0.AppImage
+ chmod +x speak-to-ai-*.AppImage
+ # Ensure user is in input group for hotkeys to work:
+ sudo usermod -a -G input $USER
+ # then logout/login or reboot
+ # Open via GUI or with terminal command:
+ ./speak-to-ai-*.AppImage  
 ```
 
 ## Desktop Environment Compatibility
