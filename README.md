@@ -96,6 +96,7 @@ Start onboarding with:
 - **Audio**: Microphone/recording capability
 - **Storage**: 293.5MB (whisper small q5 model, dependencies, go-binary)
 - **Memory**: ~300MB RAM during operation
+- **CPU**: AVX-capable processor (Intel/AMD 2011+)
 
 ## ✦ Acknowledgments
 
