@@ -19,8 +19,18 @@ prepare_environment() {
     if [ -f "bash-scripts/dev-env.sh" ]; then
         source bash-scripts/dev-env.sh || true
     fi
-    if [ ! -f "lib/whisper.h" ]; then
-        make whisper-libs
+
+    # Check if we need legacy build
+    if [ "${LEGACY_BUILD:-0}" = "1" ]; then
+        echo "Building for legacy CPUs (no AVX/AVX2/FMA support)"
+        # Force clean rebuild for legacy to ensure no AVX instructions
+        rm -rf lib/ build/
+        make whisper-libs-legacy
+    else
+        echo "Building optimized version (with AVX/AVX2/FMA support)"
+        if [ ! -f "lib/whisper.h" ]; then
+            make whisper-libs
+        fi
     fi
 }
 
@@ -358,7 +368,11 @@ build_appimage() {
         
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            if [ "${LEGACY_BUILD:-0}" = "1" ]; then
+                TARGET_NAME="speak-to-ai-legacy-${APP_VERSION}.AppImage"
+            else
+                TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            fi
             mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
             echo "AppImage created successfully with linuxdeploy: $TARGET_NAME"
             ls -lh "$TARGET_NAME"
@@ -376,7 +390,11 @@ build_appimage() {
         
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            if [ "${LEGACY_BUILD:-0}" = "1" ]; then
+                TARGET_NAME="speak-to-ai-legacy-${APP_VERSION}.AppImage"
+            else
+                TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            fi
             mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
             echo "AppImage created successfully: $TARGET_NAME"
             ls -lh "$TARGET_NAME"
