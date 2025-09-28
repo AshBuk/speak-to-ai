@@ -1,5 +1,5 @@
 # Container for building AppImage packages
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:22.04 AS builder
 
 # Avoid timezone interaction
 ENV DEBIAN_FRONTEND=noninteractive

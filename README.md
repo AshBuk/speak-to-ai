@@ -94,7 +94,7 @@ Start onboarding with:
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
 - **Audio**: Microphone/recording capability
-- **Storage**: 293.5MB (whisper small q5 model, dependencies, go-binary)
+- **Storage**: 277.2MB (whisper small q5 model, dependencies, go-binary)
 - **Memory**: ~300MB RAM during operation
 - **CPU**: AVX-capable processor (Intel/AMD 2011+)
 
