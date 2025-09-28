@@ -4,31 +4,30 @@
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
   <name>Speak-to-AI</name>
-  <summary>Offline speech-to-text for AI assistants</summary>
+  <summary>Offline speech-to-text desktop app</summary>
   <description>
     <p>
       A minimalist, privacy-focused desktop application for offline speech-to-text.
       Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants)
       using the Whisper model locally for speech recognition.
-      Licensed under MIT License - free and open source software.
+    </p>
+    <p>
+      📋 For system tray integration on GNOME (install AppIndicator extension) and automatic typing on Wayland (setup ydotool),
+      see <a href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/Desktop_Environment_Support.md">Desktop Environment Support Guide</a>.
     </p>
     <p>Features:</p>
     <ul>
-      <li>100% offline speech recognition using Whisper.cpp</li>
-      <li>Portable: available as AppImage and Flatpak</li>
+      <li>Portable: AppImage package</li>
       <li>Cross-platform support for X11 and Wayland</li>
       <li>Desktop Environment Support: Native integration with GNOME, KDE, and other Linux DEs</li>
-      <li>Multi-language support with global hotkeys</li>
-      <li>Automatic typing and clipboard output modes</li>
-      <li>System tray integration with visual notifications</li>
-      <li>WebSocket API (optional) for advanced integrations</li>
-      <li>Privacy-first: no data sent to external servers</li>
+      <li>Privacy-first: desktop, no data sent to external servers</li>
+      <li>Support: multi-language, global hotkeys, automatic typing &amp; clipboard, system tray integration, visual notifications, WebSocket API (optional)</li>
     </ul>
   </description>
   <screenshots>
     <screenshot type="default">
       <caption>Quick demo: Voice recording and automatic text output</caption>
-      <video>https://github.com/user-attachments/assets/ff2ef633-40df-46be-b9c8-ab8ae16e0101</video>
+      <video>https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587</video>
     </screenshot>
     <screenshot>
       <caption>System tray integration with recording status indicators</caption>
@@ -50,13 +49,12 @@
       <description>
         <p>First stable release with full functionality:</p>
         <ul>
-          <li>Full functionality as declared in README</li>
-          <li>AppImage and Flatpak builds</li>
-          <li>Whisper small q5 model included</li>
-          <li>Smart environment detection and setup/fallback system</li>
-          <li>Desktop environment and graphics server support (Wayland/X11)</li>
-          <li>Available audio detection (arecord or ffmpeg)</li>
-          <li>Hotkey and output providers auto-detection</li>
+          <li>Voice-to-text functionality with offline Whisper.cpp</li>
+          <li>System tray integration</li>
+          <li>Global hotkey support</li>
+          <li>Multiple output modes (clipboard, typing)</li>
+          <li>AppImage packaging</li>
+          <li>Cross-platform Linux desktop environment compatibility</li>
         </ul>
       </description>
     </release>

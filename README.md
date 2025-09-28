@@ -28,7 +28,7 @@
   Uses the Whisper model locally for speech recognition. 
   Written in Go, an optimized desktop application for Linux.**
 
-https://github.com/user-attachments/assets/ff2ef633-40df-46be-b9c8-ab8ae16e0101
+https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
 
