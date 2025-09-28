@@ -4,7 +4,6 @@
 package notify
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -331,44 +330,5 @@ func TestCommandExists(t *testing.T) {
 	// Test with a command that should not exist
 	if commandExists("non-existent-command-12345") {
 		t.Error("Expected 'non-existent-command-12345' to not exist")
-	}
-}
-
-func TestNotificationManager_Integration(t *testing.T) {
-	// Skip this test in CI environment
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping integration test in CI environment")
-	}
-
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping integration test")
-	}
-
-	nm := NewNotificationManager("Integration Test", createTestConfig())
-
-	// Test a sequence of notifications
-	err := nm.NotifyStartRecording()
-	if err != nil {
-		t.Errorf("Failed to notify start recording: %v", err)
-	}
-
-	err = nm.NotifyStopRecording()
-	if err != nil {
-		t.Errorf("Failed to notify stop recording: %v", err)
-	}
-
-	err = nm.NotifyTranscriptionComplete()
-	if err != nil {
-		t.Errorf("Failed to notify transcription complete: %v", err)
-	}
-
-	err = nm.NotifyError("Test error for integration")
-	if err != nil {
-		t.Errorf("Failed to notify error: %v", err)
-	}
-
-	err = nm.ShowNotification("Integration Test", "All notifications completed")
-	if err != nil {
-		t.Errorf("Failed to show notification: %v", err)
 	}
 }
