@@ -13,13 +13,14 @@ import (
 	"github.com/AshBuk/speak-to-ai/whisper/providers"
 )
 
-// ModelManager handles the fixed small-q5_1 Whisper model
+// Implements the logic for managing the fixed `small-q5_1` Whisper model.
+// It relies on a path resolver to find the bundled model file
 type ModelManager struct {
 	config       *config.Config
 	pathResolver interfaces.ModelPathResolver
 }
 
-// NewModelManager creates a new model manager instance
+// Create a new manager responsible for the bundled Whisper model
 func NewModelManager(config *config.Config) *ModelManager {
 	pathResolver := providers.NewModelPathResolver(config)
 
@@ -29,23 +30,20 @@ func NewModelManager(config *config.Config) *ModelManager {
 	}
 }
 
-// Initialize sets up the model manager for the small-q5_1 model
+// Verify that the bundled `small-q5_1` model is present and valid
 func (m *ModelManager) Initialize() error {
-	// Validate the bundled small-q5_1 model exists
 	modelPath := m.pathResolver.GetBundledModelPath()
 	if _, err := os.Stat(modelPath); err != nil {
 		return fmt.Errorf("bundled small-q5_1 model not found at %s: %w", modelPath, err)
 	}
-	// Model exists, validate it
 	return m.ValidateModel(modelPath)
 }
 
-// GetModelPath returns the path to the bundled small-q5_1 model
+// Return the path to the bundled `small-q5_1` model
+// Do not fall back to any other path; the bundled model must exist
 func (m *ModelManager) GetModelPath() (string, error) {
-	// Always use bundled model path - no config path fallback
 	modelPath := m.pathResolver.GetBundledModelPath()
 
-	// Verify the bundled model exists
 	if !utils.IsValidFile(modelPath) {
 		return "", fmt.Errorf("bundled small-q5_1 model not found at %s", modelPath)
 	}
@@ -53,20 +51,19 @@ func (m *ModelManager) GetModelPath() (string, error) {
 	return modelPath, nil
 }
 
-// ValidateModel checks if a model file is valid
+// Check if the model file at the given path is a valid model file
+// Perform a basic sanity check based on file size
 func (m *ModelManager) ValidateModel(modelPath string) error {
-	// Check file exists
 	if !utils.IsValidFile(modelPath) {
 		return fmt.Errorf("model file not found: %s", modelPath)
 	}
 
-	// Get file size
 	size, err := utils.GetFileSize(modelPath)
 	if err != nil {
 		return fmt.Errorf("error checking model file: %w", err)
 	}
 
-	// Basic size check (models should be at least 10MB)
+	// Sanity check: the model should be at least 10MB
 	if size < 10*1024*1024 {
 		return fmt.Errorf("model file is too small (%d bytes), might be corrupted", size)
 	}

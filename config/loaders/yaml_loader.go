@@ -17,14 +17,14 @@ import (
 
 // Read a configuration file, apply defaults, and validate the result.
 // If the file doesn't exist, log a warning and return a default configuration.
-// The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate.
+// The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate
 func LoadConfig(filename string) (*models.Config, error) {
 	var config models.Config
 
-	// Start with a default configuration to ensure all fields are initialized.
+	// Start with a default configuration to ensure all fields are initialized
 	SetDefaultConfig(&config)
 
-	// Sanitize path to prevent directory traversal attacks.
+	// Sanitize path to prevent directory traversal attacks
 	clean := filepath.Clean(filename)
 	if strings.Contains(clean, "..") {
 		return nil, fmt.Errorf("invalid config path: %s", filename)
@@ -38,12 +38,12 @@ func LoadConfig(filename string) (*models.Config, error) {
 		return &config, nil
 	}
 
-	// Parse the YAML content into the config struct.
+	// Parse the YAML content into the config struct
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
 
-	// Validate the loaded configuration and apply corrections if necessary.
+	// Validate the loaded configuration and apply corrections if necessary
 	if err := validators.ValidateConfig(&config); err != nil {
 		log.Printf("Configuration validation error: %v", err)
 		log.Println("Using validated configuration with corrections")
@@ -53,7 +53,7 @@ func LoadConfig(filename string) (*models.Config, error) {
 }
 
 // Apply sensible, safe-by-default values to a configuration struct.
-// These defaults are used when a configuration file is not found or a field is missing.
+// These defaults are used when a configuration file is not found or a field is missing
 func SetDefaultConfig(config *models.Config) {
 	// General settings
 	config.General.Debug = false
@@ -109,9 +109,9 @@ func SetDefaultConfig(config *models.Config) {
 
 // Marshal the configuration to YAML and write it to a file.
 // It ensures the target directory exists and sets restrictive file permissions (0600)
-// for security.
+// for security
 func SaveConfig(filename string, config *models.Config) error {
-	// Sanitize path to prevent directory traversal.
+	// Sanitize path to prevent directory traversal
 	safe := filepath.Clean(filename)
 	if strings.Contains(safe, "..") {
 		return fmt.Errorf("invalid config path: %s", filename)
@@ -122,11 +122,11 @@ func SaveConfig(filename string, config *models.Config) error {
 		return err
 	}
 
-	// Ensure the directory exists before writing the file.
+	// Ensure the directory exists before writing the file
 	if err := os.MkdirAll(filepath.Dir(safe), 0o750); err != nil {
 		return err
 	}
 
-	// Write with restrictive permissions (read/write for owner only).
+	// Write with restrictive permissions (read/write for owner only)
 	return os.WriteFile(safe, data, 0o600)
 }

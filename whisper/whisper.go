@@ -1,7 +1,9 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-// Package whisper provides speech-to-text functionality using Whisper models
+// Provides a high-level facade for interacting with the speech-to-text
+// functionality. It abstracts the underlying implementation details of model management
+// and transcription, exposing a simple entry point for external packages.
 package whisper
 
 import (
@@ -10,12 +12,12 @@ import (
 	"github.com/AshBuk/speak-to-ai/whisper/manager"
 )
 
-// Re-export key interfaces and types for external use
+// Re-export key interfaces for convenience
 type (
 	ModelManager = interfaces.ModelManager
 )
 
-// NewModelManager creates a new model manager instance
+// Create a new manager for the bundled Whisper model
 func NewModelManager(config *config.Config) ModelManager {
 	return manager.NewModelManager(config)
 }

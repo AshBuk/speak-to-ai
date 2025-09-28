@@ -18,7 +18,7 @@ import (
 
 // Check if a command is in the security whitelist.
 // It checks only the base name of the command, ignoring the path, to ensure
-// that path-based bypasses are not possible (e.g., /usr/bin/evil is treated as evil).
+// that path-based bypasses are not possible (e.g., /usr/bin/evil is treated as evil)
 func IsCommandAllowed(config *models.Config, command string) bool {
 	base := filepath.Base(command)
 	for _, cmd := range config.Security.AllowedCommands {
@@ -30,12 +30,12 @@ func IsCommandAllowed(config *models.Config, command string) bool {
 }
 
 // Filter a list of arguments to remove shell metacharacters
-// and other constructs that could be used for command injection attacks.
+// and other constructs that could be used for command injection attacks
 func SanitizeCommandArgs(args []string) []string {
 	sanitized := make([]string, 0, len(args))
 
 	for _, arg := range args {
-		// Filter out shell metacharacters and directory traversal attempts.
+		// Filter out shell metacharacters and directory traversal attempts
 		if !strings.ContainsAny(arg, "&|;$<>(){}[]") && !strings.Contains(arg, "..") {
 			sanitized = append(sanitized, arg)
 		}
@@ -45,14 +45,14 @@ func SanitizeCommandArgs(args []string) []string {
 }
 
 // Verify the config file against a stored hash to ensure
-// it has not been modified without authorization.
+// it has not been modified without authorization
 func VerifyConfigIntegrity(filename string, config *models.Config) error {
 	if !config.Security.CheckIntegrity {
 		return nil
 	}
 
 	if config.Security.ConfigHash == "" {
-		// No hash to compare against, so we can't verify.
+		// No hash to compare against, so we can't verify
 		return nil
 	}
 
@@ -69,7 +69,7 @@ func VerifyConfigIntegrity(filename string, config *models.Config) error {
 }
 
 // Calculate a new hash for the configuration file and store it
-// within the config struct. This is used to "seal" the config after valid changes.
+// within the config struct. This is used to "seal" the config after valid changes
 func UpdateConfigHash(filename string, config *models.Config) error {
 	hash, err := CalculateFileHash(filename)
 	if err != nil {
@@ -80,9 +80,9 @@ func UpdateConfigHash(filename string, config *models.Config) error {
 	return nil
 }
 
-// Compute the SHA-256 hash of a file's content.
+// Compute the SHA-256 hash of a file's content
 func CalculateFileHash(filename string) (string, error) {
-	// Clean the path to prevent null byte and other injection attacks.
+	// Clean the path to prevent null byte and other injection attacks
 	safe := filepath.Clean(filename)
 	if strings.Contains(safe, "\x00") {
 		return "", fmt.Errorf("invalid filename")
@@ -95,7 +95,7 @@ func CalculateFileHash(filename string) (string, error) {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			// Log the error but don't return it, as the primary operation (hashing) succeeded.
+			// Log the error but don't return it, as the primary operation (hashing) succeeded
 			log.Printf("Warning: failed to close file %s: %v", filename, err)
 		}
 	}()
@@ -109,7 +109,7 @@ func CalculateFileHash(filename string) (string, error) {
 }
 
 // Enforce the maximum configured size for a file.
-// This is a security measure to prevent denial-of-service attacks using large files.
+// This is a security measure to prevent denial-of-service attacks using large files
 func EnforceFileSizeLimit(filename string, config *models.Config) error {
 	info, err := os.Stat(filename)
 	if err != nil {
