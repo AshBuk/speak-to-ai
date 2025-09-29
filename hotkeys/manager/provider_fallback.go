@@ -12,9 +12,9 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
 )
 
-// registerAllHotkeysOn registers recording and custom hotkeys on the given provider
+// Register all configured hotkeys on the given provider
 func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventProvider) error {
-	// Register start/stop recording hotkey
+	// Register the primary start/stop recording hotkey
 	if err := provider.RegisterHotkey(h.config.GetStartRecordingHotkey(), func() error {
 		h.hotkeysMutex.Lock()
 		defer h.hotkeysMutex.Unlock()
@@ -39,13 +39,13 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 		return fmt.Errorf("failed to register start/stop recording hotkey: %w", err)
 	}
 
-	// Register additional hotkeys (action -> configured hotkey string)
+	// Register any additional custom hotkeys
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	for actionName, action := range h.hotkeyActions {
 		hk := h.config.GetActionHotkey(actionName)
 		if strings.TrimSpace(hk) == "" {
-			// Skip actions without configured hotkey
+			// Skip actions that do not have a configured hotkey
 			continue
 		}
 
@@ -65,15 +65,16 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 	return nil
 }
 
-// startFallbackAfterRegistration attempts to switch to a fallback provider (evdev)
-// Allows fallback on GNOME/KDE when running in AppImage due to portal sandboxing issues.
+// Attempt to switch to a fallback provider if the primary one fails
+// This is mainly for AppImage, where D-Bus portals can be unreliable
 func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 	h.logger.Error("Primary keyboard provider failed to start: %v", startErr)
 
-	// Check if running in AppImage - allow fallback even on GNOME/KDE
+	// Check if running in an AppImage environment
 	de := strings.ToLower(os.Getenv("XDG_CURRENT_DESKTOP"))
 	isAppImage := os.Getenv("APPIMAGE") != "" || os.Getenv("APPDIR") != ""
 
+	// Do not fall back on GNOME/KDE unless in an AppImage
 	if (strings.Contains(de, "gnome") || strings.Contains(de, "kde")) && !isAppImage {
 		h.logger.Info("Skipping evdev fallback on GNOME/KDE; please check portal permissions")
 		return fmt.Errorf("failed to start keyboard provider: %w", startErr)
@@ -83,21 +84,21 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 		h.logger.Info("AppImage detected - allowing evdev fallback for better hotkey compatibility")
 	}
 
-	// Only fallback when current provider is DBus and evdev is supported
+	// Only fall back from DBus to evdev if evdev is supported
 	switch h.provider.(type) {
 	case *providers.DbusKeyboardProvider:
 		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
 		if fallback != nil && fallback.IsSupported() {
 			h.logger.Info("Falling back to evdev keyboard provider")
-			// Swap provider
+			// Swap to the fallback provider
 			h.provider = fallback
 
-			// Re-register hotkeys on fallback provider
+			// Re-register all hotkeys on the new provider
 			if err := h.registerAllHotkeysOn(h.provider); err != nil {
 				return fmt.Errorf("failed to register hotkeys on fallback provider: %w", err)
 			}
 
-			// Start fallback provider
+			// Start the fallback provider
 			if err := h.provider.Start(); err != nil {
 				return fmt.Errorf("failed to start fallback keyboard provider: %w", err)
 			}

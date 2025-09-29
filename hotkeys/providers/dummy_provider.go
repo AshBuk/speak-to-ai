@@ -10,15 +10,15 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// DummyKeyboardProvider implements KeyboardEventProvider with no actual functionality
-// Used as a fallback when no other providers are available
+// Implements a KeyboardEventProvider with no actual functionality
+// Use as a fallback when no other providers are available
 type DummyKeyboardProvider struct {
 	callbacks   map[string]func() error
 	isListening bool
 	logger      logger.Logger
 }
 
-// NewDummyKeyboardProvider creates a new DummyKeyboardProvider
+// Create a new DummyKeyboardProvider
 func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	return &DummyKeyboardProvider{
 		callbacks:   make(map[string]func() error),
@@ -27,19 +27,19 @@ func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	}
 }
 
-// IsSupported always returns true as the dummy provider is always supported
+// Return true as the dummy provider is always supported as a fallback
 func (p *DummyKeyboardProvider) IsSupported() bool {
 	return true
 }
 
-// Start does nothing but logs helpful instructions
+// Log helpful instructions and warnings instead of starting a listener
 func (p *DummyKeyboardProvider) Start() error {
 	if p.isListening {
 		return fmt.Errorf("dummy keyboard provider already started")
 	}
 
 	p.isListening = true
-	p.logger.Warning("Using dummy keyboard provider. Hotkeys will not be functional.")
+	p.logger.Warning("Using dummy keyboard provider; hotkeys will not be functional")
 	p.logger.Info("")
 	p.logger.Info("To enable hotkeys, try one of these solutions:")
 	p.logger.Info("")
@@ -48,7 +48,7 @@ func (p *DummyKeyboardProvider) Start() error {
 	p.logger.Info("   - Check if 'dbus-daemon --session' is active")
 	p.logger.Info("")
 	p.logger.Info("🔧 Other Desktop Environments (XFCE/i3/sway):")
-	p.logger.Info("   - Add your user to 'input' group: sudo usermod -a -G input $USER")
+	p.logger.Info("   - Add your user to the 'input' group: sudo usermod -a -G input $USER")
 	p.logger.Info("   - Then logout and login again")
 	p.logger.Info("   - Or run the application with sudo (not recommended)")
 	p.logger.Info("")
@@ -61,19 +61,19 @@ func (p *DummyKeyboardProvider) Start() error {
 	return nil
 }
 
-// Stop does nothing but changes the state
+// Update the state to indicate the provider is stopped
 func (p *DummyKeyboardProvider) Stop() {
 	p.isListening = false
 }
 
-// RegisterHotkey just stores the callback but never calls it
+// Store the callback but never call it
 func (p *DummyKeyboardProvider) RegisterHotkey(hotkey string, callback func() error) error {
 	p.logger.Info("Registered hotkey: %s (but it will not function with dummy provider)", hotkey)
 	p.callbacks[hotkey] = callback
 	return nil
 }
 
-// CaptureOnce is not supported in dummy provider
+// Return an error as this functionality is not supported
 func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dummy provider")
 }

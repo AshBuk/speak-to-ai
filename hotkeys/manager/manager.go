@@ -17,7 +17,7 @@ import (
 // HotkeyAction represents a hotkey action callback
 type HotkeyAction func() error
 
-// HotkeyManager handles keyboard shortcuts
+// Manages keyboard shortcuts, providers, and actions
 type HotkeyManager struct {
 	config           adapters.HotkeyConfig
 	isListening      bool
@@ -25,15 +25,15 @@ type HotkeyManager struct {
 	stopListening    chan bool
 	recordingStarted func() error
 	recordingStopped func() error
-	hotkeyActions    map[string]HotkeyAction // Additional hotkey actions
+	hotkeyActions    map[string]HotkeyAction // Maps hotkey actions to their callbacks
 	hotkeysMutex     sync.Mutex
 	environment      interfaces.EnvironmentType
 	provider         interfaces.KeyboardEventProvider
-	modifierState    map[string]bool // Track state of modifier keys
+	modifierState    map[string]bool // Tracks the state of modifier keys
 	logger           logger.Logger
 }
 
-// NewHotkeyManager creates a new instance of HotkeyManager
+// Create a new instance of the HotkeyManager
 func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *HotkeyManager {
 	manager := &HotkeyManager{
 		config:        config,
@@ -46,15 +46,15 @@ func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.Envir
 		logger:        logger,
 	}
 
-	// Initialize the appropriate keyboard provider based on environment and privileges
+	// Initialize the appropriate keyboard provider
 	manager.provider = selectProviderForEnvironment(manager.config, manager.environment, manager.logger)
 
 	return manager
 }
 
-// selectProviderForEnvironment is defined per-OS (see manager_linux.go and manager_stub.go)
+// selectProviderForEnvironment is defined in OS-specific files (e.g., manager_linux.go)
 
-// RegisterCallbacks registers callback functions for hotkey actions
+// Register callbacks for recording start and stop events
 func (h *HotkeyManager) RegisterCallbacks(
 	recordingStarted func() error,
 	recordingStopped func() error,
@@ -63,30 +63,30 @@ func (h *HotkeyManager) RegisterCallbacks(
 	h.recordingStopped = recordingStopped
 }
 
-// RegisterHotkeyAction registers a custom hotkey action
+// Register a custom hotkey action
 func (h *HotkeyManager) RegisterHotkeyAction(hotkey string, action HotkeyAction) {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	h.hotkeyActions[hotkey] = action
 }
 
-// UnregisterHotkeyAction removes a hotkey action
+// Unregister a custom hotkey action
 func (h *HotkeyManager) UnregisterHotkeyAction(hotkey string) {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	delete(h.hotkeyActions, hotkey)
 }
 
-// GetRegisteredHotkeys returns all registered hotkeys
+// Return all registered hotkeys
 func (h *HotkeyManager) GetRegisteredHotkeys() []string {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 
 	var hotkeys []string
-	// Add recording hotkeys
+	// Add the primary recording hotkeys
 	hotkeys = append(hotkeys, h.config.GetStartRecordingHotkey())
 
-	// Add custom hotkeys
+	// Add any custom hotkeys
 	for hotkey := range h.hotkeyActions {
 		hotkeys = append(hotkeys, hotkey)
 	}
@@ -94,13 +94,12 @@ func (h *HotkeyManager) GetRegisteredHotkeys() []string {
 	return hotkeys
 }
 
-// Start begins listening for hotkeys
+// Start listening for hotkeys
 func (h *HotkeyManager) Start() error {
 	if h.isListening {
 		return fmt.Errorf("hotkey manager is already running")
 	}
 
-	// Check if provider is available
 	if h.provider == nil {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
@@ -110,15 +109,14 @@ func (h *HotkeyManager) Start() error {
 	h.logger.Info("Starting hotkey manager...")
 	h.logger.Info("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
 
-	// Register all hotkeys using helper
+	// Register all hotkeys on the selected provider
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
 		return err
 	}
 
-	// Start the provider
+	// Start the provider and handle potential fallbacks
 	err := h.provider.Start()
 	if err != nil {
-		// Delegate fallback logic to helper
 		h.isListening = false
 		return startFallbackAfterRegistration(h, err)
 	}
@@ -126,7 +124,7 @@ func (h *HotkeyManager) Start() error {
 	return nil
 }
 
-// Stop stops the hotkey listener
+// Stop the hotkey listener
 func (h *HotkeyManager) Stop() {
 	if h.isListening {
 		h.provider.Stop()
@@ -134,21 +132,21 @@ func (h *HotkeyManager) Stop() {
 	}
 }
 
-// IsRecording returns the current recording state
+// Return the current recording state
 func (h *HotkeyManager) IsRecording() bool {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	return h.isRecording
 }
 
-// ResetRecordingState forcefully sets recording state to false
+// Forcefully set the recording state to false
 func (h *HotkeyManager) ResetRecordingState() {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	h.isRecording = false
 }
 
-// SimulateHotkeyPress simulates a hotkey press for testing
+// Simulate a hotkey press for testing purposes
 func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
@@ -175,7 +173,7 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	return nil
 }
 
-// ReloadConfig stops current listener, updates config/provider, re-registers and restarts
+// Reload the configuration by stopping, updating the provider, and restarting
 func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if h.isListening && h.provider != nil {
 		h.provider.Stop()
@@ -188,12 +186,12 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
 
-	// Register all hotkeys using helper
+	// Re-register all hotkeys on the new provider
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
 		return err
 	}
 
-	// Start the provider
+	// Start the new provider
 	if err := h.provider.Start(); err != nil {
 		return startFallbackAfterRegistration(h, err)
 	}
@@ -202,8 +200,8 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	return nil
 }
 
-// CaptureOnce attempts to capture a single hotkey combination using the active provider.
-// If the active provider does not support capture, it falls back to a temporary evdev provider.
+// Attempt to capture a single hotkey combination
+// Fall back to a temporary evdev provider if the active one does not support capture
 func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider == nil {
 		return "", fmt.Errorf("no keyboard provider available")
@@ -212,6 +210,7 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if err == nil && combo != "" {
 		return combo, nil
 	}
+	// If the D-Bus provider fails, attempt a fallback to evdev for the capture
 	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
 		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
 		if fallback != nil && fallback.IsSupported() {
@@ -221,12 +220,12 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", err
 }
 
-// SupportsCaptureOnce returns true if the active provider can capture once
+// Check if the active provider supports the capture-once functionality
 func (h *HotkeyManager) SupportsCaptureOnce() bool {
 	if h.provider == nil {
 		return false
 	}
-	// evdev supports capture once; dbus provider returns explicit error; dummy doesn't
+	// evdev supports capture-once, dbus does not
 	if _, ok := h.provider.(*providers.EvdevKeyboardProvider); ok {
 		return true
 	}

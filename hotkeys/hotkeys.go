@@ -1,14 +1,13 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-// Package hotkeys provides hotkey management functionality with support for multiple providers
-// and desktop environments. It handles global hotkey registration and event processing.
+// Package hotkeys provides a high-level facade for hotkey management
+// It abstracts the underlying implementation of providers and event handling
 //
 // Subpackages:
-//   - interfaces: KeyboardEventProvider interface and related types
-//   - providers: Provider implementations (dbus, evdev, dummy)
-//   - manager: HotkeyManager and provider fallback logic
-//   - adapters: Configuration adapters and utilities
-//   - mocks: Mock implementations for testing
-//   - utils: Utility functions for hotkeys
+//   - interfaces: Define contracts for hotkey providers
+//   - providers:  Provide concrete implementations for different environments (D-Bus, evdev)
+//   - manager:    Implement the core HotkeyManager logic, including provider selection and fallback
+//   - adapters:   Provide adapters for configuration structs
+//   - utils:      Offer utility functions for parsing and handling key combinations
 package hotkeys
