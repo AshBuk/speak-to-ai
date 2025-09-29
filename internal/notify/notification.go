@@ -11,13 +11,13 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 )
 
-// NotificationManager handles desktop notifications
+// Manages the sending of desktop notifications
 type NotificationManager struct {
 	appName string
 	config  *config.Config
 }
 
-// NewNotificationManager creates a new notification manager
+// Create a new notification manager
 func NewNotificationManager(appName string, cfg *config.Config) *NotificationManager {
 	return &NotificationManager{
 		appName: appName,
@@ -25,26 +25,26 @@ func NewNotificationManager(appName string, cfg *config.Config) *NotificationMan
 	}
 }
 
-// NotifyStartRecording shows a notification when recording starts
+// Show a notification when recording starts
 func (nm *NotificationManager) NotifyStartRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
-		return nil // Skip workflow notification
+		return nil // Skip if workflow notifications are disabled
 	}
 	return nm.sendNotification(constants.NotifyTitleRecordingStart, constants.NotifyRecordingStartMsg, "notification-microphone-sensitivity-high")
 }
 
-// NotifyStopRecording shows a notification when recording stops
+// Show a notification when recording stops
 func (nm *NotificationManager) NotifyStopRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
-		return nil // Skip workflow notification
+		return nil // Skip if workflow notifications are disabled
 	}
 	return nm.sendNotification(constants.NotifyTitleRecordingStop, constants.NotifyRecordingStopMsg, "notification-microphone-sensitivity-muted")
 }
 
-// NotifyTranscriptionComplete shows a notification when transcription is complete
+// Show a notification when transcription is complete
 func (nm *NotificationManager) NotifyTranscriptionComplete() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
-		return nil // Skip workflow notification
+		return nil // Skip if workflow notifications are disabled
 	}
 	// Select message based on current output mode
 	body := constants.NotifyTranscriptionMsg
@@ -54,22 +54,22 @@ func (nm *NotificationManager) NotifyTranscriptionComplete() error {
 	return nm.sendNotification(constants.NotifyTitleTranscription, body, "edit-copy")
 }
 
-// NotifyError shows an error notification
+// Show an error notification
 func (nm *NotificationManager) NotifyError(errMsg string) error {
 	return nm.sendNotification(constants.NotifyTitleError, errMsg, "dialog-error")
 }
 
-// NotifyConfigurationReset shows a notification when configuration is reset to defaults
+// Show a notification when the configuration is reset to defaults
 func (nm *NotificationManager) NotifyConfigurationReset() error {
 	return nm.sendNotification(constants.NotifyTitleConfigReset, constants.NotifyConfigResetSuccess, "preferences-system")
 }
 
-// ShowNotification shows a generic notification
+// Show a generic notification
 func (nm *NotificationManager) ShowNotification(summary, body string) error {
 	return nm.sendNotification(summary, body, "dialog-information")
 }
 
-// sendNotification sends a notification with the given parameters
+// Send a notification using the notify-send command
 func (nm *NotificationManager) sendNotification(summary, body, icon string) error {
 	// Security: validate command before execution
 	if !config.IsCommandAllowed(nm.config, "notify-send") {
@@ -84,7 +84,7 @@ func (nm *NotificationManager) sendNotification(summary, body, icon string) erro
 
 	// Security: sanitize arguments
 	safeArgs := config.SanitizeCommandArgs(args)
-	// #nosec G204 -- Safe: notify-send is allowlisted and arguments are sanitized.
+	// #nosec G204 -- Safe: notify-send is from an allowlist and arguments are sanitized
 	cmd := exec.Command("notify-send", safeArgs...)
 
 	if err := cmd.Run(); err != nil {
@@ -94,7 +94,7 @@ func (nm *NotificationManager) sendNotification(summary, body, icon string) erro
 	return nil
 }
 
-// IsAvailable checks if the notification system is available
+// Check if the notification system is available
 func (nm *NotificationManager) IsAvailable() bool {
 	_, err := exec.LookPath("notify-send")
 	return err == nil

@@ -18,7 +18,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 )
 
-// UIService implements UIServiceInterface
+// Coordinates tray icon states and desktop notifications
 type UIService struct {
 	logger        logger.Logger
 	trayManager   tray.TrayManagerInterface
@@ -26,7 +26,7 @@ type UIService struct {
 	config        *config.Config
 }
 
-// NewUIService creates a new UIService instance
+// Create a new service instance
 func NewUIService(
 	logger logger.Logger,
 	trayManager tray.TrayManagerInterface,
@@ -41,14 +41,14 @@ func NewUIService(
 	}
 }
 
-// SetRecordingState implements UIServiceInterface
+// Update tray icon to reflect current recording state
 func (us *UIService) SetRecordingState(isRecording bool) {
 	if us.trayManager != nil {
 		us.trayManager.SetRecordingState(isRecording)
 	}
 }
 
-// ShowNotification implements UIServiceInterface
+// Display desktop notification with appropriate icon
 func (us *UIService) ShowNotification(title, message string) {
 	if us.notifyManager != nil {
 		// Use appropriate notification method based on message type
@@ -59,20 +59,20 @@ func (us *UIService) ShowNotification(title, message string) {
 	}
 }
 
-// UpdateSettings updates tray UI with current configuration
+// Refresh tray menu items to reflect config changes
 func (us *UIService) UpdateSettings(cfg *config.Config) {
 	if us.trayManager != nil {
 		us.trayManager.UpdateSettings(cfg)
 	}
 }
 
-// UpdateRecordingUI implements UIServiceInterface
+// Update visual feedback during active recording
 func (us *UIService) UpdateRecordingUI(isRecording bool, level float64) {
 	us.SetRecordingState(isRecording)
 
 }
 
-// SetError implements UIServiceInterface
+// Display error notification and log for debugging
 func (us *UIService) SetError(message string) {
 	us.logger.Error("UI Error: %s", message)
 
@@ -83,7 +83,7 @@ func (us *UIService) SetError(message string) {
 	}
 }
 
-// SetSuccess implements UIServiceInterface
+// Display success notification for completed operations
 func (us *UIService) SetSuccess(message string) {
 	us.logger.Info("UI Success: %s", message)
 
@@ -94,7 +94,7 @@ func (us *UIService) SetSuccess(message string) {
 	}
 }
 
-// ShowAboutPage opens the About page in the default browser
+// Create temporary HTML file and open with system browser
 func (us *UIService) ShowAboutPage() error {
 	us.logger.Info("Showing about page...")
 
@@ -114,7 +114,7 @@ func (us *UIService) ShowAboutPage() error {
 	return us.openWithSystem(tmpFile.Name())
 }
 
-// ShowConfigFile implements UIServiceInterface
+// Open configuration file with system default editor
 func (us *UIService) ShowConfigFile() error {
 	us.logger.Info("Showing config file...")
 
@@ -144,8 +144,8 @@ func (us *UIService) ShowConfigFile() error {
 	return nil
 }
 
-// Open file or directory via the system default handler.
-// It strips AppImage-related environment variables to avoid host app linkage issues.
+// Open file with system handler while cleaning AppImage environment variables
+// to prevent host application conflicts
 func (us *UIService) openWithSystem(target string) error {
 	// #nosec G204 -- Safe: xdg-open is a system tool; arguments are not shell-interpreted.
 	cmd := exec.Command("xdg-open", target)
@@ -167,7 +167,7 @@ func (us *UIService) openWithSystem(target string) error {
 	return cmd.Start()
 }
 
-// getConfigPath retrieves the effective config file path
+// Locate config file across different installation methods (AppImage/Flatpak)
 func (us *UIService) getConfigPath() (string, bool) {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
@@ -187,7 +187,7 @@ func (us *UIService) getConfigPath() (string, bool) {
 	return appImagePath, true
 }
 
-// sendNotification is a helper method for sending notifications
+// Route notification to appropriate handler based on message type
 func (us *UIService) sendNotification(title, message, _ string) error {
 	if us.notifyManager == nil {
 		return fmt.Errorf("notification manager not available")
@@ -212,7 +212,7 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 	}
 }
 
-// Shutdown implements UIServiceInterface
+// Clean termination of UI components
 func (us *UIService) Shutdown() error {
 	us.logger.Info("UIService shutdown complete")
 	return nil

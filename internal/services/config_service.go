@@ -11,7 +11,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// ConfigService implements ConfigServiceInterface for configuration management only
+// Manages persistent configuration state and validation
 type ConfigService struct {
 	logger     logger.Logger
 	config     *config.Config
@@ -19,7 +19,7 @@ type ConfigService struct {
 	uiService  UIServiceInterface
 }
 
-// NewConfigService creates a new ConfigService instance
+// Create a new ConfigService instance
 func NewConfigService(
 	logger logger.Logger,
 	config *config.Config,
@@ -33,12 +33,12 @@ func NewConfigService(
 	}
 }
 
-// SetUIService sets the UI service for notifications (dependency injection)
+// Wire UI service to enable user feedback after config changes
 func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
 	cs.uiService = uiService
 }
 
-// LoadConfig implements ConfigServiceInterface
+// Update active configuration path reference
 func (cs *ConfigService) LoadConfig(configFile string) error {
 	cs.logger.Info("Loading configuration from: %s", configFile)
 	cs.configFile = configFile
@@ -47,7 +47,7 @@ func (cs *ConfigService) LoadConfig(configFile string) error {
 	return nil
 }
 
-// SaveConfig implements ConfigServiceInterface
+// Persist current configuration state to disk
 func (cs *ConfigService) SaveConfig() error {
 	cs.logger.Info("Saving configuration to: %s", cs.configFile)
 
@@ -58,7 +58,7 @@ func (cs *ConfigService) SaveConfig() error {
 	return config.SaveConfig(cs.configFile, cs.config)
 }
 
-// ResetToDefaults implements ConfigServiceInterface
+// Restore factory defaults and notify user of successful reset
 func (cs *ConfigService) ResetToDefaults() error {
 	cs.logger.Info("Resetting configuration to defaults...")
 
@@ -81,7 +81,7 @@ func (cs *ConfigService) ResetToDefaults() error {
 	return nil
 }
 
-// GetConfig implements ConfigServiceInterface
+// Provide read-only access to current configuration
 func (cs *ConfigService) GetConfig() *config.Config {
 	return cs.config
 }
@@ -113,7 +113,7 @@ func (cs *ConfigService) GetConfig() *config.Config {
 //	return nil
 // }
 
-// UpdateLanguage implements ConfigServiceInterface
+// Change whisper language setting with rollback on save failure
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)
 
@@ -132,7 +132,7 @@ func (cs *ConfigService) UpdateLanguage(language string) error {
 	return nil
 }
 
-// UpdateOutputMode implements ConfigServiceInterface
+// Switch between clipboard and typing output with rollback protection
 func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	cs.logger.Info("Updating output mode to: %s", mode)
 
@@ -151,7 +151,7 @@ func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	return nil
 }
 
-// ToggleWorkflowNotifications implements ConfigServiceInterface
+// Enable/disable desktop notifications for workflow events
 func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.logger.Info("Toggling workflow notifications")
 
@@ -170,7 +170,7 @@ func (cs *ConfigService) ToggleWorkflowNotifications() error {
 //	return cs.SaveConfig()
 // }
 
-// UpdateRecordingMethod updates and persists the audio recording method
+// Switch audio backend (arecord/ffmpeg) with validation and persistence
 func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	cs.logger.Info("Updating recording method to: %s", method)
 
@@ -193,7 +193,7 @@ func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	return nil
 }
 
-// UpdateHotkey updates a hotkey action string and persists config
+// Rebind hotkey combinations with validation and rollback protection
 func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	if cs == nil || cs.config == nil {
 		return fmt.Errorf("config service not available")
@@ -231,7 +231,7 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	return nil
 }
 
-// Shutdown implements ConfigServiceInterface
+// Ensure final configuration state is saved before termination
 func (cs *ConfigService) Shutdown() error {
 	// Save final configuration state
 	if err := cs.SaveConfig(); err != nil {

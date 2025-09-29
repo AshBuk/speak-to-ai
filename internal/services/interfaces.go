@@ -8,7 +8,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
 
-// AudioServiceInterface defines the contract for audio-related operations
+// Defines the contract for audio-related operations
 type AudioServiceInterface interface {
 	// Recording lifecycle
 	HandleStartRecording() error
@@ -23,7 +23,7 @@ type AudioServiceInterface interface {
 	Shutdown() error
 }
 
-// UIServiceInterface defines the contract for user interface operations
+// Defines the contract for user interface operations
 type UIServiceInterface interface {
 	// Tray management
 	SetRecordingState(isRecording bool)
@@ -43,7 +43,7 @@ type UIServiceInterface interface {
 	Shutdown() error
 }
 
-// IOServiceInterface defines the contract for input/output operations
+// Defines the contract for input/output operations
 type IOServiceInterface interface {
 	// Text output
 	OutputText(text string) error
@@ -57,7 +57,7 @@ type IOServiceInterface interface {
 	Shutdown() error
 }
 
-// ConfigServiceInterface defines the contract for configuration operations
+// Defines the contract for configuration operations
 type ConfigServiceInterface interface {
 	// Configuration management
 	LoadConfig(configFile string) error
@@ -79,7 +79,7 @@ type ConfigServiceInterface interface {
 	Shutdown() error
 }
 
-// HotkeyServiceInterface defines the contract for hotkey operations
+// Defines the contract for hotkey operations
 type HotkeyServiceInterface interface {
 	// Hotkey callback setup
 	SetupHotkeyCallbacks(
@@ -116,12 +116,12 @@ type ServiceContainer struct {
 	Hotkeys HotkeyServiceInterface
 }
 
-// NewServiceContainer creates a new service container with all services
+// Create a new service container with all services
 func NewServiceContainer() *ServiceContainer {
 	return &ServiceContainer{}
 }
 
-// Shutdown gracefully shuts down all services
+// Gracefully shut down all services
 func (sc *ServiceContainer) Shutdown() error {
 	var lastErr error
 

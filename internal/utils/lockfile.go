@@ -23,7 +23,7 @@ type LockFile struct {
 	file *os.File
 }
 
-// NewLockFile creates a new lock file instance
+// Create a new lock file instance
 func NewLockFile(path string) *LockFile {
 	return &LockFile{
 		path: path,

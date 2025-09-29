@@ -5,7 +5,7 @@ package tray
 
 import "github.com/AshBuk/speak-to-ai/config"
 
-// TrayManagerInterface defines the interface for tray managers
+// Defines the interface for tray managers
 type TrayManagerInterface interface {
 	Start()
 	SetRecordingState(isRecording bool)

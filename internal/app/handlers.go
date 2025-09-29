@@ -9,9 +9,9 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
 
-// Hotkey handler methods that delegate to services
+// Defines hotkey handler methods that delegate to the appropriate services
 
-// handleStartRecording handles the start recording hotkey
+// Handle the start recording hotkey
 func (a *App) handleStartRecording() error {
 	if a.Services == nil || a.Services.Audio == nil {
 		return fmt.Errorf("audio service not available")
@@ -19,7 +19,7 @@ func (a *App) handleStartRecording() error {
 	return a.Services.Audio.HandleStartRecording()
 }
 
-// handleStopRecordingAndTranscribe handles the stop recording hotkey
+// Handle the stop recording hotkey
 func (a *App) handleStopRecordingAndTranscribe() error {
 	if a.Services == nil || a.Services.Audio == nil {
 		return fmt.Errorf("audio service not available")
@@ -36,7 +36,7 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 //	return a.Services.Config.ToggleVAD()
 // }
 
-// handleShowConfig handles show config hotkey
+// Handle the show config hotkey
 func (a *App) handleShowConfig() error {
 	if a.Services == nil || a.Services.UI == nil {
 		return fmt.Errorf("UI service not available")
@@ -44,7 +44,7 @@ func (a *App) handleShowConfig() error {
 	return a.Services.UI.ShowConfigFile()
 }
 
-// handleResetToDefaults handles reset to defaults hotkey
+// Handle the reset to defaults hotkey
 func (a *App) handleResetToDefaults() error {
 	if a.Services == nil || a.Services.Config == nil {
 		return fmt.Errorf("config service not available")
@@ -52,7 +52,7 @@ func (a *App) handleResetToDefaults() error {
 	if err := a.Services.Config.ResetToDefaults(); err != nil {
 		return err
 	}
-	// Reload hotkeys to apply default bindings immediately (covers hotkey-initiated reset)
+	// Reload hotkeys to apply the new default bindings immediately
 	if a.Services.Hotkeys != nil {
 		cfgProvider := func() adapters.HotkeyConfig {
 			if cfg := a.Services.Config.GetConfig(); cfg != nil {
