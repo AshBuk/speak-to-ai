@@ -63,8 +63,8 @@ func SetDefaultConfig(config *models.Config) {
 
 	// Hotkey settings
 	config.Hotkeys.Provider = "auto"
-	config.Hotkeys.StartRecording = "alt+r" // Start/stop recording
-	config.Hotkeys.StopRecording = "alt+r"  // Same combination for start/stop
+	config.Hotkeys.StartRecording = "alt+r"  // Start/stop recording
+	config.Hotkeys.StopRecording = "alt+r"   // Same combination for start/stop
 	config.Hotkeys.ShowConfig = "alt+c"      // Show config
 	config.Hotkeys.ResetToDefaults = "alt+d" // Reset to defaults
 
