@@ -1,11 +1,11 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-// Package output provides text output functionality with support for multiple output methods
-// and desktop environments. It handles clipboard operations and text typing simulation.
+// Package output provides a high-level facade for text output functionality
+// It abstracts the underlying implementation of clipboard and typing operations
 //
 // Subpackages:
-//   - interfaces: Outputter interface and related types
-//   - outputters: Output implementations (clipboard, type, combined, mock)
-//   - factory: Factory functions and environment detection
+//   - interfaces: Define contracts (interfaces) for text output components
+//   - outputters: Provide concrete implementations for different output methods
+//   - factory:    Implement a factory for creating outputter instances
 package output

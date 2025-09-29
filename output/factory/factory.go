@@ -13,7 +13,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
 
-// EnvironmentType represents the display server type
+// Defines the display server type
 type EnvironmentType string
 
 const (
@@ -21,25 +21,25 @@ const (
 	EnvironmentX11 EnvironmentType = "X11"
 	// EnvironmentWayland represents Wayland display server
 	EnvironmentWayland EnvironmentType = "Wayland"
-	// EnvironmentUnknown represents unknown display server
+	// EnvironmentUnknown represents an unknown display server
 	EnvironmentUnknown EnvironmentType = "Unknown"
 )
 
-// Factory creates output managers based on environment and configuration
+// Creates output managers based on environment and configuration
 type Factory struct {
 	config *config.Config
 }
 
-// NewFactory creates a new output factory
+// Create a new output factory
 func NewFactory(config *config.Config) *Factory {
 	return &Factory{
 		config: config,
 	}
 }
 
-// GetOutputter creates an appropriate outputter based on environment
+// Create an appropriate outputter based on the environment
 func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error) {
-	// Choose clipboard tool based on environment
+	// Choose a clipboard tool based on the environment
 	clipboardTool := f.config.Output.ClipboardTool
 	if clipboardTool == "auto" {
 		switch env {
@@ -52,7 +52,7 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 		}
 	}
 
-	// Choose type tool based on environment
+	// Choose a typing tool based on the environment
 	typeTool := f.config.Output.TypeTool
 	if typeTool == "auto" {
 		switch env {
@@ -68,7 +68,7 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 					typeTool = "xdotool"
 				}
 			} else {
-				// Non-GNOME Wayland: try wtype first, then ydotool
+				// For non-GNOME Wayland, try wtype first, then ydotool
 				if f.isToolAvailable("wtype") {
 					typeTool = "wtype"
 				} else if f.isToolAvailable("ydotool") {
@@ -81,7 +81,7 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 		case EnvironmentX11:
 			typeTool = "xdotool"
 		default:
-			// Auto-detect best available tool
+			// Auto-detect the best available tool
 			if f.isToolAvailable("xdotool") {
 				typeTool = "xdotool"
 			} else if f.isToolAvailable("wtype") {
@@ -94,7 +94,7 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 		}
 	}
 
-	// Security: Validate selected tool commands against allowlist
+	// Security: Validate selected tool commands against the allowlist
 	if clipboardTool != "" && !config.IsCommandAllowed(f.config, clipboardTool) {
 		return nil, fmt.Errorf("clipboard tool not allowed: %s", clipboardTool)
 	}
@@ -102,7 +102,7 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 		return nil, fmt.Errorf("type tool not allowed: %s", typeTool)
 	}
 
-	// Create appropriate outputter
+	// Create the appropriate outputter based on the default mode
 	switch f.config.Output.DefaultMode {
 	case config.OutputModeClipboard:
 		return outputters.NewClipboardOutputter(clipboardTool, f.config)
@@ -113,13 +113,13 @@ func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error
 	}
 }
 
-// GetOutputterFromConfig is a convenience function to create an outputter directly from config
+// Create an outputter directly from a configuration
 func GetOutputterFromConfig(config *config.Config, env EnvironmentType) (interfaces.Outputter, error) {
 	factory := NewFactory(config)
 	return factory.GetOutputter(env)
 }
 
-// isToolAvailable checks if a command-line tool is available in PATH
+// Check if a command-line tool is available in the system's PATH
 func (f *Factory) isToolAvailable(toolName string) bool {
 	_, err := exec.LookPath(toolName)
 	return err == nil
