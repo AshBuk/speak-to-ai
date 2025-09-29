@@ -18,7 +18,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// WebSocketServer represents a WebSocket server
+// Enables real-time speech-to-text API for external clients
 type WebSocketServer struct {
 	config      *config.Config
 	clients     map[*websocket.Conn]bool
@@ -32,7 +32,7 @@ type WebSocketServer struct {
 	logger      logger.Logger
 }
 
-// Message represents a message for exchange via WebSocket
+// Protocol structure for bidirectional client communication
 type Message struct {
 	Type       string      `json:"type"`
 	Payload    interface{} `json:"payload,omitempty"`
@@ -42,7 +42,7 @@ type Message struct {
 	Error      string      `json:"error,omitempty"`
 }
 
-// NewWebSocketServer creates a new instance of WebSocketServer
+// Initialize server with security and resource constraints
 func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
@@ -66,7 +66,7 @@ func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder
 	}
 }
 
-// Start launches the WebSocket server
+// Begin accepting client connections with health monitoring
 func (s *WebSocketServer) Start() error {
 	if !s.config.WebServer.Enabled {
 		return nil
@@ -112,7 +112,7 @@ func (s *WebSocketServer) Start() error {
 	return nil
 }
 
-// Stop gracefully shuts down the WebSocket server
+// Ensure clean client disconnection before termination
 func (s *WebSocketServer) Stop() {
 	if s.server != nil && s.started {
 		s.logger.Info("Stopping WebSocket server...")
@@ -140,7 +140,7 @@ func (s *WebSocketServer) Stop() {
 	}
 }
 
-// handleWebSocket handles WebSocket connections
+// Authenticate and establish secure client session
 func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Check authentication first
 	if !s.authenticate(r) {
@@ -204,7 +204,7 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	s.processMessages(conn)
 }
 
-// pingClient sends periodic pings to keep connection alive
+// Maintain connection health to prevent proxy timeouts
 func (s *WebSocketServer) pingClient(conn *websocket.Conn) {
 	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
@@ -217,7 +217,7 @@ func (s *WebSocketServer) pingClient(conn *websocket.Conn) {
 	}
 }
 
-// sendMessage sends a message to a client
+// Deliver structured response with timeout protection
 func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, payload interface{}, requestID ...string) {
 	msg := Message{
 		Type:       messageType,
@@ -252,7 +252,7 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 	}
 }
 
-// BroadcastMessage sends a message to all connected clients
+// Notify all active clients of server-wide events
 func (s *WebSocketServer) BroadcastMessage(messageType string, payload interface{}) {
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
