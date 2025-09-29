@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TempFileManager handles temporary audio files lifecycle
+// Manages the lifecycle of temporary audio files
 type TempFileManager struct {
 	tempFiles      map[string]time.Time
 	mutex          sync.Mutex
@@ -23,12 +23,12 @@ type TempFileManager struct {
 }
 
 var (
-	// Global singleton instance
+	// global singleton instance
 	tempFileManager *TempFileManager
 	managerOnce     sync.Once
 )
 
-// GetTempFileManager returns the global TempFileManager instance
+// Return the global TempFileManager instance, creating it if necessary
 func GetTempFileManager() *TempFileManager {
 	managerOnce.Do(func() {
 		tempFileManager = &TempFileManager{
@@ -41,14 +41,14 @@ func GetTempFileManager() *TempFileManager {
 	return tempFileManager
 }
 
-// AddFile adds a file to the manager for tracking
+// Add a file to the manager for tracking and eventual cleanup
 func (t *TempFileManager) AddFile(path string) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	t.tempFiles[path] = time.Now()
 }
 
-// RemoveFile removes a file from tracking and optionally deletes it
+// Remove a file from tracking and optionally delete it from disk
 func (t *TempFileManager) RemoveFile(path string, shouldDelete bool) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -64,7 +64,7 @@ func (t *TempFileManager) RemoveFile(path string, shouldDelete bool) {
 	}
 }
 
-// cleanupRoutine periodically checks for old files to remove
+// Run a background routine to periodically remove old files
 func (t *TempFileManager) cleanupRoutine() {
 	t.running = true
 	ticker := time.NewTicker(5 * time.Minute)
@@ -81,7 +81,7 @@ func (t *TempFileManager) cleanupRoutine() {
 	}
 }
 
-// cleanupOldFiles removes files older than the timeout
+// Remove any tracked files that are older than the configured timeout
 func (t *TempFileManager) cleanupOldFiles() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -99,7 +99,7 @@ func (t *TempFileManager) cleanupOldFiles() {
 	}
 }
 
-// CleanupAll removes all tracked temp files immediately
+// Remove all tracked temporary files from disk immediately
 func (t *TempFileManager) CleanupAll() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -114,7 +114,7 @@ func (t *TempFileManager) CleanupAll() {
 	}
 }
 
-// Stop shuts down the cleanup routine
+// Stop the background cleanup routine
 func (t *TempFileManager) Stop() {
 	if t.running {
 		t.stopChan <- true
@@ -122,37 +122,37 @@ func (t *TempFileManager) Stop() {
 	}
 }
 
-// CreateTempWav creates a temp .wav file in provided base dir (or os.TempDir) and registers it
+// Create a new temporary .wav file and register it for cleanup
 func (t *TempFileManager) CreateTempWav(baseDir string) (string, error) {
-	// Determine directory
+	// Determine the directory for the temporary file
 	dir := baseDir
 	if dir == "" {
 		dir = os.TempDir()
 	}
 
-	// Ensure directory exists
+	// Ensure the target directory exists
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %w", err)
 	}
 
-	// Generate unique name
+	// Generate a unique filename based on the current timestamp
 	timestamp := time.Now().Format("20060102-150405")
 	path := filepath.Join(dir, fmt.Sprintf("audio_%s.wav", timestamp))
 	cleaned := filepath.Clean(path)
-	// Ensure the path remains within the base directory to avoid traversal
+	// Ensure the path remains within the base directory to prevent traversal attacks
 	if !strings.HasPrefix(cleaned+string(os.PathSeparator), filepath.Clean(dir)+string(os.PathSeparator)) {
 		return "", fmt.Errorf("unsafe temp file path outside base dir")
 	}
 
-	// Pre-create file for downstream checks
-	// #nosec G304 -- Safe: path is constructed, cleaned, and verified under controlled base directory
+	// Pre-create the file to reserve the path
+	// #nosec G304 -- Safe: path is constructed, cleaned, and verified under a controlled base directory.
 	f, err := os.OpenFile(cleaned, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	_ = f.Close()
 
-	// Track file for cleanup
+	// Track the file for automatic cleanup
 	t.AddFile(cleaned)
 	return cleaned, nil
 }

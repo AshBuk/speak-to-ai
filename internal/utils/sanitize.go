@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// SanitizeTranscript removes placeholder tokens and normalizes whitespace.
-// This package is broadly used across app and whisper layers.
+// Remove placeholder tokens and normalize whitespace.
+// This package is broadly used across app and whisper layers
 func SanitizeTranscript(input string) string {
 	if input == "" {
 		return ""

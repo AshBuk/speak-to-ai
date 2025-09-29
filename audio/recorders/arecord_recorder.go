@@ -10,21 +10,21 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// ArecordRecorder implements AudioRecorder using arecord
+// Implements the AudioRecorder interface using the `arecord` command-line tool
 type ArecordRecorder struct {
 	BaseRecorder
 }
 
-// NewArecordRecorder creates a new instance of ArecordRecorder
+// Create a new instance of the arecord-based recorder
 func NewArecordRecorder(config *config.Config, logger logger.Logger) *ArecordRecorder {
 	return &ArecordRecorder{
 		BaseRecorder: NewBaseRecorder(config, logger),
 	}
 }
 
-// StartRecording starts audio recording
+// Start an audio recording using the `arecord` command
 func (a *ArecordRecorder) StartRecording() error {
-	// Build arecord command arguments (output file will be set in ExecuteRecordingCommand)
+	// Build the command-line arguments for arecord
 	formatArg := a.getArecordFormat()
 
 	baseArgs := []string{
@@ -34,19 +34,15 @@ func (a *ArecordRecorder) StartRecording() error {
 		"-c", "1",
 	}
 
-	if a.useBuffer {
-		// Keep WAV header for buffer mode compatibility
-		baseArgs = append(baseArgs, "-t", "wav")
-	} else {
-		// Output to file with WAV header - file path will be added in ExecuteRecordingCommand
-		baseArgs = append(baseArgs, "-t", "wav")
-	}
+	// Ensure a WAV header is used for both file and buffer modes
+	baseArgs = append(baseArgs, "-t", "wav")
 
-	// Use BaseRecorder's ExecuteRecordingCommand for all process management
+	// Use the BaseRecorder to execute the command and manage the process
 	return a.ExecuteRecordingCommand("arecord", baseArgs)
 }
 
-// getArecordFormat converts format from ffmpeg style to arecord style
+// Convert a format string from the application's convention (e.g., s16le)
+// to the format required by the `arecord` tool (e.g., S16_LE)
 func (a *ArecordRecorder) getArecordFormat() string {
 	format := a.config.Audio.Format
 	switch format {

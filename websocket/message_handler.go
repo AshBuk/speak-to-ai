@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// processMessages reads and processes messages from a client
+// Handle client requests with message validation and routing
 func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 	for {
 		_, rawMessage, err := conn.ReadMessage()
@@ -50,7 +50,7 @@ func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 	}
 }
 
-// handleStartRecording starts audio recording
+// Initiate recording session with retry logic for reliability
 func (s *WebSocketServer) handleStartRecording(conn *websocket.Conn, requestID string) {
 	// Start recording
 	err := s.executeWithRetry(func() error {
@@ -66,7 +66,7 @@ func (s *WebSocketServer) handleStartRecording(conn *websocket.Conn, requestID s
 	s.sendMessage(conn, "recording-started", nil, requestID)
 }
 
-// handleStopRecording stops recording and transcribes the audio
+// Complete recording workflow and deliver transcription result
 func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID string) {
 	// Stop recording
 	audioFile, err := s.recorder.StopRecording()
@@ -117,7 +117,7 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 	}
 }
 
-// sendError sends an error message to a client
+// Deliver structured error response for client debugging
 func (s *WebSocketServer) sendError(conn *websocket.Conn, errorType string, errorMsg string, requestID string) {
 	msg := Message{
 		Type:       "error",

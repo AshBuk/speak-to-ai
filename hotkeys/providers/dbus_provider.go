@@ -18,7 +18,7 @@ import (
 	dbus "github.com/godbus/dbus/v5"
 )
 
-// DbusKeyboardProvider implements KeyboardEventProvider using D-Bus portal
+// Implements KeyboardEventProvider using the D-Bus GlobalShortcuts portal
 type DbusKeyboardProvider struct {
 	config        adapters.HotkeyConfig
 	environment   interfaces.EnvironmentType
@@ -30,7 +30,7 @@ type DbusKeyboardProvider struct {
 	logger        logger.Logger
 }
 
-// NewDbusKeyboardProvider creates a new D-Bus keyboard provider
+// Create a new D-Bus keyboard provider
 func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
 		config:      config,
@@ -41,7 +41,7 @@ func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interface
 	}
 }
 
-// IsSupported checks if D-Bus portal GlobalShortcuts is available
+// Check if the D-Bus GlobalShortcuts portal is available
 func (p *DbusKeyboardProvider) IsSupported() bool {
 	conn, err := dbus.ConnectSessionBus()
 	if err != nil {
@@ -54,7 +54,7 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 		}
 	}()
 
-	// Check if GlobalShortcuts portal is available
+	// Check if the GlobalShortcuts portal is available by introspecting the desktop portal
 	obj := conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 	call := obj.Call("org.freedesktop.DBus.Introspectable.Introspect", 0)
 	if call.Err != nil {
@@ -62,14 +62,12 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 		return false
 	}
 
-	// Check if the introspection contains GlobalShortcuts interface
 	var introspectData string
 	if err := call.Store(&introspectData); err != nil {
 		p.logger.Error("Failed to get introspection data: %v", err)
 		return false
 	}
 
-	// Check for GlobalShortcuts interface in introspection data
 	if len(introspectData) > 0 && containsGlobalShortcuts(introspectData) {
 		p.logger.Info("D-Bus portal GlobalShortcuts detected")
 		return true
@@ -79,12 +77,12 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 	return false
 }
 
-// containsGlobalShortcuts checks if the introspection data contains GlobalShortcuts interface
+// Check if the introspection data contains the GlobalShortcuts interface
 func containsGlobalShortcuts(data string) bool {
 	return strings.Contains(data, "GlobalShortcuts")
 }
 
-// Start begins listening for D-Bus hotkey events
+// Start listening for D-Bus hotkey events
 func (p *DbusKeyboardProvider) Start() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -99,14 +97,13 @@ func (p *DbusKeyboardProvider) Start() error {
 		return fmt.Errorf("failed to connect to session bus (D-Bus unavailable): %w", err)
 	}
 
-	// Register hotkeys using GlobalShortcuts portal
+	// Register hotkeys via the GlobalShortcuts portal
 	if err := p.registerHotkeys(); err != nil {
 		if closeErr := p.conn.Close(); closeErr != nil {
 			p.logger.Error("Failed to close D-Bus connection: %v", closeErr)
 		}
 		p.logger.Error("DBus GlobalShortcuts binding failed: %v", err)
-		p.logger.Info("Hint: In Flatpak/AppImage, global shortcuts may require consent or permissions.")
-		p.logger.Error("If running as AppImage, consider provider override 'evdev' and adding user to 'input' group.")
+		p.logger.Info("Hint: In Flatpak/AppImage, global shortcuts may require user consent")
 		return fmt.Errorf("failed to register hotkeys (GlobalShortcuts portal unavailable): %w", err)
 	}
 
@@ -115,7 +112,7 @@ func (p *DbusKeyboardProvider) Start() error {
 	return nil
 }
 
-// Stop stops the D-Bus hotkey listener
+// Stop the D-Bus hotkey listener
 func (p *DbusKeyboardProvider) Stop() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -135,7 +132,7 @@ func (p *DbusKeyboardProvider) Stop() {
 	p.logger.Info("D-Bus hotkey provider stopped")
 }
 
-// RegisterHotkey registers a hotkey callback
+// Register a hotkey and its callback
 func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() error) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -149,17 +146,13 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	return nil
 }
 
-// CaptureOnce is currently not supported via GlobalShortcuts portal in listen-only mode.
-// The service should fallback to evdev for capture sessions when available.
+// Return an error as this provider does not support capture-once functionality
 func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dbus provider")
 }
 
-// convertHotkeyToAccelerator converts our hotkey syntax to a desktop-portal accelerator string
-// Examples:
-//
-//	"ctrl+shift+a" -> "<Ctrl><Shift>a"
-//	"altgr+comma"  -> "<AltGr>comma"
+// Convert a hotkey string to a desktop-portal accelerator string
+// e.g., "ctrl+shift+a" -> "<Ctrl><Shift>a"
 func convertHotkeyToAccelerator(hotkey string) string {
 	combo := utils.ParseHotkey(hotkey)
 	var prefix strings.Builder
@@ -178,7 +171,7 @@ func convertHotkeyToAccelerator(hotkey string) string {
 		}
 	}
 
-	// Map special key names to standard accelerator format
+	// Map special key names to the standard accelerator format
 	key := combo.Key
 	switch strings.ToLower(key) {
 	case "comma":
@@ -202,7 +195,7 @@ func convertHotkeyToAccelerator(hotkey string) string {
 	return prefix.String() + key
 }
 
-// registerHotkeys registers all hotkeys using the GlobalShortcuts portal
+// Register all hotkeys using the GlobalShortcuts portal
 func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 
@@ -248,7 +241,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 		shortcutData := map[string]dbus.Variant{
 			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
-			"preferred_trigger": dbus.MakeVariant(accel), // Standard field name per portal spec
+			"preferred_trigger": dbus.MakeVariant(accel),
 		}
 		shortcuts = append(shortcuts, struct {
 			ID   string
@@ -277,7 +270,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	return nil
 }
 
-// waitForSessionResponse waits for the Response signal from a CreateSession request
+// Wait for the Response signal from a CreateSession request
 func (p *DbusKeyboardProvider) waitForSessionResponse(requestHandle dbus.ObjectPath) (string, error) {
 	// Subscribe to the Response signal
 	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.Request',member='Response',path='%s'", requestHandle)
@@ -326,9 +319,9 @@ func (p *DbusKeyboardProvider) waitForSessionResponse(requestHandle dbus.ObjectP
 	}
 }
 
-// listenForShortcuts listens for shortcut activations from the GlobalShortcuts portal
+// Listen for shortcut activation signals from the GlobalShortcuts portal
 func (p *DbusKeyboardProvider) listenForShortcuts() {
-	// Add signal match rule for the session
+	// Add a signal match rule for the session
 	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.GlobalShortcuts',member='Activated',path='%s'", p.sessionHandle)
 	p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule)
 

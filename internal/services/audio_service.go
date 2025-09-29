@@ -19,7 +19,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
-// AudioService implements AudioServiceInterface with full functionality
+// Orchestrates recording, transcription, and output workflows
 type AudioService struct {
 	logger        logger.Logger
 	config        *config.Config
@@ -43,7 +43,7 @@ type AudioService struct {
 	cfg ConfigServiceInterface
 }
 
-// NewAudioService creates a new AudioService instance
+// Create a new AudioService instance
 func NewAudioService(
 	logger logger.Logger,
 	config *config.Config,
@@ -64,13 +64,13 @@ func NewAudioService(
 	}
 }
 
-// SetDependencies sets service dependencies
+// Wire dependencies to prevent circular imports during initialization
 func (as *AudioService) SetDependencies(ui UIServiceInterface, io IOServiceInterface) {
 	as.ui = ui
 	as.io = io
 }
 
-// SetConfig sets the config service dependency
+// Wire config service for runtime setting persistence
 func (as *AudioService) SetConfig(cfg ConfigServiceInterface) { as.cfg = cfg }
 
 // HandleStartRecording starts audio recording

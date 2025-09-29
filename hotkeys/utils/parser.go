@@ -10,22 +10,17 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 )
 
-// ParseHotkey parses a hotkey string like "ctrl+alt+r" into a KeyCombination.
-// The last part is treated as the main key, everything else as modifiers.
-//
-// Examples:
-//   - "r" -> KeyCombination{Key: "r", Modifiers: []}
-//   - "ctrl+r" -> KeyCombination{Key: "r", Modifiers: ["ctrl"]}
-//   - "ctrl+alt+r" -> KeyCombination{Key: "r", Modifiers: ["ctrl", "alt"]}
+// Parse a hotkey string into a KeyCombination struct
+// Treat the last part as the main key and all preceding parts as modifiers
 func ParseHotkey(hotkeyStr string) interfaces.KeyCombination {
 	combo := interfaces.KeyCombination{}
 	parts := strings.Split(hotkeyStr, "+")
-	// If there's only one part, it's just a key
+	// If there is only one part, it is a key with no modifiers
 	if len(parts) == 1 {
 		combo.Key = strings.TrimSpace(parts[0])
 		return combo
 	}
-	// Last part is the key, the rest are modifiers
+	// The last part is the key; the rest are modifiers
 	combo.Key = strings.TrimSpace(parts[len(parts)-1])
 	for i := 0; i < len(parts)-1; i++ {
 		modifier := strings.ToLower(strings.TrimSpace(parts[i]))
@@ -34,7 +29,7 @@ func ParseHotkey(hotkeyStr string) interfaces.KeyCombination {
 	return combo
 }
 
-// IsModifier checks if a key name represents a modifier key
+// Check if a key name represents a modifier key
 func IsModifier(keyName string) bool {
 	modifiers := map[string]bool{
 		"ctrl":       true,
@@ -57,7 +52,7 @@ func IsModifier(keyName string) bool {
 	return modifiers[strings.ToLower(keyName)]
 }
 
-// ConvertModifierToEvdev converts common modifier names to evdev key names
+// Convert a common modifier name to its evdev key name equivalent
 func ConvertModifierToEvdev(modifier string) string {
 	modifierMap := map[string]string{
 		"ctrl":  "leftctrl",
@@ -76,11 +71,9 @@ func ConvertModifierToEvdev(modifier string) string {
 	return strings.ToLower(modifier)
 }
 
-// NormalizeHotkey converts a hotkey string to a canonical form:
-// - lowercase, trimmed
-// - canonical modifier names and ordering: ctrl, shift, alt, altgr, super
-// - removes duplicate modifiers
-// Example: "RightCtrl+WIN + Alt + R" -> "ctrl+alt+super+r"
+// Normalize a hotkey string to its canonical form
+// This involves making it lowercase, trimming whitespace, ordering modifiers,
+// and using canonical names for modifiers
 func NormalizeHotkey(hotkeyStr string) string {
 	s := strings.ToLower(strings.TrimSpace(hotkeyStr))
 	if s == "" {
@@ -101,7 +94,7 @@ func NormalizeHotkey(hotkeyStr string) string {
 	key := cleaned[len(cleaned)-1]
 	mods := cleaned[:len(cleaned)-1]
 
-	// Map modifier synonyms to canonical names
+	// Map modifier synonyms to their canonical names
 	mapMod := func(m string) string {
 		switch m {
 		case "win", "meta", "leftmeta", "rightmeta":
@@ -141,8 +134,8 @@ func NormalizeHotkey(hotkeyStr string) string {
 	return strings.Join(ordered, "+") + "+" + key
 }
 
-// ValidateHotkey performs basic validation on a hotkey string.
-// Returns error if empty, or if the main key is missing/only modifier.
+// Perform basic validation on a hotkey string
+// Return an error if the string is empty or if the main key is a modifier
 func ValidateHotkey(hotkeyStr string) error {
 	s := NormalizeHotkey(hotkeyStr)
 	if strings.TrimSpace(s) == "" {

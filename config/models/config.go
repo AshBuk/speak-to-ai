@@ -3,77 +3,72 @@
 
 package models
 
-// Output mode constants to avoid magic strings throughout the codebase
+// OutputMode constants define the supported methods for delivering the transcribed text.
+// Using constants avoids magic strings and ensures consistency across the application.
 const (
-	OutputModeClipboard    = "clipboard"
-	OutputModeActiveWindow = "active_window"
+	OutputModeClipboard    = "clipboard"     // Copy text to the clipboard
+	OutputModeActiveWindow = "active_window" // Type text into the currently active window
 )
 
-// Config structure for storing application configuration
+// Config defines the application's configuration structure, organized into logical groups.
+// It uses YAML tags for serialization and deserialization.
 type Config struct {
-	// General settings
 	General struct {
 		Debug         bool   `yaml:"debug"`
-		WhisperModel  string `yaml:"whisper_model"` // Fixed whisper model: "small-q5_1"
-		TempAudioPath string `yaml:"temp_audio_path"`
-		Language      string `yaml:"language"` // Language for recognition (en, ..., etc.)
+		WhisperModel  string `yaml:"whisper_model"`   // The specific Whisper model to use (e.g., "small-q5_1")
+		TempAudioPath string `yaml:"temp_audio_path"` // Directory to store temporary audio files
+		Language      string `yaml:"language"`        // Language for speech recognition (e.g., "en", "ru")
 	} `yaml:"general"`
 
-	// Hotkey settings
 	Hotkeys struct {
-		// Provider override: "auto" | "dbus" | "evdev"
-		Provider       string `yaml:"provider"`
-		StartRecording string `yaml:"start_recording"`
-		StopRecording  string `yaml:"stop_recording"`
-		// Hotkey to toggle VAD on/off
-		// ToggleVAD       string `yaml:"toggle_vad"`
+		// Hotkey provider override. Use "auto" for automatic detection, or force a specific backend like "dbus" or "evdev"
+		Provider        string `yaml:"provider"`
+		StartRecording  string `yaml:"start_recording"`
+		StopRecording   string `yaml:"stop_recording"`
 		ShowConfig      string `yaml:"show_config"`
 		ResetToDefaults string `yaml:"reset_to_defaults"`
+		// TODO: VAD hotkey to be implemented
+		// ToggleVAD       string `yaml:"toggle_vad"`
 	} `yaml:"hotkeys"`
 
-	// Audio recording settings
 	Audio struct {
 		Device           string `yaml:"device"`
 		SampleRate       int    `yaml:"sample_rate"`
 		Format           string `yaml:"format"`
-		RecordingMethod  string `yaml:"recording_method"`   // 'arecord', 'ffmpeg'
-		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds
-		MaxRecordingTime int    `yaml:"max_recording_time"` // Max recording time in seconds
+		RecordingMethod  string `yaml:"recording_method"`   // Recording backend: "arecord" or "ffmpeg"
+		ExpectedDuration int    `yaml:"expected_duration"`  // Expected recording duration in seconds (0 for indefinite)
+		MaxRecordingTime int    `yaml:"max_recording_time"` // Maximum recording time in seconds to prevent runaway recordings
 		// TODO: Next feature - VAD implementation
 		// EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
 		// VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
-		// AutoStartStop     bool   `yaml:"auto_start_stop"`     // Auto start/stop recording based on VAD
+		// AutoStartStop     bool   `yaml:"auto_start_stop"`     // Automatically start/stop recording based on voice activity
 	} `yaml:"audio"`
 
-	// Text output settings
 	Output struct {
-		DefaultMode   string `yaml:"default_mode"`   // 'clipboard', 'active_window', 'web'
-		ClipboardTool string `yaml:"clipboard_tool"` // 'wl-copy', 'xsel'
-		TypeTool      string `yaml:"type_tool"`      // 'xdotool', 'wl-clipboard', 'dbus'
+		DefaultMode   string `yaml:"default_mode"`   // Default output mode: "clipboard" or "active_window"
+		ClipboardTool string `yaml:"clipboard_tool"` // Tool for clipboard operations (e.g., "wl-copy", "xsel"). "auto" for detection
+		TypeTool      string `yaml:"type_tool"`      // Tool for typing text (e.g., "xdotool", "wtype"). "auto" for detection
 	} `yaml:"output"`
 
-	// Notification settings
 	Notifications struct {
-		EnableWorkflowNotifications bool `yaml:"enable_workflow_notifications"` // Enable workflow notifications (recording, transcription)
+		EnableWorkflowNotifications bool `yaml:"enable_workflow_notifications"` // If true, show notifications for events like "Recording started"
 	} `yaml:"notifications"`
 
-	// Web server settings
 	WebServer struct {
 		Enabled     bool   `yaml:"enabled"`
 		Port        int    `yaml:"port"`
 		Host        string `yaml:"host"`
-		AuthToken   string `yaml:"auth_token"`   // Optional auth token
-		APIVersion  string `yaml:"api_version"`  // API version
-		LogRequests bool   `yaml:"log_requests"` // Whether to log requests
-		CORSOrigins string `yaml:"cors_origins"` // Allowed origins for CORS
-		MaxClients  int    `yaml:"max_clients"`  // Maximum number of clients
+		AuthToken   string `yaml:"auth_token"`   // Optional Bearer token for API authentication
+		APIVersion  string `yaml:"api_version"`  // API version string
+		LogRequests bool   `yaml:"log_requests"` // If true, log incoming HTTP requests
+		CORSOrigins string `yaml:"cors_origins"` // CORS origins to allow (e.g., "*" or "http://localhost:3000")
+		MaxClients  int    `yaml:"max_clients"`  // Maximum number of concurrent WebSocket clients
 	} `yaml:"web_server"`
 
-	// Security settings
 	Security struct {
-		AllowedCommands []string `yaml:"allowed_commands"`   // Whitelist of allowed commands
-		CheckIntegrity  bool     `yaml:"check_integrity"`    // Whether to check config integrity
-		ConfigHash      string   `yaml:"config_hash"`        // Hash for integrity check
-		MaxTempFileSize int64    `yaml:"max_temp_file_size"` // Max temp file size in bytes
+		AllowedCommands []string `yaml:"allowed_commands"`   // Whitelist of external commands the application is allowed to execute
+		CheckIntegrity  bool     `yaml:"check_integrity"`    // If true, verify the config file's hash on startup
+		ConfigHash      string   `yaml:"config_hash"`        // The SHA-256 hash of the config file for integrity checking
+		MaxTempFileSize int64    `yaml:"max_temp_file_size"` // Maximum allowed size for temporary audio files in bytes
 	} `yaml:"security"`
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// selectProviderForEnvironment returns a dummy provider on non-Linux to avoid pulling linux deps
+// Return a dummy provider on non-Linux systems to avoid build errors
 func selectProviderForEnvironment(_ adapters.HotkeyConfig, _ interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
 	return providers.NewDummyKeyboardProvider(logger)
 }

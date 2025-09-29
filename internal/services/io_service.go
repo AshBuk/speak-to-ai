@@ -16,7 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/websocket"
 )
 
-// IOService implements IOServiceInterface
+// Handles text output routing and transcription synchronization
 type IOService struct {
 	logger          logger.Logger
 	config          *config.Config
@@ -32,7 +32,7 @@ type IOService struct {
 	transcriptionResultChan chan string
 }
 
-// NewIOService creates a new IOService instance
+// Create a new service instance
 func NewIOService(
 	logger logger.Logger,
 	config *config.Config,
@@ -47,7 +47,7 @@ func NewIOService(
 	}
 }
 
-// BeginTranscription marks start of transcription to protect clipboard reads
+// Prevent clipboard race conditions during async transcription
 func (ios *IOService) BeginTranscription() {
 	ios.mu.Lock()
 	defer ios.mu.Unlock()
@@ -64,7 +64,7 @@ func (ios *IOService) BeginTranscription() {
 	}
 }
 
-// CompleteTranscription publishes result and clears protection
+// Release clipboard protection and notify waiting readers
 func (ios *IOService) CompleteTranscription(result string) {
 	ios.mu.Lock()
 	inProgress := ios.transcriptionInProgress
@@ -80,7 +80,7 @@ func (ios *IOService) CompleteTranscription(result string) {
 	}
 }
 
-// WaitForTranscription waits up to timeout for a result if protection is active
+// Block until transcription completes or timeout for synchronized reads
 func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error) {
 	ios.mu.Lock()
 	inProgress := ios.transcriptionInProgress
@@ -103,7 +103,7 @@ func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error
 	}
 }
 
-// OutputText implements IOServiceInterface
+// Route text to configured output method with fallback strategy
 func (ios *IOService) OutputText(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
@@ -132,7 +132,7 @@ func (ios *IOService) OutputText(text string) error {
 	return nil
 }
 
-// OutputToClipboard outputs text to clipboard specifically
+// Force clipboard output bypassing default routing
 func (ios *IOService) OutputToClipboard(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
@@ -146,7 +146,7 @@ func (ios *IOService) OutputToClipboard(text string) error {
 	return nil
 }
 
-// OutputByTyping outputs text by typing
+// Force typing output bypassing default routing
 func (ios *IOService) OutputByTyping(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
@@ -160,7 +160,7 @@ func (ios *IOService) OutputByTyping(text string) error {
 	return nil
 }
 
-// SetOutputMethod implements IOServiceInterface
+// Switch output mode and persist setting with UI refresh
 func (ios *IOService) SetOutputMethod(method string) error {
 	ios.logger.Info("Setting output method to: %s", method)
 
@@ -195,7 +195,7 @@ func (ios *IOService) SetOutputMethod(method string) error {
 	return nil
 }
 
-// StartWebSocketServer implements IOServiceInterface
+// Enable external client communication channel
 func (ios *IOService) StartWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return fmt.Errorf("WebSocket server not configured")
@@ -207,7 +207,7 @@ func (ios *IOService) StartWebSocketServer() error {
 	return ios.webSocketServer.Start()
 }
 
-// StopWebSocketServer implements IOServiceInterface
+// Gracefully close external client connections
 func (ios *IOService) StopWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return nil
@@ -220,7 +220,7 @@ func (ios *IOService) StopWebSocketServer() error {
 	return nil
 }
 
-// GetOutputToolNames returns the actual tool names being used
+// Report active clipboard/typing tool implementations for debugging
 func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
 	if ios.outputManager == nil {
 		return "unknown", "unknown"
@@ -228,7 +228,7 @@ func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
 	return ios.outputManager.GetToolNames()
 }
 
-// Shutdown implements IOServiceInterface
+// Ensure all connections are closed before termination
 func (ios *IOService) Shutdown() error {
 	var lastErr error
 
@@ -254,10 +254,10 @@ func (ios *IOService) detectOutputEnvironment() outputFactory.EnvironmentType {
 	}
 }
 
-// SetUIService sets UI service dependency
+// Wire UI service for settings refresh notifications
 func (ios *IOService) SetUIService(ui UIServiceInterface) { ios.ui = ui }
 
-// SetConfigService sets Config service dependency
+// Wire config service for persistent setting changes
 func (ios *IOService) SetConfigService(cfg ConfigServiceInterface) { ios.cfg = cfg }
 
 // fallbackToTyping switches to typing mode and executes the output

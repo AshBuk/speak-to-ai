@@ -5,24 +5,27 @@ package interfaces
 
 import "time"
 
-// KeyboardEventProvider defines an interface for keyboard event sources
+// Defines the contract for a keyboard event source
 type KeyboardEventProvider interface {
+	// Start listening for keyboard events
 	Start() error
+	// Stop listening for keyboard events
 	Stop()
+	// Register a hotkey combination and its associated callback function
 	RegisterHotkey(hotkey string, callback func() error) error
+	// Check if the provider is supported on the current system
 	IsSupported() bool
-	// CaptureOnce starts a short-lived capture session and returns a single
-	// normalized hotkey string (e.g., "ctrl+alt+r") or an error on timeout/cancel.
+	// Capture a single hotkey combination within a given timeout
 	CaptureOnce(timeout time.Duration) (string, error)
 }
 
-// KeyCombination represents a hotkey combination
+// Represents a hotkey combination
 type KeyCombination struct {
 	Modifiers []string // Modifier keys like "ctrl", "alt", "shift"
-	Key       string   // Main key
+	Key       string   // The primary, non-modifier key
 }
 
-// EnvironmentType defines the type of desktop environment
+// Defines the type of desktop environment
 type EnvironmentType int
 
 const (

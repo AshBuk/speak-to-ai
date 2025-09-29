@@ -3,14 +3,14 @@
 
 package interfaces
 
-// Outputter defines the interface for text output operations
+// Defines the contract for text output operations
 type Outputter interface {
-	// CopyToClipboard copies text to the system clipboard
+	// Copy text to the system clipboard
 	CopyToClipboard(text string) error
 
-	// TypeToActiveWindow simulates typing in the currently active window
+	// Simulate typing text into the currently active window
 	TypeToActiveWindow(text string) error
 
-	// GetToolNames returns the actual tool names being used
+	// Return the names of the underlying tools being used
 	GetToolNames() (clipboardTool, typeTool string)
 }

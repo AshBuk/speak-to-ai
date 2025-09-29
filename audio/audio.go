@@ -1,13 +1,13 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-// Package audio provides audio recording functionality with support for multiple recording methods,
-// audio processing, and factory patterns for creating recorders.
+// Package audio provides a high-level facade for audio recording functionality.
+// It abstracts the underlying implementation details of recorder creation and management.
 //
 // Subpackages:
-//   - interfaces: AudioRecorder interface and related types
-//   - recorders: Implementation of audio recorders (arecord, ffmpeg, base)
-//   - factory: Factory for creating audio recorders based on configuration
-//   - processing: Audio processing utilities (temp file management)
-//   - mocks: Mock implementations for testing
+//   - interfaces: Define contracts (interfaces) for audio recording components
+//   - recorders:  Provide concrete implementations of audio recorders (e.g., arecord, ffmpeg)
+//   - factory:    Implement a factory for creating recorder instances based on configuration
+//   - processing: Offer utilities for audio processing, such as temporary file management
+//   - mocks:      Supply mock implementations for testing purposes
 package audio

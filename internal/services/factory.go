@@ -43,7 +43,7 @@ type ServiceFactory struct {
 	config ServiceFactoryConfig
 }
 
-// NewServiceFactory creates a new service factory
+// Create a new service factory
 func NewServiceFactory(config ServiceFactoryConfig) *ServiceFactory {
 	return &ServiceFactory{
 		config: config,

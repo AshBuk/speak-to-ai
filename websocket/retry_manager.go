@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// executeWithRetry attempts to execute a function with retries
+// Handle transient failures with exponential backoff strategy
 func (s *WebSocketServer) executeWithRetry(fn func() error, conn *websocket.Conn) error {
 	// Get current retry count for this connection
 	s.clientsLock.Lock()
@@ -43,14 +43,14 @@ func (s *WebSocketServer) executeWithRetry(fn func() error, conn *websocket.Conn
 	return s.executeWithRetry(fn, conn)
 }
 
-// resetRetryCount resets the retry counter for a connection
+// Clear retry state after successful operation or cleanup
 func (s *WebSocketServer) resetRetryCount(conn *websocket.Conn) { // nolint:unused // used in defer cleanup
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
 	s.retryCount[conn] = 0
 }
 
-// getRetryBackoff calculates retry backoff duration
+// Compute exponential delay with jitter to prevent thundering herd
 func getRetryBackoff(attempt int) time.Duration { // nolint:unused // used in tests and future retry strategies
 	baseDelay := 500 * time.Millisecond
 	maxDelay := 5 * time.Second

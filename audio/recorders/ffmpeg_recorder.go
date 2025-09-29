@@ -10,66 +10,61 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// FFmpegRecorder implements AudioRecorder using ffmpeg
+// Implements the AudioRecorder interface using the `ffmpeg` command-line tool
 type FFmpegRecorder struct {
 	BaseRecorder
 }
 
-// NewFFmpegRecorder creates a new instance of FFmpegRecorder
+// Create a new instance of the ffmpeg-based recorder
 func NewFFmpegRecorder(config *config.Config, logger logger.Logger) *FFmpegRecorder {
 	return &FFmpegRecorder{
 		BaseRecorder: NewBaseRecorder(config, logger),
 	}
 }
 
-// StartRecording starts audio recording
+// Start an audio recording using the `ffmpeg` command
 func (f *FFmpegRecorder) StartRecording() error {
-	// Build ffmpeg command arguments (output file will be set in ExecuteRecordingCommand)
+	// Build the command-line arguments for ffmpeg
 	args := f.buildBaseCommandArgs()
 
-	// Use BaseRecorder's ExecuteRecordingCommand for all process management
+	// Use the BaseRecorder to execute the command and manage the process
 	return f.ExecuteRecordingCommand("ffmpeg", args)
 }
 
-// buildBaseCommandArgs builds the base command arguments for ffmpeg (without output file)
+// Build the base command-line arguments for an ffmpeg recording process
 func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
-	// Basic arguments with improved PipeWire compatibility
+	// Start with base arguments for input, performance, and logging
 	args := []string{
-		"-y", // overwrite if temp file pre-created
+		"-y", // Overwrite output file if it exists
 		"-nostdin",
 		"-hide_banner",
 		"-loglevel", "error",
-		"-f", "pulse", // Use pulse for PipeWire compatibility
+		"-f", "pulse", // Use the PulseAudio input format for broad compatibility (including PipeWire)
 		"-thread_queue_size", "256",
-		"-probesize", "32", // Reduce probing time
+		"-probesize", "32", // Reduce probing time for faster startup
 		"-analyzeduration", "0", // Skip analysis phase
 	}
 
-	// Handle device specification for better PipeWire support
+	// Specify the input device
 	device := f.config.Audio.Device
-	if device == "default" {
-		// Try to activate a specific source in PipeWire if default fails
-		args = append(args, "-i", "default")
-	} else {
-		args = append(args, "-i", device)
-	}
+	args = append(args, "-i", device)
 
-	// Audio format settings
+	// Specify audio format settings
 	args = append(args,
 		"-ar", fmt.Sprintf("%d", f.config.Audio.SampleRate),
 		"-ac", "1",
 	)
 
-	// Add quality settings
+	// Specify quality settings
 	args = append(args, "-q:a", "0")
 
-	// Configure output format
+	// Configure the output format
 	if f.useBuffer {
-		// Keep WAV header in buffer mode to avoid breaking audio level monitor
+		// Output raw PCM to a WAV container in stdout for in-memory processing
 		args = append(args, "-acodec", "pcm_s16le")
 		args = append(args, "-f", "wav", "-")
 	} else {
-		// Output to file - file path will be added by ExecuteRecordingCommand
+		// Output to a WAV file. The path will be added by ExecuteRecordingCommand
 		args = append(args, "-acodec", "pcm_s16le")
 		args = append(args, "-f", "wav")
 	}

@@ -16,27 +16,26 @@ import (
 	"github.com/AshBuk/speak-to-ai/config/models"
 )
 
-// IsCommandAllowed checks if a command is in the allowed list
+// Check if a command is in the security whitelist.
+// It checks only the base name of the command, ignoring the path, to ensure
+// that path-based bypasses are not possible (e.g., /usr/bin/evil is treated as evil)
 func IsCommandAllowed(config *models.Config, command string) bool {
-	// Extract base command name
 	base := filepath.Base(command)
-
-	// Check if it's in allowed list
 	for _, cmd := range config.Security.AllowedCommands {
 		if cmd == base {
 			return true
 		}
 	}
-
 	return false
 }
 
-// SanitizeCommandArgs removes potentially dangerous arguments
+// Filter a list of arguments to remove shell metacharacters
+// and other constructs that could be used for command injection attacks
 func SanitizeCommandArgs(args []string) []string {
 	sanitized := make([]string, 0, len(args))
 
 	for _, arg := range args {
-		// Filter out shell metacharacters and other dangerous constructs
+		// Filter out shell metacharacters and directory traversal attempts
 		if !strings.ContainsAny(arg, "&|;$<>(){}[]") && !strings.Contains(arg, "..") {
 			sanitized = append(sanitized, arg)
 		}
@@ -45,25 +44,23 @@ func SanitizeCommandArgs(args []string) []string {
 	return sanitized
 }
 
-// VerifyConfigIntegrity checks if the config file has been tampered with
+// Verify the config file against a stored hash to ensure
+// it has not been modified without authorization
 func VerifyConfigIntegrity(filename string, config *models.Config) error {
-	// Skip check if not enabled
 	if !config.Security.CheckIntegrity {
 		return nil
 	}
 
-	// If no hash is set, just return
 	if config.Security.ConfigHash == "" {
+		// No hash to compare against, so we can't verify
 		return nil
 	}
 
-	// Calculate hash of the config file
 	hash, err := CalculateFileHash(filename)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
 
-	// Compare hashes
 	if hash != config.Security.ConfigHash {
 		return fmt.Errorf("config file integrity check failed: hash mismatch")
 	}
@@ -71,32 +68,34 @@ func VerifyConfigIntegrity(filename string, config *models.Config) error {
 	return nil
 }
 
-// UpdateConfigHash updates the hash in the config
+// Calculate a new hash for the configuration file and store it
+// within the config struct. This is used to "seal" the config after valid changes
 func UpdateConfigHash(filename string, config *models.Config) error {
-	// Calculate hash
 	hash, err := CalculateFileHash(filename)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
 
-	// Update hash in config
 	config.Security.ConfigHash = hash
 	return nil
 }
 
-// CalculateFileHash calculates SHA-256 hash of a file
+// Compute the SHA-256 hash of a file's content
 func CalculateFileHash(filename string) (string, error) {
+	// Clean the path to prevent null byte and other injection attacks
 	safe := filepath.Clean(filename)
 	if strings.Contains(safe, "\x00") {
 		return "", fmt.Errorf("invalid filename")
 	}
-	// #nosec G304 -- Safe: caller controls and sanitizes path to config file.
+
+	// #nosec G304 -- Path is cleaned and expected to be a controlled local config file.
 	f, err := os.Open(safe)
 	if err != nil {
 		return "", err
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
+			// Log the error but don't return it, as the primary operation (hashing) succeeded
 			log.Printf("Warning: failed to close file %s: %v", filename, err)
 		}
 	}()
@@ -109,7 +108,8 @@ func CalculateFileHash(filename string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// EnforceFileSizeLimit checks if a file exceeds the maximum allowed size
+// Enforce the maximum configured size for a file.
+// This is a security measure to prevent denial-of-service attacks using large files
 func EnforceFileSizeLimit(filename string, config *models.Config) error {
 	info, err := os.Stat(filename)
 	if err != nil {

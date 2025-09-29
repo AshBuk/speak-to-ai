@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// IsValidFile checks if a file exists and is accessible
+// Check if file exists and is accessible
 func IsValidFile(path string) bool {
 	// Reject empty paths
 	if path == "" {
@@ -31,7 +31,7 @@ func IsValidFile(path string) bool {
 	return !info.IsDir()
 }
 
-// GetFileSize returns the size of a file in bytes
+// Return the size of a file in bytes
 func GetFileSize(path string) (int64, error) {
 	info, err := os.Stat(path)
 	if err != nil {

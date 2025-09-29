@@ -7,25 +7,33 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
-// ModelManager defines the interface for managing the fixed small-q5_1 Whisper model
+// Defines the contract for managing the lifecycle of the fixed small-q5_1 Whisper model
 type ModelManager interface {
+	// Initialize and validate the bundled model
 	Initialize() error
+	// Return the absolute path to the validated small-q5_1 model file
 	GetModelPath() (string, error)
+	// Check if the model file at the given path is valid
 	ValidateModel(modelPath string) error
 }
 
-// ModelPathResolver defines the interface for resolving the small-q5_1 model path
+// Defines the contract for resolving the path to the small-q5_1 model
 type ModelPathResolver interface {
+	// Return the platform-specific path to the bundled model file
 	GetBundledModelPath() string
 }
 
-// WhisperModel represents a whisper model interface to avoid CGO dependency in interfaces
+// Represents a whisper.Model type without a direct CGO dependency
 type WhisperModel interface{}
 
-// WhisperEngine defines the interface for the base Whisper engine
+// Defines the contract for a speech-to-text transcription engine
 type WhisperEngine interface {
+	// Transcribe an audio file and return the resulting text
 	Transcribe(audioFile string) (string, error)
+	// Close the engine and release any associated resources
 	Close() error
+	// Return the underlying model object
 	GetModel() WhisperModel
-	GetConfig() *config.Config // Strongly-typed config accessor
+	// Return the configuration used by the engine
+	GetConfig() *config.Config
 }

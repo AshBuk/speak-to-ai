@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// GetKeyName converts key code to key name using common mapping
+// Convert a key code to its string representation
 func GetKeyName(keyCode int) string {
 	keyMap := map[int]string{
 		1:   "esc",
@@ -106,8 +106,7 @@ func GetKeyName(keyCode int) string {
 	return ""
 }
 
-// IsModifierPressed determines if a modifier (generic or side-specific) is pressed
-// based on the modifier state map
+// Determine if a generic or side-specific modifier is pressed
 func IsModifierPressed(mod string, state map[string]bool) bool {
 	m := strings.ToLower(mod)
 	switch m {
@@ -136,12 +135,12 @@ func IsModifierPressed(mod string, state map[string]bool) bool {
 	case "rightmeta":
 		return state["rightmeta"]
 	default:
-		// Fallback to simple mapping for any other names
+		// Fallback to a simple mapping for any other names
 		return state[ConvertModifierToEvdev(m)]
 	}
 }
 
-// BuildModifierState builds a modifier state map from evdev state for CaptureOnce
+// Build a list of active modifiers for use in CaptureOnce
 func BuildModifierState(modState map[string]bool) []string {
 	mods := make([]string, 0, 5)
 
@@ -164,7 +163,7 @@ func BuildModifierState(modState map[string]bool) []string {
 	return mods
 }
 
-// IsModifierKey checks if a key name is a modifier or meta key for tracking state
+// Check if a key name corresponds to a modifier key
 func IsModifierKey(keyName string) bool {
 	switch strings.ToLower(keyName) {
 	case "leftctrl", "rightctrl", "leftalt", "rightalt",
@@ -174,20 +173,20 @@ func IsModifierKey(keyName string) bool {
 	return IsModifier(keyName)
 }
 
-// CheckCancelCondition checks if Esc was pressed without modifiers (for CaptureOnce)
+// Check if the escape key was pressed without any modifiers
 func CheckCancelCondition(keyName string, modState map[string]bool) bool {
 	if !strings.EqualFold(keyName, "esc") {
 		return false
 	}
 
-	// Check if no modifiers are pressed
+	// Return true if no modifiers are pressed
 	return !modState["leftctrl"] && !modState["rightctrl"] &&
 		!modState["leftshift"] && !modState["rightshift"] &&
 		!modState["leftalt"] && !modState["rightalt"] &&
 		!modState["leftmeta"] && !modState["rightmeta"]
 }
 
-// BuildHotkeyString builds a hotkey string from modifiers and key
+// Build a hotkey string from a list of modifiers and a key
 func BuildHotkeyString(mods []string, keyName string) string {
 	combo := strings.ToLower(keyName)
 	if len(mods) > 0 {

@@ -3,17 +3,15 @@
 
 package adapters
 
-// HotkeyConfig defines the interface that a configuration must implement
-// to be used with the hotkey system
+// Defines the contract a configuration must implement to be used by the hotkey system
 type HotkeyConfig interface {
 	GetStartRecordingHotkey() string
 	GetProvider() string
-	// GetActionHotkey returns configured hotkey string for a logical action name
-	// Supported actions: "toggle_vad", "show_config", "reset_to_defaults"
+	// Return the configured hotkey string for a given logical action name
 	GetActionHotkey(action string) string
 }
 
-// ConfigAdapter adapts any config to HotkeyConfig
+// Adapts a generic configuration to the HotkeyConfig interface
 type ConfigAdapter struct {
 	startRecording string
 	provider       string
@@ -23,7 +21,7 @@ type ConfigAdapter struct {
 	resetToDefaults string
 }
 
-// NewConfigAdapter creates a new adapter from the given values
+// Create a new adapter from the given values
 func NewConfigAdapter(startRecording string, provider string) *ConfigAdapter {
 	return &ConfigAdapter{
 		startRecording: startRecording,
@@ -31,7 +29,7 @@ func NewConfigAdapter(startRecording string, provider string) *ConfigAdapter {
 	}
 }
 
-// WithAdditionalHotkeys sets optional action hotkeys and returns the adapter (builder style)
+// Set optional action hotkeys using a builder pattern
 func (c *ConfigAdapter) WithAdditionalHotkeys(toggleVAD, showConfig, resetToDefaults string) *ConfigAdapter {
 	// c.toggleVAD = toggleVAD
 	c.showConfig = showConfig
@@ -39,12 +37,12 @@ func (c *ConfigAdapter) WithAdditionalHotkeys(toggleVAD, showConfig, resetToDefa
 	return c
 }
 
-// GetStartRecordingHotkey returns the start recording hotkey
+// Return the start recording hotkey
 func (c *ConfigAdapter) GetStartRecordingHotkey() string {
 	return c.startRecording
 }
 
-// GetProvider returns provider override ("auto" | "dbus" | "evdev")
+// Return the provider override ("auto", "dbus", "evdev")
 func (c *ConfigAdapter) GetProvider() string {
 	if c.provider == "" {
 		return "auto"
@@ -52,7 +50,7 @@ func (c *ConfigAdapter) GetProvider() string {
 	return c.provider
 }
 
-// GetActionHotkey implements action→hotkey string mapping
+// Return the hotkey string for a given action name
 func (c *ConfigAdapter) GetActionHotkey(action string) string {
 	switch action {
 	// case "toggle_vad":

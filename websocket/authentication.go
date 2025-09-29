@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// authenticate checks if the client is authenticated
+// Verify client credentials via token or open access policy
 func (s *WebSocketServer) authenticate(r *http.Request) bool {
 	// If auth token is not set, all connections are allowed
 	if s.config.WebServer.AuthToken == "" {
@@ -28,7 +28,7 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 	return queryToken == s.config.WebServer.AuthToken || headerToken == s.config.WebServer.AuthToken
 }
 
-// validateToken checks if a token is valid
+// Confirm token matches configured authentication secret
 func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused // used in tests
 	// If auth token is not set, all tokens are invalid
 	if s.config.WebServer.AuthToken == "" {
@@ -42,7 +42,7 @@ func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused //
 	return token == s.config.WebServer.AuthToken
 }
 
-// getClientIP gets the client's IP address
+// Extract real client IP considering proxy headers
 func getClientIP(r *http.Request) string { // nolint:unused // used in tests
 	// Check for X-Forwarded-For header
 	forwardedFor := r.Header.Get("X-Forwarded-For")

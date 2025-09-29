@@ -21,13 +21,13 @@ type HotkeyManagerInterface interface {
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
 }
 
-// HotkeyService implements HotkeyServiceInterface
+// Bridges hotkey events to application handlers
 type HotkeyService struct {
 	logger        logger.Logger
 	hotkeyManager HotkeyManagerInterface
 }
 
-// NewHotkeyService creates a new HotkeyService instance
+// Create a new service instance
 func NewHotkeyService(
 	logger logger.Logger,
 	hotkeyManager HotkeyManagerInterface,
@@ -38,7 +38,7 @@ func NewHotkeyService(
 	}
 }
 
-// SetupHotkeyCallbacks configures hotkey callbacks with handler functions
+// Connect application handlers to low-level hotkey events
 func (hs *HotkeyService) SetupHotkeyCallbacks(
 	startRecording func() error,
 	stopRecording func() error,
@@ -66,7 +66,7 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	return nil
 }
 
-// RegisterHotkeys implements HotkeyServiceInterface
+// Activate hotkey capture for the current session
 func (hs *HotkeyService) RegisterHotkeys() error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
@@ -77,7 +77,7 @@ func (hs *HotkeyService) RegisterHotkeys() error {
 	return hs.hotkeyManager.Start()
 }
 
-// UnregisterHotkeys implements HotkeyServiceInterface
+// Release hotkey capture to prevent conflicts
 func (hs *HotkeyService) UnregisterHotkeys() error {
 	if hs.hotkeyManager == nil {
 		return nil
@@ -89,7 +89,7 @@ func (hs *HotkeyService) UnregisterHotkeys() error {
 	return nil
 }
 
-// Shutdown implements HotkeyServiceInterface
+// Clean shutdown to prevent hanging hotkey listeners
 func (hs *HotkeyService) Shutdown() error {
 	// Unregister hotkeys
 	if err := hs.UnregisterHotkeys(); err != nil {
@@ -101,7 +101,7 @@ func (hs *HotkeyService) Shutdown() error {
 	return nil
 }
 
-// ReloadFromConfig rebuilds hotkey configuration in the underlying manager
+// Apply new hotkey bindings without restarting the service
 func (hs *HotkeyService) ReloadFromConfig(startRecording, stopRecording func() error, configProvider func() adapters.HotkeyConfig) error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
@@ -112,7 +112,7 @@ func (hs *HotkeyService) ReloadFromConfig(startRecording, stopRecording func() e
 	return hs.hotkeyManager.ReloadConfig(cfg)
 }
 
-// CaptureOnce proxies one-shot capture to the underlying hotkey manager
+// Capture single keypress for hotkey rebinding workflow
 func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 	if hs.hotkeyManager == nil {
 		return "", fmt.Errorf("hotkey manager not available")
@@ -126,7 +126,7 @@ func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 	return "", fmt.Errorf("capture not supported by manager")
 }
 
-// SupportsCaptureOnce reports whether the underlying manager supports capture once
+// Check if interactive hotkey binding is available
 func (hs *HotkeyService) SupportsCaptureOnce() bool {
 	if hs.hotkeyManager == nil {
 		return false
