@@ -212,7 +212,7 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	}
 	// If the D-Bus provider fails, attempt a fallback to evdev for the capture
 	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
-		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
+		fallback := providers.NewEvdevKeyboardProvider(h.logger)
 		if fallback != nil && fallback.IsSupported() {
 			return fallback.CaptureOnce(timeout)
 		}

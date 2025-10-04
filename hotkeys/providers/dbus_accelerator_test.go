@@ -8,8 +8,6 @@ package providers
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
@@ -63,9 +61,8 @@ func TestConvertHotkeyToAccelerator(t *testing.T) {
 }
 
 func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
-	config := adapters.NewConfigAdapter("altgr+comma", "auto")
 
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, testutils.NewMockLogger())
+	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
 
 	// Test that IsSupported doesn't panic
 	// The result depends on system environment, so we just check it doesn't crash
@@ -74,9 +71,8 @@ func TestDbusKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestDbusProvider_RegisterHotkey(t *testing.T) {
-	config := adapters.NewConfigAdapter("altgr+comma", "auto")
 
-	provider := NewDbusKeyboardProvider(config, interfaces.EnvironmentWayland, testutils.NewMockLogger())
+	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
 
 	// Test callback registration
 	callback := func() error {

@@ -87,7 +87,7 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 	// Only fall back from DBus to evdev if evdev is supported
 	switch h.provider.(type) {
 	case *providers.DbusKeyboardProvider:
-		fallback := providers.NewEvdevKeyboardProvider(h.config, h.environment, h.logger)
+		fallback := providers.NewEvdevKeyboardProvider(h.logger)
 		if fallback != nil && fallback.IsSupported() {
 			h.logger.Info("Falling back to evdev keyboard provider")
 			// Swap to the fallback provider

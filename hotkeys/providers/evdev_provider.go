@@ -13,8 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	evdev "github.com/holoplot/go-evdev"
@@ -34,9 +32,7 @@ type EvdevKeyboardProvider struct {
 }
 
 // Create a new EvdevKeyboardProvider instance
-func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *EvdevKeyboardProvider {
-	_ = config       // unused, kept for interface compatibility
-	_ = environment  // unused, kept for interface compatibility
+func NewEvdevKeyboardProvider(logger logger.Logger) *EvdevKeyboardProvider {
 	return &EvdevKeyboardProvider{
 		callbacks:     make(map[string]func() error),
 		stopListening: make(chan bool),

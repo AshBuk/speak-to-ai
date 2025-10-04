@@ -6,17 +6,13 @@ package providers
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
 func TestNewEvdevKeyboardProvider(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	env := interfaces.EnvironmentX11
 
-	provider := NewEvdevKeyboardProvider(config, env, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	if provider == nil {
 		t.Fatal("NewEvdevKeyboardProvider returned nil")
@@ -37,8 +33,7 @@ func TestNewEvdevKeyboardProvider(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	// Test IsSupported - this will likely return false in test environment due to permissions
 	supported := provider.IsSupported()
@@ -53,8 +48,7 @@ func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	callbackCalled := false
 	callback := func() error {
@@ -91,8 +85,7 @@ func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	// Set isListening to true to simulate already started
 	provider.isListening = true
@@ -107,8 +100,7 @@ func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	// Stop should not panic even if not started
 	provider.Stop()
@@ -120,8 +112,7 @@ func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
 }
 
 func TestEvdevKeyboardProvider_Stop_WhenStarted(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
-	provider := NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	// Simulate started state
 	provider.isListening = true
@@ -246,7 +237,7 @@ func TestHasKeyEvents(t *testing.T) {
 
 func TestModifierStateTracking(t *testing.T) {
 	// Test that modifier state tracking logic works
-	provider := NewEvdevKeyboardProvider(adapters.NewConfigAdapter("ctrl+shift+r", "auto"), interfaces.EnvironmentX11, testutils.NewMockLogger())
+	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 
 	// Simulate modifier key press
 	provider.modifierState["leftctrl"] = true
