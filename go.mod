@@ -18,5 +18,6 @@ require (
 require (
 	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
+	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 )
