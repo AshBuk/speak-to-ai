@@ -201,23 +201,37 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 }
 
 // Attempt to capture a single hotkey combination
-// Fall back to a temporary evdev provider if the active one does not support capture
+// Temporarily stops provider to release devices, then captures on fresh instance
 func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider == nil {
 		return "", fmt.Errorf("no keyboard provider available")
 	}
-	combo, err := h.provider.CaptureOnce(timeout)
-	if err == nil && combo != "" {
-		return combo, nil
+
+	// For evdev: stop to release devices, capture on new instance, restart
+	if _, isEvdev := h.provider.(*providers.EvdevKeyboardProvider); isEvdev {
+		h.provider.Stop()
+		defer func() {
+			h.provider.Start()
+			h.registerAllHotkeysOn(h.provider)
+		}()
+
+		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
+		if !captureProvider.IsSupported() {
+			return "", fmt.Errorf("evdev not available")
+		}
+		return captureProvider.CaptureOnce(timeout)
 	}
-	// If the D-Bus provider fails, attempt a fallback to evdev for the capture
+
+	// For dbus: use evdev fallback (dbus doesn't support CaptureOnce)
 	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
 		fallback := providers.NewEvdevKeyboardProvider(h.logger)
 		if fallback != nil && fallback.IsSupported() {
 			return fallback.CaptureOnce(timeout)
 		}
+		return "", fmt.Errorf("evdev not available")
 	}
-	return "", err
+
+	return "", fmt.Errorf("capture not supported")
 }
 
 // Check if the active provider supports the capture-once functionality
