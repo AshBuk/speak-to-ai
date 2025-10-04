@@ -6,6 +6,7 @@
 package whisper
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -121,6 +122,28 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	result := strings.TrimSpace(transcript.String())
 	result = utils.SanitizeTranscript(result)
 	return result, nil
+}
+
+// Perform speech-to-text conversion with cancellation support.
+// It wraps Transcribe in a goroutine and returns early if the provided context is cancelled.
+func (w *WhisperEngine) TranscribeWithContext(ctx context.Context, audioFile string) (string, error) {
+	type result struct {
+		text string
+		err  error
+	}
+	ch := make(chan result, 1)
+
+	go func() {
+		txt, err := w.Transcribe(audioFile)
+		ch <- result{text: txt, err: err}
+	}()
+
+	select {
+	case r := <-ch:
+		return r.text, r.err
+	case <-ctx.Done():
+		return "", fmt.Errorf("transcription cancelled: %w", ctx.Err())
+	}
 }
 
 // Open a WAV file, decode it, and convert the PCM data
