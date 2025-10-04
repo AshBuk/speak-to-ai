@@ -12,6 +12,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // TrayManager manages the system tray icon and menu
@@ -91,7 +92,7 @@ func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func()
 
 // Start initializes and starts the system tray icon and menu
 func (tm *TrayManager) Start() {
-	go systray.Run(tm.onReady, tm.onExit)
+	utils.Go(func() { systray.Run(tm.onReady, tm.onExit) })
 }
 
 // onReady sets up the system tray when it's ready
@@ -126,7 +127,7 @@ func (tm *TrayManager) onReady() {
 	tm.exitItem = systray.AddMenuItem(fmt.Sprintf("%s Quit", constants.IconError), "Quit Speak-to-AI")
 
 	// Handle menu item clicks
-	go tm.handleMenuClicks()
+	utils.Go(func() { tm.handleMenuClicks() })
 
 	// Apply the current recording state once menu items are ready
 	// This avoids missing early state updates before systray initialization

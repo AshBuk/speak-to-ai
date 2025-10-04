@@ -9,11 +9,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/services"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Manages application lifecycle and context
@@ -202,6 +204,13 @@ func (a *App) Shutdown() error {
 			a.Runtime.Logger.Error("Error during service shutdown: %v", err)
 			return err
 		}
+	}
+
+	// Wait for long-lived goroutines to complete with a timeout
+	if ok := utils.WaitAll(5 * time.Second); ok {
+		a.Runtime.Logger.Info("Background tasks completed")
+	} else {
+		a.Runtime.Logger.Warning("Shutdown timeout - forcing exit")
 	}
 
 	a.Runtime.Logger.Info("Application shutdown complete")
