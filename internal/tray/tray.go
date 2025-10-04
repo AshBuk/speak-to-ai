@@ -6,6 +6,7 @@
 package tray
 
 import (
+	"context"
 	"fmt"
 
 	"fyne.io/systray"
@@ -61,6 +62,10 @@ type TrayManager struct {
 
 	// Capability callbacks
 	getCaptureOnceSupport func() bool
+
+	// Cancellation context for background menu handlers
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -92,6 +97,11 @@ func (tm *TrayManager) SetCoreActions(onToggle func() error, onShowConfig func()
 
 // Start initializes and starts the system tray icon and menu
 func (tm *TrayManager) Start() {
+	// Initialize context for background handlers
+	if tm.cancel != nil {
+		tm.cancel()
+	}
+	tm.ctx, tm.cancel = context.WithCancel(context.Background())
 	utils.Go(func() { systray.Run(tm.onReady, tm.onExit) })
 }
 
@@ -155,6 +165,8 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 func (tm *TrayManager) handleMenuClicks() {
 	for {
 		select {
+		case <-tm.ctx.Done():
+			return
 		case <-tm.toggleItem.ClickedCh:
 			tm.logger.Info("Toggle recording clicked")
 			if err := tm.onToggle(); err != nil {
@@ -183,6 +195,9 @@ func (tm *TrayManager) handleMenuClicks() {
 			}
 		case <-tm.exitItem.ClickedCh:
 			tm.logger.Info("Exit clicked")
+			if tm.cancel != nil {
+				tm.cancel()
+			}
 			// Quit systray first to ensure UI responds
 			systray.Quit()
 			// Then trigger application shutdown
@@ -214,6 +229,9 @@ func (tm *TrayManager) SetRecordingState(isRecording bool) {
 
 // Stop stops the tray manager
 func (tm *TrayManager) Stop() {
+	if tm.cancel != nil {
+		tm.cancel()
+	}
 	systray.Quit()
 }
 

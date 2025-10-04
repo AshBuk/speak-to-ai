@@ -5,6 +5,10 @@
 
 package tray
 
+import (
+	"github.com/AshBuk/speak-to-ai/internal/utils"
+)
+
 // Create settings submenus
 func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
@@ -50,7 +54,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	// tm.updateVADRadioUI(tm.config.Audio.VADSensitivity)
 
 	// Handle clicks for recorder selection
-	go func() {
+	utils.Go(func() {
 		for range tm.audioItems["recorder_arecord"].ClickedCh {
 			tm.logger.Info("Audio recorder switched to arecord (UI)")
 			tm.updateRecorderRadioUI("arecord")
@@ -60,8 +64,8 @@ func (tm *TrayManager) populateSettingsMenus() {
 				}
 			}
 		}
-	}()
-	go func() {
+	})
+	utils.Go(func() {
 		for range tm.audioItems["recorder_ffmpeg"].ClickedCh {
 			tm.logger.Info("Audio recorder switched to ffmpeg (UI)")
 			tm.updateRecorderRadioUI("ffmpeg")
@@ -71,7 +75,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 				}
 			}
 		}
-	}()
+	})
 
 	// Handle VAD sensitivity clicks
 	// if tm.audioItems["vad_low"] != nil {
@@ -116,7 +120,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 
 	// Handle workflow notifications toggle
 	if tm.audioItems["workflow_notifications"] != nil {
-		go func() {
+		utils.Go(func() {
 			for range tm.audioItems["workflow_notifications"].ClickedCh {
 				tm.logger.Info("Workflow notifications toggle clicked")
 				if tm.onToggleWorkflowNotify != nil {
@@ -129,7 +133,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 					}
 				}
 			}
-		}()
+		})
 	}
 
 	// Update workflow notifications toggle
@@ -159,7 +163,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	for _, k := range []string{"en", "de", "fr", "es", "he", "ru"} {
 		if itm := tm.modelItems["lang_"+k]; itm != nil {
 			key := k
-			go func() {
+			utils.Go(func() {
 				for range itm.ClickedCh {
 					tm.logger.Info("Language switched to %s (UI)", key)
 					tm.updateLanguageRadioUI(key)
@@ -169,7 +173,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 						}
 					}
 				}
-			}()
+			})
 		}
 	}
 
@@ -210,7 +214,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	for _, k := range []string{"clipboard", "active_window"} {
 		if itm := tm.outputItems["mode_"+k]; itm != nil {
 			key := k
-			go func() {
+			utils.Go(func() {
 				for range itm.ClickedCh {
 					tm.logger.Info("Output mode switched to %s (UI)", key)
 					tm.updateOutputModeRadioUI(key)
@@ -220,7 +224,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 						}
 					}
 				}
-			}()
+			})
 		}
 	}
 }
@@ -240,7 +244,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 		if supportsCaptureOnce {
 			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Start/Stop…", "Change start/stop hotkey")
 			tm.hotkeyItems["rebind_start_stop"] = reb
-			go func() {
+			utils.Go(func() {
 				for range reb.ClickedCh {
 					if tm.onRebindHotkey != nil {
 						if err := tm.onRebindHotkey("start_recording"); err != nil {
@@ -248,7 +252,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 						}
 					}
 				}
-			}()
+			})
 		}
 	}
 	if tm.hotkeyItems["display_start_stop"] == nil {
@@ -265,7 +269,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 		if supportsCaptureOnce {
 			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Show Config…", "Change show config hotkey")
 			tm.hotkeyItems["rebind_show_config"] = reb
-			go func() {
+			utils.Go(func() {
 				for range reb.ClickedCh {
 					if tm.onRebindHotkey != nil {
 						if err := tm.onRebindHotkey("show_config"); err != nil {
@@ -273,7 +277,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 						}
 					}
 				}
-			}()
+			})
 		}
 	}
 	if tm.hotkeyItems["display_show_config"] == nil {
@@ -290,7 +294,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 		if supportsCaptureOnce {
 			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Reset to Defaults…", "Change reset defaults hotkey")
 			tm.hotkeyItems["rebind_reset_defaults"] = reb
-			go func() {
+			utils.Go(func() {
 				for range reb.ClickedCh {
 					if tm.onRebindHotkey != nil {
 						if err := tm.onRebindHotkey("reset_to_defaults"); err != nil {
@@ -298,7 +302,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 						}
 					}
 				}
-			}()
+			})
 		}
 	}
 	if tm.hotkeyItems["display_reset_defaults"] == nil {
