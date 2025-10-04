@@ -30,6 +30,7 @@ type EvdevKeyboardProvider struct {
 	modifierState map[string]bool // Tracks the state of modifier keys
 	mutex         sync.RWMutex
 	logger        logger.Logger
+	wg            sync.WaitGroup // Tracks device listener goroutines
 }
 
 // Create a new EvdevKeyboardProvider instance
@@ -139,28 +140,37 @@ func (p *EvdevKeyboardProvider) Start() error {
 
 	// Start a listener goroutine for each device
 	for i := range p.devices {
-		deviceIndex := i
-		go func() {
-			for {
-				select {
-				case <-p.stopListening:
-					return
-				default:
-				}
-
-				event, err := p.devices[deviceIndex].ReadOne()
-				if err != nil {
-					continue
-				}
-
-				if event.Type == evdev.EV_KEY {
-					p.handleKeyEvent(deviceIndex, event)
-				}
-			}
-		}()
+		idx := i
+		p.wg.Add(1)
+		go func(deviceIdx int) {
+			defer p.wg.Done()
+			p.listenDevice(deviceIdx)
+		}(idx)
 	}
 
 	return nil
+}
+
+// listenDevice listens to one device events and exits on stop signal or critical read error
+func (p *EvdevKeyboardProvider) listenDevice(idx int) {
+	for {
+		select {
+		case <-p.stopListening:
+			return
+		default:
+		}
+
+		event, err := p.devices[idx].ReadOne()
+		if err != nil {
+			// Exit on device read error to avoid infinite loops
+			p.logger.Error("Device read error: %v", err)
+			return
+		}
+
+		if event.Type == evdev.EV_KEY {
+			p.handleKeyEvent(idx, event)
+		}
+	}
 }
 
 // Process a key event from a device
@@ -239,12 +249,15 @@ func (p *EvdevKeyboardProvider) Stop() {
 	// Signal all listener goroutines to stop
 	close(p.stopListening)
 
-	// Close all device handles
+	// Close all device handles to unblock any pending reads
 	for _, dev := range p.devices {
 		if err := dev.Close(); err != nil {
 			p.logger.Error("Failed to close evdev device: %v", err)
 		}
 	}
+
+	// Wait for all device listeners to exit
+	p.wg.Wait()
 
 	p.devices = nil
 	p.isListening = false
