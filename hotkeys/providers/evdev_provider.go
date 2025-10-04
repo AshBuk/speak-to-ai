@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
@@ -21,8 +22,6 @@ import (
 
 // Implements KeyboardEventProvider using the Linux evdev interface
 type EvdevKeyboardProvider struct {
-	config        adapters.HotkeyConfig
-	environment   interfaces.EnvironmentType
 	devices       []*evdev.InputDevice
 	callbacks     map[string]func() error
 	stopListening chan bool
@@ -31,13 +30,14 @@ type EvdevKeyboardProvider struct {
 	mutex         sync.RWMutex
 	logger        logger.Logger
 	wg            sync.WaitGroup // Tracks device listener goroutines
+	stopping      int32          // atomic flag to soften expected errors during shutdown
 }
 
 // Create a new EvdevKeyboardProvider instance
 func NewEvdevKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *EvdevKeyboardProvider {
+	_ = config       // unused, kept for interface compatibility
+	_ = environment  // unused, kept for interface compatibility
 	return &EvdevKeyboardProvider{
-		config:        config,
-		environment:   environment,
 		callbacks:     make(map[string]func() error),
 		stopListening: make(chan bool),
 		isListening:   false,
@@ -98,17 +98,19 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 
 // Check if a device exposes typical keyboard-related key codes
 func isKeyboardDevice(dev *evdev.InputDevice) bool {
+	// Check for EV_KEY capability
 	types := dev.CapableTypes()
-	isKey := false
+	hasKeyType := false
 	for _, evType := range types {
 		if evType == evdev.EV_KEY {
-			isKey = true
+			hasKeyType = true
 			break
 		}
 	}
-	if !isKey {
+	if !hasKeyType {
 		return false
 	}
+
 	// The presence of common letter keys strongly indicates a keyboard
 	events := dev.CapableEvents(evdev.EV_KEY)
 	common := map[uint16]bool{16: true, 30: true, 44: true, 57: true} // q, a, z, space
@@ -127,6 +129,10 @@ func (p *EvdevKeyboardProvider) Start() error {
 	}
 
 	var err error
+	// (Re)initialize stop channel on each start to avoid using a closed channel
+	p.stopListening = make(chan bool)
+	// clear stopping flag
+	atomic.StoreInt32(&p.stopping, 0)
 	p.devices, err = p.findKeyboardDevices()
 	if err != nil {
 		return fmt.Errorf("failed to find keyboard devices: %w", err)
@@ -163,7 +169,12 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 		event, err := p.devices[idx].ReadOne()
 		if err != nil {
 			// Exit on device read error to avoid infinite loops
-			p.logger.Error("Device read error: %v", err)
+			// During shutdown, the device is expected to be closed; downgrade to warning
+			if atomic.LoadInt32(&p.stopping) == 1 {
+				p.logger.Warning("Device read ended: %v", err)
+			} else {
+				p.logger.Error("Device read error: %v", err)
+			}
 			return
 		}
 
@@ -247,12 +258,18 @@ func (p *EvdevKeyboardProvider) Stop() {
 	}
 
 	// Signal all listener goroutines to stop
-	close(p.stopListening)
+	if p.stopListening != nil {
+		// make Stop idempotent: close only once and nil the channel
+		close(p.stopListening)
+		p.stopListening = nil
+	}
 
 	// Close all device handles to unblock any pending reads
+	atomic.StoreInt32(&p.stopping, 1)
 	for _, dev := range p.devices {
 		if err := dev.Close(); err != nil {
-			p.logger.Error("Failed to close evdev device: %v", err)
+			// If already closed, this is expected during shutdown
+			p.logger.Warning("Evdev device close (ignored): %v", err)
 		}
 	}
 
@@ -261,6 +278,7 @@ func (p *EvdevKeyboardProvider) Stop() {
 
 	p.devices = nil
 	p.isListening = false
+	atomic.StoreInt32(&p.stopping, 0)
 }
 
 // Start a short-lived capture session to get a single hotkey combination
@@ -276,19 +294,24 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 	defer func() {
 		for _, d := range devices {
 			if closeErr := d.Close(); closeErr != nil {
-				p.logger.Error("Failed to close evdev device: %v", closeErr)
+				// Closing after capture may race with external interactions; not fatal
+				p.logger.Warning("Evdev device close after capture (ignored): %v", closeErr)
 			}
 		}
 	}()
 
-	// Use a local modifier state for this capture session
+	// Use a local modifier state for this capture session with mutex protection
+	var modStateMutex sync.Mutex
 	modState := map[string]bool{}
 	resultCh := make(chan string, 1)
 	stopCh := make(chan struct{})
+	var captureWg sync.WaitGroup
 
 	for i := range devices {
 		idx := i
+		captureWg.Add(1)
 		go func() {
+			defer captureWg.Done()
 			for {
 				select {
 				case <-stopCh:
@@ -314,9 +337,11 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 					continue
 				}
 
-				// Track modifier state
+				// Track modifier state with mutex protection
 				if utils.IsModifierKey(keyName) {
+					modStateMutex.Lock()
 					modState[strings.ToLower(keyName)] = (ev.Value == 1)
+					modStateMutex.Unlock()
 					continue
 				}
 
@@ -326,7 +351,11 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 				}
 
 				// Cancel if Esc is pressed without modifiers
-				if utils.CheckCancelCondition(keyName, modState) {
+				modStateMutex.Lock()
+				isCancelled := utils.CheckCancelCondition(keyName, modState)
+				modStateMutex.Unlock()
+
+				if isCancelled {
 					select {
 					case resultCh <- "":
 					default:
@@ -334,7 +363,10 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 					return
 				}
 
+				modStateMutex.Lock()
 				mods := utils.BuildModifierState(modState)
+				modStateMutex.Unlock()
+
 				combo := utils.BuildHotkeyString(mods, keyName)
 				if err := utils.ValidateHotkey(combo); err != nil {
 					continue
@@ -360,6 +392,9 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		close(stopCh)
 		return "", fmt.Errorf("capture timeout")
 	}
+
+	// Wait for all capture goroutines to finish before closing devices
+	captureWg.Wait()
 
 	if strings.TrimSpace(result) == "" {
 		return "", fmt.Errorf("capture cancelled")

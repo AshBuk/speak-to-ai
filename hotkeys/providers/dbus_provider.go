@@ -20,8 +20,6 @@ import (
 
 // Implements KeyboardEventProvider using the D-Bus GlobalShortcuts portal
 type DbusKeyboardProvider struct {
-	config        adapters.HotkeyConfig
-	environment   interfaces.EnvironmentType
 	callbacks     map[string]func() error
 	conn          *dbus.Conn
 	sessionHandle string
@@ -33,9 +31,9 @@ type DbusKeyboardProvider struct {
 
 // Create a new D-Bus keyboard provider
 func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *DbusKeyboardProvider {
+	_ = config       // unused, kept for interface compatibility
+	_ = environment  // unused, kept for interface compatibility
 	return &DbusKeyboardProvider{
-		config:      config,
-		environment: environment,
 		callbacks:   make(map[string]func() error),
 		isListening: false,
 		logger:      logger,

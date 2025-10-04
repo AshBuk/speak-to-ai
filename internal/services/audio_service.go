@@ -232,6 +232,9 @@ func (as *AudioService) Shutdown() error {
 
 	as.cancel()
 
+	// Stop background temp file cleanup goroutine to avoid shutdown hangs
+	processing.GetTempFileManager().Stop()
+
 	if as.isRecording && as.recorder != nil {
 		if _, err := as.recorder.StopRecording(); err != nil {
 			as.logger.Error("Error stopping recording during shutdown: %v", err)

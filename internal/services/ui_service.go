@@ -214,6 +214,10 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 
 // Clean termination of UI components
 func (us *UIService) Shutdown() error {
+	if us.trayManager != nil {
+		// Ensure tray event loop and systray are stopped to avoid shutdown hangs
+		us.trayManager.Stop()
+	}
 	us.logger.Info("UIService shutdown complete")
 	return nil
 }
