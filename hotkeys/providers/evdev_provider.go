@@ -287,15 +287,6 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		return "", fmt.Errorf("no keyboard devices found")
 	}
 
-	defer func() {
-		for _, d := range devices {
-			if closeErr := d.Close(); closeErr != nil {
-				// Closing after capture may race with external interactions; not fatal
-				p.logger.Warning("Evdev device close after capture (ignored): %v", closeErr)
-			}
-		}
-	}()
-
 	// Use a local modifier state for this capture session with mutex protection
 	var modStateMutex sync.Mutex
 	modState := map[string]bool{}
@@ -386,11 +377,19 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		close(stopCh)
 	case <-timer.C:
 		close(stopCh)
-		return "", fmt.Errorf("capture timeout")
+		result = ""
 	}
 
-	// Wait for all capture goroutines to finish before closing devices
+	// Wait for all capture goroutines to finish BEFORE closing devices
 	captureWg.Wait()
+
+	// Now safe to close devices after all goroutines stopped
+	for _, d := range devices {
+		if closeErr := d.Close(); closeErr != nil {
+			// Already closed or error - not critical
+			p.logger.Warning("Evdev device close after capture: %v", closeErr)
+		}
+	}
 
 	if strings.TrimSpace(result) == "" {
 		return "", fmt.Errorf("capture cancelled")
