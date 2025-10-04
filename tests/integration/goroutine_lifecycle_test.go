@@ -10,8 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
 	"github.com/AshBuk/speak-to-ai/internal/app"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
@@ -97,9 +95,8 @@ func TestEvdevProviderLifecycle(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	mockLogger := testutils.NewMockLogger()
-	config := adapters.NewConfigAdapter("Alt+R", "evdev")
 
-	provider := providers.NewEvdevKeyboardProvider(config, interfaces.EnvironmentX11, mockLogger)
+	provider := providers.NewEvdevKeyboardProvider(mockLogger)
 
 	// Check if evdev is supported
 	if !provider.IsSupported() {
@@ -143,9 +140,8 @@ func TestDbusProviderLifecycle(t *testing.T) {
 	)
 
 	mockLogger := testutils.NewMockLogger()
-	config := adapters.NewConfigAdapter("Alt+R", "dbus")
 
-	provider := providers.NewDbusKeyboardProvider(config, interfaces.EnvironmentX11, mockLogger)
+	provider := providers.NewDbusKeyboardProvider(mockLogger)
 
 	// Check if dbus is supported
 	if !provider.IsSupported() {

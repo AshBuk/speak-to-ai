@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	dbus "github.com/godbus/dbus/v5"
@@ -30,9 +28,7 @@ type DbusKeyboardProvider struct {
 }
 
 // Create a new D-Bus keyboard provider
-func NewDbusKeyboardProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *DbusKeyboardProvider {
-	_ = config       // unused, kept for interface compatibility
-	_ = environment  // unused, kept for interface compatibility
+func NewDbusKeyboardProvider(logger logger.Logger) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
 		callbacks:   make(map[string]func() error),
 		isListening: false,

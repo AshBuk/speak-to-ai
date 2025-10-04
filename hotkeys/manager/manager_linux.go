@@ -105,12 +105,16 @@ func selectSystemProvider(config adapters.HotkeyConfig, environment interfaces.E
 
 // Create an evdev provider instance
 func createEvdevProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
-	return providers.NewEvdevKeyboardProvider(config, environment, logger)
+	_ = config
+	_ = environment
+	return providers.NewEvdevKeyboardProvider(logger)
 }
 
 // Create a D-Bus provider instance
 func createDbusProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
-	return providers.NewDbusKeyboardProvider(config, environment, logger)
+	_ = config
+	_ = environment
+	return providers.NewDbusKeyboardProvider(logger)
 }
 
 // Create a dummy provider as a last resort
