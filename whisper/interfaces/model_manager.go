@@ -4,6 +4,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
@@ -30,6 +32,8 @@ type WhisperModel interface{}
 type WhisperEngine interface {
 	// Transcribe an audio file and return the resulting text
 	Transcribe(audioFile string) (string, error)
+	// Add cancellation support for long running operations
+	TranscribeWithContext(ctx context.Context, audioFile string) (string, error)
 	// Close the engine and release any associated resources
 	Close() error
 	// Return the underlying model object

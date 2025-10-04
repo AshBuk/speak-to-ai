@@ -4,6 +4,7 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -88,9 +89,11 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 	// Create channel for receiving transcription result
 	resultCh := make(chan transcriptionResult, 1)
 
-	// Start transcription in a goroutine
+	// Start transcription in a goroutine with timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	go func() {
-		text, err := s.whisper.Transcribe(audioFile)
+		text, err := s.whisper.TranscribeWithContext(ctx, audioFile)
 		resultCh <- transcriptionResult{text: text, err: err}
 	}()
 

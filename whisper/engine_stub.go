@@ -6,6 +6,7 @@
 package whisper
 
 import (
+	"context"
 	"errors"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -25,6 +26,11 @@ func (w *WhisperEngine) Close() error { return nil }
 
 // Transcribe returns an error in the stub implementation
 func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
+	return "", errors.New("transcription unavailable: built without cgo")
+}
+
+// TranscribeWithContext returns an error in the stub implementation
+func (w *WhisperEngine) TranscribeWithContext(_ context.Context, _ string) (string, error) {
 	return "", errors.New("transcription unavailable: built without cgo")
 }
 

@@ -284,7 +284,7 @@ func (as *AudioService) transcribeAsync(audioFile string) {
 	resultChan := make(chan result, 1)
 
 	go func() {
-		transcript, err := as.whisperEngine.Transcribe(audioFile)
+		transcript, err := as.whisperEngine.TranscribeWithContext(ctx, audioFile)
 		select {
 		case resultChan <- result{transcript: transcript, err: err}:
 		case <-ctx.Done():
