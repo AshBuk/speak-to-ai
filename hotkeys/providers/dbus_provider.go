@@ -28,6 +28,7 @@ type DbusKeyboardProvider struct {
 	isListening   bool
 	mutex         sync.Mutex
 	logger        logger.Logger
+	wg            sync.WaitGroup // Tracks listener goroutine
 }
 
 // Create a new D-Bus keyboard provider
@@ -121,6 +122,7 @@ func (p *DbusKeyboardProvider) Stop() {
 		return
 	}
 
+	// Close D-Bus connection to unblock signal channel
 	if p.conn != nil {
 		if err := p.conn.Close(); err != nil {
 			p.logger.Error("Failed to close D-Bus connection: %v", err)
@@ -129,6 +131,10 @@ func (p *DbusKeyboardProvider) Stop() {
 	}
 
 	p.isListening = false
+
+	// Wait for listener goroutine to exit
+	p.wg.Wait()
+
 	p.logger.Info("D-Bus hotkey provider stopped")
 }
 
@@ -264,8 +270,12 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 
 	p.logger.Info("DBus: Successfully bound shortcuts")
 
-	// Step 4: Start listening for shortcut activations
-	go p.listenForShortcuts()
+	// Step 4: Start listening for shortcut activations in tracked goroutine
+	p.wg.Add(1)
+	go func() {
+		defer p.wg.Done()
+		p.listenForShortcuts()
+	}()
 
 	return nil
 }
