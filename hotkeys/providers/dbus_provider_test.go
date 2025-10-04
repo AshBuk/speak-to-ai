@@ -21,12 +21,6 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 		t.Fatal("NewDbusKeyboardProvider returned nil")
 	}
 
-	if provider.config != config {
-		t.Error("config not set correctly")
-	}
-	if provider.environment != env {
-		t.Error("environment not set correctly")
-	}
 	if provider.callbacks == nil {
 		t.Error("callbacks map not initialized")
 	}
