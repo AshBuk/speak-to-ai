@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Manages the lifecycle of temporary audio files
@@ -36,7 +38,7 @@ func GetTempFileManager() *TempFileManager {
 			cleanupTimeout: 30 * time.Minute, // Default timeout
 			stopChan:       make(chan bool),
 		}
-		go tempFileManager.cleanupRoutine()
+		utils.Go(func() { tempFileManager.cleanupRoutine() })
 	})
 	return tempFileManager
 }

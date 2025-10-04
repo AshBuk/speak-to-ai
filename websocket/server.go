@@ -14,6 +14,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper"
 	"github.com/gorilla/websocket"
 )
@@ -100,14 +101,14 @@ func (s *WebSocketServer) Start() error {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start HTTP server in a goroutine
-	go func() {
+	// Start HTTP server in a tracked goroutine
+	utils.Go(func() {
 		s.logger.Info("Starting WebSocket server on %s", addr)
 		s.started = true
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.logger.Error("WebSocket server error: %v", err)
 		}
-	}()
+	})
 
 	return nil
 }
@@ -197,8 +198,8 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		"api_version": s.config.WebServer.APIVersion,
 	})
 
-	// Start ping/pong
-	go s.pingClient(conn)
+	// Start ping/pong in tracked goroutine
+	utils.Go(func() { s.pingClient(conn) })
 
 	// Process messages from client
 	s.processMessages(conn)
