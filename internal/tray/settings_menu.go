@@ -442,7 +442,7 @@ func (tm *TrayManager) updateOutputUI() {
 
 // handleMenuItemClick creates a tracked goroutine that handles menu item clicks
 // with context cancellation support. This helper reduces boilerplate for menu handlers.
-func (tm *TrayManager) handleMenuItemClick(item systray.IMenuItem, handler func()) {
+func (tm *TrayManager) handleMenuItemClick(item *systray.MenuItem, handler func()) {
 	utils.Go(func() {
 		ch := item.ClickedCh
 		for {
@@ -462,7 +462,7 @@ func (tm *TrayManager) handleMenuItemClick(item systray.IMenuItem, handler func(
 // handleRadioItemClick handles radio button menu items with automatic logging and UI update.
 // This is a specialized helper for settings that behave like radio groups.
 func (tm *TrayManager) handleRadioItemClick(
-	item systray.IMenuItem,
+	item *systray.MenuItem,
 	value string,
 	logTemplate string,
 	updateUI func(string),
