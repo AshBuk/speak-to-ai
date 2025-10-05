@@ -22,6 +22,7 @@ type TempFileManager struct {
 	cleanupTimeout time.Duration
 	running        bool
 	stopChan       chan bool
+	stopClosed     bool
 }
 
 // Create a new TempFileManager instance
@@ -30,14 +31,21 @@ func NewTempFileManager(cleanupTimeout time.Duration) *TempFileManager {
 		tempFiles:      make(map[string]time.Time),
 		cleanupTimeout: cleanupTimeout,
 		stopChan:       make(chan bool),
+		stopClosed:     false,
 	}
 }
 
 // Start the background cleanup routine
 func (t *TempFileManager) Start() {
-	if !t.running {
-		utils.Go(func() { t.cleanupRoutine() })
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	if t.running {
+		return
 	}
+
+	t.running = true
+	utils.Go(func() { t.cleanupRoutine() })
 }
 
 // Add a file to the manager for tracking and eventual cleanup
@@ -115,9 +123,17 @@ func (t *TempFileManager) CleanupAll() {
 
 // Stop the background cleanup routine
 func (t *TempFileManager) Stop() {
-	if t.running {
-		t.stopChan <- true
-		close(t.stopChan)
+	t.mutex.Lock()
+	if t.stopClosed {
+		t.mutex.Unlock()
+		return
+	}
+	t.stopClosed = true
+	ch := t.stopChan
+	t.mutex.Unlock()
+
+	if ch != nil {
+		close(ch)
 	}
 }
 
