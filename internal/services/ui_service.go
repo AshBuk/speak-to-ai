@@ -164,7 +164,22 @@ func (us *UIService) openWithSystem(target string) error {
 	}
 	cmd.Env = filtered
 
-	return cmd.Start()
+	// Start detached and do not block tray event loop
+	if err := cmd.Start(); err != nil {
+		// Try gio as an alternative opener if available
+		if _, lookErr := exec.LookPath("gio"); lookErr == nil {
+			alt := exec.Command("gio", "open", target)
+			alt.Env = filtered
+			if err2 := alt.Start(); err2 == nil {
+				_ = alt.Process.Release()
+				return nil
+			}
+		}
+		return err
+	}
+	// avoid keeping child as a zombie if parent exits
+	_ = cmd.Process.Release()
+	return nil
 }
 
 // Locate config file across different installation methods (AppImage/Flatpak)
