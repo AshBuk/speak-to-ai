@@ -73,8 +73,9 @@ func SetDefaultConfig(config *models.Config) {
 	config.Audio.SampleRate = 16000
 	config.Audio.Format = "s16le"
 	config.Audio.RecordingMethod = "arecord"
-	config.Audio.ExpectedDuration = 0   // No expected duration by default
-	config.Audio.MaxRecordingTime = 300 // 5 minutes max by default
+	config.Audio.ExpectedDuration = 0     // No expected duration by default
+	config.Audio.MaxRecordingTime = 300   // 5 minutes max by default
+	config.Audio.TempFileCleanupTime = 30 // 30 minutes cleanup timeout by default
 
 	// TODO: Next feature - VAD implementation
 	// config.Hotkeys.ToggleVAD = "alt+v"       // Start/stop VAD

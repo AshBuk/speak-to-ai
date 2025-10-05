@@ -24,23 +24,20 @@ type TempFileManager struct {
 	stopChan       chan bool
 }
 
-var (
-	// global singleton instance
-	tempFileManager *TempFileManager
-	managerOnce     sync.Once
-)
+// Create a new TempFileManager instance
+func NewTempFileManager(cleanupTimeout time.Duration) *TempFileManager {
+	return &TempFileManager{
+		tempFiles:      make(map[string]time.Time),
+		cleanupTimeout: cleanupTimeout,
+		stopChan:       make(chan bool),
+	}
+}
 
-// Return the global TempFileManager instance, creating it if necessary
-func GetTempFileManager() *TempFileManager {
-	managerOnce.Do(func() {
-		tempFileManager = &TempFileManager{
-			tempFiles:      make(map[string]time.Time),
-			cleanupTimeout: 30 * time.Minute, // Default timeout
-			stopChan:       make(chan bool),
-		}
-		utils.Go(func() { tempFileManager.cleanupRoutine() })
-	})
-	return tempFileManager
+// Start the background cleanup routine
+func (t *TempFileManager) Start() {
+	if !t.running {
+		utils.Go(func() { t.cleanupRoutine() })
+	}
 }
 
 // Add a file to the manager for tracking and eventual cleanup

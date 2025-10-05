@@ -43,6 +43,7 @@ func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 	container.Audio = audioSvc
 	container.UI = uiSvc
 	container.IO = ioSvc
+	container.TempFileManager = components.TempFileManager
 
 	// Cross-dependencies
 	sa.SetupDependencies(container)
@@ -83,6 +84,7 @@ func (sa *ServiceAssembler) createAudioService(components *Components) *AudioSer
 		components.Recorder,
 		components.WhisperEngine,
 		components.ModelManager,
+		components.TempFileManager,
 	)
 }
 

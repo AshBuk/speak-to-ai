@@ -6,9 +6,11 @@ package services
 import (
 	"fmt"
 	"os/exec"
+	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	hotkeyInterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
@@ -54,8 +56,16 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 	}
 	cf.config.Logger.Info("Model path resolved: %s", modelFilePath)
 
+	// Initialize temp file manager
+	cleanupTimeout := time.Duration(cf.config.Config.Audio.TempFileCleanupTime) * time.Minute
+	if cleanupTimeout <= 0 {
+		cleanupTimeout = 30 * time.Minute
+	}
+	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout)
+	components.TempFileManager.Start()
+
 	// Initialize audio recorder
-	components.Recorder, err = factory.GetRecorder(cf.config.Config, cf.config.Logger)
+	components.Recorder, err = factory.GetRecorder(cf.config.Config, cf.config.Logger, components.TempFileManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize audio recorder: %w", err)
 	}

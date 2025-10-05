@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
@@ -21,7 +22,8 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	cfg.Audio.SampleRate = 16000
 
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	if recorder == nil {
 		t.Fatal("Expected recorder to be created, got nil")
@@ -72,7 +74,8 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			cfg.Audio.SampleRate = tt.sampleRate
 
 			mockLogger := testutils.NewMockLogger()
-			recorder := NewFFmpegRecorder(cfg, mockLogger)
+			tempMgr := processing.NewTempFileManager(30 * time.Minute)
+			recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 			recorder.useBuffer = tt.useBuffer
 			recorder.outputFile = "/tmp/test.wav"
 
@@ -151,7 +154,8 @@ func TestFFmpegRecorder_OutputFileHandling(t *testing.T) {
 	cfg.Audio.SampleRate = 16000
 
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
@@ -175,7 +179,8 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 	cfg.Audio.SampleRate = 16000
 
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	// Set up output file before testing stop
 	tempDir := t.TempDir()
@@ -234,7 +239,8 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.setupConfig()
 			mockLogger := testutils.NewMockLogger()
-			recorder := NewFFmpegRecorder(cfg, mockLogger)
+			tempMgr := processing.NewTempFileManager(30 * time.Minute)
+			recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 			// Build args to see if they're reasonable
 			args := recorder.buildBaseCommandArgs()
@@ -258,7 +264,8 @@ func TestFFmpegRecorder_AudioLevelCallbacks(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.Device = "default"
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	// Test initial audio level
 	if recorder.GetAudioLevel() != 0.0 {
@@ -298,7 +305,8 @@ func TestFFmpegRecorder_AudioLevelCallbacks(t *testing.T) {
 func TestFFmpegRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	// Create a temporary file to test cleanup
 	tempFile, err := os.CreateTemp("", "ffmpeg_test_*.wav")
@@ -335,7 +343,8 @@ func TestFFmpegRecorder_BufferMode(t *testing.T) {
 	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
 
 	mockLogger := testutils.NewMockLogger()
-	recorder := NewFFmpegRecorder(cfg, mockLogger)
+	tempMgr := processing.NewTempFileManager(30 * time.Minute)
+	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 
 	// Should be using buffer mode for short, low-quality recordings
 	if !recorder.useBuffer {

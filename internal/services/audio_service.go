@@ -26,6 +26,7 @@ type AudioService struct {
 	recorder      interfaces.AudioRecorder
 	whisperEngine *whisper.WhisperEngine
 	modelManager  whisper.ModelManager
+	tempManager   *processing.TempFileManager
 
 	// State management
 	mu                       sync.RWMutex
@@ -50,6 +51,7 @@ func NewAudioService(
 	recorder interfaces.AudioRecorder,
 	whisperEngine *whisper.WhisperEngine,
 	modelManager whisper.ModelManager,
+	tempManager *processing.TempFileManager,
 ) *AudioService {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -59,6 +61,7 @@ func NewAudioService(
 		recorder:      recorder,
 		whisperEngine: whisperEngine,
 		modelManager:  modelManager,
+		tempManager:   tempManager,
 		ctx:           ctx,
 		cancel:        cancel,
 	}
@@ -213,7 +216,7 @@ func (as *AudioService) ensureAudioRecorderAvailable() error {
 	if as.audioRecorderNeedsReinit || as.recorder == nil {
 		as.logger.Info("Reinitializing audio recorder...")
 
-		recorder, err := factory.GetRecorder(as.config, as.logger)
+		recorder, err := factory.GetRecorder(as.config, as.logger, as.tempManager)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}
@@ -231,9 +234,6 @@ func (as *AudioService) Shutdown() error {
 	defer as.mu.Unlock()
 
 	as.cancel()
-
-	// Stop background temp file cleanup goroutine to avoid shutdown hangs
-	processing.GetTempFileManager().Stop()
 
 	if as.isRecording && as.recorder != nil {
 		if _, err := as.recorder.StopRecording(); err != nil {
@@ -395,7 +395,9 @@ func (as *AudioService) handleTranscriptionCancellation(err error) {
 
 // clearSession clears audio session state and temp files
 func (as *AudioService) clearSession() {
-	processing.GetTempFileManager().CleanupAll()
+	if as.recorder != nil {
+		_ = as.recorder.CleanupFile()
+	}
 	as.audioRecorderNeedsReinit = true
 	as.lastTranscript = ""
 }
