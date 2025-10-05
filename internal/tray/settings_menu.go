@@ -6,6 +6,7 @@
 package tray
 
 import (
+	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
@@ -35,10 +36,16 @@ func (tm *TrayManager) populateSettingsMenus() {
 		return
 	}
 
-	// Populate Hotkeys menu (display + rebind)
 	tm.updateHotkeysMenuUI()
+	tm.setupAudioRecorderMenu()
+	tm.setupLanguageMenu()
+	tm.setupOutputMenu()
+	tm.setupWorkflowNotifications()
+}
 
-	// Populate Audio Recorder submenu with selectable items
+// setupAudioRecorderMenu creates and configures the audio recorder submenu
+func (tm *TrayManager) setupAudioRecorderMenu() {
+	// Create menu items
 	tm.audioItems["recorder_arecord"] = tm.audioRecorderMenu.AddSubMenuItem(
 		"○ arecord (ALSA)",
 		"Use arecord (ALSA)",
@@ -48,128 +55,34 @@ func (tm *TrayManager) populateSettingsMenus() {
 		"Use ffmpeg (PulseAudio)",
 	)
 
-	// Reflect current selections
+	// Set up click handlers
+	tm.handleRadioItemClick(
+		tm.audioItems["recorder_arecord"],
+		"arecord",
+		"Audio recorder switched to %s (UI)",
+		tm.updateRecorderRadioUI,
+		tm.onSelectRecorder,
+	)
+	tm.handleRadioItemClick(
+		tm.audioItems["recorder_ffmpeg"],
+		"ffmpeg",
+		"Audio recorder switched to %s (UI)",
+		tm.updateRecorderRadioUI,
+		tm.onSelectRecorder,
+	)
+
+	// Update initial UI state
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
-	// TODO: Next feature - VAD implementation
-	// tm.updateVADRadioUI(tm.config.Audio.VADSensitivity)
+}
 
-	// Handle clicks for recorder selection
-	utils.Go(func() {
-		ch := tm.audioItems["recorder_arecord"].ClickedCh
-		for {
-			select {
-			case <-tm.ctx.Done():
-				return
-			case _, ok := <-ch:
-				if !ok {
-					return
-				}
-				tm.logger.Info("Audio recorder switched to arecord (UI)")
-				tm.updateRecorderRadioUI("arecord")
-				if tm.onSelectRecorder != nil {
-					if err := tm.onSelectRecorder("arecord"); err != nil {
-						tm.logger.Error("Error selecting recorder: %v", err)
-					}
-				}
-			}
-		}
-	})
-	utils.Go(func() {
-		ch := tm.audioItems["recorder_ffmpeg"].ClickedCh
-		for {
-			select {
-			case <-tm.ctx.Done():
-				return
-			case _, ok := <-ch:
-				if !ok {
-					return
-				}
-				tm.logger.Info("Audio recorder switched to ffmpeg (UI)")
-				tm.updateRecorderRadioUI("ffmpeg")
-				if tm.onSelectRecorder != nil {
-					if err := tm.onSelectRecorder("ffmpeg"); err != nil {
-						tm.logger.Error("Error selecting recorder: %v", err)
-					}
-				}
-			}
-		}
-	})
-
-	// Handle VAD sensitivity clicks
-	// if tm.audioItems["vad_low"] != nil {
-	// 	go func() {
-	// 		for range tm.audioItems["vad_low"].ClickedCh {
-	// 			tm.logger.Info("VAD sensitivity switched to low (UI)")
-	// 			tm.updateVADRadioUI("low")
-	// 			if tm.onSelectVADSens != nil {
-	// 				if err := tm.onSelectVADSens("low"); err != nil {
-	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
-	// 				}
-	// 			}
-	// 		}
-	// 	}()
-	// }
-	// if tm.audioItems["vad_medium"] != nil {
-	// 	go func() {
-	// 		for range tm.audioItems["vad_medium"].ClickedCh {
-	// 			tm.logger.Info("VAD sensitivity switched to medium (UI)")
-	// 			tm.updateVADRadioUI("medium")
-	// 			if tm.onSelectVADSens != nil {
-	// 				if err := tm.onSelectVADSens("medium"); err != nil {
-	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
-	// 				}
-	// 			}
-	// 		}
-	// 	}()
-	// }
-	// if tm.audioItems["vad_high"] != nil {
-	// 	go func() {
-	// 		for range tm.audioItems["vad_high"].ClickedCh {
-	// 			tm.logger.Info("VAD sensitivity switched to high (UI)")
-	// 			tm.updateVADRadioUI("high")
-	// 			if tm.onSelectVADSens != nil {
-	// 				if err := tm.onSelectVADSens("high"); err != nil {
-	// 					tm.logger.Error("Error selecting VAD sensitivity: %v", err)
-	// 				}
-	// 			}
-	// 		}
-	// 	}()
-	// }
-
-	// Handle workflow notifications toggle
-	if tm.audioItems["workflow_notifications"] != nil {
-		utils.Go(func() {
-			ch := tm.audioItems["workflow_notifications"].ClickedCh
-			for {
-				select {
-				case <-tm.ctx.Done():
-					return
-				case _, ok := <-ch:
-					if !ok {
-						return
-					}
-					tm.logger.Info("Workflow notifications toggle clicked")
-					if tm.onToggleWorkflowNotify != nil {
-						if err := tm.onToggleWorkflowNotify(); err != nil {
-							tm.logger.Error("Error toggling workflow notifications: %v", err)
-						}
-						// Reflect new state in UI using updated config
-						if tm.config != nil {
-							tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
-						}
-					}
-				}
-			}
-		})
-	}
-
-	// Update workflow notifications toggle
-	tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
-
-	// Populate Language Selection menu
+// setupLanguageMenu creates and configures the language selection submenu
+func (tm *TrayManager) setupLanguageMenu() {
 	langDefs := []struct{ key, title string }{
-		{"en", "English"}, {"de", "German"}, {"fr", "French"}, {"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
+		{"en", "English"}, {"de", "German"}, {"fr", "French"},
+		{"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
 	}
+
+	// Create language menu items
 	for _, l := range langDefs {
 		indicator := "○ "
 		if tm.config.General.Language == l.key {
@@ -179,45 +92,35 @@ func (tm *TrayManager) populateSettingsMenus() {
 		tm.modelItems["lang_"+l.key] = itm
 	}
 
-	// Language display (gray text)
+	// Create language display (gray text)
 	tm.modelItems["language"] = tm.aiModelMenu.AddSubMenuItem(
 		"Current: "+tm.config.General.Language,
 		"Current language setting",
 	)
 	tm.modelItems["language"].Disable()
 
-	// Handle language clicks
+	// Set up click handlers
 	for _, k := range []string{"en", "de", "fr", "es", "he", "ru"} {
 		if itm := tm.modelItems["lang_"+k]; itm != nil {
 			key := k
-			utils.Go(func() {
-				ch := itm.ClickedCh
-				for {
-					select {
-					case <-tm.ctx.Done():
-						return
-					case _, ok := <-ch:
-						if !ok {
-							return
-						}
-						tm.logger.Info("Language switched to %s (UI)", key)
-						tm.updateLanguageRadioUI(key)
-						if tm.onSelectLang != nil {
-							if err := tm.onSelectLang(key); err != nil {
-								tm.logger.Error("Error selecting language: %v", err)
-							}
-						}
-					}
-				}
-			})
+			tm.handleRadioItemClick(
+				itm,
+				key,
+				"Language switched to %s (UI)",
+				tm.updateLanguageRadioUI,
+				tm.onSelectLang,
+			)
 		}
 	}
+}
 
-	// Populate Output menu
-	// Output mode selection
+// setupOutputMenu creates and configures the output mode submenu
+func (tm *TrayManager) setupOutputMenu() {
 	modeDefs := []struct{ key, title string }{
 		{"clipboard", "Clipboard"}, {"active_window", "Active Window"},
 	}
+
+	// Create output mode items
 	for _, m := range modeDefs {
 		indicator := "○ "
 		if tm.config.Output.DefaultMode == m.key {
@@ -227,7 +130,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 		tm.outputItems["mode_"+m.key] = itm
 	}
 
-	// Mode display (gray text)
+	// Create display items (gray text)
 	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
 		tm.config.Output.DefaultMode,
 		"Current output mode",
@@ -246,32 +149,42 @@ func (tm *TrayManager) populateSettingsMenus() {
 	)
 	tm.outputItems["type_tool"].Disable()
 
-	// Handle output mode clicks
+	// Set up click handlers
 	for _, k := range []string{"clipboard", "active_window"} {
 		if itm := tm.outputItems["mode_"+k]; itm != nil {
 			key := k
-			utils.Go(func() {
-				ch := itm.ClickedCh
-				for {
-					select {
-					case <-tm.ctx.Done():
-						return
-					case _, ok := <-ch:
-						if !ok {
-							return
-						}
-						tm.logger.Info("Output mode switched to %s (UI)", key)
-						tm.updateOutputModeRadioUI(key)
-						if tm.onSelectOutputMode != nil {
-							if err := tm.onSelectOutputMode(key); err != nil {
-								tm.logger.Error("Error selecting output mode: %v", err)
-							}
-						}
-					}
-				}
-			})
+			tm.handleRadioItemClick(
+				itm,
+				key,
+				"Output mode switched to %s (UI)",
+				tm.updateOutputModeRadioUI,
+				tm.onSelectOutputMode,
+			)
 		}
 	}
+}
+
+// setupWorkflowNotifications creates and configures the workflow notifications toggle
+func (tm *TrayManager) setupWorkflowNotifications() {
+	if tm.audioItems["workflow_notifications"] == nil {
+		return
+	}
+
+	tm.handleMenuItemClick(tm.audioItems["workflow_notifications"], func() {
+		tm.logger.Info("Workflow notifications toggle clicked")
+		if tm.onToggleWorkflowNotify != nil {
+			if err := tm.onToggleWorkflowNotify(); err != nil {
+				tm.logger.Error("Error toggling workflow notifications: %v", err)
+			}
+			// Reflect new state in UI using updated config
+			if tm.config != nil {
+				tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
+			}
+		}
+	})
+
+	// Update initial UI state
+	tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
 }
 
 // updateHotkeysMenuUI ensures hotkeys items exist and reflect current config
@@ -523,4 +436,45 @@ func (tm *TrayManager) updateOutputUI() {
 	if typeItem := tm.outputItems["type_tool"]; typeItem != nil {
 		typeItem.SetTitle("Type Tool: " + typeTool)
 	}
+}
+
+// Helper functions for menu handling
+
+// handleMenuItemClick creates a tracked goroutine that handles menu item clicks
+// with context cancellation support. This helper reduces boilerplate for menu handlers.
+func (tm *TrayManager) handleMenuItemClick(item systray.IMenuItem, handler func()) {
+	utils.Go(func() {
+		ch := item.ClickedCh
+		for {
+			select {
+			case <-tm.ctx.Done():
+				return
+			case _, ok := <-ch:
+				if !ok {
+					return
+				}
+				handler()
+			}
+		}
+	})
+}
+
+// handleRadioItemClick handles radio button menu items with automatic logging and UI update.
+// This is a specialized helper for settings that behave like radio groups.
+func (tm *TrayManager) handleRadioItemClick(
+	item systray.IMenuItem,
+	value string,
+	logTemplate string,
+	updateUI func(string),
+	callback func(string) error,
+) {
+	tm.handleMenuItemClick(item, func() {
+		tm.logger.Info(logTemplate, value)
+		updateUI(value)
+		if callback != nil {
+			if err := callback(value); err != nil {
+				tm.logger.Error("Error: %v", err)
+			}
+		}
+	})
 }
