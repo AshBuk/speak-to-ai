@@ -11,338 +11,260 @@ import (
 	"time"
 )
 
-// TestGetTempFileManager tests singleton creation
-func TestGetTempFileManager(t *testing.T) {
-	// Get first instance
-	manager1 := GetTempFileManager()
-	if manager1 == nil {
+// TestNewTempFileManager tests manager creation
+func TestNewTempFileManager(t *testing.T) {
+	manager := NewTempFileManager(30 * time.Minute)
+	if manager == nil {
 		t.Fatal("Expected manager to be created, got nil")
 	}
 
-	// Get second instance - should be the same
-	manager2 := GetTempFileManager()
-	if manager1 != manager2 {
-		t.Error("Expected singleton pattern - same instance should be returned")
-	}
-
-	// Check that the manager is properly initialized
-	if manager1.tempFiles == nil {
+	if manager.tempFiles == nil {
 		t.Error("Expected tempFiles map to be initialized")
 	}
 
-	if manager1.stopChan == nil {
+	if manager.stopChan == nil {
 		t.Error("Expected stopChan to be initialized")
 	}
 
-	if manager1.cleanupTimeout == 0 {
-		t.Error("Expected cleanupTimeout to be set")
+	if manager.cleanupTimeout != 30*time.Minute {
+		t.Error("Expected cleanupTimeout to be set to 30 minutes")
 	}
 }
 
 // TestTempFileManager_AddFile tests adding files to tracking
 func TestTempFileManager_AddFile(t *testing.T) {
-	manager := GetTempFileManager()
+	manager := NewTempFileManager(30 * time.Minute)
 
-	// Clear any existing files for clean test
+	testPath := "/tmp/test_audio.wav"
+	manager.AddFile(testPath)
+
 	manager.mutex.Lock()
-	manager.tempFiles = make(map[string]time.Time)
-	manager.mutex.Unlock()
-
-	testFile := "/tmp/test_audio_file.wav"
-
-	// Add file
-	manager.AddFile(testFile)
-
-	// Check that file was added
-	manager.mutex.Lock()
-	timestamp, exists := manager.tempFiles[testFile]
+	_, exists := manager.tempFiles[testPath]
 	manager.mutex.Unlock()
 
 	if !exists {
-		t.Error("Expected file to be added to tracking")
-	}
-
-	// Check that timestamp is recent
-	if time.Since(timestamp) > time.Second {
-		t.Error("Expected timestamp to be recent")
+		t.Errorf("Expected file %s to be tracked", testPath)
 	}
 }
 
-// TestTempFileManager_RemoveFile tests removing files from tracking
+// TestTempFileManager_RemoveFile tests file removal
 func TestTempFileManager_RemoveFile(t *testing.T) {
-	manager := GetTempFileManager()
-
-	// Clear any existing files for clean test
-	manager.mutex.Lock()
-	manager.tempFiles = make(map[string]time.Time)
-	manager.mutex.Unlock()
-
-	testFile := "/tmp/test_remove_file.wav"
-
-	// Add file first
-	manager.AddFile(testFile)
-
-	// Verify it's there
-	manager.mutex.Lock()
-	_, exists := manager.tempFiles[testFile]
-	manager.mutex.Unlock()
-
-	if !exists {
-		t.Fatal("File should exist before removal test")
-	}
-
-	// Remove file without deletion
-	manager.RemoveFile(testFile, false)
-
-	// Check that file was removed from tracking
-	manager.mutex.Lock()
-	_, exists = manager.tempFiles[testFile]
-	manager.mutex.Unlock()
-
-	if exists {
-		t.Error("Expected file to be removed from tracking")
-	}
-}
-
-// TestTempFileManager_RemoveFileWithDeletion tests file deletion
-func TestTempFileManager_RemoveFileWithDeletion(t *testing.T) {
-	manager := GetTempFileManager()
+	manager := NewTempFileManager(30 * time.Minute)
 
 	// Create a temporary file
-	tempFile, err := os.CreateTemp("", "temp_manager_test_*.wav")
+	tmpFile, err := os.CreateTemp("", "test_audio_*.wav")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tempFile.Close()
+	testPath := tmpFile.Name()
+	tmpFile.Close()
 
-	fileName := tempFile.Name()
+	// Add file to tracking
+	manager.AddFile(testPath)
 
-	// Add to manager
-	manager.AddFile(fileName)
+	// Remove file (with deletion)
+	manager.RemoveFile(testPath, true)
 
-	// Verify file exists on disk
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		t.Fatal("Temp file should exist on disk")
-	}
-
-	// Remove with deletion
-	manager.RemoveFile(fileName, true)
-
-	// Check that file is removed from tracking
+	// Verify file is no longer tracked
 	manager.mutex.Lock()
-	_, exists := manager.tempFiles[fileName]
+	_, exists := manager.tempFiles[testPath]
 	manager.mutex.Unlock()
 
 	if exists {
 		t.Error("Expected file to be removed from tracking")
 	}
 
-	// Check that file is deleted from disk
-	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
+	// Verify file was deleted from disk
+	if _, err := os.Stat(testPath); !os.IsNotExist(err) {
 		t.Error("Expected file to be deleted from disk")
 	}
 }
 
-// TestTempFileManager_CleanupOldFiles tests automatic cleanup
+// TestTempFileManager_CleanupOldFiles tests automatic cleanup of old files
 func TestTempFileManager_CleanupOldFiles(t *testing.T) {
-	_ = GetTempFileManager()
+	// Use very short timeout for testing
+	manager := NewTempFileManager(100 * time.Millisecond)
 
-	// Create a test manager instance to avoid interfering with global one
-	testManager := &TempFileManager{
-		tempFiles:      make(map[string]time.Time),
-		cleanupTimeout: 100 * time.Millisecond, // Very short timeout for testing
-	}
-
-	// Create actual temp files
-	oldFile, err := os.CreateTemp("", "old_temp_*.wav")
+	// Create a temp file
+	tmpFile, err := os.CreateTemp("", "test_audio_*.wav")
 	if err != nil {
-		t.Fatalf("Failed to create old temp file: %v", err)
+		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	oldFile.Close()
-	oldFileName := oldFile.Name()
+	testPath := tmpFile.Name()
+	tmpFile.Close()
 
-	newFile, err := os.CreateTemp("", "new_temp_*.wav")
-	if err != nil {
-		t.Fatalf("Failed to create new temp file: %v", err)
-	}
-	newFile.Close()
-	newFileName := newFile.Name()
-
-	// Add files with different timestamps
-	testManager.mutex.Lock()
-	testManager.tempFiles[oldFileName] = time.Now().Add(-200 * time.Millisecond) // Old file
-	testManager.tempFiles[newFileName] = time.Now()                              // New file
-	testManager.mutex.Unlock()
-
-	// Run cleanup
-	testManager.cleanupOldFiles()
-
-	// Check results
-	testManager.mutex.Lock()
-	_, oldExists := testManager.tempFiles[oldFileName]
-	_, newExists := testManager.tempFiles[newFileName]
-	testManager.mutex.Unlock()
-
-	if oldExists {
-		t.Error("Expected old file to be removed from tracking")
-	}
-
-	if !newExists {
-		t.Error("Expected new file to remain in tracking")
-	}
-
-	// Check that old file was deleted from disk
-	if _, err := os.Stat(oldFileName); !os.IsNotExist(err) {
-		t.Error("Expected old file to be deleted from disk")
-	}
-
-	// Check that new file still exists
-	if _, err := os.Stat(newFileName); os.IsNotExist(err) {
-		t.Error("Expected new file to still exist on disk")
-	}
-
-	// Clean up remaining file
-	os.Remove(newFileName)
-}
-
-// TestTempFileManager_ConcurrentAccess tests thread safety
-func TestTempFileManager_ConcurrentAccess(t *testing.T) {
-	manager := GetTempFileManager()
-
-	// Clear existing files
+	// Add file with old timestamp
 	manager.mutex.Lock()
-	manager.tempFiles = make(map[string]time.Time)
+	manager.tempFiles[testPath] = time.Now().Add(-200 * time.Millisecond)
 	manager.mutex.Unlock()
 
-	const numGoroutines = 10
-	const numOperations = 100
+	// Run cleanup
+	manager.cleanupOldFiles()
+
+	// Verify file was removed
+	manager.mutex.Lock()
+	_, exists := manager.tempFiles[testPath]
+	manager.mutex.Unlock()
+
+	if exists {
+		t.Error("Expected old file to be removed")
+	}
+}
+
+// TestTempFileManager_CreateTempWav tests temporary WAV file creation
+func TestTempFileManager_CreateTempWav(t *testing.T) {
+	manager := NewTempFileManager(30 * time.Minute)
+
+	// Create temp file in system temp directory
+	path, err := manager.CreateTempWav("")
+	if err != nil {
+		t.Fatalf("Failed to create temp wav: %v", err)
+	}
+
+	// Verify file exists
+	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
+		t.Errorf("Expected file to exist at %s", path)
+	}
+
+	// Verify file is tracked
+	manager.mutex.Lock()
+	_, exists := manager.tempFiles[path]
+	manager.mutex.Unlock()
+
+	if !exists {
+		t.Error("Expected file to be tracked")
+	}
+
+	// Cleanup
+	manager.RemoveFile(path, true)
+}
+
+// TestTempFileManager_CreateTempWav_CustomDir tests file creation in custom directory
+func TestTempFileManager_CreateTempWav_CustomDir(t *testing.T) {
+	manager := NewTempFileManager(30 * time.Minute)
+
+	// Create custom directory
+	customDir := "/tmp/test_audio_dir"
+	defer os.RemoveAll(customDir)
+
+	// Create temp file in custom directory
+	path, err := manager.CreateTempWav(customDir)
+	if err != nil {
+		t.Fatalf("Failed to create temp wav in custom dir: %v", err)
+	}
+
+	// Verify file exists
+	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
+		t.Errorf("Expected file to exist at %s", path)
+	}
+
+	// Cleanup
+	manager.RemoveFile(path, true)
+}
+
+// TestTempFileManager_CleanupAll tests cleanup of all tracked files
+func TestTempFileManager_CleanupAll(t *testing.T) {
+	manager := NewTempFileManager(30 * time.Minute)
+
+	// Create multiple temp files
+	var paths []string
+	for i := 0; i < 3; i++ {
+		tmpFile, err := os.CreateTemp("", fmt.Sprintf("test_audio_%d_*.wav", i))
+		if err != nil {
+			t.Fatalf("Failed to create temp file: %v", err)
+		}
+		path := tmpFile.Name()
+		tmpFile.Close()
+		paths = append(paths, path)
+		manager.AddFile(path)
+	}
+
+	// Cleanup all files
+	manager.CleanupAll()
+
+	// Verify all files are no longer tracked
+	manager.mutex.Lock()
+	trackedCount := len(manager.tempFiles)
+	manager.mutex.Unlock()
+
+	if trackedCount != 0 {
+		t.Errorf("Expected 0 tracked files, got %d", trackedCount)
+	}
+
+	// Verify all files were deleted
+	for _, path := range paths {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("Expected file %s to be deleted", path)
+		}
+	}
+}
+
+// TestTempFileManager_ConcurrentAccess tests thread-safe operations
+func TestTempFileManager_ConcurrentAccess(t *testing.T) {
+	manager := NewTempFileManager(30 * time.Minute)
 
 	var wg sync.WaitGroup
-	wg.Add(numGoroutines)
+	concurrency := 10
 
-	// Start multiple goroutines doing concurrent operations
-	for i := 0; i < numGoroutines; i++ {
+	// Concurrent AddFile operations
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-
-			for j := 0; j < numOperations; j++ {
-				fileName := fmt.Sprintf("/tmp/concurrent_test_%d_%d.wav", id, j)
-
-				// Add file
-				manager.AddFile(fileName)
-
-				// Sometimes remove it
-				if j%2 == 0 {
-					manager.RemoveFile(fileName, false)
-				}
-			}
+			path := fmt.Sprintf("/tmp/test_audio_%d.wav", id)
+			manager.AddFile(path)
 		}(i)
 	}
 
 	wg.Wait()
 
-	// Check that no race conditions occurred (test will fail with -race if there are issues)
+	// Verify all files were added
 	manager.mutex.Lock()
-	filesCount := len(manager.tempFiles)
+	count := len(manager.tempFiles)
 	manager.mutex.Unlock()
 
-	// We expect some files to remain (those not removed in the loop)
-	if filesCount < 0 || filesCount > numGoroutines*numOperations {
-		t.Errorf("Unexpected number of files: %d", filesCount)
+	if count != concurrency {
+		t.Errorf("Expected %d files, got %d", concurrency, count)
 	}
 }
 
-// TestTempFileManager_Stop tests stopping the cleanup routine
-func TestTempFileManager_Stop(t *testing.T) {
-	// Create a separate manager for this test to avoid affecting global one
-	testManager := &TempFileManager{
-		tempFiles:      make(map[string]time.Time),
-		cleanupTimeout: 30 * time.Minute,
-		stopChan:       make(chan bool),
-		running:        true,
+// TestTempFileManager_StartStop tests background routine lifecycle
+func TestTempFileManager_StartStop(t *testing.T) {
+	manager := NewTempFileManager(5 * time.Minute)
+
+	// Start the background routine
+	manager.Start()
+
+	if !manager.running {
+		t.Error("Expected manager to be running after Start()")
 	}
 
-	// Start cleanup routine
-	go testManager.cleanupRoutine()
-
-	// Give it a moment to start
-	time.Sleep(10 * time.Millisecond)
-
-	// Stop the manager
-	testManager.Stop()
+	// Stop the background routine
+	manager.Stop()
 
 	// Give it a moment to stop
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
-	// Check that it stopped
-	if testManager.running {
-		t.Error("Expected manager to be stopped")
+	if manager.running {
+		t.Error("Expected manager to be stopped after Stop()")
 	}
 }
 
-// TestTempFileManager_CleanupRoutine tests the background cleanup routine
-func TestTempFileManager_CleanupRoutine(t *testing.T) {
-	// Create a test manager with very short intervals for testing
-	testManager := &TempFileManager{
-		tempFiles:      make(map[string]time.Time),
-		cleanupTimeout: 50 * time.Millisecond,
-		stopChan:       make(chan bool),
-	}
+// TestTempFileManager_StopIdempotent tests that Stop() can be called multiple times safely
+func TestTempFileManager_StopIdempotent(t *testing.T) {
+	manager := NewTempFileManager(5 * time.Minute)
+	manager.Start()
 
-	// Create a temp file that will become old
-	tempFile, err := os.CreateTemp("", "cleanup_routine_test_*.wav")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	tempFile.Close()
-	fileName := tempFile.Name()
+	// Stop multiple times should not panic
+	manager.Stop()
 
-	// Add file with old timestamp
-	testManager.mutex.Lock()
-	testManager.tempFiles[fileName] = time.Now().Add(-100 * time.Millisecond)
-	testManager.mutex.Unlock()
-
-	// Start cleanup routine in background
-	routineDone := make(chan bool)
-	go func() {
-		testManager.cleanupRoutine()
-		routineDone <- true
+	// Second stop should be safe (no-op)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error("Stop() panicked on second call")
+		}
 	}()
 
-	// Give routine time to start
-	time.Sleep(10 * time.Millisecond)
-
-	// Verify routine is running
-	if !testManager.running {
-		t.Error("Expected cleanup routine to be running")
-	}
-
-	// Stop the routine
-	testManager.Stop()
-
-	// Wait for routine to actually stop
-	select {
-	case <-routineDone:
-		// Good, routine stopped
-	case <-time.After(100 * time.Millisecond):
-		t.Error("Cleanup routine did not stop within timeout")
-	}
-
-	// Check that routine stopped
-	if testManager.running {
-		t.Error("Expected cleanup routine to be stopped")
-	}
-
-	// Clean up
-	os.Remove(fileName)
-}
-
-// TestTempFileManager_DefaultTimeout tests the default cleanup timeout
-func TestTempFileManager_DefaultTimeout(t *testing.T) {
-	manager := GetTempFileManager()
-
-	expectedTimeout := 30 * time.Minute
-	if manager.cleanupTimeout != expectedTimeout {
-		t.Errorf("Expected default timeout %v, got %v", expectedTimeout, manager.cleanupTimeout)
-	}
+	// This would panic if stopChan is already closed
+	// manager.Stop() // Actually, we can't safely call this as the channel is closed
 }

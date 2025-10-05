@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/audio/recorders"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -17,15 +18,17 @@ import (
 
 // Creates appropriate audio recorder instances based on configuration
 type AudioRecorderFactory struct {
-	config *config.Config
-	logger logger.Logger
+	config      *config.Config
+	logger      logger.Logger
+	tempManager *processing.TempFileManager
 }
 
 // Create a new factory instance
-func NewAudioRecorderFactory(config *config.Config, logger logger.Logger) *AudioRecorderFactory {
+func NewAudioRecorderFactory(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) *AudioRecorderFactory {
 	return &AudioRecorderFactory{
-		config: config,
-		logger: logger,
+		config:      config,
+		logger:      logger,
+		tempManager: tempManager,
 	}
 }
 
@@ -36,9 +39,9 @@ func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error
 
 	switch f.config.Audio.RecordingMethod {
 	case "arecord":
-		return recorders.NewArecordRecorder(f.config, f.logger), nil
+		return recorders.NewArecordRecorder(f.config, f.logger, f.tempManager), nil
 	case "ffmpeg":
-		return recorders.NewFFmpegRecorder(f.config, f.logger), nil
+		return recorders.NewFFmpegRecorder(f.config, f.logger, f.tempManager), nil
 	default:
 		return nil, fmt.Errorf("unsupported recording method: %s", f.config.Audio.RecordingMethod)
 	}
@@ -165,13 +168,13 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 }
 
 // Create a recorder directly from a configuration
-func GetRecorder(config *config.Config, logger logger.Logger) (interfaces.AudioRecorder, error) {
-	factory := NewAudioRecorderFactory(config, logger)
+func GetRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) (interfaces.AudioRecorder, error) {
+	factory := NewAudioRecorderFactory(config, logger, tempManager)
 	return factory.CreateRecorder()
 }
 
 // Create a recorder with automatic fallback functionality
-func GetRecorderWithFallback(config *config.Config, logger logger.Logger) (interfaces.AudioRecorder, error) {
-	factory := NewAudioRecorderFactory(config, logger)
+func GetRecorderWithFallback(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) (interfaces.AudioRecorder, error) {
+	factory := NewAudioRecorderFactory(config, logger, tempManager)
 	return factory.CreateRecorderWithFallback()
 }

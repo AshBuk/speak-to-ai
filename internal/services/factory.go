@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -36,6 +37,7 @@ type Components struct {
 	WebSocketServer *websocket.WebSocketServer
 	TrayManager     tray.TrayManagerInterface
 	NotifyManager   *notify.NotificationManager
+	TempFileManager *processing.TempFileManager
 }
 
 // ServiceFactory creates and configures all services with proper dependency injection

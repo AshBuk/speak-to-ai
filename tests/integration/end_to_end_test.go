@@ -28,7 +28,8 @@ import (
 // setupRecorderWithCleanup creates a recorder and ensures cleanup on test completion
 func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audiointerfaces.AudioRecorder {
 	testLogger := logger.NewDefaultLogger(logger.InfoLevel)
-	recorder, err := factory.GetRecorder(cfg, testLogger)
+	tempManager := processing.NewTempFileManager(30 * time.Minute)
+	recorder, err := factory.GetRecorder(cfg, testLogger, tempManager)
 	if err != nil {
 		t.Skipf("Audio not available: %v", err)
 	}
@@ -144,7 +145,8 @@ func TestApplicationInitializationFlow(t *testing.T) {
 		// Test audio system
 		t.Log("Testing audio system...")
 		testLogger := logger.NewDefaultLogger(logger.InfoLevel)
-		_, err = factory.GetRecorder(cfg, testLogger)
+		tempManager := processing.NewTempFileManager(30 * time.Minute)
+		_, err = factory.GetRecorder(cfg, testLogger, tempManager)
 		if err != nil {
 			t.Logf("Audio system not available: %v", err)
 		} else {
@@ -204,7 +206,8 @@ func TestRealWorldScenarios(t *testing.T) {
 			forceStopRecorder(recorder)
 
 			// Clear session state between recordings for isolation
-			processing.GetTempFileManager().CleanupAll()
+			tempManager := processing.NewTempFileManager(30 * time.Minute)
+			tempManager.CleanupAll()
 
 			// Give time for cleanup to complete
 			time.Sleep(100 * time.Millisecond)
@@ -288,7 +291,7 @@ func TestRealWorldScenarios(t *testing.T) {
 
 	t.Run("concurrent_operations", func(t *testing.T) {
 		// Test that concurrent operations are handled safely
-		tempManager := processing.GetTempFileManager()
+		tempManager := processing.NewTempFileManager(30 * time.Minute)
 
 		// Add files concurrently
 		errChan := make(chan error, 10)
@@ -329,7 +332,7 @@ func TestSystemResourceManagement(t *testing.T) {
 	// Test that system resources are properly managed
 	t.Run("temporary_file_cleanup", func(t *testing.T) {
 		tempDir := t.TempDir()
-		tempManager := processing.GetTempFileManager()
+		tempManager := processing.NewTempFileManager(30 * time.Minute)
 
 		// Create several temp files
 		testFiles := []string{}
@@ -370,7 +373,8 @@ func TestSystemResourceManagement(t *testing.T) {
 			t.Logf("Iteration %d: Skipping whisper engine (requires CGO)", i+1)
 
 			testLogger := logger.NewDefaultLogger(logger.InfoLevel)
-			recorder, err := factory.GetRecorder(cfg, testLogger)
+			tempManager := processing.NewTempFileManager(30 * time.Minute)
+			recorder, err := factory.GetRecorder(cfg, testLogger, tempManager)
 			if err == nil {
 				recorder.CleanupFile()
 			}
@@ -446,7 +450,8 @@ func TestCrossComponentIntegration(t *testing.T) {
 			t.Run(testCfg.Audio.RecordingMethod, func(t *testing.T) {
 				// Test that configuration is respected
 				testLogger := logger.NewDefaultLogger(logger.InfoLevel)
-				_, err := factory.GetRecorder(testCfg, testLogger)
+				tempManager := processing.NewTempFileManager(30 * time.Minute)
+				_, err := factory.GetRecorder(testCfg, testLogger, tempManager)
 				if err != nil {
 					t.Logf("Config %d: recorder not available: %v", i, err)
 				} else {

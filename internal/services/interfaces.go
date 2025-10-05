@@ -4,6 +4,7 @@
 package services
 
 import (
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
@@ -109,11 +110,12 @@ type HotkeyServiceInterface interface {
 
 // ServiceContainer holds all service interfaces
 type ServiceContainer struct {
-	Audio   AudioServiceInterface
-	UI      UIServiceInterface
-	IO      IOServiceInterface
-	Config  ConfigServiceInterface
-	Hotkeys HotkeyServiceInterface
+	Audio           AudioServiceInterface
+	UI              UIServiceInterface
+	IO              IOServiceInterface
+	Config          ConfigServiceInterface
+	Hotkeys         HotkeyServiceInterface
+	TempFileManager *processing.TempFileManager
 }
 
 // Create a new service container with all services
@@ -153,6 +155,11 @@ func (sc *ServiceContainer) Shutdown() error {
 		if err := sc.Hotkeys.Shutdown(); err != nil {
 			lastErr = err
 		}
+	}
+
+	if sc.TempFileManager != nil {
+		sc.TempFileManager.Stop()
+		sc.TempFileManager.CleanupAll()
 	}
 
 	return lastErr

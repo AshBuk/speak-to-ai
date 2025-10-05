@@ -6,6 +6,7 @@ package recorders
 import (
 	"fmt"
 
+	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
@@ -16,9 +17,9 @@ type ArecordRecorder struct {
 }
 
 // Create a new instance of the arecord-based recorder
-func NewArecordRecorder(config *config.Config, logger logger.Logger) *ArecordRecorder {
+func NewArecordRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) *ArecordRecorder {
 	return &ArecordRecorder{
-		BaseRecorder: NewBaseRecorder(config, logger),
+		BaseRecorder: NewBaseRecorder(config, logger, tempManager),
 	}
 }
 

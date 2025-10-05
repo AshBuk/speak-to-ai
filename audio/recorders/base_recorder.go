@@ -47,7 +47,7 @@ type BaseRecorder struct {
 }
 
 // Create a new base recorder instance
-func NewBaseRecorder(config *config.Config, logger logger.Logger) BaseRecorder {
+func NewBaseRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) BaseRecorder {
 	// Use an in-memory buffer for short recordings to avoid disk I/O
 	useBuffer := config.Audio.ExpectedDuration > 0 &&
 		config.Audio.ExpectedDuration < 10 &&
@@ -64,7 +64,7 @@ func NewBaseRecorder(config *config.Config, logger logger.Logger) BaseRecorder {
 		cmdTimeout:  maxTime,
 		useBuffer:   useBuffer,
 		buffer:      bytes.NewBuffer(nil),
-		tempManager: processing.GetTempFileManager(), // Use the global temp file manager
+		tempManager: tempManager,
 		logger:      logger,
 	}
 }
