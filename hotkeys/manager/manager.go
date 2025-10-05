@@ -178,6 +178,7 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if h.isListening && h.provider != nil {
 		h.provider.Stop()
 		h.isListening = false
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	h.config = newConfig
@@ -191,7 +192,6 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 		return err
 	}
 
-	// Start the new provider
 	if err := h.provider.Start(); err != nil {
 		return startFallbackAfterRegistration(h, err)
 	}
@@ -210,16 +210,25 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	// For evdev: stop to release devices, capture on new instance, restart
 	if _, isEvdev := h.provider.(*providers.EvdevKeyboardProvider); isEvdev {
 		h.provider.Stop()
-		defer func() {
-			h.provider.Start()
-			h.registerAllHotkeysOn(h.provider)
-		}()
+		// Wait for old goroutines to release file descriptors
+		time.Sleep(1 * time.Second)
 
 		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
 		if !captureProvider.IsSupported() {
+			if err := h.ReloadConfig(h.config); err != nil {
+				h.logger.Error("Failed to restart hotkeys after failed capture: %v", err)
+			}
 			return "", fmt.Errorf("evdev not available")
 		}
-		return captureProvider.CaptureOnce(timeout)
+
+		result, err := captureProvider.CaptureOnce(timeout)
+		time.Sleep(500 * time.Millisecond)
+
+		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
+			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
+		}
+
+		return result, err
 	}
 
 	// For dbus: use evdev fallback (dbus doesn't support CaptureOnce)

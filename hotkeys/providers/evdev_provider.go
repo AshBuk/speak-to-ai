@@ -253,15 +253,10 @@ func (p *EvdevKeyboardProvider) Stop() {
 		return
 	}
 
-	// Signal all listener goroutines to stop
-	if p.stopListening != nil {
-		// make Stop idempotent: close only once and nil the channel
-		close(p.stopListening)
-		p.stopListening = nil
-	}
-
-	// Close all device handles to unblock any pending reads
+	// Mark as stopping first to suppress error logs from ReadOne
 	atomic.StoreInt32(&p.stopping, 1)
+
+	// Close all device handles FIRST to unblock any pending ReadOne() calls
 	for _, dev := range p.devices {
 		if err := dev.Close(); err != nil {
 			// If already closed, this is expected during shutdown
@@ -269,21 +264,33 @@ func (p *EvdevKeyboardProvider) Stop() {
 		}
 	}
 
-	// Wait for all device listeners to exit
-	p.wg.Wait()
+	// Signal all listener goroutines to stop after devices are closed
+	if p.stopListening != nil {
+		// make Stop idempotent: close only once and nil the channel
+		close(p.stopListening)
+		p.stopListening = nil
+	}
 
-	p.devices = nil
+	// go-evdev ReadOne() can block for seconds even after Close()
+	// Clean up asynchronously to avoid blocking
+	go func() {
+		p.wg.Wait()
+		p.devices = nil
+		atomic.StoreInt32(&p.stopping, 0)
+	}()
+
 	p.isListening = false
-	atomic.StoreInt32(&p.stopping, 0)
 }
 
 // Start a short-lived capture session to get a single hotkey combination
 func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	devices, err := p.findKeyboardDevices()
 	if err != nil {
+		p.logger.Error("CaptureOnce: Failed to find keyboard devices: %v", err)
 		return "", fmt.Errorf("failed to find keyboard devices: %w", err)
 	}
 	if len(devices) == 0 {
+		p.logger.Error("CaptureOnce: No keyboard devices found")
 		return "", fmt.Errorf("no keyboard devices found")
 	}
 
@@ -316,11 +323,11 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 				keyCode := int(ev.Code)
 				keyName := utils.GetKeyName(keyCode)
 				if keyName == "" {
-					keyName = fmt.Sprintf("KEY_%d", keyCode)
+					continue
 				}
 
-				// Ignore non-keyboard buttons (e.g., mouse buttons)
-				if strings.HasPrefix(keyName, "KEY_") {
+				// Ignore mouse buttons (BTN_LEFT, BTN_RIGHT, etc.)
+				if strings.HasPrefix(keyName, "BTN_") {
 					continue
 				}
 
@@ -380,15 +387,21 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		result = ""
 	}
 
-	// Wait for all capture goroutines to finish BEFORE closing devices
-	captureWg.Wait()
-
-	// Now safe to close devices after all goroutines stopped
+	// Close devices to unblock any pending ReadOne() calls
 	for _, d := range devices {
-		if closeErr := d.Close(); closeErr != nil {
-			// Already closed or error - not critical
-			p.logger.Warning("Evdev device close after capture: %v", closeErr)
-		}
+		_ = d.Close()
+	}
+
+	// Wait for all capture goroutines to finish with timeout
+	captureDone := make(chan struct{})
+	go func() {
+		captureWg.Wait()
+		close(captureDone)
+	}()
+
+	select {
+	case <-captureDone:
+	case <-time.After(500 * time.Millisecond):
 	}
 
 	if strings.TrimSpace(result) == "" {
