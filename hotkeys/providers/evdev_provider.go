@@ -120,6 +120,9 @@ func isKeyboardDevice(dev *evdev.InputDevice) bool {
 
 // Start listening for keyboard events from all found devices
 func (p *EvdevKeyboardProvider) Start() error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	if p.isListening {
 		return fmt.Errorf("evdev keyboard provider already started")
 	}
@@ -155,6 +158,15 @@ func (p *EvdevKeyboardProvider) Start() error {
 
 // listenDevice listens to one device events and exits on stop signal or critical read error
 func (p *EvdevKeyboardProvider) listenDevice(idx int) {
+	// Capture device reference at goroutine start to avoid race with Stop()
+	p.mutex.RLock()
+	if p.devices == nil || idx >= len(p.devices) {
+		p.mutex.RUnlock()
+		return
+	}
+	dev := p.devices[idx]
+	p.mutex.RUnlock()
+
 	for {
 		select {
 		case <-p.stopListening:
@@ -162,11 +174,16 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 		default:
 		}
 
-		event, err := p.devices[idx].ReadOne()
+		// Check if stopping flag is set
+		if atomic.LoadInt32(&p.stopping) == 1 {
+			return
+		}
+
+		event, err := dev.ReadOne()
 		if err != nil {
 			// Exit on device read error to avoid infinite loops
-			// During shutdown, the device is expected to be closed; downgrade to warning
-			if atomic.LoadInt32(&p.stopping) == 1 {
+			// "file already closed" is expected when device is released for rebind/reload
+			if strings.Contains(err.Error(), "file already closed") || atomic.LoadInt32(&p.stopping) == 1 {
 				p.logger.Warning("Device read ended: %v", err)
 			} else {
 				p.logger.Error("Device read error: %v", err)
@@ -249,6 +266,9 @@ func (p *EvdevKeyboardProvider) RegisterHotkey(hotkey string, callback func() er
 
 // Stop listening for keyboard events and close all devices
 func (p *EvdevKeyboardProvider) Stop() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	if !p.isListening {
 		return
 	}
@@ -271,19 +291,45 @@ func (p *EvdevKeyboardProvider) Stop() {
 		p.stopListening = nil
 	}
 
+	p.isListening = false
+
 	// go-evdev ReadOne() can block for seconds even after Close()
-	// Clean up asynchronously to avoid blocking
+	// Wait with timeout to avoid indefinite blocking
+	done := make(chan struct{})
 	go func() {
 		p.wg.Wait()
-		p.devices = nil
-		atomic.StoreInt32(&p.stopping, 0)
+		close(done)
 	}()
 
-	p.isListening = false
+	select {
+	case <-done:
+		// All listener goroutines exited cleanly
+		p.logger.Info("Evdev listeners stopped cleanly")
+		// Clean up state only if goroutines finished (protected by mutex)
+		p.devices = nil
+		atomic.StoreInt32(&p.stopping, 0)
+	case <-time.After(500 * time.Millisecond):
+		// Timeout - goroutines still blocked in ReadOne()
+		// Release mutex and allow restart, cleanup old devices asynchronously
+		p.logger.Warning("Evdev stop timeout (500ms) - proceeding with restart")
+		oldDevices := p.devices
+		p.devices = nil
+		atomic.StoreInt32(&p.stopping, 0)
+
+		// Cleanup old devices in background after they unblock
+		go func() {
+			<-done
+			for _, dev := range oldDevices {
+				_ = dev.Close()
+			}
+		}()
+	}
 }
 
 // Start a short-lived capture session to get a single hotkey combination
+// Note: This creates a fresh isolated session, not tied to the regular provider lifecycle
 func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
+	// Try to open devices - this will fail if another instance holds exclusive access
 	devices, err := p.findKeyboardDevices()
 	if err != nil {
 		p.logger.Error("CaptureOnce: Failed to find keyboard devices: %v", err)

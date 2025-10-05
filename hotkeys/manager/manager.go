@@ -178,7 +178,6 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if h.isListening && h.provider != nil {
 		h.provider.Stop()
 		h.isListening = false
-		time.Sleep(100 * time.Millisecond)
 	}
 
 	h.config = newConfig
@@ -210,8 +209,6 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	// For evdev: stop to release devices, capture on new instance, restart
 	if _, isEvdev := h.provider.(*providers.EvdevKeyboardProvider); isEvdev {
 		h.provider.Stop()
-		// Wait for old goroutines to release file descriptors
-		time.Sleep(1 * time.Second)
 
 		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
 		if !captureProvider.IsSupported() {
@@ -222,7 +219,6 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 		}
 
 		result, err := captureProvider.CaptureOnce(timeout)
-		time.Sleep(500 * time.Millisecond)
 
 		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
 			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
