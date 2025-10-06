@@ -70,7 +70,7 @@ Help us test different desktop environments:
 
 ## ✦ Project Status
 
-**AppImage** [v1.0.0 release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. I'd appreciate feedback about your experience on your system!
+**AppImage** [release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. I'd appreciate feedback about your experience on your system!
 
 **Flatpak** bundle is planned.
 
