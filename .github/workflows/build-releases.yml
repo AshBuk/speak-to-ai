@@ -373,43 +373,31 @@ jobs:
     #     path: ./artifacts/
     #     merge-multiple: true
         
+    - name: Extract release notes
+      id: extract_release_notes
+      run: |
+        VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+        awk -v version="$VERSION" '
+          $0 ~ "## \[" version "\]" {
+            in_section=1
+            next
+          }
+          in_section && /^## / {
+            exit
+          }
+          in_section {
+            print
+          }
+        ' CHANGELOG.md > release_notes.md
+        echo "::set-output name=notes::$(cat release_notes.md)"
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
           ./artifacts/*.AppImage
           # ./artifacts/*.flatpak
-        body: |
-          ## Speak-to-AI Release ${{ github.ref_name }}
-          
-          ### Features:
-          -  Offline speech-to-text using Whisper.cpp
-          -  System tray integration with recording status
-          -  Microsoft Copilot key support (AltGr + ,)
-          -  Multiple output modes: clipboard, direct typing
-          -  Cross-platform support for X11 and Wayland
-          -  Privacy-first: no data sent to external servers
-          
-          ### Installation:
-          
-          **AppImage:**
-          ```bash
-          chmod +x speak-to-ai-*.AppImage
-          ./speak-to-ai-*.AppImage
-          ```
-          
-          **Flatpak:**
-          ```bash
-          flatpak install speak-to-ai-*.flatpak
-          flatpak run io.github.ashbuk.speak-to-ai
-          ```
-          
-          ### System Requirements:
-          - Linux (Ubuntu 20.04+, Fedora 35+, or similar)
-          - X11 or Wayland desktop environment
-          - Audio recording capability (microphone)
-          - ~200MB disk space for model and dependencies
-          
+        body_path: release_notes.md
         draft: false
         prerelease: false
       env:

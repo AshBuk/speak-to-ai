@@ -21,6 +21,7 @@ audio:
   sample_rate: 16000            # Optimal for speech recognition (do not change)
   format: "s16le"               # Note: audio is always recorded in mono (1 channel)
   recording_method: "arecord"   # Options: "arecord", "ffmpeg"
+  temp_file_cleanup_time: 30    # Auto-delete temporary audio files older than X minutes (default: 30)
   # TODO: Next feature - VAD implementation
   # enable_vad: false           # Enable Voice Activity Detection
   # vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
