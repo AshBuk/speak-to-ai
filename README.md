@@ -32,12 +32,13 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
 
-- **Offline speech-to-text and voice typing**
+- **Offline speech-to-text**
+- **Voice typing or clipboard mode**
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: desktop, no data sent to external servers
-- **Support: multi-language, global hotkeys, automatic typing & clipboard, system tray integration, visual notifications, WebSocket API (optional)**
+- **Support: multi-language, global hotkeys, automatic typing, system tray integration, visual notifications, WebSocket API (optional)**
 
 ## ✦ Installation
 
