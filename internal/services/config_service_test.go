@@ -224,24 +224,14 @@ func TestConfigService(t *testing.T) {
 	})
 
 	t.Run("Shutdown", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
+		service := NewConfigService(mockLogger, testConfig, "/tmp/test_config.yaml")
 
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
-
-		service := NewConfigService(mockLogger, testConfig, configPath)
-
-		err = service.Shutdown()
+		err := service.Shutdown()
 		if err != nil {
 			t.Errorf("Shutdown failed: %v", err)
 		}
 
-		// Verify config was saved (file should exist)
-		if _, err := os.Stat(configPath); os.IsNotExist(err) {
-			t.Error("Config file should exist after shutdown")
-		}
+		// Shutdown should complete successfully without saving
+		// (config changes are saved immediately by their respective methods)
 	})
 }

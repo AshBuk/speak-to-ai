@@ -32,6 +32,7 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
 
+- **Offline speech-to-text and voice typing**
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs

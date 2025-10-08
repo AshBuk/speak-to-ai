@@ -233,12 +233,6 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 
 // Ensure final configuration state is saved before termination
 func (cs *ConfigService) Shutdown() error {
-	// Save final configuration state
-	if err := cs.SaveConfig(); err != nil {
-		cs.logger.Error("Error saving config during shutdown: %v", err)
-		return err
-	}
-
 	cs.logger.Info("ConfigService shutdown complete")
 	return nil
 }
