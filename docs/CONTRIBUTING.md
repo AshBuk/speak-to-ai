@@ -2,14 +2,14 @@
 
 Thank you for your interest to Speak-to-AI! This document provides guidelines for contributing to the project.
 
-## 🤝 Code of Conduct
+## Code of Conduct
 
-- Be respectful and inclusive
-- Focus on constructive feedback
+- Respect the chosen stack -> Go and Whisper.cpp as AI model
+- Be respectful, focus on constructive
 - Help others learn and grow
 - Maintain a welcoming environment
 
-## 🚀 Getting Started
+## Getting Started
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/speak-to-ai.git`
