@@ -82,12 +82,17 @@ GitHub Actions handle complex builds, releases, and distribution.
 
 ## Hotkeys Architecture
 
-### Provider Chain, Override & Fallback
+### Provider Selection & Fallback Strategy ([manager_linux.go](../hotkeys/manager/manager_linux.go))
 ```
-DBus GlobalShortcuts (GNOME/KDE) → Evdev (i3/XFCE/MATE/AppImage)
-      ↑                                  ↑
-   preferred                        fallback
-   (portal)                       (direct input)
+System (GNOME/KDE):  DBus (primary) → Evdev (fallback)
+                       ↑                 ↑
+                    (portal)       (direct input)
+
+AppImage:            Evdev (primary) → DBus (fallback)
+                       ↑                 ↑
+                 (direct input)       (portal)
+
+Flatpak:             DBus only (evdev blocked by sandbox)
 ```
 
 ### Module Structure
@@ -99,7 +104,7 @@ hotkeys/
 │   ├── manager.go       # Main orchestrator
 │   └── provider_fallback.go # Fallback registration
 ├── providers/           # Hotkey providers implementation
-│   ├── dbus_provider.go # GlobalShortcuts portal (GNOME/KDE)
+│   ├── dbus_provider.go # GlobalShortcuts portal (GNOME/KDE/Flatpak)
 │   ├── evdev_provider.go # Direct input devices (i3/XFCE/AppImage)
 │   └── dummy_provider.go # Testing provider
 ├── utils/               # Parser utilities
@@ -109,3 +114,5 @@ hotkeys/
 ### Configuration Reference
 
 See [`config.yaml`](../config.yaml) for the complete configuration file with all available options and detailed comments.
+
+*Last updated: 2025-10-11*

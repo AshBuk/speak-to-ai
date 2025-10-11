@@ -124,15 +124,16 @@ Related constants:
 
 #### Provider Implementations
 - **`providers/dbus_provider.go`**: DBus GlobalShortcuts portal (preferred for GNOME/KDE)
-- **`providers/evdev_provider.go`**: Direct evdev input handling (fallback for other DEs, often preferred in AppImage)
+- **`providers/evdev_provider.go`**: Direct evdev input handling (primary for AppImage)
 - **`manager/provider_fallback.go`**: Fallback logic and hotkey re-registration
 - **`providers/dummy_provider.go`**: Dummy provider for testing
 
-#### Provider Override & Fallback
+#### Provider Selection & Fallback
 - **Override** (config): `hotkeys.provider: auto | dbus | evdev` (default: `auto`)
-- **GNOME/KDE**: Prefer D‑Bus portal
-- **i3/XFCE/MATE/AppImage**: Auto‑fallback to evdev on portal failure
-- **Failover**: Seamless re‑registration on provider switching
+- **System (GNOME/KDE)**: D-Bus primary → evdev fallback
+- **AppImage**: evdev primary → D-Bus fallback
+- **Flatpak**: D-Bus only (evdev blocked by sandbox)
+- **Failover**: Seamless re-registration on provider switching
 
 ### **Speech Recognition** (`whisper/`)
 
@@ -184,6 +185,7 @@ Related constants:
   - `disk_linux.go`: Disk space checking (Linux)
   - `disk_stub.go`: Stub implementation
   - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
+  - `async.go`: Goroutine tracking and graceful shutdown coordination
 
 ### **Build & Packaging**
 
@@ -197,7 +199,7 @@ Related constants:
 #### Docker Configuration (`docker/`)
 - **`Dockerfile.dev`**: Development environment
 - **`Dockerfile.appimage`**: AppImage build environment
-- **`Dockerfile.flatpak`**: Flatpak build environment
+- **`Dockerfile.flatpak`**: Flatpak build environment (WIP - not in release pipeline yet)
 - **`docker-compose.yml`**: Multi-service development setup
 
 #### Package Metadata
@@ -212,6 +214,8 @@ Related constants:
 - **`end_to_end_test.go`**: Full workflow testing
 - **`audio_integration_test.go`**: Audio system integration
 - **`platform_integration_test.go`**: Platform-specific testing
+- **`goroutine_lifecycle_test.go`**: Goroutine leak detection and graceful shutdown
+- **`notification_integration_test.go`**: Desktop notification system integration
 
 #### Test Utilities
 - **`tests/mocks/logger.go`**: Mock logger implementation
@@ -219,4 +223,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-09-16*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-11*
