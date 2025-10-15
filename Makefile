@@ -61,6 +61,9 @@ test-integration-full:
 # Default target (with systray support for desktop usage)
 all: deps whisper-libs build-systray
 
+# Legacy target for older CPUs (no AVX/AVX2/FMA)
+all-legacy: deps whisper-libs-legacy build-systray-legacy
+
 # Download Go dependencies
 deps:
 	@echo "=== Downloading Go dependencies ==="
@@ -71,8 +74,11 @@ deps:
 # Build whisper.cpp libraries
 whisper-libs: $(LIB_DIR)/whisper.h
 
+# Build whisper.cpp libraries for legacy CPUs (no AVX/AVX2/FMA)
+whisper-libs-legacy: $(LIB_DIR)/whisper.h.legacy
+
 $(LIB_DIR)/whisper.h:
-	@echo "=== Building whisper.cpp libraries ==="
+	@echo "=== Building whisper.cpp libraries (optimized) ==="
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && \
 	if [ ! -d "whisper.cpp" ]; then \
@@ -97,6 +103,35 @@ $(LIB_DIR)/whisper.h:
 	@echo "Library files:"
 	@ls -la $(LIB_DIR)/
 
+$(LIB_DIR)/whisper.h.legacy:
+	@echo "=== Building whisper.cpp libraries (legacy - no AVX/AVX2/FMA) ==="
+	mkdir -p $(BUILD_DIR)
+	cd $(BUILD_DIR) && \
+	if [ ! -d "whisper.cpp" ]; then \
+		echo "Cloning whisper.cpp..."; \
+		git clone https://github.com/ggml-org/whisper.cpp.git; \
+	fi
+	cd $(BUILD_DIR)/whisper.cpp && \
+		if [ -n "$(WHISPER_CPP_REF)" ]; then \
+			echo "Checking out whisper.cpp ref $(WHISPER_CPP_REF)"; \
+			git fetch --tags; \
+			git checkout $(WHISPER_CPP_REF); \
+		fi; \
+		rm -rf build && \
+		cmake -B build \
+			-DCMAKE_C_FLAGS="-mno-avx -mno-avx2 -mno-fma -mno-f16c" \
+			-DCMAKE_CXX_FLAGS="-mno-avx -mno-avx2 -mno-fma -mno-f16c" && \
+		cmake --build build --config Release
+	mkdir -p $(LIB_DIR)
+	cp $(BUILD_DIR)/whisper.cpp/build/src/libwhisper.so* $(LIB_DIR)/ || true
+	cp $(BUILD_DIR)/whisper.cpp/build/src/libwhisper.a $(LIB_DIR)/ || true
+	cp $(BUILD_DIR)/whisper.cpp/include/whisper.h $(LIB_DIR)/
+	cp $(BUILD_DIR)/whisper.cpp/ggml/include/*.h $(LIB_DIR)/ || true
+	cp $(BUILD_DIR)/whisper.cpp/build/ggml/src/libggml*.* $(LIB_DIR)/ || true
+	touch $(LIB_DIR)/whisper.h.legacy
+	@echo "Legacy library files (no AVX/AVX2/FMA):"
+	@ls -la $(LIB_DIR)/
+
 # Build the main binary
 build: deps whisper-libs
 	@echo "=== Building $(BINARY_NAME) ==="
@@ -111,6 +146,20 @@ build-systray: deps whisper-libs
 	@echo "Build completed: $(BINARY_NAME)"
 	@ls -lh $(BINARY_NAME)
 
+# Build legacy binary for older CPUs (no AVX/AVX2/FMA)
+build-legacy: deps whisper-libs-legacy
+	@echo "=== Building $(BINARY_NAME) for legacy CPUs (no AVX/AVX2/FMA) ==="
+	go build -v -o $(BINARY_NAME)-legacy cmd/daemon/main.go
+	@echo "Build completed: $(BINARY_NAME)-legacy"
+	@ls -lh $(BINARY_NAME)-legacy
+
+# Build legacy binary with systray support for older CPUs
+build-systray-legacy: deps whisper-libs-legacy
+	@echo "=== Building $(BINARY_NAME) with systray support for legacy CPUs (no AVX/AVX2/FMA) ==="
+	go build -tags systray -v -o $(BINARY_NAME) cmd/daemon/main.go
+	@echo "Build completed: $(BINARY_NAME)"
+	@ls -lh $(BINARY_NAME)
+
 
 # ============================================================================
 # Packaging
@@ -120,6 +169,11 @@ build-systray: deps whisper-libs
 appimage: build
 	@echo "=== Building AppImage ==="
 	bash bash-scripts/build-appimage.sh
+
+# Build legacy AppImage for older CPUs
+appimage-legacy: build-systray-legacy
+	@echo "=== Building legacy AppImage (no AVX/AVX2/FMA) ==="
+	LEGACY_BUILD=1 bash bash-scripts/build-appimage.sh
 
 # Build Flatpak
 flatpak: build
@@ -193,6 +247,11 @@ docker-whisper:
 docker-appimage:
 	@echo "=== Building AppImage via docker build (multi-stage) ==="
 	docker build -f docker/Dockerfile.appimage --target artifacts --output type=local,dest=$(DIST_DIR)/appimage .
+
+docker-appimage-legacy:
+	@echo "=== Building legacy AppImage for older CPUs (no AVX/AVX2/FMA) ==="
+	@echo "This build is compatible with older CPUs that do not support AVX instructions"
+	docker build -f docker/Dockerfile.appimage --target artifacts --build-arg LEGACY_BUILD=1 --output type=local,dest=$(DIST_DIR)/appimage-legacy .
 
 docker-flatpak:
 	@echo "=== Building Flatpak via docker build (multi-stage) ==="

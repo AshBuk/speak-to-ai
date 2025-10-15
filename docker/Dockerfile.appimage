@@ -66,6 +66,10 @@ ENV APP_VERSION=${APP_VERSION}
 ARG WHISPER_CPP_REF=v1.7.6
 ENV WHISPER_CPP_REF=${WHISPER_CPP_REF}
 
+# Legacy build flag for older CPUs
+ARG LEGACY_BUILD=0
+ENV LEGACY_BUILD=${LEGACY_BUILD}
+
 # Build AppImage at image build time so docker build can produce artifacts
 RUN /usr/local/bin/build-appimage.sh
 
