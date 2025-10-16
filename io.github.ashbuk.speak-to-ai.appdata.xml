@@ -58,6 +58,18 @@
         </ul>
       </description>
     </release>
+    <release version="1.2.0" date="2025-10-17">
+      <description>
+        <p>Stability improvements for PulseAudio via ffmpeg (PipeWire compatibility):</p>
+        <ul>
+          <li>Reliable recording with ffmpeg PulseAudio input (no empty/trimmed files)</li>
+          <li>Warm-up to avoid clipped start; robust stop flush for short recordings</li>
+          <li>Reduced input buffering for lower latency during concurrent audio use</li>
+          <li>Allows using the app alongside calls (Google Meet/Zoom/Discord)</li>
+          <li>See audio workflow diagram in documentation</li>
+        </ul>
+      </description>
+    </release>
   </releases>
   <content_rating type="oars-1.1"/>
   <keywords>
