@@ -1,0 +1,98 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                    SPEAK-TO-AI AUDIO WORKFLOW                            ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CONFIG: ~/.config/speak-to-ai/config.yaml                              │
+│  audio:                                                                 │
+│    recording_method: "arecord"  ← DEFAULT (can switch to "ffmpeg")      │
+│    device: "default"                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  AUDIO RECORDER FACTORY                                                 │
+│  [audio/factory/factory.go]                                             │
+│  ├─ CreateRecorder()                                                    │
+│  └─ CreateRecorderWithFallback()  ← Tests and falls back if needed      │
+└─────────────────────────────────────────────────────────────────────────┘
+                      │                               │
+          ┌───────────┴───────────┐                   │
+          ▼                       ▼                   │
+┏━━━━━━━━━━━━━━━━━━┓      ┏━━━━━━━━━━━━━━━━━━┓        │
+┃ ARECORD          ┃      ┃ FFMPEG           ┃        │
+┃ (ALSA Direct)    ┃      ┃ (PulseAudio)     ┃        │
+┃ ✅ DEFAULT       ┃      ┃ ✅ ALSO WORKS    ┃        │
+┗━━━━━━━━━━━━━━━━━━┛      ┗━━━━━━━━━━━━━━━━━━┛        │
+          │                       │                   │
+          └───────────┬───────────┘                   │
+                      ▼                               │
+         ┌────────────────────────┐                   │
+         │ BaseRecorder           │◄──────────────────┘
+         │ [audio/recorders/base_recorder.go] │
+         │ ExecuteRecordingCommand() │
+         └────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│  SYSTEM AUDIO STACK                                     │
+│                                                         │
+│  PATH 1: arecord                  PATH 2: ffmpeg        │
+│  ═════════════════                ═══════════════       │
+│                                                         │
+│  arecord cmd                      ffmpeg -f pulse       │
+│      ↓                                ↓                 │
+│  ALSA kernel driver              PulseAudio compat      │
+│      ↓                                ↓                 │
+│  Hardware (ALC294)               PipeWire               │
+│                                       ↓                 │
+│                                  ALSA kernel            │
+│                                       ↓                 │
+│                                  Hardware (ALC294)      │
+│                                                         │
+│  Latency: LOW ✅                 Latency: MEDIUM ⚠️     │
+│  Complexity: SIMPLE ✅           Complexity: HIGHER ⚠️  │
+└─────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+         ┌───────────────────────────────────────┐
+         │ TempFileManager                       │
+         │ [audio/processing/tempfile_manager.go]│
+         │ TempAudioPath/audio_*.wav             │
+         └───────────────────────────────────────┘
+                      │
+                      ▼
+         ┌─────────────────────────────────┐
+         │ WhisperEngine                   │
+         │ [whisper/engine.go]             │
+         │ Speech → Text                   │
+         └─────────────────────────────────┘
+                      │
+                      ▼
+         ┌─────────────────────────────────┐
+         │ OutputManager                   │
+         │ [output/outputters/]            │
+         │ → Clipboard OR Active Window    │
+         └─────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════
+
+USE ARECORD (ALSA) - DEFAULT:
+├─  Microphone is FREE (no other apps using it)
+├─  Need lowest latency (~5ms) - better performance
+├─  Simple use case: hotkey → record → transcribe
+└─ ⚠️  LIMITATION: Exclusive access - one app at a time
+
+USE FFMPEG (PipeWire/PulseAudio):
+├─  Recording DURING video calls (Google Meet, Zoom, Discord)
+├─  Multiple apps need microphone simultaneously
+├─  Auto-fallback when arecord fails (already implemented)
+└─ ⚠️  Trade-off: ~20-30ms latency, depends on PipeWire running
+
+CURRENT SETUP: Best of both worlds
+- Default: arecord (fast, simple)
+- Manual switch: via system tray menu or config
+- Auto-fallback: switches if method fails (device busy, permission denied, etc)
+
+════════════════════════════════════════════════════════════════════════════
+
