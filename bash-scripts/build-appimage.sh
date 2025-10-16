@@ -136,6 +136,10 @@ HERE=${SELF%/*}
 export PATH="${HERE}/usr/bin:${PATH}"
 export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 
+# Export PulseAudio/PipeWire environment for audio recording
+export PULSE_SERVER="${PULSE_SERVER:-unix:${XDG_RUNTIME_DIR}/pulse/native}"
+export PULSE_RUNTIME_PATH="${PULSE_RUNTIME_PATH:-${XDG_RUNTIME_DIR}/pulse}"
+
 # Create user config directory
 CONFIG_DIR="${HOME}/.config/speak-to-ai"
 mkdir -p "${CONFIG_DIR}"
