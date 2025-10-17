@@ -77,20 +77,31 @@
 
 ════════════════════════════════════════════════════════════════════════════
 
-USE ARECORD (ALSA) - DEFAULT:
-├─  Microphone is FREE (no other apps using it)
-├─  Need lowest latency (~5ms) - better performance
-├─  Simple use case: hotkey → record → transcribe
-└─ ⚠️  LIMITATION: Exclusive access - one app at a time
+USE ARECORD (ALSA):
+When to use:
+├─  Need lowest latency (~5ms)
+├─  Simple voice dictation workflow
+├─  Concurrent audio: Using 'default' device on modern Linux (PipeWire/PulseAudio)
+│   Example: arecord -D default → routes through PipeWire
+├─  Exclusive access: Only with hardware devices (hw:X,Y)
+    Example: arecord -D hw:0,0 → blocks other apps
 
+____________________________________________________________________________
 USE FFMPEG (PipeWire/PulseAudio):
-├─  Recording DURING video calls (Google Meet, Zoom, Discord)
+When to use:
+├─  Recording during video calls (Google Meet, Zoom, Discord)
 ├─  Multiple apps need microphone simultaneously
-├─  Auto-fallback when arecord fails (already implemented)
-└─ ⚠️  Trade-off: ~20-30ms latency, depends on PipeWire running
-
+└─  Need robust device resolution
+Capabilities:
+├─  Concurrent audio: Always (via PulseAudio API)
+├─  Auto-resolves 'default' → actual source name
+├─  Warm-up mechanism: Prevents clipped audio starts
+└─  Adaptive flush: Handles short recordings reliably
+Trade-offs:
+└─  Higher latency (~20-30ms), requires PipeWire/PulseAudio running
+____________________________________________________________________________
 CURRENT SETUP: Best of both worlds
-- Default: arecord (fast, simple)
+- Default: arecord (fast, simple, concurrent on modern systems)
 - Manual switch: via system tray menu or config
 - Auto-fallback: switches if method fails (device busy, permission denied, etc)
 
