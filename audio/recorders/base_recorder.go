@@ -222,6 +222,60 @@ func (b *BaseRecorder) waitForProcess() error {
 	return b.processErr
 }
 
+// Verify that recording process started successfully and is still running
+func (b *BaseRecorder) verifyProcessStarted(startTime time.Time) error {
+	// Check if process is still running after 100ms
+	time.Sleep(100 * time.Millisecond)
+	if b.cmd.ProcessState != nil && b.cmd.ProcessState.Exited() {
+		b.logger.Error("Process exited immediately after start! Exit code: %d", b.cmd.ProcessState.ExitCode())
+		return fmt.Errorf("process exited immediately with code %d", b.cmd.ProcessState.ExitCode())
+	}
+	b.logger.Debug("Process is running (alive for %v)", time.Since(startTime))
+	return nil
+}
+
+// Validate that the audio file was created and has valid content
+func (b *BaseRecorder) validateAudioFile() error {
+	// Allow buffers to flush to disk
+	b.logger.Debug("Waiting for buffers to flush...")
+	time.Sleep(500 * time.Millisecond)
+
+	b.logger.Debug("Checking audio file: %s", b.outputFile)
+	info, err := os.Stat(b.outputFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			b.logger.Error("Audio file was not created: %s", b.outputFile)
+			return fmt.Errorf("audio file was not created")
+		}
+		return fmt.Errorf("failed to stat audio file: %w", err)
+	}
+
+	b.logger.Debug("Audio file size: %d bytes", info.Size())
+
+	// A minimal valid WAV header is 44 bytes
+	if info.Size() <= 44 {
+		b.logger.Error("Audio file empty (size=%d) - likely recording failed", info.Size())
+		b.logger.Info("Check audio device availability and permissions")
+		return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
+	}
+
+	// Additional safety: ensure there is at least 0.05s of audio payload to avoid downstream crashes
+	// We force output to 16-bit PCM mono, so bytesPerSample = 2
+	payloadBytes := info.Size() - 44
+	sr := b.config.Audio.SampleRate
+	if sr <= 0 {
+		sr = 16000
+	}
+	minPayload := int64((sr / 20) * 2) // ~0.05s of audio
+	if payloadBytes < minPayload {
+		b.logger.Error("Audio file too short (payload=%d bytes, expected >= %d)", payloadBytes, minPayload)
+		return fmt.Errorf("audio file too short (payload=%d < %d)", payloadBytes, minPayload)
+	}
+
+	b.logger.Debug("Audio file validation successful: %d bytes", info.Size())
+	return nil
+}
+
 // Stop the recording process gracefully, with retries and final termination
 func (b *BaseRecorder) StopProcess() error {
 	b.mutex.Lock()
@@ -231,23 +285,20 @@ func (b *BaseRecorder) StopProcess() error {
 		return fmt.Errorf("recording not started")
 	}
 
-	// Cancel the context to signal a graceful shutdown
-	if b.cancel != nil {
-		b.cancel()
-	}
-
 	// Attempt to terminate the process gracefully, escalating to SIGKILL if necessary
-	var err error
 	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
 			b.logger.Warning("Retry %d to stop recording process", i)
 		}
 
-		// Send SIGTERM first for a graceful shutdown
-		err = b.cmd.Process.Signal(syscall.SIGTERM)
+		// Send SIGINT first for graceful shutdown (works for ffmpeg with -nostdin)
+		b.logger.Debug("Sending SIGINT to process PID=%d", b.cmd.Process.Pid)
+		err := b.cmd.Process.Signal(syscall.SIGINT)
 		if err != nil {
-			b.logger.Warning("Failed to send SIGTERM: %v", err)
+			b.logger.Warning("Failed to send SIGINT: %v", err)
+		} else {
+			b.logger.Debug("SIGINT sent successfully")
 		}
 
 		// Wait for the process to exit with a timeout
@@ -261,12 +312,17 @@ func (b *BaseRecorder) StopProcess() error {
 		select {
 		case err := <-done:
 			waitDone = true
-			// "signal: killed" is an expected outcome for some recorders, not an error
-			if err != nil && err.Error() != "signal: killed" {
+			// Log exit status
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				b.logger.Debug("Process exited with code: %d", exitErr.ExitCode())
+			} else if err != nil && err.Error() != "signal: killed" {
 				b.logger.Warning("Process exited with error: %v", err)
+			} else {
+				b.logger.Debug("Process exited successfully")
 			}
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(2000 * time.Millisecond):
 			// Timed out
+			b.logger.Warning("Process did not exit within timeout")
 		}
 
 		if waitDone {
@@ -295,13 +351,20 @@ func (b *BaseRecorder) StopProcess() error {
 		}
 	}
 
+	// Release the context to avoid leaks now that process has exited
+	if b.cancel != nil {
+		b.cancel()
+	}
+
 	// Log any stderr output for diagnostics
+	cmdName := "recorder"
+	if b.cmd != nil && b.cmd.Path != "" {
+		cmdName = b.cmd.Path
+	}
 	if b.stderrBuf.Len() > 0 {
-		cmdName := "recorder"
-		if b.cmd != nil && b.cmd.Path != "" {
-			cmdName = b.cmd.Path
-		}
-		b.logger.Debug("%s stderr: %s", cmdName, b.stderrBuf.String())
+		b.logger.Debug("%s stderr (len=%d): %s", cmdName, b.stderrBuf.Len(), b.stderrBuf.String())
+	} else {
+		b.logger.Debug("%s stderr: (empty)", cmdName)
 	}
 
 	// Clean up the process state
@@ -310,23 +373,7 @@ func (b *BaseRecorder) StopProcess() error {
 
 	// If recording to a file, verify it was created and is not empty
 	if !b.useBuffer {
-		time.Sleep(50 * time.Millisecond) // Allow buffers to flush to disk
-		b.logger.Debug("Checking audio file: %s", b.outputFile)
-		info, err := os.Stat(b.outputFile)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return fmt.Errorf("audio file was not created")
-			}
-			return fmt.Errorf("failed to stat audio file: %w", err)
-		}
-		b.logger.Debug("Audio file size: %d bytes", info.Size())
-		// A minimal valid WAV header is 44 bytes
-		if info.Size() <= 44 {
-			b.logger.Error("Audio file empty (size=%d) - likely recording failed", info.Size())
-			b.logger.Info("Check audio device availability and permissions")
-			return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
-		}
-		b.logger.Debug("Audio file validation successful: %d bytes", info.Size())
+		return b.validateAudioFile()
 	}
 
 	return nil
@@ -369,6 +416,9 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	// #nosec G204 -- Safe: command name is from an allowlist and arguments are sanitized.
 	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
 
+	// Log full command at Debug level for troubleshooting
+	b.logger.Debug("Executing command: %s %v", cmdName, safeArgs)
+
 	// Capture stderr for diagnostics
 	b.stderrBuf.Reset()
 	b.cmd.Stderr = &b.stderrBuf
@@ -391,5 +441,9 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
 
-	return nil
+	// Verify process started successfully
+	startTime := time.Now()
+	b.logger.Info("Recording process started: PID=%d, command=%s", b.cmd.Process.Pid, cmdName)
+
+	return b.verifyProcessStarted(startTime)
 }
