@@ -15,6 +15,17 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
+const (
+	// Timing constants for warm-up and post-roll
+	warmupTimeout      = 2500 * time.Millisecond
+	warmupPollInterval = 40 * time.Millisecond
+	postRollDelay      = 600 * time.Millisecond
+	retryFlushDelay    = 1800 * time.Millisecond
+
+	// Audio validation constants
+	minAudioPayloadMs = 50 // Minimum audio payload in milliseconds
+)
+
 // Implements the AudioRecorder interface using the `ffmpeg` command-line tool
 type FFmpegRecorder struct {
 	BaseRecorder
@@ -43,6 +54,8 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 	}
 
 	// Find first non-monitor input source (usually the microphone)
+	// Priority: wired input > any non-monitor source
+	var firstNonMonitor string
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
 		fields := strings.Fields(line)
@@ -56,12 +69,24 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 			if strings.Contains(sourceName, "bluez") {
 				continue
 			}
-			// Found a good input source
+
+			// Remember first non-monitor source as fallback
+			if firstNonMonitor == "" {
+				firstNonMonitor = sourceName
+			}
+
+			// Prefer sources with "input" in the name
 			if strings.Contains(sourceName, "input") {
 				f.logger.Info("Resolved 'default' to actual source: %s", sourceName)
 				return sourceName
 			}
 		}
+	}
+
+	// Fallback: use first non-monitor source found
+	if firstNonMonitor != "" {
+		f.logger.Info("Resolved 'default' to first non-monitor source: %s", firstNonMonitor)
+		return firstNonMonitor
 	}
 
 	f.logger.Debug("Could not resolve default source, using 'default'")
@@ -82,20 +107,20 @@ func (f *FFmpegRecorder) StartRecording() error {
 	}
 
 	// Warm-up: wait until minimal payload is written to avoid clipped start
-	// For WAV, header is 44 bytes. Ensure at least ~50ms of payload is present.
+	// For WAV, header is 44 bytes. Ensure at least minAudioPayloadMs of payload is present.
 	if !f.useBuffer {
 		out := f.GetOutputFile()
 		sr := f.config.Audio.SampleRate
 		if sr <= 0 {
 			sr = 16000
 		}
-		minPayload := int64((sr / 20) * 2) // ~50ms, 16-bit mono => 2 bytes per sample
-		deadline := time.Now().Add(2500 * time.Millisecond)
+		minPayload := int64((sr / (1000 / minAudioPayloadMs)) * 2) // 16-bit mono => 2 bytes per sample
+		deadline := time.Now().Add(warmupTimeout)
 		for time.Now().Before(deadline) {
 			if info, err := os.Stat(out); err == nil && info.Size() >= 44+minPayload {
 				break
 			}
-			time.Sleep(40 * time.Millisecond)
+			time.Sleep(warmupPollInterval)
 		}
 	}
 	return nil
@@ -104,7 +129,7 @@ func (f *FFmpegRecorder) StartRecording() error {
 // Stop recording with ffmpeg-specific adaptive flush for short recordings
 func (f *FFmpegRecorder) StopRecording() (string, error) {
 	// Always allow a small post-roll before stopping to avoid trimming
-	time.Sleep(600 * time.Millisecond)
+	time.Sleep(postRollDelay)
 
 	// Stop the base recording process
 	outputFile, err := f.BaseRecorder.StopRecording()
@@ -121,7 +146,7 @@ func (f *FFmpegRecorder) StopRecording() (string, error) {
 
 	// ffmpeg-specific retry: short recordings need extra time to flush
 	f.logger.Warning("ffmpeg recording resulted in empty/short file, retrying with extra flush time...")
-	time.Sleep(1800 * time.Millisecond)
+	time.Sleep(retryFlushDelay)
 
 	// Re-check the file
 	info, statErr := os.Stat(outputFile)
