@@ -14,7 +14,7 @@ import (
 func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
 	tm.audioRecorderMenu = tm.settingsItem.AddSubMenuItem("Audio Recorder", "Select audio recorder")
-	tm.aiModelMenu = tm.settingsItem.AddSubMenuItem("Set Language", "Select recognition language")
+	tm.languageMenu = tm.settingsItem.AddSubMenuItem("Set Language", "Select recognition language")
 
 	// VAD Sensitivity submenu
 	// vadMenu := tm.settingsItem.AddSubMenuItem("VAD Sensitivity", "Select VAD sensitivity level")
@@ -88,20 +88,20 @@ func (tm *TrayManager) setupLanguageMenu() {
 		if tm.config.General.Language == l.key {
 			indicator = "● "
 		}
-		itm := tm.aiModelMenu.AddSubMenuItem(indicator+l.title, "")
-		tm.modelItems["lang_"+l.key] = itm
+		itm := tm.languageMenu.AddSubMenuItem(indicator+l.title, "")
+		tm.languageItems["lang_"+l.key] = itm
 	}
 
 	// Create language display (gray text)
-	tm.modelItems["language"] = tm.aiModelMenu.AddSubMenuItem(
+	tm.languageItems["language"] = tm.languageMenu.AddSubMenuItem(
 		"Current: "+tm.config.General.Language,
 		"Current language setting",
 	)
-	tm.modelItems["language"].Disable()
+	tm.languageItems["language"].Disable()
 
 	// Set up click handlers
 	for _, k := range []string{"en", "de", "fr", "es", "he", "ru"} {
-		if itm := tm.modelItems["lang_"+k]; itm != nil {
+		if itm := tm.languageItems["lang_"+k]; itm != nil {
 			key := k
 			tm.handleRadioItemClick(
 				itm,
@@ -132,7 +132,7 @@ func (tm *TrayManager) setupOutputMenu() {
 
 	// Create display items (gray text)
 	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
-		tm.config.Output.DefaultMode,
+		"Mode: "+humanizeOutputMode(tm.config.Output.DefaultMode),
 		"Current output mode",
 	)
 	tm.outputItems["mode"].Disable()
@@ -187,123 +187,99 @@ func (tm *TrayManager) setupWorkflowNotifications() {
 	tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
 }
 
+// hotkeyMenuConfig describes configuration for a single hotkey menu item
+type hotkeyMenuConfig struct {
+	actionName     string // Action identifier for rebind callback (e.g., "start_recording")
+	rebindKey      string // Key in hotkeyItems map for rebind button (e.g., "rebind_start_stop")
+	displayKey     string // Key in hotkeyItems map for display item (e.g., "display_start_stop")
+	rebindTitle    string // Title for rebind button (e.g., "Rebind Start/Stop…")
+	rebindTooltip  string // Tooltip for rebind button
+	displayPrefix  string // Prefix for display item title (e.g., "Start/Stop Recording: ")
+	displayTooltip string // Tooltip for display item
+	currentValue   string // Current hotkey value from config
+}
+
+// createHotkeyMenuItem creates or updates a hotkey menu item with rebind capability.
+// This helper reduces code duplication for hotkey menu item creation.
+func (tm *TrayManager) createHotkeyMenuItem(cfg hotkeyMenuConfig, supportsCaptureOnce bool) {
+	// Create rebind button if supported and not exists
+	if tm.hotkeyItems[cfg.rebindKey] == nil {
+		if supportsCaptureOnce {
+			rebindBtn := tm.hotkeysMenu.AddSubMenuItem(cfg.rebindTitle, cfg.rebindTooltip)
+			tm.hotkeyItems[cfg.rebindKey] = rebindBtn
+
+			// Use shared click helper to reduce duplication
+			tm.handleMenuItemClick(rebindBtn, func() {
+				if tm.onRebindHotkey != nil {
+					if err := tm.onRebindHotkey(cfg.actionName); err != nil {
+						tm.logger.Error("Error rebinding %s: %v", cfg.actionName, err)
+					}
+				}
+			})
+		}
+	}
+
+	// Create or update display item
+	displayTitle := cfg.displayPrefix + cfg.currentValue
+
+	if tm.hotkeyItems[cfg.displayKey] == nil {
+		displayItem := tm.hotkeysMenu.AddSubMenuItem(displayTitle, cfg.displayTooltip)
+		displayItem.Disable()
+		tm.hotkeyItems[cfg.displayKey] = displayItem
+	} else {
+		tm.hotkeyItems[cfg.displayKey].SetTitle(displayTitle)
+	}
+}
+
 // updateHotkeysMenuUI ensures hotkeys items exist and reflect current config
 func (tm *TrayManager) updateHotkeysMenuUI() {
 	if tm.hotkeysMenu == nil || tm.config == nil {
 		return
 	}
+
 	// Determine capture once support (default true if callback unset)
 	supportsCaptureOnce := true
 	if tm.getCaptureOnceSupport != nil {
 		supportsCaptureOnce = tm.getCaptureOnceSupport()
 	}
-	// Start/Stop
-	if tm.hotkeyItems["rebind_start_stop"] == nil {
-		if supportsCaptureOnce {
-			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Start/Stop…", "Change start/stop hotkey")
-			tm.hotkeyItems["rebind_start_stop"] = reb
-			utils.Go(func() {
-				ch := reb.ClickedCh
-				for {
-					select {
-					case <-tm.ctx.Done():
-						return
-					case _, ok := <-ch:
-						if !ok {
-							return
-						}
-						if tm.onRebindHotkey != nil {
-							go func() {
-								if err := tm.onRebindHotkey("start_recording"); err != nil {
-									tm.logger.Error("Error rebinding start/stop: %v", err)
-								}
-							}()
-						}
-					}
-				}
-			})
-		}
+
+	// Define configurations for all hotkey menu items
+	hotkeyConfigs := []hotkeyMenuConfig{
+		{
+			actionName:     "start_recording",
+			rebindKey:      "rebind_start_stop",
+			displayKey:     "display_start_stop",
+			rebindTitle:    "Rebind Start/Stop…",
+			rebindTooltip:  "Change start/stop hotkey",
+			displayPrefix:  "Start/Stop Recording: ",
+			displayTooltip: "Current start/stop recording hotkey",
+			currentValue:   tm.config.Hotkeys.StartRecording,
+		},
+		{
+			actionName:     "show_config",
+			rebindKey:      "rebind_show_config",
+			displayKey:     "display_show_config",
+			rebindTitle:    "Rebind Show Config…",
+			rebindTooltip:  "Change show config hotkey",
+			displayPrefix:  "Show Config: ",
+			displayTooltip: "Current show config hotkey",
+			currentValue:   tm.config.Hotkeys.ShowConfig,
+		},
+		{
+			actionName:     "reset_to_defaults",
+			rebindKey:      "rebind_reset_defaults",
+			displayKey:     "display_reset_defaults",
+			rebindTitle:    "Rebind Reset to Defaults…",
+			rebindTooltip:  "Change reset defaults hotkey",
+			displayPrefix:  "Reset to Defaults: ",
+			displayTooltip: "Current reset to defaults hotkey",
+			currentValue:   tm.config.Hotkeys.ResetToDefaults,
+		},
 	}
-	if tm.hotkeyItems["display_start_stop"] == nil {
-		tm.hotkeyItems["display_start_stop"] = tm.hotkeysMenu.AddSubMenuItem(
-			"Start/Stop Recording: "+tm.config.Hotkeys.StartRecording,
-			"Current start/stop recording hotkey",
-		)
-		tm.hotkeyItems["display_start_stop"].Disable()
-	} else {
-		tm.hotkeyItems["display_start_stop"].SetTitle("Start/Stop Recording: " + tm.config.Hotkeys.StartRecording)
-	}
-	// Show config
-	if tm.hotkeyItems["rebind_show_config"] == nil {
-		if supportsCaptureOnce {
-			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Show Config…", "Change show config hotkey")
-			tm.hotkeyItems["rebind_show_config"] = reb
-			utils.Go(func() {
-				ch := reb.ClickedCh
-				for {
-					select {
-					case <-tm.ctx.Done():
-						return
-					case _, ok := <-ch:
-						if !ok {
-							return
-						}
-						if tm.onRebindHotkey != nil {
-							go func() {
-								if err := tm.onRebindHotkey("show_config"); err != nil {
-									tm.logger.Error("Error rebinding show config: %v", err)
-								}
-							}()
-						}
-					}
-				}
-			})
-		}
-	}
-	if tm.hotkeyItems["display_show_config"] == nil {
-		tm.hotkeyItems["display_show_config"] = tm.hotkeysMenu.AddSubMenuItem(
-			"Show Config: "+tm.config.Hotkeys.ShowConfig,
-			"Current show config hotkey",
-		)
-		tm.hotkeyItems["display_show_config"].Disable()
-	} else {
-		tm.hotkeyItems["display_show_config"].SetTitle("Show Config: " + tm.config.Hotkeys.ShowConfig)
-	}
-	// Reset defaults
-	if tm.hotkeyItems["rebind_reset_defaults"] == nil {
-		if supportsCaptureOnce {
-			reb := tm.hotkeysMenu.AddSubMenuItem("Rebind Reset to Defaults…", "Change reset defaults hotkey")
-			tm.hotkeyItems["rebind_reset_defaults"] = reb
-			utils.Go(func() {
-				ch := reb.ClickedCh
-				for {
-					select {
-					case <-tm.ctx.Done():
-						return
-					case _, ok := <-ch:
-						if !ok {
-							return
-						}
-						if tm.onRebindHotkey != nil {
-							go func() {
-								if err := tm.onRebindHotkey("reset_to_defaults"); err != nil {
-									tm.logger.Error("Error rebinding reset defaults: %v", err)
-								}
-							}()
-						}
-					}
-				}
-			})
-		}
-	}
-	if tm.hotkeyItems["display_reset_defaults"] == nil {
-		tm.hotkeyItems["display_reset_defaults"] = tm.hotkeysMenu.AddSubMenuItem(
-			"Reset to Defaults: "+tm.config.Hotkeys.ResetToDefaults,
-			"Current reset to defaults hotkey",
-		)
-		tm.hotkeyItems["display_reset_defaults"].Disable()
-	} else {
-		tm.hotkeyItems["display_reset_defaults"].SetTitle("Reset to Defaults: " + tm.config.Hotkeys.ResetToDefaults)
+
+	// Create/update all hotkey menu items
+	for _, cfg := range hotkeyConfigs {
+		tm.createHotkeyMenuItem(cfg, supportsCaptureOnce)
 	}
 }
 
@@ -360,7 +336,7 @@ func (tm *TrayManager) updateLanguageRadioUI(lang string) {
 	}
 
 	for key, title := range langDefs {
-		if itm := tm.modelItems["lang_"+key]; itm != nil {
+		if itm := tm.languageItems["lang_"+key]; itm != nil {
 			if key == lang {
 				itm.SetTitle("● " + title)
 			} else {
@@ -370,8 +346,8 @@ func (tm *TrayManager) updateLanguageRadioUI(lang string) {
 	}
 
 	// Update the gray text display
-	if langDisplay := tm.modelItems["language"]; langDisplay != nil {
-		langDisplay.SetTitle(lang)
+	if langDisplay := tm.languageItems["language"]; langDisplay != nil {
+		langDisplay.SetTitle("Current: " + lang)
 	}
 }
 
@@ -407,7 +383,7 @@ func (tm *TrayManager) updateOutputModeRadioUI(mode string) {
 
 	// Update the gray text display
 	if modeDisplay := tm.outputItems["mode"]; modeDisplay != nil {
-		modeDisplay.SetTitle(mode)
+		modeDisplay.SetTitle("Mode: " + humanizeOutputMode(mode))
 	}
 }
 
@@ -470,11 +446,25 @@ func (tm *TrayManager) handleRadioItemClick(
 ) {
 	tm.handleMenuItemClick(item, func() {
 		tm.logger.Info(logTemplate, value)
-		updateUI(value)
 		if callback != nil {
 			if err := callback(value); err != nil {
 				tm.logger.Error("Error: %v", err)
+				return
 			}
 		}
+		// Update UI only after successful callback
+		updateUI(value)
 	})
+}
+
+// humanizeOutputMode converts internal mode keys to human-readable titles
+func humanizeOutputMode(mode string) string {
+	switch mode {
+	case "clipboard":
+		return "Clipboard"
+	case "active_window":
+		return "Active Window"
+	default:
+		return mode
+	}
 }

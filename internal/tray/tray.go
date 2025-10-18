@@ -40,14 +40,14 @@ type TrayManager struct {
 	// Settings submenus
 	hotkeysMenu       *systray.MenuItem
 	audioRecorderMenu *systray.MenuItem
-	aiModelMenu       *systray.MenuItem
+	languageMenu      *systray.MenuItem
 	outputMenu        *systray.MenuItem
 
 	// Dynamic settings items
-	hotkeyItems map[string]*systray.MenuItem
-	audioItems  map[string]*systray.MenuItem
-	modelItems  map[string]*systray.MenuItem
-	outputItems map[string]*systray.MenuItem
+	hotkeyItems   map[string]*systray.MenuItem
+	audioItems    map[string]*systray.MenuItem
+	languageItems map[string]*systray.MenuItem
+	outputItems   map[string]*systray.MenuItem
 
 	// Audio action callbacks
 	onSelectRecorder func(method string) error
@@ -81,7 +81,7 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func()
 		onResetToDefaults: onResetToDefaults,
 		hotkeyItems:       make(map[string]*systray.MenuItem),
 		audioItems:        make(map[string]*systray.MenuItem),
-		modelItems:        make(map[string]*systray.MenuItem),
+		languageItems:     make(map[string]*systray.MenuItem),
 		outputItems:       make(map[string]*systray.MenuItem),
 		logger:            logger,
 	}
