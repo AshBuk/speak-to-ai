@@ -10,6 +10,8 @@
 
 <div align="center">
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/AshBuk/speak-to-ai.svg)](https://pkg.go.dev/github.com/AshBuk/speak-to-ai)
+
 [![CI](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml)
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
 [![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
