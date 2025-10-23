@@ -51,6 +51,11 @@ build_application() {
     echo "Building ${APP_NAME} with systray support..."
     go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
     cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+
+    echo "Building ${APP_NAME}-cli..."
+    go build -o "${APP_NAME}-cli" cmd/cli/main.go
+    cp "${APP_NAME}-cli" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+
     cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 }
 
@@ -202,19 +207,53 @@ DESKTOP_EOF
     fi
 }
 
-# Check for AppImageLauncher integration  
+# Check for AppImageLauncher integration
 if command -v appimaged >/dev/null 2>&1; then
     echo "AppImageLauncher detected - will handle desktop integration"
 elif command -v appimageupdatetool >/dev/null 2>&1; then
-    echo "AppImageUpdateTool detected - will handle desktop integration"  
+    echo "AppImageUpdateTool detected - will handle desktop integration"
 else
     echo "No AppImageLauncher found - creating manual menu integration..."
     integrate_with_desktop
 fi
 
-# Run the application with user config
+# Determine which binary to run based on arguments
 cd "${HERE}"
-exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+
+# Check if first argument is a CLI command
+case "$1" in
+    start|stop|status)
+        # Route to CLI binary for CLI commands
+        exec "${HERE}/usr/bin/speak-to-ai-cli" "$@"
+        ;;
+    --help|-h)
+        # Show help that includes both daemon and CLI options
+        # Use ARGV0 if available (original AppImage path), otherwise use generic name
+        APPIMAGE_NAME="${ARGV0:-speak-to-ai.AppImage}"
+        # Get just the basename if it's a full path
+        APPIMAGE_NAME="$(basename "$APPIMAGE_NAME")"
+
+        echo "Speak-to-AI - Offline speech-to-text for Linux"
+        echo ""
+        echo "Usage:"
+        echo "  ./$APPIMAGE_NAME                    Start the daemon (GUI mode)"
+        echo "  ./$APPIMAGE_NAME start              Begin recording (CLI mode)"
+        echo "  ./$APPIMAGE_NAME stop               Stop recording and transcribe (CLI mode)"
+        echo "  ./$APPIMAGE_NAME status             Check recording status (CLI mode)"
+        echo ""
+        echo "CLI Options:"
+        echo "  --json                Output in JSON format"
+        echo "  --socket PATH         Use custom IPC socket path"
+        echo ""
+        echo "Daemon Options:"
+        echo "  --config PATH         Use custom config file"
+        exit 0
+        ;;
+    *)
+        # Run daemon for all other cases (no args, or daemon-specific args)
+        exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+        ;;
+esac
 EOF
     chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
 }
@@ -319,6 +358,7 @@ build_appimage() {
     EXEC_ARGS=""
     for exe in \
       "usr/bin/${APP_NAME}" \
+      "usr/bin/${APP_NAME}-cli" \
       "usr/bin/xdotool" \
       "usr/bin/wtype" \
       "usr/bin/ydotool" \
@@ -339,7 +379,21 @@ build_appimage() {
       libdbusmenu-gtk3.so \
       libdbusmenu-glib.so; do
       for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
-        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1)
+        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1 || true)
+        if [ -n "$cand" ]; then
+          echo "Will bundle library: $cand"
+          LIB_ARGS="$LIB_ARGS --library $cand"
+          break
+        fi
+      done
+    done
+
+    # Try alternative appindicator libraries (Fedora/non-Ayatana systems)
+    for lib in \
+      libappindicator3.so \
+      libindicator3.so; do
+      for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1 || true)
         if [ -n "$cand" ]; then
           echo "Will bundle library: $cand"
           LIB_ARGS="$LIB_ARGS --library $cand"
