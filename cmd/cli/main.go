@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Asher Buk
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
@@ -28,15 +31,22 @@ func main() {
 	flag.BoolVar(&jsonOutput, "json", false, "Print responses as JSON")
 	flag.IntVar(&timeoutSec, "timeout", 0, "Override timeout in seconds for the command")
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] <command>\n", os.Args[0])
-		fmt.Fprintln(flag.CommandLine.Output())
-		fmt.Fprintln(flag.CommandLine.Output(), "Commands:")
-		fmt.Fprintln(flag.CommandLine.Output(), "  start        Start recording")
-		fmt.Fprintln(flag.CommandLine.Output(), "  stop         Stop recording and return transcript")
-		fmt.Fprintln(flag.CommandLine.Output(), "  status       Show current recording status")
-		fmt.Fprintln(flag.CommandLine.Output(), "  transcript   Show the last transcript")
-		fmt.Fprintln(flag.CommandLine.Output())
-		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
+		usageWriter := flag.CommandLine.Output()
+		writeUsage := func(format string, args ...any) {
+			if _, err := fmt.Fprintf(usageWriter, format, args...); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to write usage information: %v\n", err)
+			}
+		}
+
+		writeUsage("Usage: %s [flags] <command>\n", os.Args[0])
+		writeUsage("\n")
+		writeUsage("Commands:\n")
+		writeUsage("  start        Start recording\n")
+		writeUsage("  stop         Stop recording and return transcript\n")
+		writeUsage("  status       Show current recording status\n")
+		writeUsage("  transcript   Show the last transcript\n")
+		writeUsage("\n")
+		writeUsage("Flags:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()

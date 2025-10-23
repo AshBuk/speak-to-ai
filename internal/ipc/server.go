@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/internal/logger"
@@ -102,7 +103,7 @@ func (s *Server) acceptLoop() {
 			default:
 			}
 
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
+			if isTransientAcceptError(err) {
 				s.log.Warning("Temporary IPC accept error: %v", err)
 				time.Sleep(50 * time.Millisecond)
 				continue
@@ -157,6 +158,19 @@ func (s *Server) handleConnection(conn net.Conn) {
 	}
 
 	s.writeResponse(conn, resp)
+}
+
+func isTransientAcceptError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var ne net.Error
+	if errors.As(err, &ne) && ne.Timeout() {
+		return true
+	}
+
+	return errors.Is(err, syscall.EINTR)
 }
 
 func (s *Server) getHandler(command string) Handler {
