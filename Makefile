@@ -112,6 +112,7 @@ build-systray: deps whisper-libs
 	@echo "Build completed: $(BINARY_NAME)"
 	@ls -lh $(BINARY_NAME)
 
+# Build standalone CLI helper (AppImage build already bundles this)
 cli: deps
 	@echo "=== Building CLI helper $(CLI_BINARY_NAME) ==="
 	go build -v -o $(CLI_BINARY_NAME) cmd/cli/main.go
