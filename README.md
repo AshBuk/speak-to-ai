@@ -58,6 +58,21 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
  ./speak-to-ai-*.AppImage  
 ```
 
+### CLI Helper
+
+For tiling window managers or custom automation, build the lightweight CLI binary:
+
+```bash
+make cli
+./speak-to-ai-cli start       # Begin recording with the running daemon
+./speak-to-ai-cli stop        # Stop and print the transcript to stdout
+./speak-to-ai-cli status      # Check whether recording is active
+```
+
+The CLI communicates with an active `speak-to-ai` daemon through a secure Unix socket.  
+Launch the main application once (e.g. via AppImage or `make build`) and then trigger CLI commands from your window manager key bindings or scripts.  
+Add the `--json` flag for machine-readable responses or `--socket` to point to a custom IPC socket path.
+
 ## Desktop Environment Compatibility
 
 Help us test different desktop environments:

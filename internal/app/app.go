@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/ipc"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/services"
@@ -44,6 +45,8 @@ func NewRuntimeContext(logger logger.Logger) *RuntimeContext {
 type App struct {
 	Services *services.ServiceContainer
 	Runtime  *RuntimeContext
+
+	ipcServer *ipc.Server
 }
 
 // Create a new application instance
@@ -181,6 +184,10 @@ func (a *App) RunAndWait() error {
 		return fmt.Errorf("failed to start services: %w", err)
 	}
 
+	if err := a.startIPCServer(); err != nil {
+		a.Runtime.Logger.Warning("Failed to start CLI IPC server: %v", err)
+	}
+
 	// Wait for a shutdown signal
 	select {
 	case <-a.Runtime.ShutdownCh:
@@ -198,6 +205,10 @@ func (a *App) Shutdown() error {
 
 	// Cancel the main context to signal all operations to stop
 	a.Runtime.Cancel()
+
+	if a.ipcServer != nil {
+		a.ipcServer.Stop()
+	}
 
 	if a.Services != nil {
 		if err := a.Services.Shutdown(); err != nil {

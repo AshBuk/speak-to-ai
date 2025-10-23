@@ -1,8 +1,9 @@
-.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint test-integration test-integration-full docker-% docker-build docker-dev docker-lint docker-clean
+.PHONY: all build build-systray cli test clean deps whisper-libs appimage flatpak help fmt lint test-integration test-integration-full docker-% docker-build docker-dev docker-lint docker-clean
 
 # Variables
 GO_VERSION := 1.24.1
 BINARY_NAME := speak-to-ai
+CLI_BINARY_NAME := speak-to-ai-cli
 BUILD_DIR := build
 LIB_DIR := lib
 DIST_DIR := dist
@@ -110,6 +111,12 @@ build-systray: deps whisper-libs
 	go build -tags systray -v -o $(BINARY_NAME) cmd/daemon/main.go
 	@echo "Build completed: $(BINARY_NAME)"
 	@ls -lh $(BINARY_NAME)
+
+cli: deps
+	@echo "=== Building CLI helper $(CLI_BINARY_NAME) ==="
+	go build -v -o $(CLI_BINARY_NAME) cmd/cli/main.go
+	@echo "Build completed: $(CLI_BINARY_NAME)"
+	@ls -lh $(CLI_BINARY_NAME)
 
 
 # ============================================================================
