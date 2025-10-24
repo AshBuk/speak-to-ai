@@ -17,6 +17,7 @@ Entry point for developers with proper CGO environment setup:
 make all                 # Build everything (deps + whisper + binary)
 make build               # Build binary with whisper.cpp integration
 make build-systray       # Build with system tray support
+make cli                 # Build standalone CLI binary (AppImage already bundles it)
 make test                # Run unit tests via Docker (CGO + whisper.cpp)
 make test-integration    # Run integration tests via Docker (fast mode)
 make test-integration-full # Run full integration tests via Docker (audio/CGO)
@@ -115,4 +116,4 @@ hotkeys/
 
 See [`config.yaml`](../config.yaml) for the complete configuration file with all available options and detailed comments.
 
-*Last updated: 2025-10-11*
+*Last updated: 2025-10-23*

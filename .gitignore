@@ -4,8 +4,11 @@
 *.out
 coverage.out
 
-# Project executable
+# Project executables
 /speak-to-ai
+/speak-to-ai-cli
+/daemon
+/cli
 /packaging
 /dist
 
@@ -24,6 +27,7 @@ coverage.out
 /build/
 /build/whisper.cpp
 .flatpak-builder/
+/tools/
 
 # Temporary directories and logs
 /tmp/

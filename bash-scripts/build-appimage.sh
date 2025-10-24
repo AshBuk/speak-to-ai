@@ -51,6 +51,7 @@ build_application() {
     echo "Building ${APP_NAME} with systray support..."
     go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
     cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
+
     cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 }
 
@@ -202,19 +203,60 @@ DESKTOP_EOF
     fi
 }
 
-# Check for AppImageLauncher integration  
+# Check for AppImageLauncher integration
 if command -v appimaged >/dev/null 2>&1; then
     echo "AppImageLauncher detected - will handle desktop integration"
 elif command -v appimageupdatetool >/dev/null 2>&1; then
-    echo "AppImageUpdateTool detected - will handle desktop integration"  
+    echo "AppImageUpdateTool detected - will handle desktop integration"
 else
     echo "No AppImageLauncher found - creating manual menu integration..."
     integrate_with_desktop
 fi
 
-# Run the application with user config
+# Determine which binary mode to use based on arguments
 cd "${HERE}"
-exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+
+is_cli_command() {
+    set -- "$@"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --)
+                shift
+                if [ $# -gt 0 ]; then
+                    case "$1" in
+                        start|stop|status|transcript|last-transcript) return 0 ;;
+                    esac
+                fi
+                return 1
+                ;;
+            start|stop|status|transcript|last-transcript)
+                return 0
+                ;;
+            -json|--json)
+                shift
+                ;;
+            -socket|--socket|-timeout|--timeout)
+                if [ $# -lt 2 ]; then
+                    return 1
+                fi
+                shift 2
+                ;;
+            -socket=*|--socket=*|-timeout=*|--timeout=*)
+                shift
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    done
+    return 1
+}
+
+if is_cli_command "$@"; then
+    exec "${HERE}/usr/bin/speak-to-ai" "$@"
+else
+    exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+fi
 EOF
     chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
 }
@@ -319,6 +361,7 @@ build_appimage() {
     EXEC_ARGS=""
     for exe in \
       "usr/bin/${APP_NAME}" \
+      "usr/bin/${APP_NAME}-cli" \
       "usr/bin/xdotool" \
       "usr/bin/wtype" \
       "usr/bin/ydotool" \
@@ -339,7 +382,21 @@ build_appimage() {
       libdbusmenu-gtk3.so \
       libdbusmenu-glib.so; do
       for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
-        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1)
+        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1 || true)
+        if [ -n "$cand" ]; then
+          echo "Will bundle library: $cand"
+          LIB_ARGS="$LIB_ARGS --library $cand"
+          break
+        fi
+      done
+    done
+
+    # Try alternative appindicator libraries (Fedora/non-Ayatana systems)
+    for lib in \
+      libappindicator3.so \
+      libindicator3.so; do
+      for d in /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib; do
+        cand=$(ls -1 $d/${lib}* 2>/dev/null | sort -V | tail -n1 || true)
         if [ -n "$cand" ]; then
           echo "Will bundle library: $cand"
           LIB_ARGS="$LIB_ARGS --library $cand"
