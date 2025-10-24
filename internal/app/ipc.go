@@ -4,6 +4,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -53,6 +54,12 @@ func (a *App) ipcHandleStartRecording(ipc.Request) (ipc.Response, error) {
 
 func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 	if err := a.handleStopRecordingAndTranscribe(); err != nil {
+		if errors.Is(err, services.ErrNoRecordingInProgress) {
+			return ipc.NewSuccessResponse("recording already stopped", map[string]any{
+				"recording":  false,
+				"transcript": "",
+			}), nil
+		}
 		return ipc.Response{}, err
 	}
 

@@ -5,6 +5,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -43,6 +44,9 @@ type AudioService struct {
 	io  IOServiceInterface
 	cfg ConfigServiceInterface
 }
+
+// ErrNoRecordingInProgress indicates a stop request when no session is active.
+var ErrNoRecordingInProgress = errors.New("no recording in progress")
 
 // Create a new AudioService instance
 func NewAudioService(
@@ -113,7 +117,7 @@ func (as *AudioService) HandleStopRecording() error {
 	defer as.mu.Unlock()
 
 	if !as.isRecording {
-		return fmt.Errorf("no recording in progress")
+		return ErrNoRecordingInProgress
 	}
 
 	as.logger.Info("Stopping recording and transcribing...")
