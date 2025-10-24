@@ -5,23 +5,29 @@ general:
   debug: false
   whisper_model: "small-q5_1"
   temp_audio_path: "/tmp"
-  language: "en"  # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
+  language: "en" # Recognition language: "en", "ru", "de", "fr", "es", "he", etc.
+
+# Runtime acceleration settings
+acceleration:
+  backend: "auto" # Options: "auto", "vulkan", "cpu"
+  gpu_device: -1 # Use -1 for automatic device selection
+  allow_fallback: true # Fallback to CPU if the selected backend fails
 
 # Hotkey settings
 hotkeys:
-  start_recording: "alt+r"            # Start/stop recording
-  stop_recording: "alt+r"             # Same combination for start/stop
+  start_recording: "alt+r" # Start/stop recording
+  stop_recording: "alt+r" # Same combination for start/stop
   # toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
-  show_config: "alt+c"                # Open configuration file
-  reset_to_defaults: "alt+d"          # Reset all settings to defaults
+  show_config: "alt+c" # Open configuration file
+  reset_to_defaults: "alt+d" # Reset all settings to defaults
 
 # Audio recording settings
 audio:
   device: "default"
-  sample_rate: 16000            # Optimal for speech recognition (do not change)
-  format: "s16le"               # Note: audio is always recorded in mono (1 channel)
-  recording_method: "arecord"   # Options: "arecord", "ffmpeg"
-  temp_file_cleanup_time: 30    # Auto-delete temporary audio files older than X minutes (default: 30)
+  sample_rate: 16000 # Optimal for speech recognition (do not change)
+  format: "s16le" # Note: audio is always recorded in mono (1 channel)
+  recording_method: "arecord" # Options: "arecord", "ffmpeg"
+  temp_file_cleanup_time: 30 # Auto-delete temporary audio files older than X minutes (default: 30)
   # TODO: Next feature - VAD implementation
   # enable_vad: false           # Enable Voice Activity Detection
   # vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
@@ -29,12 +35,12 @@ audio:
 
 # Text output settings
 output:
-  default_mode: "active_window"  # Options: "clipboard", "active_window"
-  clipboard_tool: "auto"  # Options: "auto", "wl-copy", "xsel"
-  type_tool: "auto"  # Options: "auto", "ydotool", "xdotool", "wl-clipboard", "dbus"
+  default_mode: "active_window" # Options: "clipboard", "active_window"
+  clipboard_tool: "auto" # Options: "auto", "wl-copy", "xsel"
+  type_tool: "auto" # Options: "auto", "ydotool", "xdotool", "wl-clipboard", "dbus"
 
 # Web server settings
 web_server:
-  enabled: false  # Disabled by default - enable only if needed
+  enabled: false # Disabled by default - enable only if needed
   port: 8080
-  host: "localhost" 
+  host: "localhost"

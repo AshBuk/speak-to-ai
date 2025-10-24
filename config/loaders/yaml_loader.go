@@ -61,6 +61,11 @@ func SetDefaultConfig(config *models.Config) {
 	config.General.TempAudioPath = "/tmp"
 	config.General.Language = "en" // Default to English
 
+	// Acceleration settings
+	config.Acceleration.Backend = "auto"
+	config.Acceleration.GPUDevice = -1
+	config.Acceleration.AllowFallback = true
+
 	// Hotkey settings
 	config.Hotkeys.Provider = "auto"
 	config.Hotkeys.StartRecording = "alt+r"  // Start/stop recording

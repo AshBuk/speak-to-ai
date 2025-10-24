@@ -16,16 +16,17 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
-	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
+	whisperrt "github.com/AshBuk/speak-to-ai/whisper/runtime"
 	"github.com/go-audio/wav"
 )
 
 // Provides an interface for interacting with the whisper.cpp model.
 // It encapsulates model loading, context management, and the transcription process
 type WhisperEngine struct {
-	config    *config.Config
-	model     whisper.Model
-	modelPath string
+	config        *config.Config
+	model         whisperrt.Model
+	modelPath     string
+	activeBackend whisperrt.BackendType
 }
 
 // Return the underlying whisper.Model for advanced or direct interactions
@@ -38,6 +39,11 @@ func (w *WhisperEngine) GetConfig() *config.Config {
 	return w.config
 }
 
+// Backend returns the active execution backend for the model.
+func (w *WhisperEngine) Backend() whisperrt.BackendType {
+	return w.activeBackend
+}
+
 // Initialize and load a new Whisper model from the given path.
 // Return an error if the model file is not found or fails to load
 func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {
@@ -45,16 +51,26 @@ func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, 
 		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
 
-	model, err := whisper.New(modelPath)
+	options := buildRuntimeOptions(config)
+	requestedBackend := options.Backend
+
+	model, err := whisperrt.NewWithOptions(modelPath, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load whisper model: %w", err)
 	}
 
-	return &WhisperEngine{
-		config:    config,
-		model:     model,
-		modelPath: modelPath,
-	}, nil
+	engine := &WhisperEngine{
+		config:        config,
+		model:         model,
+		modelPath:     modelPath,
+		activeBackend: model.Backend(),
+	}
+
+	if requestedBackend != whisperrt.BackendCPU && engine.activeBackend == whisperrt.BackendCPU {
+		log.Printf("GPU backend unavailable, using CPU fallback")
+	}
+
+	return engine, nil
 }
 
 // Release the resources associated with the loaded Whisper model
@@ -122,6 +138,32 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	result := strings.TrimSpace(transcript.String())
 	result = utils.SanitizeTranscript(result)
 	return result, nil
+}
+
+func buildRuntimeOptions(cfg *config.Config) whisperrt.Options {
+	opts := whisperrt.DefaultOptions()
+	accel := cfg.Acceleration
+
+	switch strings.ToLower(accel.Backend) {
+	case "", string(whisperrt.BackendAuto):
+		opts.Backend = whisperrt.BackendAuto
+	case string(whisperrt.BackendCPU):
+		opts.Backend = whisperrt.BackendCPU
+	case string(whisperrt.BackendVulkan):
+		opts.Backend = whisperrt.BackendVulkan
+	default:
+		log.Printf("Unknown acceleration backend %q, defaulting to auto", accel.Backend)
+		opts.Backend = whisperrt.BackendAuto
+	}
+
+	opts.GPUDevice = accel.GPUDevice
+	if opts.GPUDevice < 0 {
+		opts.GPUDevice = -1
+	}
+
+	opts.AllowFallback = accel.AllowFallback
+
+	return opts
 }
 
 // Perform speech-to-text conversion with cancellation support.
