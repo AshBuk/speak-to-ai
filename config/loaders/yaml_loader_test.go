@@ -145,6 +145,9 @@ func TestLoadConfig_NonExistentFile(t *testing.T) {
 	if config.General.WhisperModel != "small-q5_1" {
 		t.Errorf("expected default whisper model to be 'small-q5_1', got %s", config.General.WhisperModel)
 	}
+	if config.Acceleration.Backend != "auto" {
+		t.Errorf("expected default backend to be 'auto', got %s", config.Acceleration.Backend)
+	}
 }
 
 func TestLoadConfig_InvalidPermissions(t *testing.T) {
@@ -173,6 +176,9 @@ func TestLoadConfig_InvalidPermissions(t *testing.T) {
 	// Check that default values are set
 	if config.General.WhisperModel != "small-q5_1" {
 		t.Errorf("expected default whisper model to be 'small-q5_1', got %s", config.General.WhisperModel)
+	}
+	if config.Acceleration.Backend != "auto" {
+		t.Errorf("expected default backend to be 'auto', got %s", config.Acceleration.Backend)
 	}
 }
 

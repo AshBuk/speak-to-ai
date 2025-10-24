@@ -34,6 +34,22 @@ func ValidateConfig(config *models.Config) error {
 		}
 	}
 
+	accelBackend := strings.ToLower(config.Acceleration.Backend)
+	switch accelBackend {
+	case "", "auto":
+		config.Acceleration.Backend = "auto"
+	case "cpu", "vulkan":
+		config.Acceleration.Backend = accelBackend
+	default:
+		errors = append(errors, fmt.Sprintf("invalid acceleration backend: %s, defaulting to 'auto'", config.Acceleration.Backend))
+		config.Acceleration.Backend = "auto"
+	}
+
+	if config.Acceleration.GPUDevice < -1 {
+		errors = append(errors, fmt.Sprintf("invalid gpu_device: %d, correcting to -1", config.Acceleration.GPUDevice))
+		config.Acceleration.GPUDevice = -1
+	}
+
 	// Audio sample rate must be within a reasonable range for audio processing
 	if config.Audio.SampleRate < 8000 || config.Audio.SampleRate > 48000 {
 		errors = append(errors, fmt.Sprintf("invalid sample rate: %d, correcting to 16000", config.Audio.SampleRate))

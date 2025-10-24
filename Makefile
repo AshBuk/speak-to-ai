@@ -10,6 +10,23 @@ DIST_DIR := dist
 # Example (CI recommended): make WHISPER_CPP_REF=v1.7.6
 WHISPER_CPP_REF ?= v1.7.6
 
+ENABLE_VULKAN ?= auto
+GLSLC := $(shell command -v glslc 2>/dev/null)
+PKG_CONFIG_BIN := $(shell command -v pkg-config 2>/dev/null)
+PKG_VULKAN := $(if $(PKG_CONFIG_BIN),$(shell pkg-config --exists vulkan && echo yes))
+
+ifeq ($(ENABLE_VULKAN),auto)
+  ifneq ($(and $(GLSLC),$(PKG_VULKAN)),)
+    VULKAN_CMAKE_FLAGS := -DGGML_VULKAN=ON
+  else
+    VULKAN_CMAKE_FLAGS :=
+  endif
+else ifneq ($(filter 1 true on yes,$(ENABLE_VULKAN)),)
+  VULKAN_CMAKE_FLAGS := -DGGML_VULKAN=ON
+else
+  VULKAN_CMAKE_FLAGS :=
+endif
+
 # CGO environment
 # These variables are necessary for CGO to find the whisper.cpp libraries.
 # They tell the Go compiler where to find the C header files (.h) and the compiled C libraries (.so, .a).
@@ -19,9 +36,10 @@ WHISPER_CPP_REF ?= v1.7.6
 export C_INCLUDE_PATH := $(PWD)/$(LIB_DIR)
 export LIBRARY_PATH := $(PWD)/$(LIB_DIR)
 export CGO_CFLAGS := -I$(PWD)/$(LIB_DIR)
-export CGO_LDFLAGS := -L$(PWD)/$(LIB_DIR) -lwhisper -lggml-cpu -lggml
+export CGO_LDFLAGS := -L$(PWD)/$(LIB_DIR) -lwhisper -lggml -lggml-base -lggml-cpu
 export LD_LIBRARY_PATH := $(PWD)/$(LIB_DIR):$(LD_LIBRARY_PATH)
 export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
+export GGML_BACKEND_PATH := $(PWD)/$(LIB_DIR)
 
 # ============================================================================
 # Formatting & Lint
@@ -86,7 +104,15 @@ $(LIB_DIR)/whisper.h:
 			git checkout $(WHISPER_CPP_REF); \
 		fi; \
 		rm -rf build && \
-		cmake -B build && \
+	if [ -z "$(VULKAN_CMAKE_FLAGS)" ]; then \
+		echo "Vulkan toolchain not detected; building CPU backends only"; \
+	else \
+		echo "Enabling Vulkan backend for whisper.cpp"; \
+	fi; \
+	cmake -B build \
+		$(VULKAN_CMAKE_FLAGS) \
+		-DGGML_BACKEND_DL=ON \
+		-DGGML_NATIVE=OFF && \
 		cmake --build build --config Release
 	mkdir -p $(LIB_DIR)
 	cp $(BUILD_DIR)/whisper.cpp/build/src/libwhisper.so* $(LIB_DIR)/ || true
@@ -94,6 +120,7 @@ $(LIB_DIR)/whisper.h:
 	cp $(BUILD_DIR)/whisper.cpp/include/whisper.h $(LIB_DIR)/
 	cp $(BUILD_DIR)/whisper.cpp/ggml/include/*.h $(LIB_DIR)/ || true
 	cp $(BUILD_DIR)/whisper.cpp/build/ggml/src/libggml*.* $(LIB_DIR)/ || true
+	cp $(BUILD_DIR)/whisper.cpp/build/bin/libggml*.* $(LIB_DIR)/ || true
 	@echo "Library files:"
 	@ls -la $(LIB_DIR)/
 

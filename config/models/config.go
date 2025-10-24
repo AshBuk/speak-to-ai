@@ -20,6 +20,12 @@ type Config struct {
 		Language      string `yaml:"language"`        // Language for speech recognition (e.g., "en", "ru")
 	} `yaml:"general"`
 
+	Acceleration struct {
+		Backend       string `yaml:"backend"`        // Preferred backend: "auto", "vulkan", "cpu"
+		GPUDevice     int    `yaml:"gpu_device"`     // GPU device index (if applicable)
+		AllowFallback bool   `yaml:"allow_fallback"` // Whether to fallback to CPU when the backend fails
+	} `yaml:"acceleration"`
+
 	Hotkeys struct {
 		// Hotkey provider override. Use "auto" for automatic detection, or force a specific backend like "dbus" or "evdev"
 		Provider        string `yaml:"provider"`
