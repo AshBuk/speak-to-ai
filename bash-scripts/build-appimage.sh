@@ -52,10 +52,6 @@ build_application() {
     go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
     cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 
-    echo "Building ${APP_NAME}-cli..."
-    go build -o "${APP_NAME}-cli" cmd/cli/main.go
-    cp "${APP_NAME}-cli" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
-
     cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
 }
 
@@ -217,43 +213,50 @@ else
     integrate_with_desktop
 fi
 
-# Determine which binary to run based on arguments
+# Determine which binary mode to use based on arguments
 cd "${HERE}"
 
-# Check if first argument is a CLI command
-case "$1" in
-    start|stop|status)
-        # Route to CLI binary for CLI commands
-        exec "${HERE}/usr/bin/speak-to-ai-cli" "$@"
-        ;;
-    --help|-h)
-        # Show help that includes both daemon and CLI options
-        # Use ARGV0 if available (original AppImage path), otherwise use generic name
-        APPIMAGE_NAME="${ARGV0:-speak-to-ai.AppImage}"
-        # Get just the basename if it's a full path
-        APPIMAGE_NAME="$(basename "$APPIMAGE_NAME")"
+is_cli_command() {
+    set -- "$@"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --)
+                shift
+                if [ $# -gt 0 ]; then
+                    case "$1" in
+                        start|stop|status|transcript|last-transcript) return 0 ;;
+                    esac
+                fi
+                return 1
+                ;;
+            start|stop|status|transcript|last-transcript)
+                return 0
+                ;;
+            -json|--json)
+                shift
+                ;;
+            -socket|--socket|-timeout|--timeout)
+                if [ $# -lt 2 ]; then
+                    return 1
+                fi
+                shift 2
+                ;;
+            -socket=*|--socket=*|-timeout=*|--timeout=*)
+                shift
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    done
+    return 1
+}
 
-        echo "Speak-to-AI - Offline speech-to-text for Linux"
-        echo ""
-        echo "Usage:"
-        echo "  ./$APPIMAGE_NAME                    Start the daemon (GUI mode)"
-        echo "  ./$APPIMAGE_NAME start              Begin recording (CLI mode)"
-        echo "  ./$APPIMAGE_NAME stop               Stop recording and transcribe (CLI mode)"
-        echo "  ./$APPIMAGE_NAME status             Check recording status (CLI mode)"
-        echo ""
-        echo "CLI Options:"
-        echo "  --json                Output in JSON format"
-        echo "  --socket PATH         Use custom IPC socket path"
-        echo ""
-        echo "Daemon Options:"
-        echo "  --config PATH         Use custom config file"
-        exit 0
-        ;;
-    *)
-        # Run daemon for all other cases (no args, or daemon-specific args)
-        exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
-        ;;
-esac
+if is_cli_command "$@"; then
+    exec "${HERE}/usr/bin/speak-to-ai" "$@"
+else
+    exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+fi
 EOF
     chmod +x "${OUTPUT_DIR}/${APP_NAME}.AppDir/AppRun"
 }

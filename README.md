@@ -4,7 +4,7 @@
 
 # Speak to AI
 
-> Native Linux voice-to-text app 🗣️ 
+> Native Linux voice-to-text app 🗣️
 
 </div>
 
@@ -26,8 +26,8 @@
 </div>
 
  **A minimalist, privacy-focused desktop application for offline speech-to-text.
-  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants) 
-  Uses the Whisper model locally for speech recognition. 
+  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants)
+  Uses the Whisper model locally for speech recognition.
   Written in Go, an optimized desktop application for Linux.**
 
 https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
@@ -55,39 +55,29 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
  sudo usermod -a -G input $USER
  # then logout/login or reboot
  # Open via GUI or with terminal command:
- ./speak-to-ai-*.AppImage  
+ ./speak-to-ai-*.AppImage
 ```
 
-### CLI Helper
+### CLI Usage
 
-The AppImage bundles the CLI so you can call it directly:
+The AppImage and source builds now ship a single dual-mode binary. Run the AppImage without arguments to launch the daemon UI, or pass a verb to use the CLI mode:
 
 ```bash
-./speak-to-ai-*.AppImage start    # Begin recording (requires the daemon to be running)
-./speak-to-ai-*.AppImage stop     # Stop and print the transcript to stdout
-./speak-to-ai-*.AppImage status   # Check whether recording is active
+./speak-to-ai-*.AppImage start       # Begin recording (requires the daemon to be running)
+./speak-to-ai-*.AppImage stop        # Stop recording and print the transcript to stdout
+./speak-to-ai-*.AppImage status      # Check whether recording is active
+./speak-to-ai-*.AppImage transcript  # Show the last transcript
 ```
 
-Note: these CLI commands communicate with the running speak-to-ai daemon over a Unix socket — the daemon must already be running for them to work. You can start the daemon simply by launching the AppImage once:
+Launch the daemon once (e.g. `./speak-to-ai-*.AppImage` with no arguments) and leave it running in the background.
 
+For source builds the same binary is produced:
 ```bash
-./speak-to-ai-*.AppImage
+make build
+./speak-to-ai start
 ```
 
-For source builds or packaging experiments, generate a standalone CLI binary:
-```bash
-make cli
-./speak-to-ai-cli start
-```
-
-```bash
-make cli
-./speak-to-ai-cli start
-```
-
-The CLI communicates with an active `speak-to-ai` daemon through a secure Unix socket.  
-Launch the main application once (AppImage or `make build`) and then trigger CLI commands from your window manager key bindings or scripts.  
-Add the `--json` flag for machine-readable responses or `--socket` to point to a custom IPC socket path.
+CLI flags such as `--json`, `--timeout`, and `--socket` remain available for scripting and window manager integrations.
 
 ## Desktop Environment Compatibility
 
