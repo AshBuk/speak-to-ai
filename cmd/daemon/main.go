@@ -130,34 +130,6 @@ func parseDaemonOptions(args []string) (*daemonOptions, error) {
 	return opts, nil
 }
 
-func printDaemonUsage(w io.Writer, fs *flag.FlagSet) {
-	name := filepath.Base(os.Args[0])
-	if _, err := fmt.Fprintf(w, "Usage: %s [daemon flags]\n\n", name); err != nil {
-		reportUsageError(err)
-		return
-	}
-	if _, err := fmt.Fprintln(w, "Daemon Flags:"); err != nil {
-		reportUsageError(err)
-		return
-	}
-	originalOutput := fs.Output()
-	fs.SetOutput(w)
-	fs.PrintDefaults()
-	fs.SetOutput(originalOutput)
-	if _, err := fmt.Fprintln(w); err != nil {
-		reportUsageError(err)
-		return
-	}
-	if _, err := fmt.Fprintf(w, "CLI mode: %s [CLI flags] <start|stop|status|transcript>\n", name); err != nil {
-		reportUsageError(err)
-		return
-	}
-	if _, err := fmt.Fprintln(w, "For CLI flags, run with the desired command and --help."); err != nil {
-		reportUsageError(err)
-		return
-	}
-}
-
 func maybeRunCLI(args []string) (bool, int) {
 	if !isCLICommandRequested(args) {
 		return false, 0

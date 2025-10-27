@@ -59,7 +59,7 @@ copy_libraries() {
     echo "Bundling libraries..."
     LIB_DST="${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/lib"
     mkdir -p "$LIB_DST"
-    
+
     # Copy whisper libraries
     if compgen -G "lib/libwhisper.so*" > /dev/null; then
         cp -a lib/libwhisper.so* "$LIB_DST/" || true
@@ -67,7 +67,7 @@ copy_libraries() {
     if compgen -G "lib/libggml*.so*" > /dev/null; then
         cp -a lib/libggml*.so* "$LIB_DST/" || true
     fi
-    
+
     # Copy system tray libraries
     copy_system_lib "libayatana-appindicator3.so*"
     copy_system_lib "libayatana-indicator3.so*"
@@ -103,7 +103,7 @@ copy_binaries() {
 copy_binary_if_exists() {
     local binary_name="$1"
     local binary_path=$(which "$binary_name" 2>/dev/null || echo "")
-    
+
     if [ -n "$binary_path" ]; then
         echo "Including $binary_name dependency..."
         cp "$binary_path" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
@@ -157,7 +157,7 @@ if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; th
     echo "D-Bus session available - hotkeys supported"
 elif [ -r /dev/input/event0 ] 2>/dev/null; then
     # evdev available - hotkeys should work
-    echo "Input devices accessible - hotkeys supported"  
+    echo "Input devices accessible - hotkeys supported"
 else
     # No hotkey support detected
     echo "Warning: Hotkeys may not work without additional setup."
@@ -171,7 +171,7 @@ fi
 integrate_with_desktop() {
     local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
     local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
-    
+
     # Create .desktop file if not exists
     if [ ! -f "$desktop_file" ]; then
         echo "Creating desktop menu integration..."
@@ -190,13 +190,13 @@ DESKTOP_EOF
         chmod +x "$desktop_file"
         echo "✅ Desktop menu integration created"
     fi
-    
+
     # Copy icon if not exists
     if [ ! -f "$icon_file" ]; then
         mkdir -p "$(dirname "$icon_file")"
         cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
     fi
-    
+
     # Update desktop database
     if command -v update-desktop-database >/dev/null 2>&1; then
         update-desktop-database "${HOME}/.local/share/applications"
@@ -361,7 +361,6 @@ build_appimage() {
     EXEC_ARGS=""
     for exe in \
       "usr/bin/${APP_NAME}" \
-      "usr/bin/${APP_NAME}-cli" \
       "usr/bin/xdotool" \
       "usr/bin/wtype" \
       "usr/bin/ydotool" \
@@ -414,9 +413,9 @@ build_appimage() {
         --icon-file \"${APP_NAME}.AppDir/${APP_NAME}.png\" \
         --plugin gtk \
         --output appimage"; then
-        
+
         APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "*tool*" -type f -print | head -n 1)
-        
+
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
             TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
@@ -431,10 +430,10 @@ build_appimage() {
     fi
 
     echo "Linuxdeploy failed or didn't produce AppImage, falling back to manual appimagetool..."
-    
+
     if "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run --no-appstream "${APP_NAME}.AppDir"; then
         APPIMAGE_FILE=$(find . -name "*.AppImage" ! -name "appimagetool*" -type f -print | head -n 1)
-        
+
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
             TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
@@ -472,4 +471,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"
