@@ -4,7 +4,7 @@
 
 # Speak to AI
 
-> Native Linux voice-to-text app 🗣️ 
+> Native Linux voice-to-text app 🗣️
 
 </div>
 
@@ -26,8 +26,8 @@
 </div>
 
  **A minimalist, privacy-focused desktop application for offline speech-to-text.
-  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants) 
-  Uses the Whisper model locally for speech recognition. 
+  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants)
+  Uses the Whisper model locally for speech recognition.
   Written in Go, an optimized desktop application for Linux.**
 
 https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
@@ -55,8 +55,29 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
  sudo usermod -a -G input $USER
  # then logout/login or reboot
  # Open via GUI or with terminal command:
- ./speak-to-ai-*.AppImage  
+ ./speak-to-ai-*.AppImage
 ```
+
+### CLI Usage
+
+The AppImage and source builds now ship a single dual-mode binary. Run the AppImage without arguments to launch the daemon UI, or pass a verb to use the CLI mode:
+
+```bash
+./speak-to-ai-*.AppImage start       # Begin recording (requires the daemon to be running)
+./speak-to-ai-*.AppImage stop        # Stop recording and print the transcript to stdout
+./speak-to-ai-*.AppImage status      # Check whether recording is active
+./speak-to-ai-*.AppImage transcript  # Show the last transcript
+```
+
+Launch the daemon once (e.g. `./speak-to-ai-*.AppImage` with no arguments) and leave it running in the background.
+
+For source builds the same binary is produced:
+```bash
+make build
+./speak-to-ai start
+```
+
+CLI flags such as `--json`, `--timeout`, and `--socket` remain available for scripting and window manager integrations.
 
 ## Desktop Environment Compatibility
 
