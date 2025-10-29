@@ -9,7 +9,7 @@ run:
 
 issues:
   exclude-rules:
-    - path: cmd/daemon/main\.go
+    - path: cmd/speak-to-ai/main\.go
       text: "error obtaining VCS status"
       linters:
         - typecheck

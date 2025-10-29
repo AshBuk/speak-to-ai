@@ -45,7 +45,7 @@ jobs:
     - name: Test configuration loading
       run: |
         echo "Testing configuration loading..."
-        go run cmd/daemon/main.go --help || echo "Help command completed"
+        go run ./cmd/speak-to-ai --help || echo "Help command completed"
         
     - name: Run unit tests
       run: |
