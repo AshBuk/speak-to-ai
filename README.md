@@ -62,24 +62,9 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 
 ### CLI Usage
 
-The AppImage and source builds now ship a single dual-mode binary. Run the AppImage without arguments to launch the daemon UI, or pass a verb to use the CLI mode:
+Speak-to-AI provides a dual-mode binary that works as both a background daemon and CLI tool:
 
-```bash
-./speak-to-ai-*.AppImage start       # Begin recording (requires the daemon to be running)
-./speak-to-ai-*.AppImage stop        # Stop recording and print the transcript to stdout
-./speak-to-ai-*.AppImage status      # Check whether recording is active
-./speak-to-ai-*.AppImage transcript  # Show the last transcript
-```
-
-Launch the daemon once (e.g. `./speak-to-ai-*.AppImage` with no arguments) and leave it running in the background.
-
-For source builds the same binary is produced:
-```bash
-make build
-./speak-to-ai start
-```
-
-CLI flags such as `--json`, `--timeout`, and `--socket` remain available for scripting and window manager integrations.
+**[CLI Usage Guide](docs/CLI_USAGE.md)**
 
 ## Desktop Environment Compatibility
 
@@ -97,9 +82,8 @@ Help us test different desktop environments:
 
 ## ✦ Project Status
 
-**AppImage** [release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. I'd appreciate feedback about your experience on your system!
-
-**Flatpak** bundle is planned.
+**AppImage** [release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. 
+I'd appreciate feedback about your experience on your system!
 
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
 

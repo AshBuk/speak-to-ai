@@ -16,7 +16,7 @@ The application follows a **modular daemon architecture** with clear separation 
 ┌─────────────────────────────────────────────────────────────────┐
 │                       Service Modules                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  audio/     │  hotkeys/   │  whisper/   │  output/    │  config/ │
+│  audio/     │  hotkeys/   │  whisper/   │  output/    │  config/│
 │  websocket/ │                                                   │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
@@ -24,7 +24,7 @@ The application follows a **modular daemon architecture** with clear separation 
 ├─────────────────────────────────────────────────────────────────┤
 │  internal/logger/ │ internal/notify/ │ internal/platform/       │
 │  internal/tray/   │ internal/utils/  │ internal/constants/      │
-│  internal/services/                                              │
+│  internal/services/                                             │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                       System Integration                        │
@@ -69,12 +69,18 @@ The application follows a **modular daemon architecture** with clear separation 
 ### 📁 **Core Application**
 
 #### `cmd/speak-to-ai/`
-- **Purpose**: Application entry point and CLI argument parsing
+- **Purpose**: Application entry point with dual-mode support (daemon + CLI)
+- **Structure**:
+  - `main.go`: Entry point and mode routing (daemon vs CLI)
+  - `daemon.go`: Daemon mode initialization and flag parsing
+  - `cli.go`: CLI mode commands (start/stop/status/transcript) via IPC
+  - `usage.go`: Unified help system for both modes
+  - `environment.go`: AppImage/Flatpak environment detection
 - **Responsibilities**:
-  - Command-line flag processing (`--config`, `--model`, `--debug`)
-  - Environment detection (AppImage, Flatpak)
-  - Path adjustment for portable packages
-  - Application initialization and lifecycle management
+  - Dual-mode routing (daemon for background service, CLI for commands)
+  - Command-line flag processing (`--config`, `--debug` for daemon; `--socket`, `--json`, `--timeout` for CLI)
+  - Environment detection and path adjustment for portable packages
+  - IPC client for CLI commands communicating with daemon
 
 #### `internal/app/` - Application Core
 - **`app.go`**: Application orchestrator with ServiceContainer and RuntimeContext
@@ -223,4 +229,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-11*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-29*
