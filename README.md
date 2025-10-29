@@ -11,6 +11,7 @@
 <div align="center">
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/AshBuk/speak-to-ai.svg)](https://pkg.go.dev/github.com/AshBuk/speak-to-ai)
+[![Go Report Card](https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai)](https://goreportcard.com/report/github.com/AshBuk/speak-to-ai)
 
 [![CI](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml)
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
@@ -128,16 +129,21 @@ Technical dive into architecture and engineering challenges: [Building Speak-to-
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
 - [fyne.io/systray](https://github.com/fyne-io/systray) for cross-platform system tray support
+- [ydotool](https://github.com/ReimuNotMoe/ydotool) for Wayland-compatible input automation
 - OpenAI for the original Whisper model
+
+## ✦ MIT License - see the [LICENSE](LICENSE) file for details.
+
+**If you use this project, please:**
+- Give credit by linking back to this repository
+- Star ⭐ the project if it helped you
+- Consider contributing back improvements
 
 ---
 
 Sharing with the community for privacy-conscious Linux users
 
 ---
-## ✦ License
-
-MIT — see `LICENSE`.
 
 ## Sponsor
 
