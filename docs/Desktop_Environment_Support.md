@@ -89,7 +89,13 @@ sudo usermod -a -G input $USER
 - **Experience:** Best on modern DEs with portal support -->
 
 ### **Alternative for Tiling WMs**
-- **System hotkey tools:** sxhkd, xbindkeys, etc. + webhook integration
+- **CLI commands:** Direct hotkey binding via WM config (i3, sway, bspwm, etc.)
+- **Example (i3/sway):**
+  ```
+  bindsym $mod+r exec speak-to-ai start
+  bindsym $mod+Shift+r exec speak-to-ai stop
+  ```
+- See [CLI Usage Guide](CLI_USAGE.md) for command reference
 
-*Last updated: 2025-09-22*  
+*Last updated: 2025-10-29*  
 *Tested on: Fedora 42, Ubuntu 24.04*
