@@ -145,77 +145,7 @@ export PULSE_RUNTIME_PATH="${PULSE_RUNTIME_PATH:-${XDG_RUNTIME_DIR}/pulse}"
 CONFIG_DIR="${HOME}/.config/speak-to-ai"
 mkdir -p "${CONFIG_DIR}"
 
-# First launch config setup
-if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
-    echo "First launch detected: Setting up configuration..."
-    cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
-fi
-
-# Check hotkey support (prioritize D-Bus over input devices)
-if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; then
-    # D-Bus session available - hotkeys should work on modern DEs
-    echo "D-Bus session available - hotkeys supported"
-elif [ -r /dev/input/event0 ] 2>/dev/null; then
-    # evdev available - hotkeys should work
-    echo "Input devices accessible - hotkeys supported"
-else
-    # No hotkey support detected
-    echo "Warning: Hotkeys may not work without additional setup."
-    echo "For hotkeys on GNOME/KDE: Ensure D-Bus session is running"
-    echo "For hotkeys on other DEs: sudo usermod -a -G input $USER"
-    echo "Then log out and log back in."
-    echo ""
-fi
-
-# Auto-integrate with desktop menu function
-integrate_with_desktop() {
-    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
-    local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
-
-    # Create .desktop file if not exists
-    if [ ! -f "$desktop_file" ]; then
-        echo "Creating desktop menu integration..."
-        mkdir -p "$(dirname "$desktop_file")"
-        cat > "$desktop_file" << DESKTOP_EOF
-[Desktop Entry]
-Name=Speak-to-AI
-Comment=Offline speech-to-text for AI assistants
-Exec="${SELF}" %U
-Icon=speak-to-ai
-Type=Application
-Categories=Utility;Audio;Accessibility;
-Terminal=false
-StartupNotify=true
-DESKTOP_EOF
-        chmod +x "$desktop_file"
-        echo "✅ Desktop menu integration created"
-    fi
-
-    # Copy icon if not exists
-    if [ ! -f "$icon_file" ]; then
-        mkdir -p "$(dirname "$icon_file")"
-        cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
-    fi
-
-    # Update desktop database
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "${HOME}/.local/share/applications"
-    fi
-}
-
-# Check for AppImageLauncher integration
-if command -v appimaged >/dev/null 2>&1; then
-    echo "AppImageLauncher detected - will handle desktop integration"
-elif command -v appimageupdatetool >/dev/null 2>&1; then
-    echo "AppImageUpdateTool detected - will handle desktop integration"
-else
-    echo "No AppImageLauncher found - creating manual menu integration..."
-    integrate_with_desktop
-fi
-
 # Determine which binary mode to use based on arguments
-cd "${HERE}"
-
 is_cli_command() {
     set -- "$@"
     while [ $# -gt 0 ]; do
@@ -251,6 +181,84 @@ is_cli_command() {
     done
     return 1
 }
+
+# Check if CLI mode before showing info messages
+if ! is_cli_command "$@"; then
+    # First launch config setup
+    if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
+        echo "First launch detected: Setting up configuration..."
+        cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml"
+    fi
+
+    # Check hotkey support (prioritize D-Bus over input devices)
+    if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; then
+        # D-Bus session available - hotkeys should work on modern DEs
+        echo "D-Bus session available - hotkeys supported"
+    elif [ -r /dev/input/event0 ] 2>/dev/null; then
+        # evdev available - hotkeys should work
+        echo "Input devices accessible - hotkeys supported"
+    else
+        # No hotkey support detected
+        echo "Warning: Hotkeys may not work without additional setup."
+        echo "For hotkeys on GNOME/KDE: Ensure D-Bus session is running"
+        echo "For hotkeys on other DEs: sudo usermod -a -G input $USER"
+        echo "Then log out and log back in."
+        echo ""
+    fi
+
+    # Auto-integrate with desktop menu function
+    integrate_with_desktop() {
+        local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
+        local icon_file="${HOME}/.local/share/icons/hicolor/256x256/apps/speak-to-ai.png"
+
+        # Create .desktop file if not exists
+        if [ ! -f "$desktop_file" ]; then
+            echo "Creating desktop menu integration..."
+            mkdir -p "$(dirname "$desktop_file")"
+            cat > "$desktop_file" << DESKTOP_EOF
+[Desktop Entry]
+Name=Speak-to-AI
+Comment=Offline speech-to-text for AI assistants
+Exec="${SELF}" %U
+Icon=speak-to-ai
+Type=Application
+Categories=Utility;Audio;Accessibility;
+Terminal=false
+StartupNotify=true
+DESKTOP_EOF
+            chmod +x "$desktop_file"
+            echo "✅ Desktop menu integration created"
+        fi
+
+        # Copy icon if not exists
+        if [ ! -f "$icon_file" ]; then
+            mkdir -p "$(dirname "$icon_file")"
+            cp "${HERE}/speak-to-ai.png" "$icon_file" 2>/dev/null || true
+        fi
+
+        # Update desktop database
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database "${HOME}/.local/share/applications"
+        fi
+    }
+
+    # Check for AppImageLauncher integration
+    if command -v appimaged >/dev/null 2>&1; then
+        echo "AppImageLauncher detected - will handle desktop integration"
+    elif command -v appimageupdatetool >/dev/null 2>&1; then
+        echo "AppImageUpdateTool detected - will handle desktop integration"
+    else
+        echo "No AppImageLauncher found - creating manual menu integration..."
+        integrate_with_desktop
+    fi
+else
+    # CLI mode: Silent setup - only copy config if missing
+    if [ ! -f "${CONFIG_DIR}/config.yaml" ]; then
+        cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml" 2>/dev/null || true
+    fi
+fi
+
+cd "${HERE}"
 
 if is_cli_command "$@"; then
     exec "${HERE}/usr/bin/speak-to-ai" "$@"
