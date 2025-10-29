@@ -1,7 +1,8 @@
 <div align="center">
 <img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="180" height="180" alt="Speak to AI"/>
-
 <h1>Speak to AI</h1>
+  
+> 🗣️ **Native Linux Voice-To-Text App**
 
 <p style="margin-bottom: 12px;">
 <a href="https://pkg.go.dev/github.com/AshBuk/speak-to-ai">
@@ -10,20 +11,15 @@
 <a href="https://goreportcard.com/report/github.com/AshBuk/speak-to-ai">
   <img src="https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai" alt="Go Report Card">
 </a>
+<a href="https://go.dev/">
+  <img src="https://img.shields.io/badge/go-1.24-00ADD8?logo=go" alt="Go Version">
+</a>
 </p>
-
-> 🗣️ **NATIVE LINUX VOICE-TO-TEXT APP**
-
+  
 [![CI](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml)
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)
-[![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
-[![Go Version](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)](https://go.dev/)
-[![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
-
-[![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
-[![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
-[![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
 [![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
+[![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
 
 </div>
 
@@ -35,6 +31,10 @@
 https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
+
+[![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
+[![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
+
 
 - **Offline speech-to-text**
 - **Voice typing or clipboard mode**
@@ -60,17 +60,16 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
  ./speak-to-ai-*.AppImage
 ```
 
-### CLI Usage
+🔄 **Speak-to-AI provides a dual-mode binary** that works as both a background daemon and CLI tool
 
-Speak-to-AI provides a dual-mode binary that works as both a background daemon and CLI tool:
-
-**[CLI Usage Guide](docs/CLI_USAGE.md)**
+→ see: **[CLI Usage Guide](docs/CLI_USAGE.md)**
 
 ## Desktop Environment Compatibility
 
-Help us test different desktop environments:
+[![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
+[![Display](https://img.shields.io/badge/Display-Wayland%20%2F%20X11-ff69b4)](#-features)
 
-📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)**
+📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)** - help us test different desktop environments!
 
 **For system tray integration on GNOME, [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
 > KDE and other DEs have built-in system tray support out of the box
@@ -117,7 +116,7 @@ Technical dive into architecture and engineering challenges: [Building Speak-to-
 - [ydotool](https://github.com/ReimuNotMoe/ydotool) for Wayland-compatible input automation
 - OpenAI for the original Whisper model
 
-## ✦ MIT License - see the [LICENSE](LICENSE) file for details.
+## ✦ MIT [LICENSE](LICENSE)
 
 **If you use this project, please:**
 - Give credit by linking back to this repository
@@ -134,4 +133,4 @@ Sharing with the community for privacy-conscious Linux users
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-💖-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/AshBuk) [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R3HZH8DX7SCJG)
 
-If you find Speak-to-AI useful, please consider supporting development.
+Please consider supporting development
