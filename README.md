@@ -1,17 +1,18 @@
 <div align="center">
-
 <img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="180" height="180" alt="Speak to AI"/>
 
-# Speak to AI
+<h1>Speak to AI</h1>
 
-> Native Linux voice-to-text app 🗣️
+<p style="margin-bottom: 12px;">
+<a href="https://pkg.go.dev/github.com/AshBuk/speak-to-ai">
+  <img src="https://pkg.go.dev/badge/github.com/AshBuk/speak-to-ai.svg" alt="Go Reference">
+</a>
+<a href="https://goreportcard.com/report/github.com/AshBuk/speak-to-ai">
+  <img src="https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai" alt="Go Report Card">
+</a>
+</p>
 
-</div>
-
-<div align="center">
-
-[![Go Reference](https://pkg.go.dev/badge/github.com/AshBuk/speak-to-ai.svg)](https://pkg.go.dev/github.com/AshBuk/speak-to-ai)
-[![Go Report Card](https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai)](https://goreportcard.com/report/github.com/AshBuk/speak-to-ai)
+> 🗣️ **NATIVE LINUX VOICE-TO-TEXT APP**
 
 [![CI](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml)
 [![Build Releases](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/build-releases.yml)

@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - **Recorder Reliability:** Added a warm-up phase to ensure valid audio payloads and a robust stop-retry mechanism to prevent data loss in short recordings.
 - **Low Latency:** Optimized PulseAudio input buffering to reduce audio capture latency.
 
-*For more details, see the audio workflow diagram: `docs/AUDIO_PIPELINE_DIAGRAM.txt`.*
+*For more details, see the audio pipeline diagram: [docs/AUDIO_PIPELINE_DIAGRAM.txt](docs/AUDIO_PIPELINE_DIAGRAM.txt).*
 
 
 ## [1.1.0] - 2025-10-06
