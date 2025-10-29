@@ -153,11 +153,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 		return
 	}
 
-	// Safety net to ensure resp is OK if handler didn't return an error
-	if !resp.OK {
-		resp.OK = true
-	}
-
 	s.writeResponse(conn, resp)
 }
 
