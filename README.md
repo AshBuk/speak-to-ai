@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 - **Cross-platform support** for X11 and Wayland
 - **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
 - **Privacy-first**: desktop, no data sent to external servers
-- **Support: multi-language, global hotkeys, automatic typing, system tray integration, visual notifications, WebSocket API (optional)**
+- **Support: multi-language, global hotkeys, automatic typing, system tray integration, visual notifications, Unix socket IPC, WebSocket API (optional)**
 
 ## ✦ Installation
 
