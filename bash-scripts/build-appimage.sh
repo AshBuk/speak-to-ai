@@ -154,12 +154,12 @@ is_cli_command() {
                 shift
                 if [ $# -gt 0 ]; then
                     case "$1" in
-                        start|stop|status|transcript|last-transcript) return 0 ;;
+                        start|stop|status|transcript) return 0 ;;
                     esac
                 fi
                 return 1
                 ;;
-            start|stop|status|transcript|last-transcript)
+            start|stop|status|transcript)
                 return 0
                 ;;
             -json|--json)

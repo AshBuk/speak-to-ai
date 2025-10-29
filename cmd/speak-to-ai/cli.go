@@ -134,7 +134,7 @@ func splitFlagNameAndValue(flagArg string) (name string, hasValue bool) {
 
 func isCLIVerb(command string) bool {
 	switch command {
-	case "start", "stop", "status", "transcript", "last-transcript":
+	case "start", "stop", "status", "transcript":
 		return true
 	default:
 		return false
@@ -158,7 +158,7 @@ func executeCLICommand(command, socketPath string, timeout time.Duration) (ipc.R
 	case "status":
 		req = ipc.Request{Command: "status"}
 		resp, err = ipc.SendRequest(socketPath, req, timeout)
-	case "transcript", "last-transcript":
+	case "transcript":
 		req = ipc.Request{Command: "last-transcript"}
 		resp, err = ipc.SendRequest(socketPath, req, timeout)
 	}
@@ -205,7 +205,7 @@ func printResponse(command string, resp ipc.Response) {
 		if transcript, ok := getString(data, "last_transcript"); ok && transcript != "" {
 			fmt.Printf("Last transcript: %s\n", transcript)
 		}
-	case "transcript", "last-transcript":
+	case "transcript":
 		if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
 			fmt.Println(transcript)
 		} else {
