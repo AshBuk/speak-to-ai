@@ -49,7 +49,7 @@ create_appdir_structure() {
 
 build_application() {
     echo "Building ${APP_NAME} with systray support..."
-    go build -tags systray -o "${APP_NAME}" cmd/daemon/main.go
+    go build -tags systray -o "${APP_NAME}" ./cmd/speak-to-ai
     cp "${APP_NAME}" "${OUTPUT_DIR}/${APP_NAME}.AppDir/usr/bin/"
 
     cp config.yaml "${OUTPUT_DIR}/${APP_NAME}.AppDir/"
