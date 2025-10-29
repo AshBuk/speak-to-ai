@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [1.3.0] - 2025-10-29
+
+### Features
+
+- **Dual-Mode Architecture:** Single binary now supports both daemon mode (background service with system tray) and CLI mode (command-line interface for scripting)
+- **CLI Commands:** See [CLI Usage Guide](docs/CLI_USAGE.md)
+- **Tiling WM Support:** (i3, sway, bspwm, etc.) through CLI hotkey bindings
+- **IPC Communication:** CLI commands communicate with daemon via Unix socket for low-latency operations
+- **JSON Output:** `--json` flag for machine-readable responses, perfect for automation and scripts
+- **High-Resolution Icon:** Upgraded tray icon to 500x500 resolution for crisp display on HiDPI screens
+
+### Contributors
+
+Thanks to [@BigMitchGit](https://github.com/BigMitchGit) for implementing CLI/Daemon unification and Unix socket IPC! (PR [#49](https://github.com/AshBuk/speak-to-ai/pull/49)).
+
+
 ## [1.2.0] - 2025-10-16
 
 ### Features
