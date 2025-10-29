@@ -17,48 +17,12 @@ Speak-to-AI provides a dual-mode binary that works as both a background daemon a
 ./speak-to-ai-*.AppImage transcript   # Show last transcript
 ```
 
-## CLI Commands
-
-### `start`
-Start recording audio. Requires the daemon to be running.
-
-```bash
-./speak-to-ai start                   # Start recording
-```
-
----
-
-### `stop`
-Stop recording and return the transcript to stdout.
-
-```bash
-./speak-to-ai stop                    # Stop and show transcript
-./speak-to-ai stop >/dev/null         # Stop without stdout (active_window mode only)
-```
-
 **Notes:**
 - Transcript is printed to stdout
 - If using `active_window` output mode, text is also typed into the active window
-- To suppress duplicate output: `./speak-to-ai stop >/dev/null`
+- To suppress duplicate output: `./speak-to-ai-*.AppImage stop >/dev/null`
 
 ---
-
-### `status`
-Check current recording status and view the last transcript.
-
-```bash
-./speak-to-ai status                  # Show recording status
-```
-
----
-
-### `transcript`
-Show the last transcript without stopping current recording.
-
-```bash
-./speak-to-ai transcript              # Show last transcript
-```
-
 
 ## CLI Flags
 
@@ -66,7 +30,7 @@ Show the last transcript without stopping current recording.
 Specify custom IPC socket path.
 
 ```bash
-./speak-to-ai --socket /tmp/custom.sock start     # Custom socket path
+./speak-to-ai-*.AppImage --socket /tmp/custom.sock start     # Custom socket path
 ```
 
 **Default:** `$XDG_RUNTIME_DIR/speak-to-ai.sock`
@@ -77,7 +41,7 @@ Specify custom IPC socket path.
 Output responses in JSON format for scripting.
 
 ```bash
-./speak-to-ai --json status                       # JSON output
+./speak-to-ai-*.AppImage --json status                       # JSON output
 ```
 
 ---
@@ -86,7 +50,7 @@ Output responses in JSON format for scripting.
 Override default timeout for the command.
 
 ```bash
-./speak-to-ai --timeout 120 stop                  # 120 second timeout
+./speak-to-ai-*.AppImage --timeout 120 stop                  # 120 second timeout
 ```
 
 **Default timeouts:**
@@ -103,7 +67,7 @@ When running as daemon (without CLI command):
 Specify custom configuration file path.
 
 ```bash
-./speak-to-ai --config ~/.config/speak-to-ai/custom.yaml    # Custom config
+./speak-to-ai-*.AppImage --config ~/.config/speak-to-ai/custom.yaml    # Custom config
 ```
 
 **Default path:** `~/.config/speak-to-ai/config.yaml`
@@ -114,7 +78,7 @@ Specify custom configuration file path.
 Enable debug logging.
 
 ```bash
-./speak-to-ai --debug                             # Debug mode
+./speak-to-ai-*.AppImage --debug                             # Debug mode
 ```
 
 ---
