@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250919033353-44fa2f647cf2
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20251028185044-c62adfbd1ecd
 	github.com/go-audio/wav v1.1.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
