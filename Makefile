@@ -7,8 +7,8 @@ BUILD_DIR := build
 LIB_DIR := lib
 DIST_DIR := dist
 # Optional: set to a tag or commit hash to pin whisper.cpp version for reproducible builds
-# Example (CI recommended): make WHISPER_CPP_REF=v1.7.6
-WHISPER_CPP_REF ?= v1.7.6
+# Example (CI recommended): make WHISPER_CPP_REF=v1.8.2
+WHISPER_CPP_REF ?= v1.8.2
 
 # CGO environment
 # These variables are necessary for CGO to find the whisper.cpp libraries.
