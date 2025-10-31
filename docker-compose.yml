@@ -1,5 +1,4 @@
 services:
-  # Development environment with GUI support
   dev:
     build:
       context: .
@@ -8,11 +7,11 @@ services:
     volumes:
       - .:/app
       - go-cache:/go/pkg/mod
-      - whisper-libs:/app/lib
       - build-cache:/app/build
     working_dir: /app
     environment:
       - CGO_ENABLED=1
+      - GOFLAGS=-buildvcs=false
       - C_INCLUDE_PATH=/app/lib
       - LIBRARY_PATH=/app/lib
       - CGO_CFLAGS=-I/app/lib
@@ -21,97 +20,9 @@ services:
       - PKG_CONFIG_PATH=/app/lib
     stdin_open: true
     tty: true
-    profiles: ["dev"]
-
-  # Linting service
-  lint:
-    image: golang:1.24-alpine
-    container_name: speak-to-ai-lint
-    volumes:
-      - .:/app:ro
-      - go-cache:/go/pkg/mod
-    working_dir: /app
-    environment:
-      - GOFLAGS=-buildvcs=false
-      - CGO_ENABLED=0
-    profiles: ["lint", "ci"]
-    command: ["sh", "-c", "go mod download && go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0 && golangci-lint run --verbose --timeout=5m && go install golang.org/x/tools/cmd/goimports@latest && goimports -l . | grep -v '^build/' | tee /dev/stderr | (! read) "]
-
-  
-
-  # AppImage builder
-  build-appimage:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.appimage
-    container_name: speak-to-ai-appimage
-    volumes:
-      - .:/app
-      - go-cache:/go/pkg/mod
-      - whisper-libs:/app/lib
-      - build-cache:/app/build
-      - appimage-dist:/app/dist
-    working_dir: /app
-    environment:
-      - CGO_ENABLED=1
-      - C_INCLUDE_PATH=/app/lib
-      - LIBRARY_PATH=/app/lib
-      - CGO_CFLAGS=-I/app/lib
-      - CGO_LDFLAGS=-L/app/lib -lwhisper -lggml-cpu -lggml
-      - LD_LIBRARY_PATH=/app/lib
-      - PKG_CONFIG_PATH=/app/lib
-    profiles: ["build", "appimage"]
-
-  # Flatpak builder
-  build-flatpak:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.flatpak
-    container_name: speak-to-ai-flatpak
-    volumes:
-      - .:/app
-      - go-cache:/go/pkg/mod
-      - whisper-libs:/app/lib
-      - build-cache:/app/build
-    working_dir: /app
-    environment:
-      - CGO_ENABLED=1
-      - C_INCLUDE_PATH=/app/lib
-      - LIBRARY_PATH=/app/lib
-      - CGO_CFLAGS=-I/app/lib
-      - CGO_LDFLAGS=-L/app/lib -lwhisper -lggml-cpu -lggml
-      - LD_LIBRARY_PATH=/app/lib
-      - PKG_CONFIG_PATH=/app/lib
-    privileged: true  # Needed for Flatpak
-    profiles: ["build", "flatpak"]
-
-  # Whisper.cpp builder (shared service)
-  whisper-builder:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    container_name: speak-to-ai-whisper-builder
-    volumes:
-      - whisper-libs:/app/lib
-      - build-cache:/app/build
-      - .:/app
-    working_dir: /app
-    command: ["make", "whisper-libs"]
-    profiles: ["build", "init"]
 
 volumes:
-  # Persistent Go module cache
   go-cache:
     driver: local
-  
-  # Shared whisper.cpp libraries between services
-  whisper-libs:
-    driver: local
-  
-  # Build artifacts cache
   build-cache:
-    driver: local
-
-  # AppImage distribution files
-  appimage-dist:
     driver: local
