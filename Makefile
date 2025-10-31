@@ -1,4 +1,21 @@
-.PHONY: all build build-systray test clean deps whisper-libs appimage flatpak help fmt lint test-integration test-integration-full docker-% docker-build docker-dev docker-lint docker-clean
+# Build targets
+.PHONY: all build build-systray deps whisper-libs internal-whisper-libs clean
+
+# Test targets
+.PHONY: test test-integration test-integration-full
+
+# Code quality
+.PHONY: fmt lint
+
+# Packaging
+.PHONY: appimage appimage-host flatpak
+
+# Docker targets
+.PHONY: docker-build docker-up docker-down docker-stop docker-shell
+.PHONY: docker-ci docker-logs docker-ps docker-clean docker-clean-all
+
+# Utility
+.PHONY: help
 
 # Variables
 GO_VERSION := 1.24.1
@@ -10,18 +27,8 @@ DIST_DIR := dist
 # Example (CI recommended): make WHISPER_CPP_REF=v1.8.2
 WHISPER_CPP_REF ?= v1.8.2
 
-# CGO environment
-# These variables are necessary for CGO to find the whisper.cpp libraries.
-# They tell the Go compiler where to find the C header files (.h) and the compiled C libraries (.so, .a).
-# Because we are building whisper.cpp locally into the `lib` directory, we need to
-# explicitly tell CGO where to look. Without these, `go build` and `go test` will fail
-# because they won't be able to find the required C dependencies.
-export C_INCLUDE_PATH := $(PWD)/$(LIB_DIR)
-export LIBRARY_PATH := $(PWD)/$(LIB_DIR)
-export CGO_CFLAGS := -I$(PWD)/$(LIB_DIR)
-export CGO_LDFLAGS := -L$(PWD)/$(LIB_DIR) -lwhisper -lggml-cpu -lggml
-export LD_LIBRARY_PATH := $(PWD)/$(LIB_DIR):$(LD_LIBRARY_PATH)
-export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
+# Docker helpers
+DOCKER_RUN := docker compose run --rm dev
 
 # ============================================================================
 # Formatting & Lint
@@ -30,12 +37,12 @@ export PKG_CONFIG_PATH := $(PWD)/$(LIB_DIR):$(PKG_CONFIG_PATH)
 # Format source code (full: go fmt + goimports)
 fmt:
 	@echo "=== Running go fmt and goimports in Docker ==="
-	docker compose --profile dev run --rm dev sh -c "go fmt ./... && go install golang.org/x/tools/cmd/goimports@latest && goimports -w ."
+	$(DOCKER_RUN) bash -c 'go fmt ./... && go install golang.org/x/tools/cmd/goimports@latest && goimports -w .'
 
 # Lint source code
-lint:
+lint: deps whisper-libs
 	@echo "=== Running linter in Docker ==="
-	docker compose --profile lint run --rm lint
+	$(DOCKER_RUN) bash -c 'go build -v github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper && golangci-lint run --verbose --timeout=5m && go install golang.org/x/tools/cmd/goimports@latest && goimports -l . | grep -v "^build/" | tee /dev/stderr | (! read)'
 
 # -----------------------------------------------------------------------------
 # Test targets
@@ -44,15 +51,15 @@ lint:
 # Run tests via Docker (reuses dev image with CGO + whisper.cpp)
 test:
 	@echo "=== Running tests via Docker ==="
-	docker compose --profile dev run --rm dev go test -v -cover ./...
+	$(DOCKER_RUN) go test -v -cover ./...
 
 test-integration:
 	@echo "=== Running integration tests (fast mode) via Docker ==="
-	docker compose --profile dev run --rm -e CGO_ENABLED=0 dev go test -tags=integration ./tests/integration/... -short -v
+	docker compose run --rm -e CGO_ENABLED=0 dev go test -tags=integration ./tests/integration/... -short -v
 
 test-integration-full:
 	@echo "=== Running full integration tests via Docker ==="
-	docker compose --profile dev run --rm dev go test -tags=integration ./tests/integration/... -v
+	$(DOCKER_RUN) go test -tags=integration ./tests/integration/... -v
 
 # ============================================================================
 # Build & Dependencies
@@ -63,13 +70,16 @@ all: deps whisper-libs build-systray
 
 # Download Go dependencies
 deps:
-	@echo "=== Downloading Go dependencies ==="
-	go mod download
-	go mod tidy
-	go mod verify
+	@echo "=== Downloading Go dependencies (Docker) ==="
+	$(DOCKER_RUN) bash -c 'go mod download && go mod tidy && go mod verify'
 
-# Build whisper.cpp libraries
-whisper-libs: $(LIB_DIR)/whisper.h
+# Build whisper.cpp libraries (via Docker dev)
+whisper-libs:
+	@echo "=== Building whisper.cpp libraries in Docker (dev) ==="
+	$(DOCKER_RUN) bash -c 'make internal-whisper-libs WHISPER_CPP_REF="$(WHISPER_CPP_REF)"'
+
+# Internal target executed inside the dev container
+internal-whisper-libs: $(LIB_DIR)/whisper.h
 
 $(LIB_DIR)/whisper.h:
 	@echo "=== Building whisper.cpp libraries ==="
@@ -99,53 +109,48 @@ $(LIB_DIR)/whisper.h:
 
 # Build the main binary
 build: deps whisper-libs
-	@echo "=== Building $(BINARY_NAME) ==="
-	go build -v -o $(BINARY_NAME) ./cmd/speak-to-ai
-	@echo "Build completed: $(BINARY_NAME)"
-	@ls -lh $(BINARY_NAME)
+	@echo "=== Building $(BINARY_NAME) (Docker) ==="
+	$(DOCKER_RUN) bash -c 'go build -v -o $(BINARY_NAME) ./cmd/speak-to-ai && ls -lh $(BINARY_NAME)'
 
 # Build with systray support
 build-systray: deps whisper-libs
-	@echo "=== Building $(BINARY_NAME) with systray support ==="
-	go build -tags systray -v -o $(BINARY_NAME) ./cmd/speak-to-ai
-	@echo "Build completed: $(BINARY_NAME)"
-	@ls -lh $(BINARY_NAME)
+	@echo "=== Building $(BINARY_NAME) with systray support (Docker) ==="
+	$(DOCKER_RUN) bash -c 'go build -tags systray -v -o $(BINARY_NAME) ./cmd/speak-to-ai && ls -lh $(BINARY_NAME)'
 
 # ============================================================================
 # Packaging
 # ============================================================================
 
-# Build AppImage
-appimage: build
-	@echo "=== Building AppImage ==="
+# Build AppImage (Docker-based, recommended)
+appimage:
+	@echo "=== Building AppImage via Docker (Ubuntu 22.04) ==="
+	docker build -f docker/Dockerfile.appimage --target artifacts --output type=local,dest=$(DIST_DIR) .
+
+# Build AppImage locally (without Docker, requires linuxdeploy/appimagetool on host)
+appimage-host: build
+	@echo "=== Building AppImage locally (host environment) ==="
+	@echo "⚠️  Warning: This requires linuxdeploy and appimagetool installed on host"
 	bash bash-scripts/build-appimage.sh
 
-# Build Flatpak
-flatpak: build
-	@echo "=== Building Flatpak ==="
-	bash bash-scripts/build-flatpak.sh
+# Build Flatpak (disabled)
+# flatpak: build
+#	@echo "=== Building Flatpak ==="
+#	bash bash-scripts/build-flatpak.sh
 
 # Clean build artifacts
 clean:
 	@echo "=== Cleaning build artifacts ==="
 	rm -f $(BINARY_NAME)
-	rm -rf $(BUILD_DIR)
-	rm -rf $(LIB_DIR)
+	@if [ -d "$(LIB_DIR)" ] && [ -n "$$(find $(LIB_DIR) -type f ! -writable 2>/dev/null)" ]; then \
+		echo "Removing lib/ and build/ with Docker (files owned by root)..."; \
+		docker compose run --rm dev sh -c 'rm -rf $(BUILD_DIR)/* $(LIB_DIR)/* 2>/dev/null || true'; \
+		rm -rf $(BUILD_DIR) $(LIB_DIR) 2>/dev/null || true; \
+	else \
+		rm -rf $(BUILD_DIR) $(LIB_DIR); \
+	fi
 	rm -rf $(DIST_DIR)
-	go clean -cache
+	go clean -cache 2>/dev/null || true
 	@echo "Clean completed"
-
-# ============================================================================
-# Utilities
-# ============================================================================
-
-# Check if required tools are available
-check-tools:
-	@echo "=== Checking required tools ==="
-	@command -v go >/dev/null 2>&1 || { echo "Go is required but not installed"; exit 1; }
-	@command -v cmake >/dev/null 2>&1 || { echo "CMake is required but not installed"; exit 1; }
-	@command -v git >/dev/null 2>&1 || { echo "Git is required but not installed"; exit 1; }
-	@echo "All required tools are available"
 
 # ============================================================================
 # Docker Development Commands
@@ -156,55 +161,30 @@ docker-build:
 	@echo "=== Building all Docker images ==="
 	docker compose build
 
-docker-build-dev:
-	@echo "=== Building development Docker image ==="
-	docker compose build dev
-
-docker-build-lint:
-	@echo "=== Skipping build: using official golangci-lint image ==="
-	@true
 
 # Docker development environment
 docker-up:
 	@echo "=== Starting Docker development services ==="
-	docker compose --profile dev up -d
+	docker compose up -d
 
-docker-dev:
-	@echo "=== Starting Docker development environment ==="
-	docker compose --profile dev up -d dev
-	@echo "=== Entering development container ==="
-	docker compose exec dev bash
-
-docker-dev-stop:
+docker-stop:
 	@echo "=== Stopping Docker development environment ==="
-	docker compose --profile dev down
+	docker compose down
 
 docker-down:
 	@echo "=== Stopping all Docker services ==="
 	docker compose down -v --remove-orphans
 
-# Docker whisper.cpp setup
-docker-whisper:
-	@echo "=== Building whisper.cpp libraries in Docker ==="
-	docker compose --profile init up whisper-builder
-
-# Docker building packages
-docker-appimage:
-	@echo "=== Building AppImage via docker build (multi-stage) ==="
-	docker build -f docker/Dockerfile.appimage --target artifacts --output type=local,dest=$(DIST_DIR)/appimage .
-
-docker-flatpak:
-	@echo "=== Building Flatpak via docker build (multi-stage) ==="
-	docker build -f docker/Dockerfile.flatpak --target artifacts --output type=local,dest=$(DIST_DIR)/flatpak .
+# docker-flatpak:
+# 	@echo "=== Building Flatpak via docker build (multi-stage) ==="
+# 	docker build -f docker/Dockerfile.flatpak --target artifacts --output type=local,dest=$(DIST_DIR)/flatpak .
 
 # Docker CI pipeline
 docker-ci:
 	@echo "=== Running full CI pipeline in Docker ==="
-	docker compose --profile init up whisper-builder
-	docker compose --profile ci run --rm lint
+	$(MAKE) lint
 	$(MAKE) test
-	$(MAKE) docker-appimage
-	$(MAKE) docker-flatpak
+	$(MAKE) appimage
 	@echo "=== CI pipeline completed successfully ==="
 
 # Docker cleanup
@@ -229,7 +209,19 @@ docker-ps:
 
 docker-shell:
 	@echo "=== Opening shell in development container ==="
-	docker compose --profile dev run --rm dev bash
+	docker compose exec dev bash
+
+# ============================================================================
+# Utilities
+# ============================================================================
+
+# Check if required tools are available
+check-tools:
+	@echo "=== Checking required tools ==="
+	@command -v go >/dev/null 2>&1 || { echo "Go is required but not installed"; exit 1; }
+	@command -v cmake >/dev/null 2>&1 || { echo "CMake is required but not installed"; exit 1; }
+	@command -v git >/dev/null 2>&1 || { echo "Git is required but not installed"; exit 1; }
+	@echo "All required tools are available"
 
 # ============================================================================
 # Help
@@ -254,22 +246,17 @@ help:
 	@echo "  test-integration-full - Run full integration tests (with CGO)"
 	@echo ""
 	@echo "Packaging:"
-	@echo "  appimage              - Build AppImage"
-	@echo "  flatpak               - Build Flatpak"
+	@echo "  appimage              - Build AppImage (Docker-based, recommended)"
+	@echo "  appimage-host        - Build AppImage locally (requires tools on host)"
+	# @echo "  flatpak               - Build Flatpak"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-up             - Start development services (docker compose up -d)"
 	@echo "  docker-down           - Stop all services (docker compose down)"
-	@echo "  docker-dev            - Start and enter development environment"
-	@echo "  docker-dev-stop       - Stop development environment"
+	@echo "  docker-stop           - Stop development environment"
 	@echo "  docker-shell          - Open shell in dev container"
 	@echo "  docker-build          - Build all Docker images"
-	@echo "  docker-build-dev      - Build development Docker image"
-	@echo "  docker-build-lint     - Skipping build: using official golangci-lint image"
-	@echo "  docker-whisper        - Build whisper.cpp libraries in Docker"
-	@echo "  docker-appimage       - Build AppImage in Docker"
-	@echo "  docker-flatpak        - Build Flatpak in Docker"
-	@echo "  docker-ci             - Run full CI pipeline"
+	@echo "  docker-ci             - Run full CI pipeline (lint + test + appimage)"
 	@echo "  docker-logs           - Show Docker logs"
 	@echo "  docker-ps             - Show Docker containers"
 	@echo "  docker-clean          - Clean Docker resources"

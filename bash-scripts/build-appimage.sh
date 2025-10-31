@@ -20,7 +20,7 @@ prepare_environment() {
         source bash-scripts/dev-env.sh || true
     fi
     if [ ! -f "lib/whisper.h" ]; then
-        make whisper-libs
+        make internal-whisper-libs
     fi
 }
 

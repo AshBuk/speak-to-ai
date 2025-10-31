@@ -8,11 +8,9 @@ run:
     - build/whisper.cpp
 
 issues:
-  exclude-rules:
-    - path: cmd/speak-to-ai/main\.go
-      text: "error obtaining VCS status"
-      linters:
-        - typecheck
+  exclude:
+    - "error obtaining VCS status"
+    - "Use -buildvcs=false to disable VCS stamping"
 
 linters:
   enable:
