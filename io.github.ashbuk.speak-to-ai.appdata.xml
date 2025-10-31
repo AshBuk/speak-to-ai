@@ -45,31 +45,31 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.1.0" date="2025-10-06">
+    <release version="1.3.1" date="2025-10-31">
       <description>
-        <p>First stable release with full functionality:</p>
+        <p>Dependency updates and DevOps improvements:</p>
         <ul>
-          <li>Voice-to-text functionality with offline Whisper.cpp</li>
-          <li>System tray integration</li>
-          <li>Global hotkey support</li>
-          <li>Multiple output modes (clipboard, typing)</li>
-          <li>AppImage packaging</li>
-          <li>Cross-platform Linux desktop environment compatibility</li>
+          <li>Updated Go dependencies to latest compatible versions (Go 1.24.1)</li>
+          <li>Bump Whisper.cpp to v1.8.2 for improved performance and stability</li>
+          <li>Simplified Docker workflow with Docker-first approach</li>
+          <li>Clear Docker-based make targets for reproducible AppImage builds</li>
         </ul>
       </description>
     </release>
-    <release version="1.2.0" date="2025-10-17">
+    <release version="1.3.0" date="2025-10-29">
       <description>
-        <p>Stability improvements for PulseAudio via ffmpeg (PipeWire compatibility):</p>
+        <p>Dual-mode architecture with CLI support:</p>
         <ul>
-          <li>Reliable recording with ffmpeg PulseAudio input (no empty/trimmed files)</li>
-          <li>Warm-up to avoid clipped start; robust stop flush for short recordings</li>
-          <li>Reduced input buffering for lower latency during concurrent audio use</li>
-          <li>Allows using the app alongside calls (Google Meet/Zoom/Discord)</li>
-          <li>See audio workflow diagram in documentation</li>
+          <li>Single binary supports both daemon mode (system tray) and CLI mode (scripting)</li>
+          <li>CLI commands for tiling window managers (i3, sway, bspwm)</li>
+          <li>IPC communication via Unix socket for low-latency operations</li>
+          <li>JSON output for automation and scripts</li>
+          <li>High-resolution 500x500 tray icon for HiDPI screens</li>
         </ul>
       </description>
     </release>
+    <release version="1.2.0" date="2025-10-17"/>
+    <release version="1.1.0" date="2025-10-06"/>
   </releases>
   <content_rating type="oars-1.1"/>
   <keywords>

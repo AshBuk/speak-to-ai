@@ -3,7 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.3.0] - 2025-10-29
+## [1.3.1] - 2025-10-31
+
+### Dependencies
+- **Go 1.24.1:** Updated Go dependencies to latest compatible versions
+- **Bump Whisper.cpp to v1.8.2:** Improved performance and stability
+
+### DevOps
+- **Simplified Docker workflow:** Docker-first approach with streamlined commands for easy onboarding
+- **Simplified and clearer Docker-based make targets**
+
+---
 
 ### Features
 

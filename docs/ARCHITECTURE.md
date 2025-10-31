@@ -192,6 +192,9 @@ Related constants:
   - `disk_stub.go`: Stub implementation
   - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
   - `async.go`: Goroutine tracking and graceful shutdown coordination
+- **`ipc/`**: Inter-process communication (CLI ↔ daemon via Unix sockets)
+- **`testutils/`**: Testing utilities (mock logger)
+- **`assets/`**: Embedded resources (about.html)
 
 ### **Build & Packaging**
 

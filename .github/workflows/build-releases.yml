@@ -389,7 +389,12 @@ jobs:
             print
           }
         ' CHANGELOG.md > release_notes.md
-        echo "::set-output name=notes::$(cat release_notes.md)"
+
+        {
+          echo "notes<<EOF"
+          cat release_notes.md
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
