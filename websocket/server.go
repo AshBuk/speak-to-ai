@@ -19,6 +19,27 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// WebSocket server configuration constants
+const (
+	// Buffer sizes for WebSocket connections
+	readBufferSize  = 1024 // 1KB
+	writeBufferSize = 1024 // 1KB
+
+	// Message size limits
+	maxMessageSize = 1024 * 1024 // 1MB
+
+	// Timeout configurations
+	readTimeout             = 60 * time.Second // Client read timeout
+	writeTimeout            = 10 * time.Second // Client write timeout
+	pingInterval            = 20 * time.Second // Health check interval
+	serverReadTimeout       = 15 * time.Second // HTTP server read timeout
+	serverWriteTimeout      = 15 * time.Second // HTTP server write timeout
+	serverIdleTimeout       = 60 * time.Second // HTTP server idle timeout
+	shutdownTimeout         = 5 * time.Second  // Graceful shutdown timeout
+	transcriptionTimeout    = 30 * time.Second // Whisper transcription timeout
+	transcriptionCtxTimeout = 30 * time.Second // Context timeout for transcription
+)
+
 // Enables real-time speech-to-text API for external clients
 type WebSocketServer struct {
 	config      *config.Config
@@ -43,22 +64,36 @@ type Message struct {
 	Error      string      `json:"error,omitempty"`
 }
 
+// checkOriginFunc creates a CORS origin validation function
+func checkOriginFunc(cfg *config.Config) func(*http.Request) bool {
+	return func(r *http.Request) bool {
+		// Allow all origins if configured with "*"
+		if cfg.WebServer.CORSOrigins == "*" {
+			return true
+		}
+
+		// Get the origin from the request
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			// No origin header - might be same-origin request
+			return true
+		}
+
+		// Check if origin matches configured CORS origins
+		// For simplicity, exact match. Could be extended to support wildcards
+		return origin == cfg.WebServer.CORSOrigins
+	}
+}
+
 // Initialize server with security and resource constraints
 func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
 		clients: make(map[*websocket.Conn]bool),
 		upgrader: websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-			CheckOrigin: func(r *http.Request) bool {
-				// Check origin if CORS origins is set
-				if config.WebServer.CORSOrigins != "*" {
-					// TODO: Implement proper CORS check
-					return true
-				}
-				return true
-			},
+			ReadBufferSize:  readBufferSize,
+			WriteBufferSize: writeBufferSize,
+			CheckOrigin:     checkOriginFunc(config),
 		},
 		recorder:   recorder,
 		whisper:    whisperEngine,
@@ -96,9 +131,9 @@ func (s *WebSocketServer) Start() error {
 	s.server = &http.Server{
 		Addr:         addr,
 		Handler:      mux,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  serverReadTimeout,
+		WriteTimeout: serverWriteTimeout,
+		IdleTimeout:  serverIdleTimeout,
 	}
 
 	// Start HTTP server in a tracked goroutine
@@ -119,7 +154,7 @@ func (s *WebSocketServer) Stop() {
 		s.logger.Info("Stopping WebSocket server...")
 
 		// Create a context with timeout for shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
 		// Close all client connections
@@ -169,12 +204,12 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	}
 
 	// Configure connection
-	conn.SetReadLimit(1024 * 1024) // 1MB message size limit
-	if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+	conn.SetReadLimit(maxMessageSize)
+	if err := conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
 		s.logger.Debug("SetReadDeadline error: %v", err)
 	}
 	conn.SetPongHandler(func(string) error {
-		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return conn.SetReadDeadline(time.Now().Add(readTimeout))
 	})
 
 	// Register new client
@@ -207,11 +242,11 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 
 // Maintain connection health to prevent proxy timeouts
 func (s *WebSocketServer) pingClient(conn *websocket.Conn) {
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(pingInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second)); err != nil {
+		if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeTimeout)); err != nil {
 			s.logger.Debug("Ping error: %v", err)
 			return
 		}
@@ -245,7 +280,7 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 	}
 
 	// Send message
-	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+	if err := conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
 		s.logger.Error("SetWriteDeadline error: %v", err)
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
