@@ -90,7 +90,7 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 	resultCh := make(chan transcriptionResult, 1)
 
 	// Start transcription in a goroutine with timeout context
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), transcriptionCtxTimeout)
 	defer cancel()
 	go func() {
 		text, err := s.whisper.TranscribeWithContext(ctx, audioFile)
@@ -109,7 +109,7 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 				"text": result.text,
 			}, requestID)
 		}
-	case <-time.After(30 * time.Second):
+	case <-time.After(transcriptionTimeout):
 		s.logger.Error("Timeout transcribing audio")
 		s.sendError(conn, "transcription_timeout", "Timeout transcribing audio", requestID)
 	}
@@ -139,7 +139,7 @@ func (s *WebSocketServer) sendError(conn *websocket.Conn, errorType string, erro
 	}
 
 	// Send message
-	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+	if err := conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
 		s.logger.Error("SetWriteDeadline error: %v", err)
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
