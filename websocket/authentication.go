@@ -4,6 +4,7 @@
 package websocket
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"strings"
 )
@@ -24,8 +25,11 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 		headerToken = headerToken[7:]
 	}
 
-	// Check if either token matches
-	return queryToken == s.config.WebServer.AuthToken || headerToken == s.config.WebServer.AuthToken
+	// Check if either token matches using constant-time comparison to prevent timing attacks
+	queryMatch := subtle.ConstantTimeCompare([]byte(queryToken), []byte(s.config.WebServer.AuthToken)) == 1
+	headerMatch := subtle.ConstantTimeCompare([]byte(headerToken), []byte(s.config.WebServer.AuthToken)) == 1
+
+	return queryMatch || headerMatch
 }
 
 // Confirm token matches configured authentication secret
@@ -38,8 +42,8 @@ func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused //
 	// Trim whitespace
 	token = strings.TrimSpace(token)
 
-	// Compare with configured token
-	return token == s.config.WebServer.AuthToken
+	// Compare with configured token using constant-time comparison
+	return subtle.ConstantTimeCompare([]byte(token), []byte(s.config.WebServer.AuthToken)) == 1
 }
 
 // Extract real client IP considering proxy headers
