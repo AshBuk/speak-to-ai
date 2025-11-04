@@ -37,62 +37,85 @@ func NewFactory(config *config.Config) *Factory {
 	}
 }
 
-// Create an appropriate outputter based on the environment
-func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error) {
-	// Choose a clipboard tool based on the environment
+// selectClipboardTool chooses an appropriate clipboard tool based on environment
+func (f *Factory) selectClipboardTool(env EnvironmentType) string {
 	clipboardTool := f.config.Output.ClipboardTool
-	if clipboardTool == "auto" {
-		switch env {
-		case EnvironmentWayland:
-			clipboardTool = "wl-copy"
-		case EnvironmentX11:
-			clipboardTool = "xsel"
-		default:
-			clipboardTool = "xsel" // Default to xsel
-		}
+	if clipboardTool != "auto" {
+		return clipboardTool
 	}
 
-	// Choose a typing tool based on the environment
+	switch env {
+	case EnvironmentWayland:
+		return "wl-copy"
+	case EnvironmentX11:
+		return "xsel"
+	default:
+		return "xsel"
+	}
+}
+
+// selectTypeTool chooses an appropriate typing tool based on environment
+func (f *Factory) selectTypeTool(env EnvironmentType) string {
 	typeTool := f.config.Output.TypeTool
-	if typeTool == "auto" {
-		switch env {
-		case EnvironmentWayland:
-			// Prefer ydotool on GNOME/Wayland; wtype is ineffective on GNOME
-			if platform.IsGNOMEWithWayland() {
-				if f.isToolAvailable("ydotool") {
-					typeTool = "ydotool"
-				} else if f.isToolAvailable("wtype") {
-					typeTool = "wtype"
-				} else {
-					// Fallback: try xdotool (might work with XWayland)
-					typeTool = "xdotool"
-				}
-			} else {
-				// For non-GNOME Wayland, try wtype first, then ydotool
-				if f.isToolAvailable("wtype") {
-					typeTool = "wtype"
-				} else if f.isToolAvailable("ydotool") {
-					typeTool = "ydotool"
-				} else {
-					// Fallback: try xdotool (might work with XWayland)
-					typeTool = "xdotool"
-				}
-			}
-		case EnvironmentX11:
-			typeTool = "xdotool"
-		default:
-			// Auto-detect the best available tool
-			if f.isToolAvailable("xdotool") {
-				typeTool = "xdotool"
-			} else if f.isToolAvailable("wtype") {
-				typeTool = "wtype"
-			} else if f.isToolAvailable("ydotool") {
-				typeTool = "ydotool"
-			} else {
-				typeTool = "xdotool" // Default fallback
-			}
+	if typeTool != "auto" {
+		return typeTool
+	}
+
+	switch env {
+	case EnvironmentWayland:
+		return f.selectWaylandTypeTool()
+	case EnvironmentX11:
+		return "xdotool"
+	default:
+		return f.selectFallbackTypeTool()
+	}
+}
+
+// selectWaylandTypeTool selects the best typing tool for Wayland
+func (f *Factory) selectWaylandTypeTool() string {
+	if platform.IsGNOMEWithWayland() {
+		return f.selectGNOMEWaylandTypeTool()
+	}
+	return f.selectNonGNOMEWaylandTypeTool()
+}
+
+// selectGNOMEWaylandTypeTool selects typing tool for GNOME/Wayland
+func (f *Factory) selectGNOMEWaylandTypeTool() string {
+	if f.isToolAvailable("ydotool") {
+		return "ydotool"
+	}
+	if f.isToolAvailable("wtype") {
+		return "wtype"
+	}
+	return "xdotool"
+}
+
+// selectNonGNOMEWaylandTypeTool selects typing tool for non-GNOME Wayland
+func (f *Factory) selectNonGNOMEWaylandTypeTool() string {
+	if f.isToolAvailable("wtype") {
+		return "wtype"
+	}
+	if f.isToolAvailable("ydotool") {
+		return "ydotool"
+	}
+	return "xdotool"
+}
+
+// selectFallbackTypeTool auto-detects the best available typing tool
+func (f *Factory) selectFallbackTypeTool() string {
+	tools := []string{"xdotool", "wtype", "ydotool"}
+	for _, tool := range tools {
+		if f.isToolAvailable(tool) {
+			return tool
 		}
 	}
+	return "xdotool"
+}
+
+// Create an appropriate outputter based on the environment
+func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error) {
+	clipboardTool := f.selectClipboardTool(env)
+	typeTool := f.selectTypeTool(env)
 
 	// Security: Validate selected tool commands against the allowlist
 	if clipboardTool != "" && !config.IsCommandAllowed(f.config, clipboardTool) {
