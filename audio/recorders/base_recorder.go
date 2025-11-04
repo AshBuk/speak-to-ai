@@ -285,98 +285,111 @@ func (b *BaseRecorder) StopProcess() error {
 		return fmt.Errorf("recording not started")
 	}
 
-	// Attempt to terminate the process gracefully, escalating to SIGKILL if necessary
+	b.attemptGracefulShutdown()
+	b.ensureProcessReaped()
+	b.cleanup()
+
+	if !b.useBuffer {
+		return b.validateAudioFile()
+	}
+	return nil
+}
+
+func (b *BaseRecorder) attemptGracefulShutdown() {
 	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
 			b.logger.Warning("Retry %d to stop recording process", i)
 		}
 
-		// Send SIGINT first for graceful shutdown (works for ffmpeg with -nostdin)
-		b.logger.Debug("Sending SIGINT to process PID=%d", b.cmd.Process.Pid)
-		err := b.cmd.Process.Signal(syscall.SIGINT)
-		if err != nil {
-			b.logger.Warning("Failed to send SIGINT: %v", err)
-		} else {
-			b.logger.Debug("SIGINT sent successfully")
+		if b.sendSIGINTAndWait() {
+			return
 		}
 
-		// Wait for the process to exit with a timeout
-		done := make(chan error, 1)
-		waitDone := false
-
-		go func() {
-			done <- b.waitForProcess()
-		}()
-
-		select {
-		case err := <-done:
-			waitDone = true
-			// Log exit status
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				b.logger.Debug("Process exited with code: %d", exitErr.ExitCode())
-			} else if err != nil && err.Error() != "signal: killed" {
-				b.logger.Warning("Process exited with error: %v", err)
-			} else {
-				b.logger.Debug("Process exited successfully")
-			}
-		case <-time.After(2000 * time.Millisecond):
-			// Timed out
-			b.logger.Warning("Process did not exit within timeout")
-		}
-
-		if waitDone {
-			break
-		}
-
-		// Escalate to SIGKILL
-		if killErr := b.cmd.Process.Signal(syscall.SIGKILL); killErr != nil {
-			b.logger.Warning("Failed to send SIGKILL: %v", killErr)
-		}
+		b.escalateToSIGKILL()
 		time.Sleep(100 * time.Millisecond)
 	}
+}
 
-	// Final check to ensure the process is reaped
-	if b.cmd != nil && b.cmd.Process != nil {
-		finalDone := make(chan error, 1)
-		go func() { finalDone <- b.waitForProcess() }()
-		select {
-		case <-finalDone:
-		case <-time.After(300 * time.Millisecond):
-			_ = b.cmd.Process.Signal(syscall.SIGKILL)
-			select {
-			case <-finalDone:
-			case <-time.After(200 * time.Millisecond):
-			}
-		}
+func (b *BaseRecorder) sendSIGINTAndWait() bool {
+	b.logger.Debug("Sending SIGINT to process PID=%d", b.cmd.Process.Pid)
+	if err := b.cmd.Process.Signal(syscall.SIGINT); err != nil {
+		b.logger.Warning("Failed to send SIGINT: %v", err)
+	} else {
+		b.logger.Debug("SIGINT sent successfully")
 	}
 
-	// Release the context to avoid leaks now that process has exited
+	done := make(chan error, 1)
+	go func() { done <- b.waitForProcess() }()
+
+	select {
+	case err := <-done:
+		b.logProcessExit(err)
+		return true
+	case <-time.After(2000 * time.Millisecond):
+		b.logger.Warning("Process did not exit within timeout")
+		return false
+	}
+}
+
+func (b *BaseRecorder) logProcessExit(err error) {
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		b.logger.Debug("Process exited with code: %d", exitErr.ExitCode())
+	} else if err != nil && err.Error() != "signal: killed" {
+		b.logger.Warning("Process exited with error: %v", err)
+	} else {
+		b.logger.Debug("Process exited successfully")
+	}
+}
+
+func (b *BaseRecorder) escalateToSIGKILL() {
+	if err := b.cmd.Process.Signal(syscall.SIGKILL); err != nil {
+		b.logger.Warning("Failed to send SIGKILL: %v", err)
+	}
+}
+
+func (b *BaseRecorder) ensureProcessReaped() {
+	if b.cmd == nil || b.cmd.Process == nil {
+		return
+	}
+
+	finalDone := make(chan error, 1)
+	go func() { finalDone <- b.waitForProcess() }()
+
+	select {
+	case <-finalDone:
+		return
+	case <-time.After(300 * time.Millisecond):
+		_ = b.cmd.Process.Signal(syscall.SIGKILL)
+		select {
+		case <-finalDone:
+		case <-time.After(200 * time.Millisecond):
+		}
+	}
+}
+
+func (b *BaseRecorder) cleanup() {
 	if b.cancel != nil {
 		b.cancel()
 	}
 
-	// Log any stderr output for diagnostics
+	b.logStderr()
+
+	b.cmd = nil
+	b.cancel = nil
+}
+
+func (b *BaseRecorder) logStderr() {
 	cmdName := "recorder"
 	if b.cmd != nil && b.cmd.Path != "" {
 		cmdName = b.cmd.Path
 	}
+
 	if b.stderrBuf.Len() > 0 {
 		b.logger.Debug("%s stderr (len=%d): %s", cmdName, b.stderrBuf.Len(), b.stderrBuf.String())
 	} else {
 		b.logger.Debug("%s stderr: (empty)", cmdName)
 	}
-
-	// Clean up the process state
-	b.cmd = nil
-	b.cancel = nil
-
-	// If recording to a file, verify it was created and is not empty
-	if !b.useBuffer {
-		return b.validateAudioFile()
-	}
-
-	return nil
 }
 
 // Execute a recording command with context, timeout, and output handling.
