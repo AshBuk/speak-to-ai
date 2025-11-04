@@ -326,10 +326,112 @@ func (p *EvdevKeyboardProvider) Stop() {
 	}
 }
 
+// captureSession holds state for a single capture operation
+type captureSession struct {
+	devices       []*evdev.InputDevice
+	modState      map[string]bool
+	modStateMutex sync.Mutex
+	resultCh      chan string
+	stopCh        chan struct{}
+	wg            sync.WaitGroup
+}
+
+// processKeyEvent processes a single key event during capture
+func (cs *captureSession) processKeyEvent(ev *evdev.InputEvent) (shouldStop bool, result string) {
+	if ev.Type != evdev.EV_KEY {
+		return false, ""
+	}
+
+	keyCode := int(ev.Code)
+	keyName := utils.GetKeyName(keyCode)
+	if keyName == "" || strings.HasPrefix(keyName, "BTN_") {
+		return false, ""
+	}
+
+	// Track modifier state
+	if utils.IsModifierKey(keyName) {
+		cs.modStateMutex.Lock()
+		cs.modState[strings.ToLower(keyName)] = (ev.Value == 1)
+		cs.modStateMutex.Unlock()
+		return false, ""
+	}
+
+	// Only process key-down events
+	if ev.Value != 1 {
+		return false, ""
+	}
+
+	// Check for cancellation
+	cs.modStateMutex.Lock()
+	isCancelled := utils.CheckCancelCondition(keyName, cs.modState)
+	cs.modStateMutex.Unlock()
+
+	if isCancelled {
+		return true, ""
+	}
+
+	// Build hotkey string
+	cs.modStateMutex.Lock()
+	mods := utils.BuildModifierState(cs.modState)
+	cs.modStateMutex.Unlock()
+
+	combo := utils.BuildHotkeyString(mods, keyName)
+	if err := utils.ValidateHotkey(combo); err != nil {
+		return false, ""
+	}
+
+	return true, combo
+}
+
+// listenDevice listens for events on a single device during capture
+func (cs *captureSession) listenDevice(idx int) {
+	defer cs.wg.Done()
+	for {
+		select {
+		case <-cs.stopCh:
+			return
+		default:
+		}
+
+		ev, err := cs.devices[idx].ReadOne()
+		if err != nil {
+			return
+		}
+
+		shouldStop, result := cs.processKeyEvent(ev)
+		if !shouldStop {
+			continue
+		}
+
+		select {
+		case cs.resultCh <- result:
+		default:
+		}
+		return
+	}
+}
+
+// cleanup closes devices and waits for goroutines to finish
+func (cs *captureSession) cleanup() {
+	for _, d := range cs.devices {
+		_ = d.Close()
+	}
+
+	captureDone := make(chan struct{})
+	go func() {
+		cs.wg.Wait()
+		close(captureDone)
+	}()
+
+	select {
+	case <-captureDone:
+	case <-time.After(500 * time.Millisecond):
+	}
+}
+
 // Start a short-lived capture session to get a single hotkey combination
 // Note: This creates a fresh isolated session, not tied to the regular provider lifecycle
 func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
-	// Try to open devices - this will fail if another instance holds exclusive access
 	devices, err := p.findKeyboardDevices()
 	if err != nil {
 		p.logger.Error("CaptureOnce: Failed to find keyboard devices: %v", err)
@@ -340,115 +442,33 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		return "", fmt.Errorf("no keyboard devices found")
 	}
 
-	// Use a local modifier state for this capture session with mutex protection
-	var modStateMutex sync.Mutex
-	modState := map[string]bool{}
-	resultCh := make(chan string, 1)
-	stopCh := make(chan struct{})
-	var captureWg sync.WaitGroup
-
-	for i := range devices {
-		idx := i
-		captureWg.Add(1)
-		go func() {
-			defer captureWg.Done()
-			for {
-				select {
-				case <-stopCh:
-					return
-				default:
-				}
-				ev, err := devices[idx].ReadOne()
-				if err != nil {
-					return
-				}
-				if ev.Type != evdev.EV_KEY {
-					continue
-				}
-
-				keyCode := int(ev.Code)
-				keyName := utils.GetKeyName(keyCode)
-				if keyName == "" {
-					continue
-				}
-
-				// Ignore mouse buttons (BTN_LEFT, BTN_RIGHT, etc.)
-				if strings.HasPrefix(keyName, "BTN_") {
-					continue
-				}
-
-				// Track modifier state with mutex protection
-				if utils.IsModifierKey(keyName) {
-					modStateMutex.Lock()
-					modState[strings.ToLower(keyName)] = (ev.Value == 1)
-					modStateMutex.Unlock()
-					continue
-				}
-
-				// Only consider key-down for the main hotkey
-				if ev.Value != 1 {
-					continue
-				}
-
-				// Cancel if Esc is pressed without modifiers
-				modStateMutex.Lock()
-				isCancelled := utils.CheckCancelCondition(keyName, modState)
-				modStateMutex.Unlock()
-
-				if isCancelled {
-					select {
-					case resultCh <- "":
-					default:
-					}
-					return
-				}
-
-				modStateMutex.Lock()
-				mods := utils.BuildModifierState(modState)
-				modStateMutex.Unlock()
-
-				combo := utils.BuildHotkeyString(mods, keyName)
-				if err := utils.ValidateHotkey(combo); err != nil {
-					continue
-				}
-
-				select {
-				case resultCh <- combo:
-				default:
-				}
-				return
-			}
-		}()
+	session := &captureSession{
+		devices:  devices,
+		modState: make(map[string]bool),
+		resultCh: make(chan string, 1),
+		stopCh:   make(chan struct{}),
 	}
 
+	// Start listeners for all devices
+	for i := range devices {
+		session.wg.Add(1)
+		go session.listenDevice(i)
+	}
+
+	// Wait for result or timeout
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
 
 	var result string
 	select {
-	case result = <-resultCh:
-		close(stopCh)
+	case result = <-session.resultCh:
+		close(session.stopCh)
 	case <-timer.C:
-		close(stopCh)
+		close(session.stopCh)
 		result = ""
 	}
 
-	// Close devices to unblock any pending ReadOne() calls
-	for _, d := range devices {
-		_ = d.Close()
-	}
-
-	// Wait for all capture goroutines to finish with timeout
-	captureDone := make(chan struct{})
-	go func() {
-		captureWg.Wait()
-		close(captureDone)
-	}()
-
-	select {
-	case <-captureDone:
-	case <-time.After(500 * time.Millisecond):
-	}
+	session.cleanup()
 
 	if strings.TrimSpace(result) == "" {
 		return "", fmt.Errorf("capture cancelled")
