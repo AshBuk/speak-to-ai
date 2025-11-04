@@ -81,68 +81,10 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 
 			args := recorder.buildBaseCommandArgs()
 
-			// Verify device argument
-			found := false
-			for i, arg := range args {
-				if arg == "-i" && i+1 < len(args) && args[i+1] == tt.expectDevice {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Errorf("Expected device %s not found in args: %v", tt.expectDevice, args)
-			}
-
-			// Verify sample rate argument
-			found = false
-			for i, arg := range args {
-				if arg == "-ar" && i+1 < len(args) && args[i+1] == tt.expectRate {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Errorf("Expected sample rate %s not found in args: %v", tt.expectRate, args)
-			}
-
-			// Check for correct output format and destination
-			hasWavMode := false
-			hasStdout := false
-			for i, arg := range args {
-				if arg == "-f" && i+1 < len(args) {
-					if args[i+1] == "wav" {
-						hasWavMode = true
-					}
-				}
-				if arg == "-" {
-					hasStdout = true
-				}
-			}
-
-			if tt.useBuffer {
-				if !hasWavMode || !hasStdout {
-					t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
-				}
-			} else { // File output mode
-				if hasStdout {
-					t.Error("Did not expect stdout mode in file output mode")
-				}
-				if !hasWavMode {
-					t.Error("Expected wav file output mode (-f wav)")
-				}
-			}
-
-			// Verify quality setting is always present
-			found = false
-			for i, arg := range args {
-				if arg == "-q:a" && i+1 < len(args) && args[i+1] == "0" {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Error("Expected quality setting -q:a 0 in command args")
-			}
+			verifyArgFlag(t, args, "-i", tt.expectDevice, "device")
+			verifyArgFlag(t, args, "-ar", tt.expectRate, "sample rate")
+			verifyArgFlag(t, args, "-q:a", "0", "quality setting")
+			verifyOutputMode(t, args, tt.useBuffer)
 		})
 	}
 }
@@ -350,5 +292,42 @@ func TestFFmpegRecorder_BufferMode(t *testing.T) {
 	if !recorder.useBuffer {
 		t.Error("Expected buffer mode to be enabled for short recordings")
 	}
+}
 
+// verifyArgFlag checks if a command-line flag and its value are present in args
+func verifyArgFlag(t *testing.T, args []string, flag, expectedValue, description string) {
+	for i, arg := range args {
+		if arg == flag && i+1 < len(args) && args[i+1] == expectedValue {
+			return
+		}
+	}
+	t.Errorf("Expected %s %s not found in args: %v", description, expectedValue, args)
+}
+
+// verifyOutputMode validates FFmpeg output configuration based on buffer/file mode
+func verifyOutputMode(t *testing.T, args []string, useBuffer bool) {
+	hasWavMode := false
+	hasStdout := false
+
+	for i, arg := range args {
+		if arg == "-f" && i+1 < len(args) && args[i+1] == "wav" {
+			hasWavMode = true
+		}
+		if arg == "-" {
+			hasStdout = true
+		}
+	}
+
+	if useBuffer {
+		if !hasWavMode || !hasStdout {
+			t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
+		}
+	} else {
+		if hasStdout {
+			t.Error("Did not expect stdout mode in file output mode")
+		}
+		if !hasWavMode {
+			t.Error("Expected wav file output mode (-f wav)")
+		}
+	}
 }
