@@ -11,157 +11,160 @@ import (
 	"github.com/AshBuk/speak-to-ai/tests/mocks"
 )
 
-func TestHotkeyService(t *testing.T) {
+func TestHotkeyService_NewHotkeyService(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
+	mockManager := &mocks.MockHotkeyManager{}
 
-	t.Run("NewHotkeyService", func(t *testing.T) {
-		mockManager := &mocks.MockHotkeyManager{}
-		service := NewHotkeyService(mockLogger, mockManager)
+	service := NewHotkeyService(mockLogger, mockManager)
 
-		if service == nil {
-			t.Fatal("NewHotkeyService returned nil")
+	if service == nil {
+		t.Fatal("NewHotkeyService returned nil")
+	}
+	if service.logger != mockLogger {
+		t.Error("Logger not set correctly")
+	}
+	if service.hotkeyManager != mockManager {
+		t.Error("Hotkey manager not set correctly")
+	}
+}
+
+func TestHotkeyService_RegisterHotkeys_Success(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	mockManager := &mocks.MockHotkeyManager{}
+
+	service := NewHotkeyService(mockLogger, mockManager)
+
+	if err := service.RegisterHotkeys(); err != nil {
+		t.Errorf("RegisterHotkeys failed: %v", err)
+	}
+	if !mockManager.WasStartCalled() {
+		t.Error("Hotkey manager Start method was not called")
+	}
+}
+
+func TestHotkeyService_RegisterHotkeys_Error(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	expectedError := errors.New("hotkey registration failed")
+	mockManager := &mocks.MockHotkeyManager{}
+	mockManager.SetStartError(expectedError)
+
+	service := NewHotkeyService(mockLogger, mockManager)
+
+	if err := service.RegisterHotkeys(); err != expectedError {
+		t.Errorf("Expected error %v, got %v", expectedError, err)
+	}
+}
+
+func TestHotkeyService_RegisterHotkeys_NoManager(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	service := NewHotkeyService(mockLogger, nil)
+
+	if err := service.RegisterHotkeys(); err == nil {
+		t.Error("RegisterHotkeys should fail when hotkey manager is nil")
+	}
+}
+
+func TestHotkeyService_UnregisterHotkeys_Success(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	mockManager := &mocks.MockHotkeyManager{}
+
+	service := NewHotkeyService(mockLogger, mockManager)
+
+	if err := service.UnregisterHotkeys(); err != nil {
+		t.Errorf("UnregisterHotkeys failed: %v", err)
+	}
+	if !mockManager.WasStopCalled() {
+		t.Error("Hotkey manager Stop method was not called")
+	}
+}
+
+func TestHotkeyService_UnregisterHotkeys_NoManager(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	service := NewHotkeyService(mockLogger, nil)
+
+	if err := service.UnregisterHotkeys(); err != nil {
+		t.Errorf("UnregisterHotkeys should not fail when hotkey manager is nil: %v", err)
+	}
+}
+
+func TestHotkeyService_SetupHotkeyCallbacks_Success(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	mockManager := &mocks.MockHotkeyManager{}
+	service := NewHotkeyService(mockLogger, mockManager)
+
+	// Create test callback functions
+	var callbacksCalled []string
+	startRecording := func() error { callbacksCalled = append(callbacksCalled, "startRecording"); return nil }
+	stopRecording := func() error { callbacksCalled = append(callbacksCalled, "stopRecording"); return nil }
+	showConfig := func() error { callbacksCalled = append(callbacksCalled, "showConfig"); return nil }
+	reloadConfig := func() error { callbacksCalled = append(callbacksCalled, "reloadConfig"); return nil }
+
+	err := service.SetupHotkeyCallbacks(
+		startRecording, stopRecording,
+		showConfig, reloadConfig,
+	)
+	if err != nil {
+		t.Errorf("SetupHotkeyCallbacks failed: %v", err)
+	}
+
+	// Verify RegisterCallbacks was called
+	if !mockManager.WereCallbacksRegistered() {
+		t.Error("RegisterCallbacks was not called")
+	}
+
+	// Verify all hotkey actions were registered
+	expectedActions := []string{"show_config", "reset_to_defaults"}
+	for _, action := range expectedActions {
+		if !mockManager.WasHotkeyActionRegistered(action) {
+			t.Errorf("RegisterHotkeyAction was not called for action: %s", action)
 		}
-		if service.logger != mockLogger {
-			t.Error("Logger not set correctly")
-		}
-		if service.hotkeyManager != mockManager {
-			t.Error("Hotkey manager not set correctly")
-		}
-	})
+	}
 
-	t.Run("RegisterHotkeys_Success", func(t *testing.T) {
-		mockManager := &mocks.MockHotkeyManager{}
-		service := NewHotkeyService(mockLogger, mockManager)
+	// Test that callbacks work
+	mockManager.TriggerCallback("startRecording")
+	mockManager.TriggerCallback("showConfig")
 
-		err := service.RegisterHotkeys()
-		if err != nil {
-			t.Errorf("RegisterHotkeys failed: %v", err)
-		}
-		if !mockManager.WasStartCalled() {
-			t.Error("Hotkey manager Start method was not called")
-		}
-	})
+	if len(callbacksCalled) != 2 {
+		t.Errorf("Expected 2 callbacks to be called, got %d", len(callbacksCalled))
+	}
+	if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "showConfig" {
+		t.Errorf("Unexpected callbacks called: %v", callbacksCalled)
+	}
+}
 
-	t.Run("RegisterHotkeys_Error", func(t *testing.T) {
-		expectedError := errors.New("hotkey registration failed")
-		mockManager := &mocks.MockHotkeyManager{}
-		mockManager.SetStartError(expectedError)
-		service := NewHotkeyService(mockLogger, mockManager)
+func TestHotkeyService_SetupHotkeyCallbacks_NoManager(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	service := NewHotkeyService(mockLogger, nil)
 
-		err := service.RegisterHotkeys()
-		if err != expectedError {
-			t.Errorf("Expected error %v, got %v", expectedError, err)
-		}
-	})
+	err := service.SetupHotkeyCallbacks(
+		func() error { return nil },
+		func() error { return nil },
+		func() error { return nil },
+		func() error { return nil },
+	)
+	if err == nil {
+		t.Error("SetupHotkeyCallbacks should fail when hotkey manager is nil")
+	}
+}
 
-	t.Run("RegisterHotkeys_NoManager", func(t *testing.T) {
-		service := NewHotkeyService(mockLogger, nil)
+func TestHotkeyService_Shutdown_Success(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	mockManager := &mocks.MockHotkeyManager{}
+	service := NewHotkeyService(mockLogger, mockManager)
 
-		err := service.RegisterHotkeys()
-		if err == nil {
-			t.Error("RegisterHotkeys should fail when hotkey manager is nil")
-		}
-	})
+	if err := service.Shutdown(); err != nil {
+		t.Errorf("Shutdown failed: %v", err)
+	}
+	if !mockManager.WasStopCalled() {
+		t.Error("Hotkey manager Stop method was not called during shutdown")
+	}
+}
 
-	t.Run("UnregisterHotkeys_Success", func(t *testing.T) {
-		mockManager := &mocks.MockHotkeyManager{}
-		service := NewHotkeyService(mockLogger, mockManager)
+func TestHotkeyService_Shutdown_NoManager(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	service := NewHotkeyService(mockLogger, nil)
 
-		err := service.UnregisterHotkeys()
-		if err != nil {
-			t.Errorf("UnregisterHotkeys failed: %v", err)
-		}
-		if !mockManager.WasStopCalled() {
-			t.Error("Hotkey manager Stop method was not called")
-		}
-	})
-
-	t.Run("UnregisterHotkeys_NoManager", func(t *testing.T) {
-		service := NewHotkeyService(mockLogger, nil)
-
-		err := service.UnregisterHotkeys()
-		if err != nil {
-			t.Errorf("UnregisterHotkeys should not fail when hotkey manager is nil: %v", err)
-		}
-	})
-
-	t.Run("SetupHotkeyCallbacks_Success", func(t *testing.T) {
-		mockManager := &mocks.MockHotkeyManager{}
-		service := NewHotkeyService(mockLogger, mockManager)
-
-		// Create test callback functions
-		var callbacksCalled []string
-		startRecording := func() error { callbacksCalled = append(callbacksCalled, "startRecording"); return nil }
-		stopRecording := func() error { callbacksCalled = append(callbacksCalled, "stopRecording"); return nil }
-		showConfig := func() error { callbacksCalled = append(callbacksCalled, "showConfig"); return nil }
-		reloadConfig := func() error { callbacksCalled = append(callbacksCalled, "reloadConfig"); return nil }
-
-		err := service.SetupHotkeyCallbacks(
-			startRecording, stopRecording,
-			showConfig, reloadConfig,
-		)
-		if err != nil {
-			t.Errorf("SetupHotkeyCallbacks failed: %v", err)
-		}
-
-		// Verify RegisterCallbacks was called
-		if !mockManager.WereCallbacksRegistered() {
-			t.Error("RegisterCallbacks was not called")
-		}
-
-		// Verify all hotkey actions were registered
-		expectedActions := []string{"show_config", "reset_to_defaults"}
-		for _, action := range expectedActions {
-			if !mockManager.WasHotkeyActionRegistered(action) {
-				t.Errorf("RegisterHotkeyAction was not called for action: %s", action)
-			}
-		}
-
-		// Test that callbacks work
-		mockManager.TriggerCallback("startRecording")
-		mockManager.TriggerCallback("showConfig")
-
-		if len(callbacksCalled) != 2 {
-			t.Errorf("Expected 2 callbacks to be called, got %d", len(callbacksCalled))
-		}
-		if callbacksCalled[0] != "startRecording" || callbacksCalled[1] != "showConfig" {
-			t.Errorf("Unexpected callbacks called: %v", callbacksCalled)
-		}
-	})
-
-	t.Run("SetupHotkeyCallbacks_NoManager", func(t *testing.T) {
-		service := NewHotkeyService(mockLogger, nil)
-
-		err := service.SetupHotkeyCallbacks(
-			func() error { return nil },
-			func() error { return nil },
-			func() error { return nil },
-			func() error { return nil },
-		)
-		if err == nil {
-			t.Error("SetupHotkeyCallbacks should fail when hotkey manager is nil")
-		}
-	})
-
-	t.Run("Shutdown_Success", func(t *testing.T) {
-		mockManager := &mocks.MockHotkeyManager{}
-		service := NewHotkeyService(mockLogger, mockManager)
-
-		err := service.Shutdown()
-		if err != nil {
-			t.Errorf("Shutdown failed: %v", err)
-		}
-		if !mockManager.WasStopCalled() {
-			t.Error("Hotkey manager Stop method was not called during shutdown")
-		}
-	})
-
-	t.Run("Shutdown_NoManager", func(t *testing.T) {
-		service := NewHotkeyService(mockLogger, nil)
-
-		err := service.Shutdown()
-		if err != nil {
-			t.Errorf("Shutdown should not fail when hotkey manager is nil: %v", err)
-		}
-	})
+	if err := service.Shutdown(); err != nil {
+		t.Errorf("Shutdown should not fail when hotkey manager is nil: %v", err)
+	}
 }
