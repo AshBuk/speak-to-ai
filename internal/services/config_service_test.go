@@ -13,225 +13,178 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/testutils"
 )
 
-func TestConfigService(t *testing.T) {
-	// Create mock logger
-	mockLogger := testutils.NewMockLogger()
-
-	// Create test config
-	testConfig := &models.Config{}
-	testConfig.General.Language = "en"
-	testConfig.General.WhisperModel = "small-q5_1"
+func createTestConfig() *models.Config {
+	cfg := &models.Config{}
+	cfg.General.Language = "en"
+	cfg.General.WhisperModel = "small-q5_1"
 	// TODO: Next feature - VAD implementation
-	// testConfig.Audio.VADSensitivity = "medium"
-	// testConfig.Audio.EnableVAD = false
-	testConfig.Notifications.EnableWorkflowNotifications = true
+	// cfg.Audio.VADSensitivity = "medium"
+	// cfg.Audio.EnableVAD = false
+	cfg.Notifications.EnableWorkflowNotifications = true
+	return cfg
+}
 
-	t.Run("NewConfigService", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "/test/config.yaml")
+func TestConfigService_NewConfigService(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-		if service == nil {
-			t.Fatal("NewConfigService returned nil")
-		}
-		if service.logger != mockLogger {
-			t.Error("Logger not set correctly")
-		}
-		if service.config != testConfig {
-			t.Error("Config not set correctly")
-		}
-		if service.configFile != "/test/config.yaml" {
-			t.Error("Config file path not set correctly")
-		}
-	})
+	service := NewConfigService(mockLogger, testConfig, "/test/config.yaml")
 
-	t.Run("GetConfig", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "/test/config.yaml")
+	if service == nil {
+		t.Fatal("NewConfigService returned nil")
+	}
+	if service.logger != mockLogger {
+		t.Error("Logger not set correctly")
+	}
+	if service.config != testConfig {
+		t.Error("Config not set correctly")
+	}
+	if service.configFile != "/test/config.yaml" {
+		t.Error("Config file path not set correctly")
+	}
+}
 
-		result := service.GetConfig()
-		if result != testConfig {
-			t.Error("GetConfig did not return the correct config")
-		}
-	})
+func TestConfigService_GetConfig(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-	// 	t.Run("UpdateVADSensitivity", func(t *testing.T) {
-	// 		// Create temporary config file
-	// 		tempDir := t.TempDir()
-	// 		configPath := filepath.Join(tempDir, "test_config.yaml")
-	//
-	// 		// Create initial config file
-	// 		err := config.SaveConfig(configPath, testConfig)
-	// 		if err != nil {
-	// 			t.Fatalf("Failed to create test config file: %v", err)
-	// 		}
-	//
-	// 		service := NewConfigService(mockLogger, testConfig, configPath)
-	//
-	// 		// Test valid sensitivity values
-	// 		testCases := []string{"low", "medium", "high"}
-	// 		for _, sensitivity := range testCases {
-	// 			err := service.UpdateVADSensitivity(sensitivity)
-	// 			if err != nil {
-	// 				t.Errorf("UpdateVADSensitivity(%s) failed: %v", sensitivity, err)
-	// 			}
-	// 			if service.config.Audio.VADSensitivity != sensitivity {
-	// 				t.Errorf("VAD sensitivity not updated to %s", sensitivity)
-	// 			}
-	// 		}
-	//
-	// 		// Test invalid sensitivity
-	// 		err = service.UpdateVADSensitivity("invalid")
-	// 		if err == nil {
-	// 			t.Error("UpdateVADSensitivity should fail with invalid sensitivity")
-	// 		}
-	// 	})
+	service := NewConfigService(mockLogger, testConfig, "/test/config.yaml")
 
-	t.Run("UpdateLanguage", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
+	result := service.GetConfig()
+	if result != testConfig {
+		t.Error("GetConfig did not return the correct config")
+	}
+}
 
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
+func TestConfigService_UpdateLanguage(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-		service := NewConfigService(mockLogger, testConfig, configPath)
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "test_config.yaml")
 
-		err = service.UpdateLanguage("ru")
-		if err != nil {
-			t.Errorf("UpdateLanguage failed: %v", err)
-		}
-		if service.config.General.Language != "ru" {
-			t.Error("Language not updated correctly")
-		}
+	if err := config.SaveConfig(configPath, testConfig); err != nil {
+		t.Fatalf("Failed to create test config file: %v", err)
+	}
 
-		// Test same language (should not error)
-		err = service.UpdateLanguage("ru")
-		if err != nil {
-			t.Errorf("UpdateLanguage with same language should not error: %v", err)
-		}
-	})
+	service := NewConfigService(mockLogger, testConfig, configPath)
 
-	t.Run("ToggleWorkflowNotifications", func(t *testing.T) {
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "test_config.yaml")
+	if err := service.UpdateLanguage("ru"); err != nil {
+		t.Errorf("UpdateLanguage failed: %v", err)
+	}
+	if service.config.General.Language != "ru" {
+		t.Error("Language not updated correctly")
+	}
 
-		err := config.SaveConfig(configPath, testConfig)
-		if err != nil {
-			t.Fatalf("Failed to create test config file: %v", err)
-		}
+	// Test same language (should not error)
+	if err := service.UpdateLanguage("ru"); err != nil {
+		t.Errorf("UpdateLanguage with same language should not error: %v", err)
+	}
+}
 
-		service := NewConfigService(mockLogger, testConfig, configPath)
+func TestConfigService_ToggleWorkflowNotifications(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-		// Initial state should be true
-		if !service.config.Notifications.EnableWorkflowNotifications {
-			t.Error("Initial workflow notifications state should be true")
-		}
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "test_config.yaml")
 
-		// Toggle to false
-		err = service.ToggleWorkflowNotifications()
-		if err != nil {
-			t.Errorf("ToggleWorkflowNotifications failed: %v", err)
-		}
-		if service.config.Notifications.EnableWorkflowNotifications {
-			t.Error("Workflow notifications should be toggled to false")
-		}
+	if err := config.SaveConfig(configPath, testConfig); err != nil {
+		t.Fatalf("Failed to create test config file: %v", err)
+	}
 
-		// Toggle back to true
-		err = service.ToggleWorkflowNotifications()
-		if err != nil {
-			t.Errorf("ToggleWorkflowNotifications failed: %v", err)
-		}
-		if !service.config.Notifications.EnableWorkflowNotifications {
-			t.Error("Workflow notifications should be toggled to true")
-		}
-	})
+	service := NewConfigService(mockLogger, testConfig, configPath)
 
-	// 	t.Run("ToggleVAD", func(t *testing.T) {
-	// 		tempDir := t.TempDir()
-	// 		configPath := filepath.Join(tempDir, "test_config.yaml")
-	//
-	// 		err := config.SaveConfig(configPath, testConfig)
-	// 		if err != nil {
-	// 			t.Fatalf("Failed to create test config file: %v", err)
-	// 		}
-	//
-	// 		service := NewConfigService(mockLogger, testConfig, configPath)
-	//
-	// 		// Initial state should be false
-	// 		if service.config.Audio.EnableVAD {
-	// 			t.Error("Initial VAD state should be false")
-	// 		}
-	//
-	// 		// Toggle to true
-	// 		err = service.ToggleVAD()
-	// 		if err != nil {
-	// 			t.Errorf("ToggleVAD failed: %v", err)
-	// 		}
-	// 		if !service.config.Audio.EnableVAD {
-	// 			t.Error("VAD should be toggled to true")
-	// 		}
-	// 	})
+	// Initial state should be true
+	if !service.config.Notifications.EnableWorkflowNotifications {
+		t.Error("Initial workflow notifications state should be true")
+	}
 
-	t.Run("LoadConfig", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "")
+	// Toggle to false
+	if err := service.ToggleWorkflowNotifications(); err != nil {
+		t.Errorf("ToggleWorkflowNotifications failed: %v", err)
+	}
+	if service.config.Notifications.EnableWorkflowNotifications {
+		t.Error("Workflow notifications should be toggled to false")
+	}
 
-		err := service.LoadConfig("/new/path/config.yaml")
-		if err != nil {
-			t.Errorf("LoadConfig failed: %v", err)
-		}
-		if service.configFile != "/new/path/config.yaml" {
-			t.Error("Config file path not updated correctly")
-		}
-	})
+	// Toggle back to true
+	if err := service.ToggleWorkflowNotifications(); err != nil {
+		t.Errorf("ToggleWorkflowNotifications failed: %v", err)
+	}
+	if !service.config.Notifications.EnableWorkflowNotifications {
+		t.Error("Workflow notifications should be toggled to true")
+	}
+}
 
-	t.Run("SaveConfig_NoPath", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "")
+func TestConfigService_LoadConfig(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-		err := service.SaveConfig()
-		if err == nil {
-			t.Error("SaveConfig should fail when no config file path is set")
-		}
-	})
+	service := NewConfigService(mockLogger, testConfig, "")
 
-	t.Run("ResetToDefaults", func(t *testing.T) {
-		// Create temp config file
-		tempFile, err := os.CreateTemp("", "test-config-*.yaml")
-		if err != nil {
-			t.Fatalf("Failed to create temp file: %v", err)
-		}
-		defer os.Remove(tempFile.Name())
-		tempFile.Close()
+	if err := service.LoadConfig("/new/path/config.yaml"); err != nil {
+		t.Errorf("LoadConfig failed: %v", err)
+	}
+	if service.configFile != "/new/path/config.yaml" {
+		t.Error("Config file path not updated correctly")
+	}
+}
 
-		service := NewConfigService(mockLogger, testConfig, tempFile.Name())
+func TestConfigService_SaveConfig_NoPath(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-		// Modify some settings first
-		service.config.General.Language = "fr"
-		// TODO: Next feature - VAD implementation
-		// service.config.Audio.EnableVAD = true
+	service := NewConfigService(mockLogger, testConfig, "")
 
-		err = service.ResetToDefaults()
-		if err != nil {
-			t.Errorf("ResetToDefaults failed: %v", err)
-		}
+	if err := service.SaveConfig(); err == nil {
+		t.Error("SaveConfig should fail when no config file path is set")
+	}
+}
 
-		// Verify settings were reset to defaults
-		if service.config.General.Language != "en" {
-			t.Error("Language should be reset to default 'en'")
-		}
-		// TODO: Next feature - VAD implementation
-		// if service.config.Audio.EnableVAD != false {
-		//	t.Error("EnableVAD should be reset to default false")
-		// }
-	})
+func TestConfigService_ResetToDefaults(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
 
-	t.Run("Shutdown", func(t *testing.T) {
-		service := NewConfigService(mockLogger, testConfig, "/tmp/test_config.yaml")
+	// Create temp config file
+	tempFile, err := os.CreateTemp("", "test-config-*.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+	tempFile.Close()
 
-		err := service.Shutdown()
-		if err != nil {
-			t.Errorf("Shutdown failed: %v", err)
-		}
+	service := NewConfigService(mockLogger, testConfig, tempFile.Name())
 
-		// Shutdown should complete successfully without saving
-		// (config changes are saved immediately by their respective methods)
-	})
+	// Modify some settings first
+	service.config.General.Language = "fr"
+	// TODO: Next feature - VAD implementation
+	// service.config.Audio.EnableVAD = true
+
+	if err := service.ResetToDefaults(); err != nil {
+		t.Errorf("ResetToDefaults failed: %v", err)
+	}
+
+	// Verify settings were reset to defaults
+	if service.config.General.Language != "en" {
+		t.Error("Language should be reset to default 'en'")
+	}
+	// TODO: Next feature - VAD implementation
+	// if service.config.Audio.EnableVAD != false {
+	//	t.Error("EnableVAD should be reset to default false")
+	// }
+}
+
+func TestConfigService_Shutdown(t *testing.T) {
+	mockLogger := testutils.NewMockLogger()
+	testConfig := createTestConfig()
+
+	service := NewConfigService(mockLogger, testConfig, "/tmp/test_config.yaml")
+
+	if err := service.Shutdown(); err != nil {
+		t.Errorf("Shutdown failed: %v", err)
+	}
+
+	// Shutdown should complete successfully without saving
+	// (config changes are saved immediately by their respective methods)
 }
