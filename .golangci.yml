@@ -22,3 +22,8 @@ linters:
     - unconvert
     - unused
     - unparam
+    - gocyclo
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15

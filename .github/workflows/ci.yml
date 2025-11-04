@@ -80,7 +80,7 @@ jobs:
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-            sh -s -- -b $(go env GOPATH)/bin v2.4.0
+            sh -s -- -b $(go env GOPATH)/bin v2.6.1
 
       - name: Diagnostics before golangci-lint
         env:
