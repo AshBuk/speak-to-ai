@@ -150,20 +150,21 @@
 
     <div class="section">
         <h2>About</h2>
-        <p>A minimalist, privacy-focused desktop application for offline speech-to-text.
-           Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants) 
-           Uses the Whisper model locally for speech recognition. 
-           Written in Go, an optimized desktop application for Linux.</p>
+        <p>Speak to AI runs quietly in the background and integrates into the system tray for convenient management.</p>
+        <p>It can also be invoked as a CLI tool (see <a href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/CLI_USAGE.md" target="_blank"><strong>CLI Usage Guide</strong></a>) for scripting purposes.</p>
+        <p>For integration enthusiasts, a WebSocket server is available at <code>localhost:8080</code>. Enable it in your config with <code>web_server.enabled: true</code> (disabled by default).</p>
     </div>
 
     <div class="section">
         <h2>Features</h2>
         <ul>
-            <li>Cross-platform support for X11 and Wayland</li>
-            <li>Desktop Environment Support: Native integration with GNOME, KDE, and other Linux DEs</li>
-            <li>Privacy-first: no data sent to external servers</li>
+            <li>Offline speech-to-text, privacy-first: all processing happens locally</li>
+            <li>Voice typing or clipboard mode</li>
             <li>Portable: AppImage package</li>
-            <li>Support: multi-language, global hotkeys, automatic typing & clipboard, system tray integration, visual notifications, WebSocket API (optional)</li>
+            <li>Cross-platform support for X11 and Wayland</li>
+            <li>Linux DEs: native integration with GNOME, KDE, and others</li>
+            <li>Flexible audio recording: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see <a href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/AUDIO_PIPELINE_DIAGRAM.txt" target="_blank"><strong>audio pipeline</strong></a></li>
+            <li>Multi-language support, custom hotkey binding, visual notifications</li>
         </ul>
     </div>
 

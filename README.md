@@ -35,14 +35,19 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 [![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
 [![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
 
+▸ Speak to AI runs quietly in the background and integrates into the system tray for convenient management. 
 
-- **Offline speech-to-text**
+▸ It can also be invoked as a CLI tool (see **[CLI Usage Guide](docs/CLI_USAGE.md)**) for scripting purposes. 
+
+▸ For integration enthusiasts, a WebSocket server is available at `localhost:8080`. Enable it in your config with web_server enabled: true (disabled by default).
+
+- **Offline speech-to-text, privacy-first**: all processing happens locally
 - **Voice typing or clipboard mode**
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
-- **Desktop Environment Support**: Native integration with GNOME, KDE, and other Linux DEs
-- **Privacy-first**: desktop, no data sent to external servers
-- **Support: multi-language, global hotkeys, automatic typing, system tray integration, visual notifications, Unix socket IPC, WebSocket API (optional)**
+- **Linux DEs**: native integration with GNOME, KDE, and others 
+- **Flexible audio recording**: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see [audio pipeline](docs/AUDIO_PIPELINE_DIAGRAM.txt)
+- **Multi-language support**, custom hotkey binding, visual notifications
 
 ## ✦ Installation
 
@@ -60,10 +65,6 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
  ./speak-to-ai-*.AppImage
 ```
 
-🔄 **Speak-to-AI provides a dual-mode binary** that works as both a background daemon and CLI tool
-
-→ see: **[CLI Usage Guide](docs/CLI_USAGE.md)**
-
 ## Desktop Environment Compatibility
 
 [![OS](https://img.shields.io/badge/OS-Linux-34a853?logo=linux)](#-system-requirements)
@@ -79,14 +80,18 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 
 > If automatic typing doesn't appear automatically, the app falls back to clipboard (Ctrl + V) mode
 
-## ✦ Project Status
-
-**AppImage** [release](https://github.com/AshBuk/speak-to-ai/releases) - main distribution format. 
-I'd appreciate feedback about your experience on your system!
-
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
 
 See changes: [CHANGELOG.md](CHANGELOG.md)
+
+### System Requirements
+
+- **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
+- **Desktop**: X11 or Wayland environment
+- **Audio**: Microphone/recording capability
+- **Storage**: 277.3MB (whisper small q5 model, dependencies, go-binary)
+- **Memory**: ~300MB RAM during operation
+- **CPU**: AVX-capable processor (Intel/AMD 2011+)
 
 
 ## For Developers
@@ -100,15 +105,6 @@ Start onboarding with:
 
 Technical dive into architecture and engineering challenges: [Building Speak-to-AI on Hashnode](https://ashbuk.hashnode.dev/an-offline-voice-to-text-solution-for-linux-users-using-whispercpp-and-go)
 
-## System Requirements
-
-- **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
-- **Desktop**: X11 or Wayland environment
-- **Audio**: Microphone/recording capability
-- **Storage**: 277.3MB (whisper small q5 model, dependencies, go-binary)
-- **Memory**: ~300MB RAM during operation
-- **CPU**: AVX-capable processor (Intel/AMD 2011+)
-
 ## ✦ Acknowledgments
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
@@ -118,9 +114,7 @@ Technical dive into architecture and engineering challenges: [Building Speak-to-
 
 ## ✦ MIT [LICENSE](LICENSE)
 
-**If you use this project, please:**
-- Give credit by linking back to this repository
-- Star ⭐ the project if it helped you
+**If you use this project, please:** linking back to this repo, ⭐ the project if it helped you
 - Consider contributing back improvements
 
 ---
