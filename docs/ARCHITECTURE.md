@@ -1,6 +1,8 @@
 # Speak-to-AI Architecture Documentation
 
-The application follows a **modular daemon architecture** with clear separation of concerns:
+The application follows a **dual-mode daemon architecture** with clear separation of concerns:
+- **Daemon mode**: Background service with system tray, hotkeys, IPC server
+- **CLI mode**: Control commands (start/stop/status/transcript) via Unix socket IPC
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -24,12 +26,13 @@ The application follows a **modular daemon architecture** with clear separation 
 ├─────────────────────────────────────────────────────────────────┤
 │  internal/logger/ │ internal/notify/ │ internal/platform/       │
 │  internal/tray/   │ internal/utils/  │ internal/constants/      │
-│  internal/services/                                             │
+│  internal/services/ │ internal/ipc/                             │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                       System Integration                        │
 ├─────────────────────────────────────────────────────────────────┤
 │  X11/Wayland │ DBus Portals │ System Tray │ Audio System │ FS   │
+│  Unix Sockets (IPC)                                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -56,7 +59,8 @@ The application follows a **modular daemon architecture** with clear separation 
   HotkeyService -> ConfigAdapter -> hotkey mapping
 
 // Output pipeline
-  IOService -> OutputManager -> (clipboard/typing/websocket)
+  IOService -> OutputManager -> (clipboard/typing)
+  IOService -> WebSocketServer -> external integrations
   
 // Project Pattern
   Service -> Manager -> Provider/Adapter
@@ -85,6 +89,7 @@ The application follows a **modular daemon architecture** with clear separation 
 #### `internal/app/` - Application Core
 - **`app.go`**: Application orchestrator with ServiceContainer and RuntimeContext
 - **`handlers.go`**: Hotkey handlers that delegate to services
+- **`ipc.go`**: IPC server initialization and command handlers
 
 ### **Service Layer** (`internal/services/`)
 - **`interfaces.go`**: Service contracts and ServiceContainer definition
@@ -188,11 +193,16 @@ Related constants:
   - `mock_tray.go`: Mock implementation for testing
 - **`utils/`**: General utilities
   - `files.go`: File system utilities
+  - `lockfile.go`: Single-instance protection (PID lock file)
+  - `ipc_paths.go`: IPC socket path management
   - `disk_linux.go`: Disk space checking (Linux)
   - `disk_stub.go`: Stub implementation
   - `sanitize.go`: Transcript sanitization (token cleanup, whitespace)
   - `async.go`: Goroutine tracking and graceful shutdown coordination
 - **`ipc/`**: Inter-process communication (CLI ↔ daemon via Unix sockets)
+  - `server.go`: IPC server (socket listener, handler registry)
+  - `client.go`: IPC client (request sender with timeout)
+  - `types.go`: Request/Response protocol types
 - **`testutils/`**: Testing utilities (mock logger)
 - **`assets/`**: Embedded resources (about.html)
 
@@ -232,4 +242,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-10-29*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-11-06*
