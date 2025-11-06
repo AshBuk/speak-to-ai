@@ -114,7 +114,7 @@ Technical dive into architecture and engineering challenges: [Building Speak-to-
 
 ## ✦ MIT [LICENSE](LICENSE)
 
-**If you use this project, please:** linking back to this repo, ⭐ the project if it helped you
+If you use this project, please link back to this repo and ⭐ it if it helped you.
 - Consider contributing back improvements
 
 ---
