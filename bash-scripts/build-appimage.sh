@@ -7,7 +7,9 @@ set -x  # Show commands being executed
 
 # Configuration
 APP_NAME="speak-to-ai"
-APP_VERSION="${APP_VERSION:-${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0 2>/dev/null || date +%Y%m%d)}}"
+APP_VERSION_RAW="${APP_VERSION:-${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0 2>/dev/null || date +%Y%m%d)}}"
+# Clean version: remove 'v' prefix if present (for AppImageHub standard nomenclature)
+APP_VERSION=$(echo "${APP_VERSION_RAW}" | sed 's/^v//')
 ARCH="x86_64"
 OUTPUT_DIR="dist"
 
@@ -426,7 +428,7 @@ build_appimage() {
 
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            TARGET_NAME="speak-to-ai-${APP_VERSION}-${ARCH}.AppImage"
             mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
             echo "AppImage created successfully with linuxdeploy: $TARGET_NAME"
             ls -lh "$TARGET_NAME"
@@ -444,7 +446,7 @@ build_appimage() {
 
         if [ -n "$APPIMAGE_FILE" ]; then
             chmod +x "$APPIMAGE_FILE"
-            TARGET_NAME="speak-to-ai-${APP_VERSION}.AppImage"
+            TARGET_NAME="speak-to-ai-${APP_VERSION}-${ARCH}.AppImage"
             mv -f "$APPIMAGE_FILE" "$TARGET_NAME"
             echo "AppImage created successfully: $TARGET_NAME"
             ls -lh "$TARGET_NAME"

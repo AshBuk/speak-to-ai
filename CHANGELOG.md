@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [1.3.2] - 2025-11-13
+
+### Maintainability
+- **AppImageHub compatibility:** Renamed the AppImage file to follow the standard nomenclature (`speak-to-ai-VERSION-ARCH.AppImage`) for better catalog integration.
+- **Reduced cyclomatic complexity:** Refactored several modules (validators, factories, providers, recorders) to improve code readability and maintainability.
+- **Enhanced linting:** Upgraded `golangci-lint` to v2.6.1 and enabled the `gocyclo` linter for stricter complexity checks.
+
+---
 ## [1.3.1] - 2025-10-31
 
 ### Dependencies
