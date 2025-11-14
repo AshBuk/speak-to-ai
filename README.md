@@ -42,12 +42,12 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 ▸ For integration enthusiasts, a WebSocket server is available at `localhost:8080`. Enable it in your config with web_server enabled: true (disabled by default).
 
 - **Offline speech-to-text, privacy-first**: all processing happens locally
-- **Voice typing or clipboard mode**
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
-- **Linux DEs**: native integration with GNOME, KDE, and others 
+- **Linux DEs**: native integration with GNOME, KDE, and others
+- **Voice typing or clipboard mode** 
 - **Flexible audio recording**: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see [audio pipeline](docs/AUDIO_PIPELINE_DIAGRAM.txt)
-- **Multi-language support**, custom hotkey binding, visual notifications
+- **Multi-language support, custom hotkey binding, visual notifications**
 
 ## ✦ Installation
 
@@ -89,7 +89,7 @@ See changes: [CHANGELOG.md](CHANGELOG.md)
 - **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
 - **Desktop**: X11 or Wayland environment
 - **Audio**: Microphone/recording capability
-- **Storage**: 277.3MB (whisper small q5 model, dependencies, go-binary)
+- **Storage**: 277.4MB (whisper small q5 model, dependencies, go-binary)
 - **Memory**: ~300MB RAM during operation
 - **CPU**: AVX-capable processor (Intel/AMD 2011+)
 
