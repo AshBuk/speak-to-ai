@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - **Simplified and clearer Docker-based make targets**
 
 ---
+## [1.3.0] - 2025-10-29
 
 ### Features
 
