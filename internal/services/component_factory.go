@@ -25,16 +25,22 @@ import (
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
-// ComponentFactory is responsible for creating components
+// ComponentFactory is responsible for creating low-level components
+// Stage 1 of Multi-Stage Factory Pattern (see factory.go)
 type ComponentFactory struct {
-	config ServiceFactoryConfig
+	config ServiceFactoryConfig // Factory configuration (logger, config, environment)
 }
 
+// NewComponentFactory creates a new component factory
 func NewComponentFactory(config ServiceFactoryConfig) *ComponentFactory {
 	return &ComponentFactory{config: config}
 }
 
-// Initializes all components
+// InitializeComponents creates all low-level components in dependency order
+// Dependency-aware initialization:
+//  1. ModelManager → TempFileManager → Recorder → WhisperEngine (core pipeline)
+//  2. OutputManager (with Graceful Degradation fallback)
+//  3. HotkeyManager, WebSocketServer, TrayManager, NotifyManager (UI/control)
 func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 	components := &Components{}
 
@@ -76,12 +82,12 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 		return nil, fmt.Errorf("failed to initialize whisper engine: %w", err)
 	}
 
-	// Initialize output manager
+	// Initialize output manager with graceful degradation
+	// If typing fails fallback to clipboard only
 	outputEnv := cf.convertEnvironmentType()
 	components.OutputManager, err = outputFactory.GetOutputterFromConfig(cf.config.Config, outputEnv)
 	if err != nil {
 		cf.config.Logger.Warning("Failed to initialize text outputter: %v", err)
-		// Fallback to clipboard only
 		if fallbackOut := cf.createFallbackOutputManager(outputEnv); fallbackOut != nil {
 			components.OutputManager = fallbackOut
 		} else {
@@ -121,6 +127,8 @@ func (cf *ComponentFactory) ensureModelAvailable(modelManager whisper.ModelManag
 }
 
 // convertEnvironmentType converts platform environment to output factory type
+// Adapter - adapts platform.EnvironmentType → outputFactory.EnvironmentType
+// (different packages define their own environment types)
 func (cf *ComponentFactory) convertEnvironmentType() outputFactory.EnvironmentType {
 	switch cf.config.Environment {
 	case platform.EnvironmentWayland:
@@ -194,8 +202,9 @@ func (cf *ComponentFactory) createWebSocketServer(recorder interfaces.AudioRecor
 }
 
 // createTrayManager creates system tray manager
+// Placeholder Callbacks - real callbacks wired later in Stage 3 (CallbackWirer)
+// This allows tray to be created before services are assembled
 func (cf *ComponentFactory) createTrayManager() tray.TrayManagerInterface {
-	// Create tray manager with placeholder callbacks (will be set later)
 	return tray.CreateTrayManagerWithConfig(cf.config.Config,
 		cf.config.Logger,
 		func() { // onExit
