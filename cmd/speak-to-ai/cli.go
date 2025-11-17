@@ -16,18 +16,24 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
-func maybeRunCLI(args []string) (bool, int) {
-	if !isCLICommandRequested(args) {
-		return false, 0
-	}
+// CLI configuration options
+type cliOptions struct {
+	command    string        // CLI command verb (start/stop/status/transcript)
+	socketPath string        // Path to IPC Unix socket
+	jsonOutput bool          // Output response as JSON
+	timeout    time.Duration // IPC request timeout
+}
 
+// Parse CLI command-line flags and command
+// Returns parsed options or error if invalid
+func parseCLIOptions(args []string) (*cliOptions, error) {
 	var (
 		socketPath string
 		jsonOutput bool
 		timeoutSec int
 	)
 
-	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError)
+	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError) // pls don't panic on parse error
 	var parseOutput strings.Builder
 	fs.SetOutput(&parseOutput)
 
@@ -38,26 +44,26 @@ func maybeRunCLI(args []string) (bool, int) {
 
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			return true, 0
+			return nil, flag.ErrHelp
 		}
 		if parseOutput.Len() > 0 {
 			fmt.Fprint(os.Stderr, parseOutput.String())
 		}
 		fs.Usage()
-		return true, 2
+		return nil, err
 	}
 
 	remaining := fs.Args()
 	if len(remaining) == 0 {
 		fs.Usage()
-		return true, 2
+		return nil, fmt.Errorf("no command specified")
 	}
 
 	command := strings.ToLower(remaining[0])
 	if !isCLIVerb(command) {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", remaining[0])
 		fs.Usage()
-		return true, 2
+		return nil, fmt.Errorf("unknown command: %s", remaining[0])
 	}
 
 	timeout := deriveTimeout(command, timeoutSec)
@@ -66,13 +72,43 @@ func maybeRunCLI(args []string) (bool, int) {
 		socketPath = utils.GetDefaultSocketPath()
 	}
 
-	resp, err := executeCLICommand(command, socketPath, timeout)
+	return &cliOptions{
+		command:    command,
+		socketPath: socketPath,
+		jsonOutput: jsonOutput,
+		timeout:    timeout,
+	}, nil
+}
+
+// CLI orchestrator - coordinates the entire CLI workflow
+// Facade Pattern - simplified interface to CLI subsystem
+// Execution flow:
+//  1. Detect CLI command (start/stop/status/transcript)
+//  2. Parse flags (--socket, --json, --timeout)
+//  3. Send IPC request → daemon via Unix socket
+//  4. Format response (text or JSON)
+//
+// Returns: (handled=true if CLI command detected, exitCode)
+func maybeRunCLI(args []string) (bool, int) {
+	if !isCLICommandRequested(args) {
+		return false, 0
+	}
+
+	opts, err := parseCLIOptions(args)
+	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return true, 0
+		}
+		return true, 2
+	}
+
+	resp, err := executeCLICommand(opts.command, opts.socketPath, opts.timeout)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return true, 1
 	}
 
-	if jsonOutput {
+	if opts.jsonOutput {
 		if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to encode response: %v\n", err)
 			return true, 1
@@ -80,7 +116,7 @@ func maybeRunCLI(args []string) (bool, int) {
 		return true, 0
 	}
 
-	printResponse(command, resp)
+	printResponse(opts.command, resp)
 	return true, 0
 }
 
