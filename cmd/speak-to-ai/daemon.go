@@ -15,6 +15,13 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
+// Daemon orchestrator - initializes and runs the main application
+// Execution flow:
+//  1. Parse flags (--config, --debug)
+//  2. Bootstrap logger (Info/Debug level)
+//  3. Adjust config paths (AppImage/Flatpak environment detection)
+//  4. Single-instance lock (prevent multiple daemon processes)
+//  5. App lifecycle: NewApp() → Initialize() → RunAndWait()
 func runDaemon(args []string) int {
 	opts, err := parseDaemonOptions(args)
 	if err != nil {
@@ -24,13 +31,14 @@ func runDaemon(args []string) int {
 		return 2
 	}
 
-	// Create logger early for consistent logging
+	// Bootstrap
 	logLevel := logger.InfoLevel
 	if opts.debug {
 		logLevel = logger.DebugLevel
 	}
-	appLogger := logger.NewDefaultLogger(logLevel)
+	appLogger := logger.NewDefaultLogger(logLevel) // create logger early
 
+	// Environment detection
 	configPath := adjustPathsForAppImage(appLogger, opts.configFile)
 	configPath = adjustPathsForFlatpak(appLogger, configPath)
 
@@ -49,14 +57,16 @@ func runDaemon(args []string) int {
 		return 1
 	}
 
-	// Ensure lock is released on exit
+	// Resource cleanup:
+	// defer guarantees unlock even on panic or early return
 	defer func() {
 		if err := lockFile.Unlock(); err != nil {
 			appLogger.Warning("Failed to release lock: %v", err)
 		}
 	}()
 
-	// Create application instance with service-based architecture
+	// App orchestration: delegate to App module
+	// → see internal/app/app.go
 	application := app.NewApp(appLogger)
 
 	if err := application.Initialize(configPath, opts.debug); err != nil {
@@ -72,17 +82,20 @@ func runDaemon(args []string) int {
 	return 0
 }
 
+// Daemon configuration options
 type daemonOptions struct {
-	configFile string
-	debug      bool
+	configFile string // Path to YAML config file (default: config.yaml)
+	debug      bool   // Enable debug logging level
 }
 
+// Parse daemon command-line flags (--config, --debug)
+// Returns parsed options or flag.ErrHelp if --help was requested
 func parseDaemonOptions(args []string) (*daemonOptions, error) {
 	opts := &daemonOptions{
 		configFile: "config.yaml",
 	}
 
-	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError)
+	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError) // pls don't panic on parse error
 	var parseOutput strings.Builder
 	fs.SetOutput(&parseOutput)
 
