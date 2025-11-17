@@ -21,10 +21,10 @@ import (
 
 // Manages application lifecycle and context
 type RuntimeContext struct {
-	Ctx        context.Context
-	Cancel     context.CancelFunc
-	ShutdownCh chan os.Signal
-	Logger     logger.Logger
+	Ctx        context.Context    // Main application context for cancellation propagation
+	Cancel     context.CancelFunc // Function to cancel the context and trigger shutdown
+	ShutdownCh chan os.Signal     // Channel receiving OS signals (SIGINT, SIGTERM)
+	Logger     logger.Logger      // Application-wide logger instance
 }
 
 // Create a new runtime context
@@ -43,13 +43,13 @@ func NewRuntimeContext(logger logger.Logger) *RuntimeContext {
 
 // Represents the main application and its services
 type App struct {
-	Services *services.ServiceContainer
-	Runtime  *RuntimeContext
-
-	ipcServer *ipc.Server
+	Services  *services.ServiceContainer // DI Pattern. Container for: Audio, UI, IO, Config, Hotkeys, TempFileManager
+	Runtime   *RuntimeContext            // Application lifecycle management (context, cancel, shutdown channel, logger)
+	ipcServer *ipc.Server                // Inter-process communication server for CLI commands
 }
 
-// Create a new application instance
+// NewApp Constructor - creates a new application instance
+// Initializes empty service container and runtime context
 func NewApp(logger logger.Logger) *App {
 	return &App{
 		Services: services.NewServiceContainer(),
@@ -58,6 +58,7 @@ func NewApp(logger logger.Logger) *App {
 }
 
 // Initialize all application services and dependencies
+// Multi-step initialization: Config → Services → Dependencies
 func (a *App) Initialize(configFile string, debug bool) error {
 	a.Runtime.Logger.Info("Initializing application...")
 
@@ -94,25 +95,28 @@ func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, e
 	return cfg, nil
 }
 
-// Create and configure all services
+// Factory Pattern - creates and configures all services via factory with DI
 func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	a.Runtime.Logger.Info("Initializing services with dependency injection...")
 
 	environment := platform.DetectEnvironment()
 	a.Runtime.Logger.Info("Detected environment: %s", environment)
 
+	// Factory Constructor: NewServiceFactory(config) → *ServiceFactory (stores configuration)
 	factory := services.NewServiceFactory(services.ServiceFactoryConfig{
-		Logger:      a.Runtime.Logger,
-		Config:      cfg,
-		ConfigFile:  cfgFilePath,
-		Environment: environment,
+		Logger:      a.Runtime.Logger, // Application-wide logger for all services
+		Config:      cfg,              // Loaded YAML configuration
+		ConfigFile:  cfgFilePath,      // Path to config file for reloading
+		Environment: environment,      // Detected runtime environment (Native/AppImage/etc)
 	})
 
+	// Factory Method: factory.CreateServices() → *ServiceContainer (all services ready)
 	serviceContainer, err := factory.CreateServices()
 	if err != nil {
 		return fmt.Errorf("failed to create services: %w", err)
 	}
 
+	// Replace empty container with fully initialized services
 	a.Services = serviceContainer
 
 	if err := a.setupHotkeyCallbacks(); err != nil {
@@ -124,6 +128,7 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 }
 
 // Establish communication channels between services
+// Manual Dependency Injection - wire services together
 func (a *App) setupServiceDependencies() {
 	// Example: AudioService needs UIService for status updates and IOService for output
 	if audioSvc, ok := a.Services.Audio.(*services.AudioService); ok {
@@ -132,18 +137,20 @@ func (a *App) setupServiceDependencies() {
 }
 
 // Connect hotkey manager events to their corresponding handler methods
+// Callback Pattern - registers event handlers (SRP: handlers.go implements the logic)
 func (a *App) setupHotkeyCallbacks() error {
 	if a.Services == nil || a.Services.Hotkeys == nil {
 		return fmt.Errorf("services not initialized")
 	}
 
+	// Register callback functions defined in handlers.go
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
-		a.handleStartRecording,
-		a.handleStopRecordingAndTranscribe,
+		a.handleStartRecording,             // handlers.go: Start audio recording
+		a.handleStopRecordingAndTranscribe, // handlers.go: Stop recording and transcribe
 		// TODO: Next feature - VAD implementation
-		// a.handleToggleVAD,
-		a.handleShowConfig,
-		a.handleResetToDefaults,
+		// a.handleToggleVAD,                 // handlers.go: Toggle Voice Activity Detection
+		a.handleShowConfig,      // handlers.go: Display configuration
+		a.handleResetToDefaults, // handlers.go: Reset settings to defaults
 	); err != nil {
 		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
 	}
@@ -153,6 +160,9 @@ func (a *App) setupHotkeyCallbacks() error {
 }
 
 // Start all application services
+// Fail-Safe pattern - non-critical (warning) failures don't stop the application:
+// WebSocket server: disabled by default in config
+// Hotkey registration: app can work via CLI
 func (a *App) startServices() error {
 	if a.Services == nil {
 		return fmt.Errorf("services not initialized")
@@ -162,13 +172,13 @@ func (a *App) startServices() error {
 
 	if a.Services.IO != nil {
 		if err := a.Services.IO.StartWebSocketServer(); err != nil {
-			a.Runtime.Logger.Warning("Failed to start WebSocket server: %v", err)
+			a.Runtime.Logger.Warning("WebSocket server not started: %v", err)
 		}
 	}
 
 	if a.Services.Hotkeys != nil {
 		if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
-			a.Runtime.Logger.Warning("Failed to register hotkeys: %v", err)
+			a.Runtime.Logger.Warning("Hotkeys not registered: %v", err)
 		}
 	}
 
@@ -177,6 +187,7 @@ func (a *App) startServices() error {
 }
 
 // Start the application and wait for a shutdown signal
+// Event Loop - blocks until OS signal or context cancellation
 func (a *App) RunAndWait() error {
 	a.Runtime.Logger.Info("Starting application...")
 
@@ -185,26 +196,25 @@ func (a *App) RunAndWait() error {
 	}
 
 	if err := a.startIPCServer(); err != nil {
-		a.Runtime.Logger.Warning("Failed to start CLI IPC server: %v", err)
+		a.Runtime.Logger.Warning("CLI IPC server not started: %v", err)
 	}
 
-	// Wait for a shutdown signal
-	select {
-	case <-a.Runtime.ShutdownCh:
+	select { // Blocks here waiting for shutdown signal
+	case <-a.Runtime.ShutdownCh: // OS signal (Ctrl+C, SIGTERM)
 		a.Runtime.Logger.Info("Received shutdown signal")
-	case <-a.Runtime.Ctx.Done():
+	case <-a.Runtime.Ctx.Done(): // Programmatic cancellation
 		a.Runtime.Logger.Info("Context cancelled")
 	}
 
 	return a.Shutdown()
 }
 
-// Gracefully stop all services
+// Graceful Shutdown - ensures clean resource cleanup with timeout
+// Shutdown sequence: Cancel() → Stop IPC → Shutdown Services → Wait(5s timeout)
 func (a *App) Shutdown() error {
 	a.Runtime.Logger.Info("Shutting down application...")
 
-	// Cancel the main context to signal all operations to stop
-	a.Runtime.Cancel()
+	a.Runtime.Cancel() // Signal all goroutines to stop
 
 	if a.ipcServer != nil {
 		a.ipcServer.Stop()
@@ -217,7 +227,7 @@ func (a *App) Shutdown() error {
 		}
 	}
 
-	// Wait for long-lived goroutines to complete with a timeout
+	// Wait for background goroutines with timeout
 	if ok := utils.WaitAll(5 * time.Second); ok {
 		a.Runtime.Logger.Info("Background tasks completed")
 	} else {
@@ -228,39 +238,39 @@ func (a *App) Shutdown() error {
 	return nil
 }
 
-// Provide clean accessor methods for services
-
+// Getter methods - provide clean accessors for services
+// Return interfaces - Dependency Inversion Principle (DIP)
 func (a *App) Audio() services.AudioServiceInterface {
-	if a.Services == nil {
-		return nil
+	if a.Services != nil {
+		return a.Services.Audio
 	}
-	return a.Services.Audio
+	return nil
 }
 
 func (a *App) UI() services.UIServiceInterface {
-	if a.Services == nil {
-		return nil
+	if a.Services != nil {
+		return a.Services.UI
 	}
-	return a.Services.UI
+	return nil
 }
 
 func (a *App) IO() services.IOServiceInterface {
-	if a.Services == nil {
-		return nil
+	if a.Services != nil {
+		return a.Services.IO
 	}
-	return a.Services.IO
+	return nil
 }
 
 func (a *App) Config() services.ConfigServiceInterface {
-	if a.Services == nil {
-		return nil
+	if a.Services != nil {
+		return a.Services.Config
 	}
-	return a.Services.Config
+	return nil
 }
 
 func (a *App) Hotkeys() services.HotkeyServiceInterface {
-	if a.Services == nil {
-		return nil
+	if a.Services != nil {
+		return a.Services.Hotkeys
 	}
-	return a.Services.Hotkeys
+	return nil
 }
