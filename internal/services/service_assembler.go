@@ -10,7 +10,21 @@ import (
 	"github.com/AshBuk/speak-to-ai/websocket"
 )
 
-// ServiceAssembler is responsible for building the ServiceContainer from the ready components
+// ServiceAssembler assembles low-level components into high-level services
+// Stage 2 of Multi-Stage Factory (see factory.go)
+//
+//	Services         ← Components assembly
+//	ConfigService    ← logger + config + configFile (no components!)
+//	HotkeyService    ← logger + HotkeyManager
+//	AudioService     ← logger + config + Recorder + WhisperEngine + ModelManager + TempFileManager
+//	UIService        ← logger + config + TrayManager + NotifyManager
+//	IOService        ← logger + config + OutputManager + WebSocketServer
+//
+// Assembly process:
+//  1. Create services from components
+//  2. Early wiring  (Config→UI, IO→UI, IO→Config)
+//  3. Pack into container
+//  4. Late wiring   (Audio→UI, Audio→IO, Audio→Config)
 type ServiceAssembler struct {
 	factoryConfig ServiceFactoryConfig
 }
@@ -19,25 +33,23 @@ func NewServiceAssembler(config ServiceFactoryConfig) *ServiceAssembler {
 	return &ServiceAssembler{factoryConfig: config}
 }
 
-// Assemble builds the ServiceContainer from the ready components
+// Assemble builds the ServiceContainer from components via 4-step process
 func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 	container := NewServiceContainer()
 
-	// Build services using concrete instances where needed
+	// Step 1: Create services from components
 	configSvc := sa.createConfigService()
 	hotkeysSvc := sa.createHotkeyService(components.HotkeyManager)
 	audioSvc := sa.createAudioService(components)
 	uiSvc := sa.createUIService(components.TrayManager, components.NotifyManager)
-
-	// Wire UI to Config for notifications (concrete method)
-	configSvc.SetUIService(uiSvc)
-
 	ioSvc := sa.createIOService(components.OutputManager, components.WebSocketServer)
-	// Wire dependencies for IOService
-	ioSvc.SetUIService(uiSvc)
-	ioSvc.SetConfigService(configSvc)
 
-	// Assign to container interfaces
+	// Step 2: Early wiring - dependencies needed before container assembly
+	configSvc.SetUIService(uiSvc)     // Config → UI (for reload notifications)
+	ioSvc.SetUIService(uiSvc)         // IO → UI (for output notifications)
+	ioSvc.SetConfigService(configSvc) // IO → Config (for output settings)
+
+	// Step 3: Pack services into container
 	container.Config = configSvc
 	container.Hotkeys = hotkeysSvc
 	container.Audio = audioSvc
@@ -45,8 +57,8 @@ func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 	container.IO = ioSvc
 	container.TempFileManager = components.TempFileManager
 
-	// Cross-dependencies
-	sa.SetupDependencies(container)
+	// Step 4: Late wiring - cross-dependencies after container is ready
+	sa.SetupDependencies(container) // Audio → UI, Audio → IO, Audio → Config
 
 	return container
 }
@@ -59,6 +71,8 @@ func (sa *ServiceAssembler) SetupDependencies(container *ServiceContainer) {
 	}
 }
 
+// Builders - construct services from components
+//
 // createConfigService creates the ConfigService
 func (sa *ServiceAssembler) createConfigService() *ConfigService {
 	return NewConfigService(
