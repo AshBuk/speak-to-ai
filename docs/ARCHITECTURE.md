@@ -159,10 +159,14 @@ Related constants:
 
 #### Output Implementations
 - **`interfaces/outputter.go`**: Outputter interface definition
-- **`factory/factory.go`**: Factory for creating appropriate output handlers
+- **`factory/factory.go`**: Factory for creating appropriate output handlers with automatic tool selection
 - **`outputters/`**: Output implementations
-  - `clipboard_outputter.go`: System clipboard integration
+  - `clipboard_outputter.go`: System clipboard integration (wl-copy/wl-paste for Wayland, xsel for X11)
   - `type_outputter.go`: Active window typing simulation
+    - **X11**: Uses `xdotool` (works out-of-the-box)
+    - **Wayland (non-GNOME)**: Prefers `wtype` → falls back to `ydotool` if available
+    - **Wayland (GNOME)**: Uses `ydotool` → falls back to `wtype` if available
+    - Automatic runtime fallback: if primary tool fails, tries alternative typing tool
   - `mock_outputter.go`: Mock implementation for testing
 
 ### **WebSocket API** (`websocket/`)
