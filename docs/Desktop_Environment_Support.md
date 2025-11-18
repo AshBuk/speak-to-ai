@@ -17,18 +17,25 @@ sudo pacman -S gnome-shell-extension-appindicator
 
 ### **Text output status (outputter, for automatic text insertion into active window)**
 
-***Current Implementation: Smart Auto-Selection***
+**Current Implementation: Smart Auto-Selection**
+
 | Desktop Environment | Primary Tool | Fallback | Status |
 |---------------------|--------------|----------|--------|
 | **🟢 GNOME+Wayland** | ydotool | clipboard | ⚠️ Requires setup |
-| **🟢 KDE+Wayland** | wtype → ydotool | clipboard | 🧪 Needs testing |
-| **🟢 Sway/Other Wayland** | wtype → ydotool | clipboard | 🧪 Needs testing |
+| **🟢 KDE+Wayland** | wtype → ydotool | clipboard | ✅ Auto-detected |
+| **🟢 Sway/Other Wayland** | wtype → ydotool | clipboard | ✅ Auto-detected |
 | **🟢 X11 (all DEs)** | xdotool | clipboard | ✅ Works out-of-box |
 
- *GNOME/Wayland requires ydotool setup. Other Wayland compositors may work with wtype without any setup - community testing needed*
+ *GNOME/Wayland requires ydotool setup. Other Wayland compositors (KDE, Sway, etc.) may work with wtype without any setup*
  *RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!*
 
-**Direct typing on Wayland - ydotool setup (recommended user-unit)**
+## Direct typing on Wayland - Tool options
+
+The application automatically selects the best available typing tool:
+- **wtype**: Works without setup on non-GNOME Wayland compositors (KDE, Sway, etc.). Automatically selected if available.
+- **ydotool**: Required for GNOME/Wayland, also works as fallback on other Wayland compositors. Requires setup (see below).
+
+### ydotool setup (recommended user-unit)
 
 > 1) Install ydotool:
 ```bash
@@ -64,6 +71,7 @@ systemctl --user enable --now ydotool
 ```
 *This setup uses user service: safer and no root privileges needed*
 *X11 works out-of-the-box without additional setups*
+*For non-GNOME Wayland compositors, wtype may work without any setup - the app will automatically try it first*
 
 **Clipboard fallback**
 - Works on **all** desktop environments  
