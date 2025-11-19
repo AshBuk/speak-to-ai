@@ -14,59 +14,77 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// CallbackWirer wires the callbacks to the tray manager
-type CallbackWirer struct {
+// FactoryWirer wires tray menu callbacks to service business logic
+// Stage 3 of Multi-Stage Factory (see factory.go)
+// Callbacks require fully assembled container with all services ready
+//
+// Callback wiring (UI → Services):
+//
+//	Core Actions      → AudioService, UIService, ConfigService (toggle, config, reset)
+//	Audio Actions     → ConfigService, AudioService (recorder selection)
+//	Settings Actions  → ConfigService, UIService, IOService (language, notifications, output)
+//	Dynamic Callbacks → IOService, HotkeyService (output tools, capture support)
+//	Hotkey Rebinding  → All Services (UI, Config, Hotkeys, Audio)
+//	Exit Action       → System Signal (SIGTERM)
+type FactoryWirer struct {
 	logger logger.Logger
 }
 
-func NewCallbackWirer(logger logger.Logger) *CallbackWirer {
-	return &CallbackWirer{logger: logger}
+func NewFactoryWirer(logger logger.Logger) *FactoryWirer {
+	return &FactoryWirer{logger: logger}
 }
 
-func (cw *CallbackWirer) Wire(container *ServiceContainer, components *Components) {
+// Wire connects tray menu callbacks to services via closure pattern
+// Wiring process:
+//  1. Core actions     (toggle recording, show config/about, reset defaults)
+//  2. Audio actions    (recorder selection)
+//  3. Settings actions (language, notifications, output mode)
+//  4. Dynamic queries  (output tools, capture once support)
+//  5. UI sync          (update tray menu with current settings)
+//  6. Hotkey rebinding (rebind hotkeys dynamically)
+//  7. Exit handler     (clean shutdown via SIGTERM)
+//
+// Each callback is a closure capturing ServiceContainer for service access
+func (cw *FactoryWirer) Wire(container *ServiceContainer, components *Components) {
 	if components == nil || components.TrayManager == nil {
 		return
 	}
-
-	// Core actions (toggle, show config, reset defaults)
+	// Step 1: Core actions (toggle, show config, reset defaults)
 	components.TrayManager.SetCoreActions(
 		cw.makeToggleCallback(container),
 		cw.makeShowConfigCallback(container),
 		cw.makeShowAboutCallback(container),
 		cw.makeResetToDefaultsCallback(container),
 	)
-
-	// Audio actions (recorder selection)
+	// Step 2: Audio actions (recorder selection)
 	components.TrayManager.SetAudioActions(cw.makeRecorderSelectionCallback(container))
 
-	// Settings actions (language, notifications)
+	// Step 3: Settings actions (language, notifications, output mode)
 	components.TrayManager.SetSettingsActions(
 		cw.makeLanguageCallback(container),
 		cw.makeToggleNotificationsCallback(container),
 		cw.makeOutputModeCallback(container),
 	)
-
-	// Set callback for getting actual output tool names
+	// Step 4: Dynamic queries (output tools, capture once support)
 	components.TrayManager.SetGetOutputToolsCallback(cw.makeGetOutputToolsCallback(container))
-
-	// Capture once support capability
 	components.TrayManager.SetCaptureOnceSupport(cw.makeCaptureOnceSupportCallback(container))
 
-	// Force UI update after callback is set
+	// Step 5: UI sync (update tray menu with current settings)
 	cw.updateTraySettings(container, components.TrayManager)
 
-	// Hotkeys rebind wiring
+	// Step 6: Hotkey rebinding (rebind hotkeys dynamically)
 	components.TrayManager.SetHotkeyRebindAction(cw.makeHotkeyRebindCallback(container))
 
-	// Ensure Quit exits app cleanly
+	// Step 7: Exit handler (clean shutdown via SIGTERM)
 	components.TrayManager.SetExitAction(func() {
 		_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
 	})
 }
 
-func (cw *CallbackWirer) makeToggleCallback(container *ServiceContainer) func() error {
-	return func() error {
-		if container == nil || container.Audio == nil {
+// Callback Makers
+func (cw *FactoryWirer) makeToggleCallback(container *ServiceContainer) func() error {
+	return func() error { // closure captures container
+		if container == nil || container.Audio == nil { // Null Object - defensive check
 			return fmt.Errorf("audio service not available")
 		}
 		if container.Audio.IsRecording() {
@@ -75,8 +93,7 @@ func (cw *CallbackWirer) makeToggleCallback(container *ServiceContainer) func() 
 		return container.Audio.HandleStartRecording()
 	}
 }
-
-func (cw *CallbackWirer) makeShowConfigCallback(container *ServiceContainer) func() error {
+func (cw *FactoryWirer) makeShowConfigCallback(container *ServiceContainer) func() error {
 	return func() error {
 		if container == nil || container.UI == nil {
 			return fmt.Errorf("UI service not available")
@@ -84,8 +101,7 @@ func (cw *CallbackWirer) makeShowConfigCallback(container *ServiceContainer) fun
 		return container.UI.ShowConfigFile()
 	}
 }
-
-func (cw *CallbackWirer) makeShowAboutCallback(container *ServiceContainer) func() error {
+func (cw *FactoryWirer) makeShowAboutCallback(container *ServiceContainer) func() error {
 	return func() error {
 		if container == nil || container.UI == nil {
 			return fmt.Errorf("UI service not available")
@@ -93,8 +109,7 @@ func (cw *CallbackWirer) makeShowAboutCallback(container *ServiceContainer) func
 		return container.UI.ShowAboutPage()
 	}
 }
-
-func (cw *CallbackWirer) makeResetToDefaultsCallback(container *ServiceContainer) func() error {
+func (cw *FactoryWirer) makeResetToDefaultsCallback(container *ServiceContainer) func() error {
 	return func() error {
 		if container == nil || container.Config == nil {
 			return fmt.Errorf("config service not available")
@@ -107,8 +122,7 @@ func (cw *CallbackWirer) makeResetToDefaultsCallback(container *ServiceContainer
 		return cw.reloadHotkeysFromConfig(container)
 	}
 }
-
-func (cw *CallbackWirer) makeRecorderSelectionCallback(container *ServiceContainer) func(string) error {
+func (cw *FactoryWirer) makeRecorderSelectionCallback(container *ServiceContainer) func(string) error {
 	return func(method string) error {
 		if container == nil || container.Config == nil {
 			return fmt.Errorf("config service not available")
@@ -116,15 +130,14 @@ func (cw *CallbackWirer) makeRecorderSelectionCallback(container *ServiceContain
 		if err := container.Config.UpdateRecordingMethod(method); err != nil {
 			return err
 		}
-		if audioSvc, ok := container.Audio.(*AudioService); ok {
-			audioSvc.clearSession()
+		if audioSvc, ok := container.Audio.(*AudioService); ok { // Type Assertion - access concrete type
+			audioSvc.clearSession() // clearSession() only available on *AudioService, not interface
 		}
 		cw.updateUISettings(container)
 		return nil
 	}
 }
-
-func (cw *CallbackWirer) makeLanguageCallback(container *ServiceContainer) func(string) error {
+func (cw *FactoryWirer) makeLanguageCallback(container *ServiceContainer) func(string) error {
 	return func(language string) error {
 		if container == nil || container.Config == nil {
 			return fmt.Errorf("config service not available")
@@ -132,8 +145,7 @@ func (cw *CallbackWirer) makeLanguageCallback(container *ServiceContainer) func(
 		return container.Config.UpdateLanguage(language)
 	}
 }
-
-func (cw *CallbackWirer) makeToggleNotificationsCallback(container *ServiceContainer) func() error {
+func (cw *FactoryWirer) makeToggleNotificationsCallback(container *ServiceContainer) func() error {
 	return func() error {
 		if container == nil || container.Config == nil {
 			return fmt.Errorf("config service not available")
@@ -149,8 +161,7 @@ func (cw *CallbackWirer) makeToggleNotificationsCallback(container *ServiceConta
 		return nil
 	}
 }
-
-func (cw *CallbackWirer) makeOutputModeCallback(container *ServiceContainer) func(string) error {
+func (cw *FactoryWirer) makeOutputModeCallback(container *ServiceContainer) func(string) error {
 	return func(mode string) error {
 		if container == nil || container.Config == nil || container.IO == nil {
 			return fmt.Errorf("services not available")
@@ -165,8 +176,7 @@ func (cw *CallbackWirer) makeOutputModeCallback(container *ServiceContainer) fun
 		return nil
 	}
 }
-
-func (cw *CallbackWirer) makeGetOutputToolsCallback(container *ServiceContainer) func() (string, string) {
+func (cw *FactoryWirer) makeGetOutputToolsCallback(container *ServiceContainer) func() (string, string) {
 	return func() (clipboardTool, typeTool string) {
 		if container == nil || container.IO == nil {
 			return "unknown", "unknown"
@@ -177,8 +187,7 @@ func (cw *CallbackWirer) makeGetOutputToolsCallback(container *ServiceContainer)
 		return "unknown", "unknown"
 	}
 }
-
-func (cw *CallbackWirer) makeCaptureOnceSupportCallback(container *ServiceContainer) func() bool {
+func (cw *FactoryWirer) makeCaptureOnceSupportCallback(container *ServiceContainer) func() bool {
 	return func() bool {
 		if container == nil || container.Hotkeys == nil {
 			return false
@@ -186,8 +195,7 @@ func (cw *CallbackWirer) makeCaptureOnceSupportCallback(container *ServiceContai
 		return container.Hotkeys.SupportsCaptureOnce()
 	}
 }
-
-func (cw *CallbackWirer) makeHotkeyRebindCallback(container *ServiceContainer) func(string) error {
+func (cw *FactoryWirer) makeHotkeyRebindCallback(container *ServiceContainer) func(string) error {
 	return func(action string) error {
 		if container == nil || container.UI == nil || container.Config == nil || container.Hotkeys == nil {
 			return fmt.Errorf("services not available")
@@ -214,8 +222,13 @@ func (cw *CallbackWirer) makeHotkeyRebindCallback(container *ServiceContainer) f
 	}
 }
 
-// Helper methods to reduce duplication
-func (cw *CallbackWirer) reloadHotkeysFromConfig(container *ServiceContainer) error {
+// Helper methods - shared logic for callbacks
+//   - reloadHotkeysFromConfig: reload hotkeys from config (used by reset + rebind)
+//   - makeConfigProvider: adapt Config → HotkeyConfig
+//   - updateUISettings: sync UI with config changes
+//   - updateTraySettings: sync tray menu with config changes
+//   - getNotificationStatus: query notification state from config
+func (cw *FactoryWirer) reloadHotkeysFromConfig(container *ServiceContainer) error {
 	if container.Hotkeys == nil {
 		return nil
 	}
@@ -227,12 +240,11 @@ func (cw *CallbackWirer) reloadHotkeysFromConfig(container *ServiceContainer) er
 		cfgProvider,
 	)
 }
-
-func (cw *CallbackWirer) makeConfigProvider(container *ServiceContainer) func() adapters.HotkeyConfig {
-	return func() adapters.HotkeyConfig {
+func (cw *FactoryWirer) makeConfigProvider(container *ServiceContainer) func() adapters.HotkeyConfig {
+	return func() adapters.HotkeyConfig { // Adapter Pattern - converts Config → HotkeyConfig
 		cfgSvc, ok := container.Config.(*ConfigService)
 		if !ok || cfgSvc == nil {
-			return adapters.NewConfigAdapter("", "auto")
+			return adapters.NewConfigAdapter("", "auto") // Graceful Degradation - return default
 		}
 
 		cfg := cfgSvc.GetConfig()
@@ -244,8 +256,7 @@ func (cw *CallbackWirer) makeConfigProvider(container *ServiceContainer) func() 
 			WithAdditionalHotkeys("", cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
 	}
 }
-
-func (cw *CallbackWirer) updateUISettings(container *ServiceContainer) {
+func (cw *FactoryWirer) updateUISettings(container *ServiceContainer) {
 	uiSvc, ok := container.UI.(*UIService)
 	if !ok || uiSvc == nil {
 		return
@@ -260,8 +271,7 @@ func (cw *CallbackWirer) updateUISettings(container *ServiceContainer) {
 		uiSvc.UpdateSettings(cfg)
 	}
 }
-
-func (cw *CallbackWirer) updateTraySettings(container *ServiceContainer, trayManager interface{ UpdateSettings(*config.Config) }) {
+func (cw *FactoryWirer) updateTraySettings(container *ServiceContainer, trayManager interface{ UpdateSettings(*config.Config) }) {
 	if container == nil || container.Config == nil {
 		return
 	}
@@ -275,8 +285,7 @@ func (cw *CallbackWirer) updateTraySettings(container *ServiceContainer, trayMan
 		trayManager.UpdateSettings(cfg)
 	}
 }
-
-func (cw *CallbackWirer) getNotificationStatus(container *ServiceContainer) string {
+func (cw *FactoryWirer) getNotificationStatus(container *ServiceContainer) string {
 	cfgSvc, ok := container.Config.(*ConfigService)
 	if !ok || cfgSvc == nil {
 		return "disabled"

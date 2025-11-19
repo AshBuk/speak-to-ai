@@ -10,7 +10,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/websocket"
 )
 
-// ServiceAssembler assembles low-level components into high-level services
+// FactoryAssembler assembles low-level components into high-level services
 // Stage 2 of Multi-Stage Factory (see factory.go)
 //
 //	Services         ← Components assembly
@@ -25,16 +25,16 @@ import (
 //  2. Early wiring  (Config→UI, IO→UI, IO→Config)
 //  3. Pack into container
 //  4. Late wiring   (Audio→UI, Audio→IO, Audio→Config)
-type ServiceAssembler struct {
+type FactoryAssembler struct {
 	factoryConfig ServiceFactoryConfig
 }
 
-func NewServiceAssembler(config ServiceFactoryConfig) *ServiceAssembler {
-	return &ServiceAssembler{factoryConfig: config}
+func NewFactoryAssembler(config ServiceFactoryConfig) *FactoryAssembler {
+	return &FactoryAssembler{factoryConfig: config}
 }
 
 // Assemble builds the ServiceContainer from components via 4-step process
-func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
+func (sa *FactoryAssembler) Assemble(components *Components) *ServiceContainer {
 	container := NewServiceContainer()
 
 	// Step 1: Create services from components
@@ -64,7 +64,7 @@ func (sa *ServiceAssembler) Assemble(components *Components) *ServiceContainer {
 }
 
 // SetupDependencies sets up the dependencies between the services
-func (sa *ServiceAssembler) SetupDependencies(container *ServiceContainer) {
+func (sa *FactoryAssembler) SetupDependencies(container *ServiceContainer) {
 	if audioSvc, ok := container.Audio.(*AudioService); ok {
 		audioSvc.SetDependencies(container.UI, container.IO)
 		audioSvc.SetConfig(container.Config)
@@ -74,7 +74,7 @@ func (sa *ServiceAssembler) SetupDependencies(container *ServiceContainer) {
 // Builders - construct services from components
 //
 // createConfigService creates the ConfigService
-func (sa *ServiceAssembler) createConfigService() *ConfigService {
+func (sa *FactoryAssembler) createConfigService() *ConfigService {
 	return NewConfigService(
 		sa.factoryConfig.Logger,
 		sa.factoryConfig.Config,
@@ -83,7 +83,7 @@ func (sa *ServiceAssembler) createConfigService() *ConfigService {
 }
 
 // createHotkeyService creates the HotkeyService
-func (sa *ServiceAssembler) createHotkeyService(hotkeyManager HotkeyManagerInterface) *HotkeyService {
+func (sa *FactoryAssembler) createHotkeyService(hotkeyManager HotkeyManagerInterface) *HotkeyService {
 	return NewHotkeyService(
 		sa.factoryConfig.Logger,
 		hotkeyManager,
@@ -91,7 +91,7 @@ func (sa *ServiceAssembler) createHotkeyService(hotkeyManager HotkeyManagerInter
 }
 
 // createAudioService creates the AudioService
-func (sa *ServiceAssembler) createAudioService(components *Components) *AudioService {
+func (sa *FactoryAssembler) createAudioService(components *Components) *AudioService {
 	return NewAudioService(
 		sa.factoryConfig.Logger,
 		sa.factoryConfig.Config,
@@ -103,7 +103,7 @@ func (sa *ServiceAssembler) createAudioService(components *Components) *AudioSer
 }
 
 // createUIService creates the UIService
-func (sa *ServiceAssembler) createUIService(trayManager tray.TrayManagerInterface, notifyManager *notify.NotificationManager) *UIService {
+func (sa *FactoryAssembler) createUIService(trayManager tray.TrayManagerInterface, notifyManager *notify.NotificationManager) *UIService {
 	return NewUIService(
 		sa.factoryConfig.Logger,
 		trayManager,
@@ -113,7 +113,7 @@ func (sa *ServiceAssembler) createUIService(trayManager tray.TrayManagerInterfac
 }
 
 // createIOService creates the IOService
-func (sa *ServiceAssembler) createIOService(outputManager outputInterfaces.Outputter, webSocketServer *websocket.WebSocketServer) *IOService {
+func (sa *FactoryAssembler) createIOService(outputManager outputInterfaces.Outputter, webSocketServer *websocket.WebSocketServer) *IOService {
 	return NewIOService(
 		sa.factoryConfig.Logger,
 		sa.factoryConfig.Config,
