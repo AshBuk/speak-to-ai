@@ -37,19 +37,16 @@ func TestAppShutdownNoGoroutineLeaks(t *testing.T) {
 
 	mockLogger := testutils.NewMockLogger()
 	app := app.NewApp(mockLogger)
-
 	// Initialize without starting long-lived services
 	err := app.Initialize("../../config.yaml", false)
 	if err != nil {
 		t.Logf("Initialize failed (expected in test environment): %v", err)
 	}
-
 	// Shutdown should complete without goroutine leaks
 	err = app.Shutdown()
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
 	}
-
 	// Give goroutines time to exit
 	time.Sleep(100 * time.Millisecond)
 }
@@ -62,7 +59,6 @@ func TestGracefulShutdownTimeout(t *testing.T) {
 
 	mockLogger := testutils.NewMockLogger()
 	app := app.NewApp(mockLogger)
-
 	err := app.Initialize("../../config.yaml", false)
 	if err != nil {
 		t.Logf("Initialize failed: %v", err)
@@ -72,11 +68,9 @@ func TestGracefulShutdownTimeout(t *testing.T) {
 	start := time.Now()
 	err = app.Shutdown()
 	duration := time.Since(start)
-
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
 	}
-
 	// Shutdown should complete quickly (< 6 seconds including 5s timeout)
 	if duration > 6*time.Second {
 		t.Errorf("Shutdown took too long: %v (expected < 6s)", duration)
@@ -94,9 +88,7 @@ func TestEvdevProviderLifecycle(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	mockLogger := testutils.NewMockLogger()
-
 	provider := providers.NewEvdevKeyboardProvider(mockLogger)
-
 	// Check if evdev is supported
 	if !provider.IsSupported() {
 		t.Skip("Evdev not supported in this environment")
@@ -107,20 +99,16 @@ func TestEvdevProviderLifecycle(t *testing.T) {
 	if err != nil {
 		t.Skipf("Could not start evdev provider: %v", err)
 	}
-
 	// Give goroutines time to start
 	time.Sleep(50 * time.Millisecond)
-
 	// Stop should wait for all device listener goroutines
 	start := time.Now()
 	provider.Stop()
 	duration := time.Since(start)
-
 	// Should complete quickly (< 1 second)
 	if duration > 1*time.Second {
 		t.Errorf("Stop() took too long: %v (expected < 1s)", duration)
 	}
-
 	// Give goroutines time to fully exit
 	time.Sleep(100 * time.Millisecond)
 
@@ -139,9 +127,7 @@ func TestDbusProviderLifecycle(t *testing.T) {
 	)
 
 	mockLogger := testutils.NewMockLogger()
-
 	provider := providers.NewDbusKeyboardProvider(mockLogger)
-
 	// Check if dbus is supported
 	if !provider.IsSupported() {
 		t.Skip("DBus not supported in this environment")

@@ -84,7 +84,6 @@ func (as *AudioService) SetConfig(cfg ConfigServiceInterface) { as.cfg = cfg }
 func (as *AudioService) HandleStartRecording() error {
 	as.mu.Lock()
 	defer as.mu.Unlock()
-
 	as.logger.Info("Starting recording...")
 
 	// Ensure model is available
@@ -93,14 +92,12 @@ func (as *AudioService) HandleStartRecording() error {
 		as.setUIError(constants.MsgModelUnavailable)
 		return fmt.Errorf("model not available: %w", err)
 	}
-
 	// Ensure audio recorder is available
 	if err := as.ensureAudioRecorderAvailable(); err != nil {
 		as.logger.Error("Audio recorder not available: %v", err)
 		as.setUIError(constants.MsgRecorderUnavailable)
 		return fmt.Errorf("audio recorder not available: %w", err)
 	}
-
 	// Choose recording mode
 	// TODO: Next feature - VAD implementation
 	// if as.config.Audio.EnableVAD && as.config.Audio.AutoStartStop {
@@ -119,7 +116,6 @@ func (as *AudioService) HandleStopRecording() error {
 	if !as.isRecording {
 		return ErrNoRecordingInProgress
 	}
-
 	as.logger.Info("Stopping recording and transcribing...")
 
 	audioFile, err := as.recorder.StopRecording()
@@ -135,7 +131,6 @@ func (as *AudioService) HandleStopRecording() error {
 			}
 			as.config.Audio.RecordingMethod = "arecord"
 			as.clearSession()
-
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
 				// Refresh tray to reflect new method
@@ -143,35 +138,28 @@ func (as *AudioService) HandleStopRecording() error {
 			}
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
-
 		// Ensure state is reset so the hotkey toggle can recover
 		as.isRecording = false
 		if as.ui != nil {
 			as.ui.SetRecordingState(false)
 		}
-
 		// Swallow error to make stop idempotent and avoid being stuck
 		return nil
 	}
-
 	as.isRecording = false
-
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetRecordingState(false)
 		as.ui.ShowNotification(constants.NotifyRecordingStopped, constants.NotifyRecordingStopMsg)
 	}
-
 	// Signal IO that transcription is starting to protect clipboard reads
 	if as.io != nil {
 		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
 			ioSvc.BeginTranscription()
 		}
 	}
-
 	// Start async transcription
 	go as.transcribeAsync(audioFile)
-
 	return nil
 }
 
@@ -204,14 +192,12 @@ func (as *AudioService) ensureModelAvailable() error {
 	if as.modelManager == nil {
 		return fmt.Errorf("model manager not available")
 	}
-
 	// Try to get the model path, which will download if needed
 	_, err := as.modelManager.GetModelPath()
 	if err != nil {
 		as.logger.Info("Model not found locally, checking download...")
 		return fmt.Errorf("failed to ensure model available: %w", err)
 	}
-
 	return nil
 }
 
@@ -219,16 +205,13 @@ func (as *AudioService) ensureModelAvailable() error {
 func (as *AudioService) ensureAudioRecorderAvailable() error {
 	if as.audioRecorderNeedsReinit || as.recorder == nil {
 		as.logger.Info("Reinitializing audio recorder...")
-
 		recorder, err := factory.GetRecorder(as.config, as.logger, as.tempManager)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}
-
 		as.recorder = recorder
 		as.audioRecorderNeedsReinit = false
 	}
-
 	return nil
 }
 
@@ -236,7 +219,6 @@ func (as *AudioService) ensureAudioRecorderAvailable() error {
 func (as *AudioService) Shutdown() error {
 	as.mu.Lock()
 	defer as.mu.Unlock()
-
 	as.cancel()
 
 	if as.isRecording && as.recorder != nil {
@@ -245,7 +227,6 @@ func (as *AudioService) Shutdown() error {
 		}
 		as.isRecording = false
 	}
-
 	as.logger.Info("AudioService shutdown complete")
 	return nil
 }
@@ -261,20 +242,16 @@ func (as *AudioService) startStandardRecording() error {
 		}
 		as.logger.Debug("Audio level: %.2f", level)
 	})
-
 	// Start recording
 	if err := as.recorder.StartRecording(); err != nil {
 		return fmt.Errorf("failed to start recording: %w", err)
 	}
-
 	as.isRecording = true
-
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetRecordingState(true)
 		as.ui.ShowNotification(constants.NotifyRecordingStarted, "Speak now...")
 	}
-
 	return nil
 }
 
@@ -289,7 +266,6 @@ func (as *AudioService) transcribeAsync(audioFile string) {
 	}
 
 	resultChan := make(chan result, 1)
-
 	go func() {
 		transcript, err := as.whisperEngine.TranscribeWithContext(ctx, audioFile)
 		select {
@@ -297,7 +273,6 @@ func (as *AudioService) transcribeAsync(audioFile string) {
 		case <-ctx.Done():
 		}
 	}()
-
 	select {
 	case res := <-resultChan:
 		as.handleTranscriptionResult(res.transcript, res.err)
@@ -312,7 +287,6 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 		as.handleTranscriptionError(err)
 		return
 	}
-
 	sanitized := utils.SanitizeTranscript(transcript)
 	as.mu.Lock()
 	as.lastTranscript = sanitized
@@ -322,7 +296,6 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 		as.handleEmptyTranscript()
 		return
 	}
-
 	as.logger.Info("Transcription result: %s", sanitized)
 
 	// Output text
@@ -335,14 +308,12 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 			return
 		}
 	}
-
 	// Notify IO about completion for clipboard protection release
 	if as.io != nil {
 		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
 			ioSvc.CompleteTranscription(sanitized)
 		}
 	}
-
 	// Update UI
 	if as.ui != nil {
 		as.ui.SetSuccess(constants.MsgTranscriptionComplete)

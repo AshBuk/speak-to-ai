@@ -12,7 +12,6 @@ import (
 func TestNewFactory(t *testing.T) {
 	config := &config.Config{}
 	factory := NewFactory(config)
-
 	if factory.config != config {
 		t.Errorf("expected config to be set correctly")
 	}
@@ -72,7 +71,6 @@ func TestFactory_GetOutputter(t *testing.T) {
 
 			factory := NewFactory(config)
 			outputter, err := factory.GetOutputter(tt.env)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
@@ -143,7 +141,6 @@ func TestFactory_GetOutputter_ToolSelection(t *testing.T) {
 
 			factory := NewFactory(config)
 			outputter, err := factory.GetOutputter(tt.env)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}

@@ -21,7 +21,6 @@ func TestNewNotificationManager(t *testing.T) {
 	appName := "TestApp"
 	cfg := createTestConfig()
 	nm := NewNotificationManager(appName, cfg)
-
 	if nm == nil {
 		t.Fatal("NewNotificationManager returned nil")
 	}
@@ -33,14 +32,12 @@ func TestNewNotificationManager(t *testing.T) {
 
 func TestNotificationManager_NotifyStartRecording(t *testing.T) {
 	nm := NewNotificationManager("TestApp", createTestConfig())
-
 	// Mock notify-send command to avoid actual notifications during testing
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
 	}
 
 	err := nm.NotifyStartRecording()
-
 	// We expect this to either succeed or fail gracefully
 	// The actual notification may fail in CI environment
 	if err != nil {
@@ -85,7 +82,6 @@ func TestNotificationManager_NotifyError(t *testing.T) {
 
 	testError := "Test error message"
 	err := nm.NotifyError(testError)
-
 	if err != nil {
 		t.Logf("NotifyError failed (expected in CI): %v", err)
 	}
@@ -101,7 +97,6 @@ func TestNotificationManager_ShowNotification(t *testing.T) {
 	summary := "Test Summary"
 	body := "Test Body"
 	err := nm.ShowNotification(summary, body)
-
 	if err != nil {
 		t.Logf("ShowNotification failed (expected in CI): %v", err)
 	}
@@ -111,7 +106,6 @@ func TestNotificationManager_IsAvailable(t *testing.T) {
 	nm := NewNotificationManager("TestApp", createTestConfig())
 
 	result := nm.IsAvailable()
-
 	// Check if notify-send is available in PATH
 	expected := commandExists("notify-send")
 
@@ -122,14 +116,11 @@ func TestNotificationManager_IsAvailable(t *testing.T) {
 
 func TestNotificationManager_SendNotification_ValidCommand(t *testing.T) {
 	nm := NewNotificationManager("TestApp", createTestConfig())
-
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
 	}
-
 	// Test with valid parameters
 	err := nm.sendNotification("Test Summary", "Test Body", "dialog-information")
-
 	// In CI environment, this may fail due to no display
 	if err != nil {
 		t.Logf("sendNotification failed (expected in CI): %v", err)
@@ -138,11 +129,9 @@ func TestNotificationManager_SendNotification_ValidCommand(t *testing.T) {
 
 func TestNotificationManager_SendNotification_EmptyParameters(t *testing.T) {
 	nm := NewNotificationManager("TestApp", createTestConfig())
-
 	if !commandExists("notify-send") {
 		t.Skip("notify-send not available, skipping test")
 	}
-
 	// Test with empty parameters
 	err := nm.sendNotification("", "", "")
 

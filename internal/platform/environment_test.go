@@ -47,7 +47,6 @@ func TestDetectEnvironment(t *testing.T) {
 	// Save original environment variables
 	originalWaylandDisplay := os.Getenv("WAYLAND_DISPLAY")
 	originalDisplay := os.Getenv("DISPLAY")
-
 	// Clean up after test
 	defer func() {
 		if originalWaylandDisplay != "" {
@@ -114,7 +113,6 @@ func TestDetectEnvironment(t *testing.T) {
 			} else {
 				os.Unsetenv("DISPLAY")
 			}
-
 			// Test detection
 			detected := DetectEnvironment()
 			if detected != tt.expectedEnvType {

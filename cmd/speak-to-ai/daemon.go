@@ -30,18 +30,15 @@ func runDaemon(args []string) int {
 		}
 		return 2
 	}
-
 	// Bootstrap
 	logLevel := logger.InfoLevel
 	if opts.debug {
 		logLevel = logger.DebugLevel
 	}
 	appLogger := logger.NewDefaultLogger(logLevel) // create logger early
-
 	// Environment detection
 	configPath := adjustPathsForAppImage(appLogger, opts.configFile)
 	configPath = adjustPathsForFlatpak(appLogger, configPath)
-
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
@@ -51,7 +48,6 @@ func runDaemon(args []string) int {
 		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
 		return 1
 	}
-
 	if err := lockFile.TryLock(); err != nil {
 		appLogger.Error("Failed to acquire application lock: %v", err)
 		return 1
@@ -73,7 +69,6 @@ func runDaemon(args []string) int {
 		appLogger.Error("Failed to initialize application: %v", err)
 		return 1
 	}
-
 	if err := application.RunAndWait(); err != nil {
 		appLogger.Error("Application error: %v", err)
 		return 1

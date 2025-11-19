@@ -43,18 +43,14 @@ func (m *MockAudioRecorder) StartRecording() error {
 	if m.startError != nil {
 		return m.startError
 	}
-
 	if m.isRecording {
 		return errors.New("recording already in progress")
 	}
-
 	m.isRecording = true
-
 	// Simulate audio level monitoring if callback is set
 	if m.simulateAudioLevels && m.audioLevelCallback != nil {
 		go m.simulateAudioLevelUpdates()
 	}
-
 	return nil
 }
 
@@ -63,11 +59,9 @@ func (m *MockAudioRecorder) StopRecording() (string, error) {
 	if m.stopError != nil {
 		return "", m.stopError
 	}
-
 	if !m.isRecording {
 		return "", errors.New("no recording in progress")
 	}
-
 	m.isRecording = false
 	return m.recordingResult, nil
 }
@@ -82,7 +76,6 @@ func (m *MockAudioRecorder) CleanupFile() error {
 	if m.cleanupError != nil {
 		return m.cleanupError
 	}
-
 	m.cleanupCalled = true
 	return nil
 }
@@ -158,7 +151,6 @@ func (m *MockAudioRecorder) simulateAudioLevelUpdates() {
 		} else {
 			m.audioLevelIndex = 0
 		}
-
 		if m.audioLevelCallback != nil {
 			m.audioLevelCallback(m.audioLevel)
 		}

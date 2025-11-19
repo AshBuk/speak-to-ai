@@ -14,7 +14,6 @@ import (
 func TestNewWhisperEngine(t *testing.T) {
 	config := &config.Config{}
 	modelPath := "/non/existent/model.bin"
-
 	// Test that NewWhisperEngine returns error for non-existent model
 	engine, err := NewWhisperEngine(config, modelPath)
 	if err == nil {
@@ -24,7 +23,6 @@ func TestNewWhisperEngine(t *testing.T) {
 	if engine != nil {
 		t.Errorf("Expected nil engine when model doesn't exist")
 	}
-
 	// Test error message
 	expectedError := "whisper model not found: /non/existent/model.bin"
 	if err.Error() != expectedError {
@@ -115,7 +113,6 @@ func TestGetFileSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			size, err := utils.GetFileSize(tt.path)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}

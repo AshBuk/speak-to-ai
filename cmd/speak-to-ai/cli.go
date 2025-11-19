@@ -52,7 +52,6 @@ func parseCLIOptions(args []string) (*cliOptions, error) {
 		fs.Usage()
 		return nil, err
 	}
-
 	remaining := fs.Args()
 	if len(remaining) == 0 {
 		fs.Usage()
@@ -65,9 +64,7 @@ func parseCLIOptions(args []string) (*cliOptions, error) {
 		fs.Usage()
 		return nil, fmt.Errorf("unknown command: %s", remaining[0])
 	}
-
 	timeout := deriveTimeout(command, timeoutSec)
-
 	if socketPath == "" {
 		socketPath = utils.GetDefaultSocketPath()
 	}
@@ -107,7 +104,6 @@ func maybeRunCLI(args []string) (bool, int) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return true, 1
 	}
-
 	if opts.jsonOutput {
 		if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to encode response: %v\n", err)
@@ -115,7 +111,6 @@ func maybeRunCLI(args []string) (bool, int) {
 		}
 		return true, 0
 	}
-
 	printResponse(opts.command, resp)
 	return true, 0
 }
@@ -222,7 +217,6 @@ func deriveTimeout(command string, override int) time.Duration {
 
 func printResponse(command string, resp ipc.Response) {
 	data := mapFromResponse(resp.Data)
-
 	switch command {
 	case "start":
 		fmt.Println("Recording started.")

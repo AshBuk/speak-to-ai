@@ -62,7 +62,6 @@ func (s *Server) Start() error {
 	if s.path == "" {
 		return fmt.Errorf("ipc server requires a socket path")
 	}
-
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o700); err != nil {
 		return fmt.Errorf("failed to create ipc directory: %w", err)
 	}
@@ -95,14 +94,12 @@ func (s *Server) acceptLoop() {
 			if errors.Is(err, net.ErrClosed) {
 				return
 			}
-
 			// Check if we are shutting down.
 			select {
 			case <-s.stopCh:
 				return
 			default:
 			}
-
 			if isTransientAcceptError(err) {
 				s.log.Warning("Temporary IPC accept error: %v", err)
 				time.Sleep(50 * time.Millisecond)
@@ -112,7 +109,6 @@ func (s *Server) acceptLoop() {
 			s.log.Error("IPC accept error: %v", err)
 			return
 		}
-
 		go s.handleConnection(conn)
 	}
 }
@@ -134,7 +130,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 		}
 		return
 	}
-
 	var req Request
 	if err := json.Unmarshal(line, &req); err != nil {
 		s.writeResponse(conn, NewErrorResponse("invalid request payload"))
@@ -152,7 +147,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 		s.writeResponse(conn, NewErrorResponse(err.Error()))
 		return
 	}
-
 	s.writeResponse(conn, resp)
 }
 
@@ -160,12 +154,10 @@ func isTransientAcceptError(err error) bool {
 	if err == nil {
 		return false
 	}
-
 	var ne net.Error
 	if errors.As(err, &ne) && ne.Timeout() {
 		return true
 	}
-
 	return errors.Is(err, syscall.EINTR)
 }
 
@@ -187,7 +179,6 @@ func (s *Server) writeResponse(conn net.Conn, resp Response) {
 		return
 	}
 	data = append(data, '\n')
-
 	if _, err := conn.Write(data); err != nil {
 		s.log.Debug("IPC write error: %v", err)
 	}

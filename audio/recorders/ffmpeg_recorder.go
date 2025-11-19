@@ -44,7 +44,6 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 	if device != "default" {
 		return device
 	}
-
 	// Try to get actual source name using pactl
 	cmd := exec.Command("pactl", "list", "short", "sources")
 	output, err := cmd.Output()
@@ -52,7 +51,6 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 		f.logger.Debug("Could not list PulseAudio sources: %v", err)
 		return device
 	}
-
 	// Find first non-monitor input source (usually the microphone)
 	// Priority: wired input > any non-monitor source
 	var firstNonMonitor string
@@ -69,7 +67,6 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 			if strings.Contains(sourceName, "bluez") {
 				continue
 			}
-
 			// Remember first non-monitor source as fallback
 			if firstNonMonitor == "" {
 				firstNonMonitor = sourceName
@@ -136,25 +133,21 @@ func (f *FFmpegRecorder) StopRecording() (string, error) {
 	if err == nil {
 		return outputFile, nil // Success on first attempt
 	}
-
 	// Retry on empty/too-short files regardless of duration (ffmpeg flush)
 	isEmptyFileError := strings.Contains(err.Error(), "audio file is empty") ||
 		strings.Contains(err.Error(), "audio file too short")
 	if !isEmptyFileError {
 		return outputFile, err
 	}
-
 	// ffmpeg-specific retry: short recordings need extra time to flush
 	f.logger.Warning("ffmpeg recording resulted in empty/short file, retrying with extra flush time...")
 	time.Sleep(retryFlushDelay)
-
 	// Re-check the file
 	info, statErr := os.Stat(outputFile)
 	if statErr == nil && info.Size() > 44 {
 		f.logger.Info("Retry successful: file now has %d bytes", info.Size())
 		return outputFile, nil
 	}
-
 	// Still failed after retry
 	f.logger.Error("Retry failed, file still empty or too small")
 	return outputFile, err
@@ -164,7 +157,6 @@ func (f *FFmpegRecorder) StopRecording() (string, error) {
 func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 	// Resolve actual PulseAudio source name (ffmpeg needs explicit source, not "default")
 	device := f.resolvePulseAudioSource(f.config.Audio.Device)
-
 	// Stable command with optimized options; avoid stdin to let SIGINT be handled cleanly
 	sr := f.config.Audio.SampleRate
 	if sr <= 0 {

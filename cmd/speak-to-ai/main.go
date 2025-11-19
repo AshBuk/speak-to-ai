@@ -20,7 +20,6 @@ func main() {
 	if handled, exitCode := maybeRunCLI(args); handled {
 		os.Exit(exitCode)
 	}
-
 	if exitCode := runDaemon(args); exitCode != 0 {
 		os.Exit(exitCode)
 	}

@@ -43,7 +43,6 @@ func NewFactoryComponents(config ServiceFactoryConfig) *FactoryComponents {
 //  3. HotkeyManager, WebSocketServer, TrayManager, NotifyManager (UI/control)
 func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	components := &Components{}
-
 	// Initialize model manager
 	components.ModelManager = whisper.NewModelManager(cf.config.Config)
 	if err := components.ModelManager.Initialize(); err != nil {
@@ -59,7 +58,6 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 		return nil, fmt.Errorf("failed to resolve model path: %w", err)
 	}
 	cf.config.Logger.Info("Model path resolved: %s", modelFilePath)
-
 	// Initialize temp file manager
 	cleanupTimeout := time.Duration(cf.config.Config.Audio.TempFileCleanupTime) * time.Minute
 	if cleanupTimeout <= 0 {
@@ -67,7 +65,6 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	}
 	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout)
 	components.TempFileManager.Start()
-
 	// Initialize audio recorder
 	components.Recorder, err = factory.GetRecorder(cf.config.Config, cf.config.Logger, components.TempFileManager)
 	if err != nil {
@@ -92,10 +89,8 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	}
 	// Initialize hotkey manager
 	components.HotkeyManager = cf.createHotkeyManager()
-
 	// Initialize WebSocket server (always initialized but may not be started)
 	components.WebSocketServer = cf.createWebSocketServer(components.Recorder, components.WhisperEngine)
-
 	// Initialize tray manager
 	components.TrayManager = cf.createTrayManager()
 	// Start tray manager (no-op in mock). Ensures systray is initialized early.

@@ -24,7 +24,6 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempMgr := processing.NewTempFileManager(30 * time.Minute)
 	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-
 	if recorder == nil {
 		t.Fatal("Expected recorder to be created, got nil")
 	}
@@ -32,7 +31,6 @@ func TestNewFFmpegRecorder(t *testing.T) {
 	if recorder.config != cfg {
 		t.Error("Expected config to be set correctly")
 	}
-
 	// Test that BaseRecorder is properly initialized
 	if recorder.config.Audio.Device != "default" {
 		t.Errorf("Expected device 'default', got %s", recorder.config.Audio.Device)
@@ -78,9 +76,7 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
 			recorder.useBuffer = tt.useBuffer
 			recorder.outputFile = "/tmp/test.wav"
-
 			args := recorder.buildBaseCommandArgs()
-
 			verifyArgFlag(t, args, "-i", tt.expectDevice, "device")
 			verifyArgFlag(t, args, "-ar", tt.expectRate, "sample rate")
 			verifyArgFlag(t, args, "-q:a", "0", "quality setting")
@@ -98,7 +94,6 @@ func TestFFmpegRecorder_OutputFileHandling(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempMgr := processing.NewTempFileManager(30 * time.Minute)
 	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
 		t.Errorf("Expected empty output file initially, got %s", recorder.GetOutputFile())
@@ -108,7 +103,6 @@ func TestFFmpegRecorder_OutputFileHandling(t *testing.T) {
 	tempDir := t.TempDir()
 	expectedFile := filepath.Join(tempDir, "test_ffmpeg_recording.wav")
 	recorder.outputFile = expectedFile
-
 	if recorder.GetOutputFile() != expectedFile {
 		t.Errorf("Expected output file %s, got %s", expectedFile, recorder.GetOutputFile())
 	}
@@ -123,15 +117,12 @@ func TestFFmpegRecorder_StopRecording(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempMgr := processing.NewTempFileManager(30 * time.Minute)
 	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-
 	// Set up output file before testing stop
 	tempDir := t.TempDir()
 	expectedFile := filepath.Join(tempDir, "test_ffmpeg_output.wav")
 	recorder.outputFile = expectedFile
-
 	// Test stopping without starting (should not panic)
 	outputFile, err := recorder.StopRecording()
-
 	// When no recording process is started, StopProcess() returns error
 	// and the function returns empty string
 	if err != nil {

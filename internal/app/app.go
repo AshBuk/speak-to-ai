@@ -61,18 +61,14 @@ func NewApp(logger logger.Logger) *App {
 // Multi-step initialization: Config → Services → Dependencies
 func (a *App) Initialize(configFile string, debug bool) error {
 	a.Runtime.Logger.Info("Initializing application...")
-
 	config, err := a.initializeConfig(configFile, debug)
 	if err != nil {
 		return fmt.Errorf("failed to initialize config: %w", err)
 	}
-
 	if err := a.initializeServices(config, configFile); err != nil {
 		return fmt.Errorf("failed to initialize services: %w", err)
 	}
-
 	a.setupServiceDependencies()
-
 	a.Runtime.Logger.Info("Application initialization complete")
 	return nil
 }
@@ -80,12 +76,10 @@ func (a *App) Initialize(configFile string, debug bool) error {
 // Load and validate the application configuration
 func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, error) {
 	a.Runtime.Logger.Info("Loading configuration from: %s", configFile)
-
 	cfg, err := config.LoadConfig(configFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
-
 	// Override the debug flag from the command line if specified
 	if debug {
 		cfg.General.Debug = true
@@ -98,7 +92,6 @@ func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, e
 // Factory Pattern - creates and configures all services via factory with DI
 func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	a.Runtime.Logger.Info("Initializing services with dependency injection...")
-
 	environment := platform.DetectEnvironment()
 	a.Runtime.Logger.Info("Detected environment: %s", environment)
 
@@ -109,7 +102,6 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 		ConfigFile:  cfgFilePath,      // Path to config file for reloading
 		Environment: environment,      // Detected runtime environment (Native/AppImage/etc)
 	})
-
 	// Factory Method: factory.CreateServices() → *ServiceContainer (all services ready)
 	serviceContainer, err := factory.CreateServices()
 	if err != nil {
@@ -118,7 +110,6 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 
 	// Replace empty container with fully initialized services
 	a.Services = serviceContainer
-
 	if err := a.setupHotkeyCallbacks(); err != nil {
 		a.Runtime.Logger.Warning("Failed to set up hotkey callbacks: %v", err)
 	}
@@ -190,11 +181,9 @@ func (a *App) startServices() error {
 // Event Loop - blocks until OS signal or context cancellation
 func (a *App) RunAndWait() error {
 	a.Runtime.Logger.Info("Starting application...")
-
 	if err := a.startServices(); err != nil {
 		return fmt.Errorf("failed to start services: %w", err)
 	}
-
 	if err := a.startIPCServer(); err != nil {
 		a.Runtime.Logger.Warning("CLI IPC server not started: %v", err)
 	}
@@ -213,20 +202,16 @@ func (a *App) RunAndWait() error {
 // Shutdown sequence: Cancel() → Stop IPC → Shutdown Services → Wait(5s timeout)
 func (a *App) Shutdown() error {
 	a.Runtime.Logger.Info("Shutting down application...")
-
 	a.Runtime.Cancel() // Signal all goroutines to stop
-
 	if a.ipcServer != nil {
 		a.ipcServer.Stop()
 	}
-
 	if a.Services != nil {
 		if err := a.Services.Shutdown(); err != nil {
 			a.Runtime.Logger.Error("Error during service shutdown: %v", err)
 			return err
 		}
 	}
-
 	// Wait for background goroutines with timeout
 	if ok := utils.WaitAll(5 * time.Second); ok {
 		a.Runtime.Logger.Info("Background tasks completed")

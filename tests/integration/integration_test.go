@@ -25,14 +25,12 @@ func TestApplicationInitialization(t *testing.T) {
 
 	// Test that basic config loading works
 	tempDir := t.TempDir()
-
 	// Create test config
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
 	cfg.General.TempAudioPath = tempDir
 	cfg.Output.DefaultMode = "clipboard" // Safe for testing
 	cfg.WebServer.Enabled = false
-
 	// Test config validation
 	err := config.ValidateConfig(cfg)
 	if err != nil {
@@ -78,7 +76,6 @@ invalid: yaml: content:
 		t.Run(tt.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			configFile := filepath.Join(tempDir, "config.yaml")
-
 			err := os.WriteFile(configFile, []byte(tt.configData), 0644)
 			if err != nil {
 				t.Fatalf("Failed to write test config: %v", err)
@@ -103,7 +100,6 @@ func TestHotkeyManagerIntegration(t *testing.T) {
 	// Test that hotkey manager can be created and configured
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	// Test different hotkey configurations
 	testHotkeys := []string{
 		"altgr+comma",
@@ -114,7 +110,6 @@ func TestHotkeyManagerIntegration(t *testing.T) {
 	for _, hotkey := range testHotkeys {
 		t.Run("hotkey_"+hotkey, func(t *testing.T) {
 			cfg.Hotkeys.StartRecording = hotkey
-
 			// This would normally require elevated permissions
 			// In test environment, we just verify it doesn't crash
 			t.Logf("Testing hotkey configuration: %s", hotkey)
@@ -126,13 +121,11 @@ func TestOutputManagerIntegration(t *testing.T) {
 	// Test output manager creation with different configurations
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	testModes := []string{"clipboard", "active_window"}
 
 	for _, mode := range testModes {
 		t.Run("mode_"+mode, func(t *testing.T) {
 			cfg.Output.DefaultMode = mode
-
 			// Test that output manager can be created
 			// Actual functionality would require external tools
 			t.Logf("Testing output mode: %s", mode)

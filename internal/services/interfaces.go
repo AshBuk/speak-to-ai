@@ -126,37 +126,31 @@ func NewServiceContainer() *ServiceContainer {
 // Gracefully shut down all services
 func (sc *ServiceContainer) Shutdown() error {
 	var lastErr error
-
 	if sc.Audio != nil {
 		if err := sc.Audio.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}
-
 	if sc.UI != nil {
 		if err := sc.UI.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}
-
 	if sc.IO != nil {
 		if err := sc.IO.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}
-
 	if sc.Config != nil {
 		if err := sc.Config.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}
-
 	if sc.Hotkeys != nil {
 		if err := sc.Hotkeys.Shutdown(); err != nil {
 			lastErr = err
 		}
 	}
-
 	if sc.TempFileManager != nil {
 		sc.TempFileManager.Stop()
 		sc.TempFileManager.CleanupAll()

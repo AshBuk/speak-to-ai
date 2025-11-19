@@ -42,7 +42,6 @@ func (m *MockHotkeyProvider) Start() error {
 
 	// Always record the call attempt, regardless of outcome
 	m.callHistory = append(m.callHistory, "Start")
-
 	if m.startError != nil {
 		return m.startError
 	}
@@ -52,12 +51,10 @@ func (m *MockHotkeyProvider) Start() error {
 	}
 
 	m.isStarted = true
-
 	// Create new event channel if it was closed
 	if m.eventChannel == nil {
 		m.eventChannel = make(chan string, 10)
 	}
-
 	// Start event simulation if enabled
 	if m.simulateEvents {
 		go m.simulateHotkeyEvents()
@@ -80,7 +77,6 @@ func (m *MockHotkeyProvider) Stop() {
 	m.isStarted = false
 	m.stopCalled = true
 	m.callHistory = append(m.callHistory, "Stop")
-
 	// Close event channel only if it's still open
 	if m.eventChannel != nil {
 		close(m.eventChannel)
@@ -95,7 +91,6 @@ func (m *MockHotkeyProvider) RegisterHotkey(hotkey string, callback func() error
 
 	// Always record the call attempt, regardless of outcome
 	m.callHistory = append(m.callHistory, "RegisterHotkey")
-
 	if m.registerError != nil {
 		return m.registerError
 	}
@@ -109,7 +104,6 @@ func (m *MockHotkeyProvider) RegisterHotkey(hotkey string, callback func() error
 	}
 
 	m.registeredHotkeys[hotkey] = callback
-
 	return nil
 }
 
@@ -187,11 +181,9 @@ func (m *MockHotkeyProvider) SimulateHotkeyPress(hotkey string) error {
 	m.mu.RLock()
 	callback, exists := m.registeredHotkeys[hotkey]
 	m.mu.RUnlock()
-
 	if !exists {
 		return fmt.Errorf("hotkey %s not registered", hotkey)
 	}
-
 	return callback()
 }
 
@@ -213,7 +205,6 @@ func (m *MockHotkeyProvider) DisableEventSimulation() {
 func (m *MockHotkeyProvider) GetCallHistory() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
 	history := make([]string, len(m.callHistory))
 	copy(history, m.callHistory)
 	return history
@@ -223,7 +214,6 @@ func (m *MockHotkeyProvider) GetCallHistory() []string {
 func (m *MockHotkeyProvider) Reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
 	// Close existing channel if it's open
 	if m.eventChannel != nil && m.isStarted {
 		close(m.eventChannel)
@@ -237,7 +227,6 @@ func (m *MockHotkeyProvider) Reset() {
 	m.simulateEvents = false
 	m.callHistory = make([]string, 0)
 	m.stopCalled = false
-
 	// Create new event channel
 	m.eventChannel = make(chan string, 100)
 }
@@ -246,7 +235,6 @@ func (m *MockHotkeyProvider) Reset() {
 func (m *MockHotkeyProvider) WasMethodCalled(method string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
 	for _, call := range m.callHistory {
 		if strings.Contains(call, method) {
 			return true
@@ -259,7 +247,6 @@ func (m *MockHotkeyProvider) WasMethodCalled(method string) bool {
 func (m *MockHotkeyProvider) GetMethodCallCount(method string) int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
 	count := 0
 	for _, call := range m.callHistory {
 		if strings.Contains(call, method) {

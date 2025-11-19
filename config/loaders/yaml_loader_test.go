@@ -20,7 +20,6 @@ func TestLoadConfig(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	configPath := filepath.Join(tempDir, "config.yaml")
-
 	tests := []struct {
 		name          string
 		configContent string
@@ -112,7 +111,6 @@ general:
 			}
 
 			config, err := LoadConfig(configPath)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
@@ -122,7 +120,6 @@ general:
 			if !tt.expectError && config == nil {
 				t.Errorf("expected config to be loaded")
 			}
-
 			if tt.checkValues != nil && config != nil {
 				tt.checkValues(t, config)
 			}
@@ -132,7 +129,6 @@ general:
 
 func TestLoadConfig_NonExistentFile(t *testing.T) {
 	config, err := LoadConfig("/non/existent/file.yaml")
-
 	// LoadConfig returns default config when file doesn't exist
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -161,7 +157,6 @@ func TestLoadConfig_InvalidPermissions(t *testing.T) {
 	}
 
 	config, err := LoadConfig(configPath)
-
 	// LoadConfig returns default config when file can't be read
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -179,7 +174,6 @@ func TestLoadConfig_InvalidPermissions(t *testing.T) {
 func TestConfig_DefaultValues(t *testing.T) {
 	// Test that default config has reasonable values
 	config := &models.Config{}
-
 	// Apply default values (this would typically be done in LoadConfig)
 	// For this test, we'll just verify the structure exists
 	if config.General.WhisperModel == "" {
@@ -188,7 +182,6 @@ func TestConfig_DefaultValues(t *testing.T) {
 	if config.Audio.SampleRate == 0 {
 		config.Audio.SampleRate = 16000
 	}
-
 	// Verify defaults
 	if config.General.WhisperModel != "small-q5_1" {
 		t.Errorf("expected default whisper model to be 'small-q5_1', got %s", config.General.WhisperModel)

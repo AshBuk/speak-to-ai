@@ -45,7 +45,6 @@ func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.Envir
 		hotkeyActions: make(map[string]HotkeyAction),
 		logger:        logger,
 	}
-
 	// Initialize the appropriate keyboard provider
 	manager.provider = selectProviderForEnvironment(manager.config, manager.environment, manager.logger)
 
@@ -85,7 +84,6 @@ func (h *HotkeyManager) GetRegisteredHotkeys() []string {
 	var hotkeys []string
 	// Add the primary recording hotkeys
 	hotkeys = append(hotkeys, h.config.GetStartRecordingHotkey())
-
 	// Add any custom hotkeys
 	for hotkey := range h.hotkeyActions {
 		hotkeys = append(hotkeys, hotkey)
@@ -99,7 +97,6 @@ func (h *HotkeyManager) Start() error {
 	if h.isListening {
 		return fmt.Errorf("hotkey manager is already running")
 	}
-
 	if h.provider == nil {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
@@ -108,12 +105,10 @@ func (h *HotkeyManager) Start() error {
 
 	h.logger.Info("Starting hotkey manager...")
 	h.logger.Info("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
-
 	// Register all hotkeys on the selected provider
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
 		return err
 	}
-
 	// Start the provider and handle potential fallbacks
 	err := h.provider.Start()
 	if err != nil {
@@ -185,7 +180,6 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if h.provider == nil {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
-
 	// Re-register all hotkeys on the new provider
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
 		return err
@@ -205,7 +199,6 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider == nil {
 		return "", fmt.Errorf("no keyboard provider available")
 	}
-
 	// For evdev: stop to release devices, capture on new instance, restart
 	if _, isEvdev := h.provider.(*providers.EvdevKeyboardProvider); isEvdev {
 		h.provider.Stop()
@@ -219,14 +212,12 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 		}
 
 		result, err := captureProvider.CaptureOnce(timeout)
-
 		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
 			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
 		}
 
 		return result, err
 	}
-
 	// For dbus: use evdev fallback (dbus doesn't support CaptureOnce)
 	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
 		fallback := providers.NewEvdevKeyboardProvider(h.logger)

@@ -71,7 +71,6 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	if !utils.IsValidFile(audioFile) {
 		return "", fmt.Errorf("audio file not found or invalid: %s", audioFile)
 	}
-
 	// Enforce a reasonable file size limit to prevent excessive memory usage
 	fileSize, err := utils.GetFileSize(audioFile)
 	if err != nil {
@@ -81,22 +80,18 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	if fileSize > maxFileSize {
 		return "", fmt.Errorf("audio file too large (%d bytes), max allowed is %d bytes", fileSize, maxFileSize)
 	}
-
 	// Check for sufficient disk space before proceeding
 	if err := utils.CheckDiskSpace(audioFile); err != nil {
 		return "", fmt.Errorf("insufficient disk space: %w", err)
 	}
-
 	audioData, err := w.loadAudioData(audioFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to load audio data: %w", err)
 	}
-
 	context, err := w.model.NewContext()
 	if err != nil {
 		return "", fmt.Errorf("failed to create whisper context: %w", err)
 	}
-
 	// Set the target language for transcription if specified in the config
 	if lang := w.config.General.Language; lang != "" {
 		if err := context.SetLanguage(lang); err != nil {
@@ -107,7 +102,6 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	if err := context.Process(audioData, nil, nil, nil); err != nil {
 		return "", fmt.Errorf("failed to process audio: %w", err)
 	}
-
 	// Collect all text segments from the processed audio
 	var transcript strings.Builder
 	for {
