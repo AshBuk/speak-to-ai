@@ -16,6 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/config/models"
 	"github.com/AshBuk/speak-to-ai/config/security"
 	"github.com/AshBuk/speak-to-ai/config/validators"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // Config is a type alias for the main configuration structure defined in the models package.
@@ -29,8 +30,8 @@ const (
 )
 
 // Load configuration from the specified file using the configured loader.
-func LoadConfig(filename string) (*Config, error) {
-	return loaders.LoadConfig(filename)
+func LoadConfig(filename string, loggers ...logger.Logger) (*Config, error) {
+	return loaders.LoadConfig(filename, loggers...)
 }
 
 // Write the configuration to the specified file.

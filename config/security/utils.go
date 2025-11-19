@@ -8,13 +8,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
+
+var securityLogger logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
 
 // Check if a command is in the security whitelist.
 // It checks only the base name of the command, ignoring the path, to ensure
@@ -96,7 +98,7 @@ func CalculateFileHash(filename string) (string, error) {
 	defer func() {
 		if err := f.Close(); err != nil {
 			// Log the error but don't return it, as the primary operation (hashing) succeeded
-			log.Printf("Warning: failed to close file %s: %v", filename, err)
+			securityLogger.Warning("Failed to close file %s: %v", filename, err)
 		}
 	}()
 

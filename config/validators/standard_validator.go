@@ -64,7 +64,6 @@ func validateWebServerConfig(config *models.Config, errors *[]string) {
 		*errors = append(*errors, fmt.Sprintf("invalid port: %d, correcting to 8080", config.WebServer.Port))
 		config.WebServer.Port = 8080
 	}
-
 	// Host must be a valid hostname
 	if config.WebServer.Host == "" {
 		config.WebServer.Host = "localhost"
@@ -101,6 +100,5 @@ func ValidateConfig(config *models.Config) error {
 	if len(errors) > 0 {
 		return fmt.Errorf("configuration validation issues: %s", strings.Join(errors, "; "))
 	}
-
 	return nil
 }

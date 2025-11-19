@@ -17,8 +17,8 @@ import (
 // based on available dependencies
 func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
 	// Use the real systray implementation
-	iconMicOff := GetIconMicOff()
-	iconMicOn := GetIconMicOn()
+	iconMicOff := GetIconMicOff(logger)
+	iconMicOn := GetIconMicOn(logger)
 
 	// Try to detect AppImage dir (reserved for potential icon overrides)
 	_ = os.Getenv("APPDIR")
