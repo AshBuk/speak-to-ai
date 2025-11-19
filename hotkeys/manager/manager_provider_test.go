@@ -63,7 +63,6 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 	t.Run("RegisterAndCreateProvider", func(t *testing.T) {
 		mockProvider := mocks.NewMockHotkeyProvider()
 		factory.RegisterProvider("mock", mockProvider)
-
 		provider, err := factory.CreateProvider("mock")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -90,7 +89,6 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 
 		factory.RegisterProvider("provider1", mock1)
 		factory.RegisterProvider("provider2", mock2)
-
 		provider1, err := factory.CreateProvider("provider1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -112,7 +110,6 @@ func TestHotkeyFactory_DependencyInjection(t *testing.T) {
 
 		factory.RegisterProvider("override", mock1)
 		factory.RegisterProvider("override", mock2)
-
 		provider, err := factory.CreateProvider("override")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -130,7 +127,6 @@ func TestHotkeyFactory_ErrorHandling(t *testing.T) {
 	t.Run("FactoryError", func(t *testing.T) {
 		expectedError := errors.New("factory error")
 		factory.SetCreateError(expectedError)
-
 		provider, err := factory.CreateProvider("any")
 		if err == nil {
 			t.Error("expected error but got none")

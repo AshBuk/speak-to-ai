@@ -49,7 +49,6 @@ func (p *EvdevKeyboardProvider) IsSupported() bool {
 	if err != nil || len(devices) == 0 {
 		return false
 	}
-
 	// Close the devices after the check
 	for _, dev := range devices {
 		if err := dev.Close(); err != nil {
@@ -68,7 +67,6 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to list input devices: %w", err)
 	}
-
 	// Filter for devices that are keyboards
 	for _, path := range devicePaths {
 		dev, err := evdev.Open(path)
@@ -106,7 +104,6 @@ func isKeyboardDevice(dev *evdev.InputDevice) bool {
 	if !hasKeyType {
 		return false
 	}
-
 	// The presence of common letter keys strongly indicates a keyboard
 	events := dev.CapableEvents(evdev.EV_KEY)
 	common := map[uint16]bool{16: true, 30: true, 44: true, 57: true} // q, a, z, space
@@ -126,7 +123,6 @@ func (p *EvdevKeyboardProvider) Start() error {
 	if p.isListening {
 		return fmt.Errorf("evdev keyboard provider already started")
 	}
-
 	var err error
 	// (Re)initialize stop channel on each start to avoid using a closed channel
 	p.stopListening = make(chan bool)
@@ -140,9 +136,7 @@ func (p *EvdevKeyboardProvider) Start() error {
 	if len(p.devices) == 0 {
 		return fmt.Errorf("no keyboard devices found")
 	}
-
 	p.isListening = true
-
 	// Start a listener goroutine for each device
 	for i := range p.devices {
 		idx := i
@@ -166,19 +160,16 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 	}
 	dev := p.devices[idx]
 	p.mutex.RUnlock()
-
 	for {
 		select {
 		case <-p.stopListening:
 			return
 		default:
 		}
-
 		// Check if stopping flag is set
 		if atomic.LoadInt32(&p.stopping) == 1 {
 			return
 		}
-
 		event, err := dev.ReadOne()
 		if err != nil {
 			// Exit on device read error to avoid infinite loops
@@ -212,12 +203,10 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 		p.modifierState[strings.ToLower(keyName)] = (event.Value == 1)
 		p.mutex.Unlock()
 	}
-
 	// Only process key-down events for hotkey triggers
 	if event.Value != 1 {
 		return
 	}
-
 	// Create a thread-safe copy of callbacks and modifier state
 	p.mutex.RLock()
 	callbacksCopy := make(map[string]func() error, len(p.callbacks))
@@ -229,11 +218,9 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 		modState[k] = v
 	}
 	p.mutex.RUnlock()
-
 	// Check for registered hotkeys
 	for hotkeyStr, callback := range callbacksCopy {
 		hotkey := utils.ParseHotkey(hotkeyStr)
-
 		// Check if the pressed key matches the hotkey's main key
 		if strings.EqualFold(hotkey.Key, keyName) {
 			// Check if all required modifiers are also pressed
@@ -244,7 +231,6 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 					break
 				}
 			}
-
 			if allModifiersPressed {
 				go func(cb func() error) {
 					if err := cb(); err != nil {
@@ -272,10 +258,8 @@ func (p *EvdevKeyboardProvider) Stop() {
 	if !p.isListening {
 		return
 	}
-
 	// Mark as stopping first to suppress error logs from ReadOne
 	atomic.StoreInt32(&p.stopping, 1)
-
 	// Close all device handles FIRST to unblock any pending ReadOne() calls
 	for _, dev := range p.devices {
 		if err := dev.Close(); err != nil {
@@ -283,7 +267,6 @@ func (p *EvdevKeyboardProvider) Stop() {
 			p.logger.Warning("Evdev device close (ignored): %v", err)
 		}
 	}
-
 	// Signal all listener goroutines to stop after devices are closed
 	if p.stopListening != nil {
 		// make Stop idempotent: close only once and nil the channel
@@ -292,7 +275,6 @@ func (p *EvdevKeyboardProvider) Stop() {
 	}
 
 	p.isListening = false
-
 	// go-evdev ReadOne() can block for seconds even after Close()
 	// Wait with timeout to avoid indefinite blocking
 	done := make(chan struct{})
@@ -347,7 +329,6 @@ func (cs *captureSession) processKeyEvent(ev *evdev.InputEvent) (shouldStop bool
 	if keyName == "" || strings.HasPrefix(keyName, "BTN_") {
 		return false, ""
 	}
-
 	// Track modifier state
 	if utils.IsModifierKey(keyName) {
 		cs.modStateMutex.Lock()
@@ -355,12 +336,10 @@ func (cs *captureSession) processKeyEvent(ev *evdev.InputEvent) (shouldStop bool
 		cs.modStateMutex.Unlock()
 		return false, ""
 	}
-
 	// Only process key-down events
 	if ev.Value != 1 {
 		return false, ""
 	}
-
 	// Check for cancellation
 	cs.modStateMutex.Lock()
 	isCancelled := utils.CheckCancelCondition(keyName, cs.modState)
@@ -369,7 +348,6 @@ func (cs *captureSession) processKeyEvent(ev *evdev.InputEvent) (shouldStop bool
 	if isCancelled {
 		return true, ""
 	}
-
 	// Build hotkey string
 	cs.modStateMutex.Lock()
 	mods := utils.BuildModifierState(cs.modState)
@@ -392,7 +370,6 @@ func (cs *captureSession) listenDevice(idx int) {
 			return
 		default:
 		}
-
 		ev, err := cs.devices[idx].ReadOne()
 		if err != nil {
 			return
@@ -402,7 +379,6 @@ func (cs *captureSession) listenDevice(idx int) {
 		if !shouldStop {
 			continue
 		}
-
 		select {
 		case cs.resultCh <- result:
 		default:
@@ -448,13 +424,11 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		resultCh: make(chan string, 1),
 		stopCh:   make(chan struct{}),
 	}
-
 	// Start listeners for all devices
 	for i := range devices {
 		session.wg.Add(1)
 		go session.listenDevice(i)
 	}
-
 	// Wait for result or timeout
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
@@ -467,9 +441,7 @@ func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, erro
 		close(session.stopCh)
 		result = ""
 	}
-
 	session.cleanup()
-
 	if strings.TrimSpace(result) == "" {
 		return "", fmt.Errorf("capture cancelled")
 	}

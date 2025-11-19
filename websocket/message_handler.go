@@ -22,7 +22,6 @@ func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 			}
 			break
 		}
-
 		// Log request if enabled
 		if s.config.WebServer.LogRequests {
 			s.logger.Debug("Received WebSocket message: %s", string(rawMessage))
@@ -35,7 +34,6 @@ func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 			s.sendError(conn, "invalid_message", "Could not parse message", msg.RequestID)
 			continue
 		}
-
 		// Process message based on type
 		switch msg.Type {
 		case "start-recording":
@@ -63,7 +61,6 @@ func (s *WebSocketServer) handleStartRecording(conn *websocket.Conn, requestID s
 		s.sendError(conn, "recording_error", fmt.Sprintf("Error starting recording: %v", err), requestID)
 		return
 	}
-
 	s.sendMessage(conn, "recording-started", nil, requestID)
 }
 
@@ -76,19 +73,15 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 		s.sendError(conn, "recording_error", fmt.Sprintf("Error stopping recording: %v", err), requestID)
 		return
 	}
-
 	// Notify client that recording has stopped
 	s.sendMessage(conn, "recording-stopped", nil, requestID)
-
 	// Send the audio file to Whisper for transcription
 	type transcriptionResult struct {
 		text string
 		err  error
 	}
-
 	// Create channel for receiving transcription result
 	resultCh := make(chan transcriptionResult, 1)
-
 	// Start transcription in a goroutine with timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), transcriptionCtxTimeout)
 	defer cancel()
@@ -113,7 +106,6 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 		s.logger.Error("Timeout transcribing audio")
 		s.sendError(conn, "transcription_timeout", "Timeout transcribing audio", requestID)
 	}
-
 	// Clean up audio file
 	if err := s.recorder.CleanupFile(); err != nil {
 		s.logger.Error("Error cleaning up audio file: %v", err)
@@ -130,14 +122,12 @@ func (s *WebSocketServer) sendError(conn *websocket.Conn, errorType string, erro
 		RequestID:  requestID,
 		Timestamp:  time.Now().Unix(),
 	}
-
 	// Serialize message
 	data, err := json.Marshal(msg)
 	if err != nil {
 		s.logger.Error("Error marshaling error message: %v", err)
 		return
 	}
-
 	// Send message
 	if err := conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
 		s.logger.Error("SetWriteDeadline error: %v", err)

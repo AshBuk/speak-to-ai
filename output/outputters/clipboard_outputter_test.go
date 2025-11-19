@@ -34,7 +34,6 @@ func TestNewClipboardOutputter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{}
 			outputter, err := NewClipboardOutputter(tt.clipboardTool, cfg)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
@@ -64,7 +63,6 @@ func TestNewClipboardOutputter_WithExistingTool(t *testing.T) {
 
 	cfg := &config.Config{}
 	outputter, err := NewClipboardOutputter(existingTool, cfg)
-
 	if err != nil {
 		t.Errorf("unexpected error with existing tool: %v", err)
 	}
@@ -93,7 +91,6 @@ func TestClipboardOutputter_CopyToClipboard_CommandNotAllowed(t *testing.T) {
 		clipboardTool: "xsel",
 		config:        cfg,
 	}
-
 	err := outputter.CopyToClipboard("test text")
 	if err == nil {
 		t.Error("expected error for disallowed command")
@@ -111,7 +108,6 @@ func TestClipboardOutputter_CopyToClipboard_UnsupportedTool(t *testing.T) {
 		clipboardTool: "unsupported-tool",
 		config:        cfg,
 	}
-
 	err := outputter.CopyToClipboard("test text")
 	if err == nil {
 		t.Error("expected error for unsupported tool")

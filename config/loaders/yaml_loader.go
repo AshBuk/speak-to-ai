@@ -20,7 +20,6 @@ import (
 // The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate
 func LoadConfig(filename string) (*models.Config, error) {
 	var config models.Config
-
 	// Start with a default configuration to ensure all fields are initialized
 	SetDefaultConfig(&config)
 
@@ -29,7 +28,6 @@ func LoadConfig(filename string) (*models.Config, error) {
 	if strings.Contains(clean, "..") {
 		return nil, fmt.Errorf("invalid config path: %s", filename)
 	}
-
 	// #nosec G304 -- Path is cleaned and validated, mitigating directory traversal risks.
 	data, err := os.ReadFile(clean)
 	if err != nil {
@@ -37,12 +35,10 @@ func LoadConfig(filename string) (*models.Config, error) {
 		log.Println("Using default configuration")
 		return &config, nil
 	}
-
 	// Parse the YAML content into the config struct
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-
 	// Validate the loaded configuration and apply corrections if necessary
 	if err := validators.ValidateConfig(&config); err != nil {
 		log.Printf("Configuration validation error: %v", err)

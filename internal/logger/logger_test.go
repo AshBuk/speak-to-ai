@@ -13,7 +13,6 @@ import (
 
 func TestNewDefaultLogger(t *testing.T) {
 	logger := NewDefaultLogger(InfoLevel)
-
 	if logger == nil {
 		t.Fatal("NewDefaultLogger returned nil")
 	}
@@ -32,7 +31,6 @@ func TestDefaultLogger_LogLevels(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer log.SetOutput(os.Stderr)
-
 	tests := []struct {
 		name      string
 		logLevel  LogLevel
@@ -122,9 +120,7 @@ func TestDefaultLogger_LogFormatting(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer log.SetOutput(os.Stderr)
-
 	logger := NewDefaultLogger(DebugLevel)
-
 	tests := []struct {
 		name         string
 		logMethod    func(*DefaultLogger, string, ...interface{})

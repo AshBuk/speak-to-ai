@@ -48,7 +48,6 @@ func TestNotificationManager_Integration(t *testing.T) {
 	}
 
 	nm := notify.NewNotificationManager("Integration Test", createTestConfig())
-
 	// Test a sequence of notifications
 	err := nm.NotifyStartRecording()
 	if err != nil {

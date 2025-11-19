@@ -24,7 +24,6 @@ func TestNewArecordRecorder(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempMgr := processing.NewTempFileManager(30 * time.Minute)
 	recorder := NewArecordRecorder(cfg, mockLogger, tempMgr)
-
 	if recorder == nil {
 		t.Fatal("Expected recorder to be created, got nil")
 	}
@@ -32,7 +31,6 @@ func TestNewArecordRecorder(t *testing.T) {
 	if recorder.config != cfg {
 		t.Error("Expected config to be set correctly")
 	}
-
 	// Test that BaseRecorder is properly initialized
 	if recorder.config.Audio.Device != "default" {
 		t.Errorf("Expected device 'default', got %s", recorder.config.Audio.Device)
@@ -81,7 +79,6 @@ func TestArecordRecorder_getArecordFormat(t *testing.T) {
 			tempMgr := processing.NewTempFileManager(30 * time.Minute)
 			recorder := NewArecordRecorder(cfg, mockLogger, tempMgr)
 			format := recorder.getArecordFormat()
-
 			if format != tt.expectFormat {
 				t.Errorf("Expected format %s, got %s", tt.expectFormat, format)
 			}
@@ -99,7 +96,6 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempMgr := processing.NewTempFileManager(30 * time.Minute)
 	recorder := NewArecordRecorder(cfg, mockLogger, tempMgr)
-
 	// Initially, no output file should be set
 	if recorder.GetOutputFile() != "" {
 		t.Errorf("Expected empty output file initially, got %s", recorder.GetOutputFile())
@@ -109,7 +105,6 @@ func TestArecordRecorder_OutputFileHandling(t *testing.T) {
 	tempDir := t.TempDir()
 	expectedFile := filepath.Join(tempDir, "test_recording.wav")
 	recorder.outputFile = expectedFile
-
 	if recorder.GetOutputFile() != expectedFile {
 		t.Errorf("Expected output file %s, got %s", expectedFile, recorder.GetOutputFile())
 	}

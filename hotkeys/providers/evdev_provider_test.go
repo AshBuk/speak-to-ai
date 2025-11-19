@@ -11,9 +11,7 @@ import (
 )
 
 func TestNewEvdevKeyboardProvider(t *testing.T) {
-
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	if provider == nil {
 		t.Fatal("NewEvdevKeyboardProvider returned nil")
 	}
@@ -34,7 +32,6 @@ func TestNewEvdevKeyboardProvider(t *testing.T) {
 
 func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	// Test IsSupported - this will likely return false in test environment due to permissions
 	supported := provider.IsSupported()
 
@@ -49,19 +46,16 @@ func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
 
 func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	callbackCalled := false
 	callback := func() error {
 		callbackCalled = true
 		return nil
 	}
-
 	// Test registering a hotkey
 	err := provider.RegisterHotkey("ctrl+shift+a", callback)
 	if err != nil {
 		t.Errorf("unexpected error registering hotkey: %v", err)
 	}
-
 	// Check that callback is stored
 	if len(provider.callbacks) != 1 {
 		t.Errorf("expected 1 callback, got %d", len(provider.callbacks))
@@ -86,7 +80,6 @@ func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	// Set isListening to true to simulate already started
 	provider.isListening = true
 
@@ -101,10 +94,8 @@ func TestEvdevKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 
 func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	// Stop should not panic even if not started
 	provider.Stop()
-
 	// Verify state
 	if provider.isListening {
 		t.Error("isListening should remain false")
@@ -113,7 +104,6 @@ func TestEvdevKeyboardProvider_Stop_NotStarted(t *testing.T) {
 
 func TestEvdevKeyboardProvider_Stop_WhenStarted(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 	// Simulate started state
 	provider.isListening = true
 	provider.stopListening = make(chan bool)

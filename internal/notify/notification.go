@@ -86,7 +86,6 @@ func (nm *NotificationManager) sendNotification(summary, body, icon string) erro
 	safeArgs := config.SanitizeCommandArgs(args)
 	// #nosec G204 -- Safe: notify-send is from an allowlist and arguments are sanitized
 	cmd := exec.Command("notify-send", safeArgs...)
-
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to send notification: %w", err)
 	}

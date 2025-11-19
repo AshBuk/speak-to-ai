@@ -42,7 +42,6 @@ func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
 func (cs *ConfigService) LoadConfig(configFile string) error {
 	cs.logger.Info("Loading configuration from: %s", configFile)
 	cs.configFile = configFile
-
 	// Config is already loaded by factory, just update the file path
 	return nil
 }
@@ -50,11 +49,9 @@ func (cs *ConfigService) LoadConfig(configFile string) error {
 // Persist current configuration state to disk
 func (cs *ConfigService) SaveConfig() error {
 	cs.logger.Info("Saving configuration to: %s", cs.configFile)
-
 	if cs.configFile == "" {
 		return fmt.Errorf("no config file path set")
 	}
-
 	return config.SaveConfig(cs.configFile, cs.config)
 }
 
@@ -69,7 +66,6 @@ func (cs *ConfigService) ResetToDefaults() error {
 	if err := cs.SaveConfig(); err != nil {
 		return fmt.Errorf("failed to save default config: %w", err)
 	}
-
 	cs.logger.Info("Configuration reset to defaults successfully")
 
 	// Show success notification via UI service and refresh UI
@@ -77,7 +73,6 @@ func (cs *ConfigService) ResetToDefaults() error {
 		cs.uiService.ShowNotification(constants.NotifyConfigReset, constants.NotifyConfigResetSuccess)
 		cs.uiService.UpdateSettings(cs.config)
 	}
-
 	return nil
 }
 
@@ -97,30 +92,24 @@ func (cs *ConfigService) GetConfig() *config.Config {
 //	default:
 //		return fmt.Errorf("invalid VAD sensitivity: %s", sensitivity)
 //	}
-//
 //	if cs.config.Audio.VADSensitivity == s {
 //		return nil
 //	}
-//
 //	old := cs.config.Audio.VADSensitivity
 //	cs.config.Audio.VADSensitivity = s
-//
 //	if err := cs.SaveConfig(); err != nil {
 //		cs.config.Audio.VADSensitivity = old
 //		return fmt.Errorf("failed to save config: %w", err)
 //	}
-//
 //	return nil
 // }
 
 // Change whisper language setting with rollback on save failure
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)
-
 	if cs.config.General.Language == language {
 		return nil
 	}
-
 	old := cs.config.General.Language
 	cs.config.General.Language = language
 
@@ -128,18 +117,15 @@ func (cs *ConfigService) UpdateLanguage(language string) error {
 		cs.config.General.Language = old
 		return fmt.Errorf("failed to save config: %w", err)
 	}
-
 	return nil
 }
 
 // Switch between clipboard and typing output with rollback protection
 func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	cs.logger.Info("Updating output mode to: %s", mode)
-
 	if cs.config.Output.DefaultMode == mode {
 		return nil
 	}
-
 	old := cs.config.Output.DefaultMode
 	cs.config.Output.DefaultMode = mode
 
@@ -147,16 +133,13 @@ func (cs *ConfigService) UpdateOutputMode(mode string) error {
 		cs.config.Output.DefaultMode = old
 		return fmt.Errorf("failed to save config: %w", err)
 	}
-
 	return nil
 }
 
 // Enable/disable desktop notifications for workflow events
 func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.logger.Info("Toggling workflow notifications")
-
 	cs.config.Notifications.EnableWorkflowNotifications = !cs.config.Notifications.EnableWorkflowNotifications
-
 	return cs.SaveConfig()
 }
 
@@ -164,24 +147,19 @@ func (cs *ConfigService) ToggleWorkflowNotifications() error {
 // ToggleVAD implements ConfigServiceInterface
 // func (cs *ConfigService) ToggleVAD() error {
 //	cs.logger.Info("Toggling VAD mode")
-//
 //	cs.config.Audio.EnableVAD = !cs.config.Audio.EnableVAD
-//
 //	return cs.SaveConfig()
 // }
 
 // Switch audio backend (arecord/ffmpeg) with validation and persistence
 func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	cs.logger.Info("Updating recording method to: %s", method)
-
 	if method != "arecord" && method != "ffmpeg" {
 		return fmt.Errorf("invalid recording method: %s", method)
 	}
-
 	if cs.config.Audio.RecordingMethod == method {
 		return nil
 	}
-
 	old := cs.config.Audio.RecordingMethod
 	cs.config.Audio.RecordingMethod = method
 
@@ -189,7 +167,6 @@ func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 		cs.config.Audio.RecordingMethod = old
 		return fmt.Errorf("failed to save config: %w", err)
 	}
-
 	return nil
 }
 

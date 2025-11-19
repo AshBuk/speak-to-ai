@@ -58,7 +58,6 @@ func (cw *FactoryWirer) Wire(container *ServiceContainer, components *Components
 	)
 	// Step 2: Audio actions (recorder selection)
 	components.TrayManager.SetAudioActions(cw.makeRecorderSelectionCallback(container))
-
 	// Step 3: Settings actions (language, notifications, output mode)
 	components.TrayManager.SetSettingsActions(
 		cw.makeLanguageCallback(container),
@@ -68,13 +67,10 @@ func (cw *FactoryWirer) Wire(container *ServiceContainer, components *Components
 	// Step 4: Dynamic queries (output tools, capture once support)
 	components.TrayManager.SetGetOutputToolsCallback(cw.makeGetOutputToolsCallback(container))
 	components.TrayManager.SetCaptureOnceSupport(cw.makeCaptureOnceSupportCallback(container))
-
 	// Step 5: UI sync (update tray menu with current settings)
 	cw.updateTraySettings(container, components.TrayManager)
-
 	// Step 6: Hotkey rebinding (rebind hotkeys dynamically)
 	components.TrayManager.SetHotkeyRebindAction(cw.makeHotkeyRebindCallback(container))
-
 	// Step 7: Exit handler (clean shutdown via SIGTERM)
 	components.TrayManager.SetExitAction(func() {
 		_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
@@ -114,11 +110,9 @@ func (cw *FactoryWirer) makeResetToDefaultsCallback(container *ServiceContainer)
 		if container == nil || container.Config == nil {
 			return fmt.Errorf("config service not available")
 		}
-
 		if err := container.Config.ResetToDefaults(); err != nil {
 			return err
 		}
-
 		return cw.reloadHotkeysFromConfig(container)
 	}
 }
@@ -153,7 +147,6 @@ func (cw *FactoryWirer) makeToggleNotificationsCallback(container *ServiceContai
 		if err := container.Config.ToggleWorkflowNotifications(); err != nil {
 			return err
 		}
-
 		if container.UI != nil {
 			enabled := cw.getNotificationStatus(container)
 			container.UI.ShowNotification("Workflow Notifications", "Now "+enabled)
@@ -202,21 +195,17 @@ func (cw *FactoryWirer) makeHotkeyRebindCallback(container *ServiceContainer) fu
 		}
 
 		container.UI.ShowNotification("Rebind Hotkey", "Press new hotkey… (Esc to cancel)")
-
 		combo, err := container.Hotkeys.CaptureOnce(3000)
 		if err != nil || strings.TrimSpace(combo) == "" {
 			container.UI.ShowNotification("Rebind Hotkey", "Cancelled or timeout")
 			return nil
 		}
-
 		if err := container.Config.UpdateHotkey(action, combo); err != nil {
 			return err
 		}
-
 		if err := cw.reloadHotkeysFromConfig(container); err != nil {
 			return err
 		}
-
 		container.UI.ShowNotification("Hotkey Updated", fmt.Sprintf("%s -> %s", action, combo))
 		return nil
 	}

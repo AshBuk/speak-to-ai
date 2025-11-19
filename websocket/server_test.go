@@ -55,7 +55,6 @@ func TestNewWebSocketServer(t *testing.T) {
 	logger := testutils.NewMockLogger()
 
 	server := NewWebSocketServer(cfg, recorder, whisperEngine, logger)
-
 	if server == nil {
 		t.Fatal("NewWebSocketServer returned nil")
 	}
@@ -99,16 +98,12 @@ func TestWebSocketServer_Start_Enabled(t *testing.T) {
 	cfg.WebServer.Port = 0 // Use random port for testing
 
 	server := NewWebSocketServer(cfg, &mocks.MockAudioRecorder{}, createTestWhisperEngine(cfg), testutils.NewMockLogger())
-
 	err := server.Start()
-
 	if err != nil {
 		t.Errorf("Expected no error when starting server, got %v", err)
 	}
-
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
-
 	// Clean up
 	server.Stop()
 }
@@ -118,7 +113,6 @@ func TestWebSocketServer_Stop(t *testing.T) {
 	cfg.WebServer.Port = 0 // Use random port for testing
 
 	server := NewWebSocketServer(cfg, &mocks.MockAudioRecorder{}, createTestWhisperEngine(cfg), testutils.NewMockLogger())
-
 	// Start server
 	err := server.Start()
 	if err != nil {
@@ -127,7 +121,6 @@ func TestWebSocketServer_Stop(t *testing.T) {
 
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
-
 	// Stop server
 	server.Stop()
 
@@ -141,12 +134,9 @@ func TestWebSocketServer_Authentication_NoToken(t *testing.T) {
 	cfg.WebServer.AuthToken = ""
 
 	server := NewWebSocketServer(cfg, &mocks.MockAudioRecorder{}, createTestWhisperEngine(cfg), testutils.NewMockLogger())
-
 	// Create test request
 	req := httptest.NewRequest("GET", "/ws", nil)
-
 	result := server.authenticate(req)
-
 	if !result {
 		t.Error("Expected authentication to pass when no token is required")
 	}

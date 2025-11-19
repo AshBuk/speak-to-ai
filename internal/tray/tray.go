@@ -109,10 +109,8 @@ func (tm *TrayManager) Start() {
 func (tm *TrayManager) onReady() {
 	systray.SetIcon(tm.iconMicOff)
 	systray.SetTitle("Speak-to-AI")
-
 	// Create main menu items
 	tm.toggleItem = systray.AddMenuItem(fmt.Sprintf("%s Start Recording", constants.IconRecording), "Start/Stop recording")
-
 	// Workflow notifications toggle
 	tm.audioItems["workflow_notifications"] = systray.AddMenuItem(
 		"○ Workflow Notifications",
@@ -120,22 +118,18 @@ func (tm *TrayManager) onReady() {
 	)
 
 	systray.AddSeparator()
-
 	// Settings submenu
 	tm.settingsItem = systray.AddMenuItem(fmt.Sprintf("%s  Settings", constants.TraySettings), "Application settings")
 	tm.createSettingsSubmenus()
 
 	systray.AddSeparator()
-
 	// Config actions
 	tm.showConfigItem = systray.AddMenuItem("📄 Show Config File", "Open configuration file")
 	tm.reloadConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Reset to Defaults", constants.IconConfig), "Reset all settings to default values")
 	tm.aboutItem = systray.AddMenuItem("ℹ️ About", "About Speak-to-AI")
 
 	systray.AddSeparator()
-
 	tm.exitItem = systray.AddMenuItem(fmt.Sprintf("%s Quit", constants.IconError), "Quit Speak-to-AI")
-
 	// Handle menu item clicks
 	utils.Go(func() { tm.handleMenuClicks() })
 
@@ -212,7 +206,6 @@ func (tm *TrayManager) handleMenuClicks() {
 // SetRecordingState updates the tray icon and menu to reflect recording state
 func (tm *TrayManager) SetRecordingState(isRecording bool) {
 	tm.isRecording = isRecording
-
 	// Guard against early calls before onReady creates menu items
 	if tm.toggleItem == nil {
 		return

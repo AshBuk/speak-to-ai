@@ -43,7 +43,6 @@ func TestNewConfigAdapter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := NewConfigAdapter(tt.startRecording, tt.provider)
-
 			if adapter == nil {
 				t.Fatalf("NewConfigAdapter returned nil")
 			}
@@ -54,7 +53,6 @@ func TestNewConfigAdapter(t *testing.T) {
 			if adapter.provider != tt.provider {
 				t.Errorf("Expected provider '%s', got '%s'", tt.provider, adapter.provider)
 			}
-
 			// Test that the adapter implements HotkeyConfig interface
 			var _ HotkeyConfig = adapter
 		})
@@ -98,7 +96,6 @@ func TestConfigAdapter_GetStartRecordingHotkey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := NewConfigAdapter(tt.startRecording, "auto")
 			result := adapter.GetStartRecordingHotkey()
-
 			if result != tt.expected {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}
@@ -109,7 +106,6 @@ func TestConfigAdapter_GetStartRecordingHotkey(t *testing.T) {
 func TestConfigAdapter_InterfaceCompliance(t *testing.T) {
 	// Test that ConfigAdapter properly implements HotkeyConfig interface
 	adapter := NewConfigAdapter("test+hotkey", "auto")
-
 	// This should compile without issues if the interface is implemented correctly
 	var config HotkeyConfig = adapter
 
@@ -125,7 +121,6 @@ func TestConfigAdapter_Immutability(t *testing.T) {
 	// Test that the adapter's internal state cannot be modified externally
 	originalHotkey := "ctrl+r"
 	adapter := NewConfigAdapter(originalHotkey, "auto")
-
 	// Get the hotkey multiple times to ensure it doesn't change
 	first := adapter.GetStartRecordingHotkey()
 	second := adapter.GetStartRecordingHotkey()
@@ -142,7 +137,6 @@ func TestConfigAdapter_MultipleInstances(t *testing.T) {
 	adapter1 := NewConfigAdapter("ctrl+1", "auto")
 	adapter2 := NewConfigAdapter("ctrl+2", "auto")
 	adapter3 := NewConfigAdapter("ctrl+3", "auto")
-
 	if adapter1.GetStartRecordingHotkey() != "ctrl+1" {
 		t.Errorf("Adapter1 hotkey incorrect: got '%s'", adapter1.GetStartRecordingHotkey())
 	}
@@ -152,7 +146,6 @@ func TestConfigAdapter_MultipleInstances(t *testing.T) {
 	if adapter3.GetStartRecordingHotkey() != "ctrl+3" {
 		t.Errorf("Adapter3 hotkey incorrect: got '%s'", adapter3.GetStartRecordingHotkey())
 	}
-
 	// Verify they are different instances
 	if adapter1 == adapter2 || adapter2 == adapter3 || adapter1 == adapter3 {
 		t.Error("Adapters should be different instances")
@@ -196,7 +189,6 @@ func TestConfigAdapter_EdgeCases(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := NewConfigAdapter(tt.input, "auto")
 			result := adapter.GetStartRecordingHotkey()
-
 			if result != tt.expected {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}

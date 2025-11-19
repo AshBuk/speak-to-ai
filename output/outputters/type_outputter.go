@@ -42,7 +42,6 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	if platform.DetectEnvironment() == platform.EnvironmentWayland && o.typeTool == "ydotool" && isNonASCII(text) {
 		return fmt.Errorf("ydotool on Wayland doesn't support non-ASCII characters, use clipboard fallback")
 	}
-
 	var cmd *exec.Cmd
 	var args []string
 
@@ -61,7 +60,6 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	safeArgs := config.SanitizeCommandArgs(args)
 	// #nosec G204 -- Safe: tool is from an allowlist and arguments are sanitized
 	cmd = exec.Command(o.typeTool, safeArgs...)
-
 	// Run the command
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -80,7 +78,6 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 		}
 		return fmt.Errorf("failed to type text with %s: %w, output: %s", o.typeTool, err, string(output))
 	}
-
 	return nil
 }
 

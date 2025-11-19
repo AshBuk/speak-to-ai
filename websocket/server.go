@@ -107,7 +107,6 @@ func (s *WebSocketServer) Start() error {
 	if !s.config.WebServer.Enabled {
 		return nil
 	}
-
 	// Handler for WebSocket connection setup
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWebSocket)
@@ -125,7 +124,6 @@ func (s *WebSocketServer) Start() error {
 			s.logger.Debug("health write error: %v", err)
 		}
 	})
-
 	// Create HTTP server with timeouts
 	addr := fmt.Sprintf("%s:%d", s.config.WebServer.Host, s.config.WebServer.Port)
 	s.server = &http.Server{
@@ -135,7 +133,6 @@ func (s *WebSocketServer) Start() error {
 		WriteTimeout: serverWriteTimeout,
 		IdleTimeout:  serverIdleTimeout,
 	}
-
 	// Start HTTP server in a tracked goroutine
 	utils.Go(func() {
 		s.logger.Info("Starting WebSocket server on %s", addr)
@@ -152,11 +149,9 @@ func (s *WebSocketServer) Start() error {
 func (s *WebSocketServer) Stop() {
 	if s.server != nil && s.started {
 		s.logger.Info("Stopping WebSocket server...")
-
 		// Create a context with timeout for shutdown
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-
 		// Close all client connections
 		s.clientsLock.Lock()
 		for client := range s.clients {
@@ -164,7 +159,6 @@ func (s *WebSocketServer) Stop() {
 		}
 		s.clients = make(map[*websocket.Conn]bool)
 		s.clientsLock.Unlock()
-
 		// Shutdown the server
 		if err := s.server.Shutdown(ctx); err != nil {
 			s.logger.Error("Error shutting down WebSocket server: %v", err)
@@ -184,7 +178,6 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
 	// Check if we're at max clients limit
 	s.clientsLock.Lock()
 	clientCount := len(s.clients)
@@ -195,14 +188,12 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Too many connections", http.StatusServiceUnavailable)
 		return
 	}
-
 	// Establish connection
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		s.logger.Error("Error upgrading to WebSocket: %v", err)
 		return
 	}
-
 	// Configure connection
 	conn.SetReadLimit(maxMessageSize)
 	if err := conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
@@ -232,10 +223,8 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		"server":      "Speak-to-AI",
 		"api_version": s.config.WebServer.APIVersion,
 	})
-
 	// Start ping/pong in tracked goroutine
 	utils.Go(func() { s.pingClient(conn) })
-
 	// Process messages from client
 	s.processMessages(conn)
 }
@@ -261,24 +250,20 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 		APIVersion: s.config.WebServer.APIVersion,
 		Timestamp:  time.Now().Unix(),
 	}
-
 	// Set request ID if provided
 	if len(requestID) > 0 && requestID[0] != "" {
 		msg.RequestID = requestID[0]
 	}
-
 	// Serialize message
 	data, err := json.Marshal(msg)
 	if err != nil {
 		s.logger.Error("Error marshaling message: %v", err)
 		return
 	}
-
 	// Log if enabled
 	if s.config.WebServer.LogRequests {
 		s.logger.Debug("Sending WebSocket message: %s", string(data))
 	}
-
 	// Send message
 	if err := conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
 		s.logger.Error("SetWriteDeadline error: %v", err)

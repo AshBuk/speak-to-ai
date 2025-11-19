@@ -22,7 +22,6 @@ func (a *App) startIPCServer() error {
 	if a.Services == nil {
 		return fmt.Errorf("services not initialized")
 	}
-
 	socketPath := utils.GetDefaultSocketPath()
 	server := ipc.NewServer(socketPath, a.Runtime.Logger)
 	a.registerIPCHandlers(server)
@@ -30,7 +29,6 @@ func (a *App) startIPCServer() error {
 	if err := server.Start(); err != nil {
 		return err
 	}
-
 	a.ipcServer = server
 	return nil
 }
@@ -46,7 +44,6 @@ func (a *App) ipcHandleStartRecording(ipc.Request) (ipc.Response, error) {
 	if err := a.handleStartRecording(); err != nil {
 		return ipc.Response{}, err
 	}
-
 	return ipc.NewSuccessResponse("recording started", map[string]any{
 		"recording": true,
 	}), nil
@@ -62,7 +59,6 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 		}
 		return ipc.Response{}, err
 	}
-
 	transcript, err := a.waitForTranscription(ipcTranscriptionTimeout)
 	if err != nil {
 		// Still mark as success, but propagate warning to caller.
@@ -72,7 +68,6 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 			"warning":    err.Error(),
 		}), nil
 	}
-
 	return ipc.NewSuccessResponse("recording stopped", map[string]any{
 		"recording":  false,
 		"transcript": transcript,
@@ -84,7 +79,6 @@ func (a *App) ipcHandleStatus(ipc.Request) (ipc.Response, error) {
 	if a.Services != nil && a.Services.Audio != nil {
 		recording = a.Services.Audio.IsRecording()
 	}
-
 	return ipc.NewSuccessResponse("status", map[string]any{
 		"recording":       recording,
 		"last_transcript": a.getLastTranscript(),
@@ -101,7 +95,6 @@ func (a *App) waitForTranscription(timeout time.Duration) (string, error) {
 	if a.Services == nil || a.Services.IO == nil {
 		return "", fmt.Errorf("io service not available")
 	}
-
 	if ioSvc, ok := a.Services.IO.(*services.IOService); ok && ioSvc != nil {
 		return ioSvc.WaitForTranscription(timeout)
 	}
@@ -113,7 +106,6 @@ func (a *App) getLastTranscript() string {
 	if a.Services == nil || a.Services.Audio == nil {
 		return ""
 	}
-
 	if audioSvc, ok := a.Services.Audio.(*services.AudioService); ok && audioSvc != nil {
 		return audioSvc.GetLastTranscript()
 	}

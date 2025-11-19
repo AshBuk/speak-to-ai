@@ -51,7 +51,6 @@ func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error
 func (f *AudioRecorderFactory) DiagnoseAudioSystem() {
 	f.logger.Info("[AUDIO DIAGNOSTICS] Recording method: %s, Device: %s",
 		f.config.Audio.RecordingMethod, f.config.Audio.Device)
-
 	// Check if the required command-line tools are available and log device info
 	switch f.config.Audio.RecordingMethod {
 	case "ffmpeg":
@@ -86,7 +85,6 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	testConfig.Audio.RecordingMethod = method
 
 	f.logger.Info("[AUDIO TEST] Testing %s recorder...", method)
-
 	var testArgs []string
 	var cmdName string
 
@@ -109,7 +107,6 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	// Run the test command with a timeout to prevent hangs
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
 	// Security: validate the command and sanitize arguments before execution
 	if !config.IsCommandAllowed(&testConfig, cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
@@ -119,7 +116,6 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 	// #nosec G204 -- Safe: command is allowlisted and arguments are sanitized.
 	cmd := exec.CommandContext(ctx, cmdName, safeArgs...)
 	output, err := cmd.CombinedOutput()
-
 	if err != nil {
 		f.logger.Error("[AUDIO TEST] %s test failed: %v", method, err)
 		f.logger.Info("[AUDIO TEST] %s output: %s", method, string(output))
@@ -138,7 +134,6 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 	if err != nil {
 		return nil, err
 	}
-
 	// Test if the method actually works
 	testErr := f.TestRecorderMethod(f.config.Audio.RecordingMethod)
 	if testErr == nil {
@@ -147,7 +142,6 @@ func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRec
 	}
 
 	f.logger.Warning("[AUDIO] Configured method %s failed test: %v", f.config.Audio.RecordingMethod, testErr)
-
 	// Try fallback methods if the configured one fails
 	fallbacks := []string{"arecord", "ffmpeg"}
 	originalMethod := f.config.Audio.RecordingMethod

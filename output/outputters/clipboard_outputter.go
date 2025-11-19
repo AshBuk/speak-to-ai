@@ -54,10 +54,8 @@ func (o *ClipboardOutputter) CopyToClipboard(text string) error {
 	safeArgs := config.SanitizeCommandArgs(args)
 	// #nosec G204 -- Safe: tool is from an allowlist and arguments are sanitized
 	cmd = exec.Command(o.clipboardTool, safeArgs...)
-
 	// Pipe the text to the command's standard input
 	cmd.Stdin = strings.NewReader(text)
-
 	// Run the command
 	err := cmd.Run()
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 func TestRuntimeContext_NewRuntimeContext(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	runtime := NewRuntimeContext(mockLogger)
-
 	if runtime == nil {
 		t.Fatal("NewRuntimeContext returned nil")
 	}
@@ -38,7 +37,6 @@ func TestRuntimeContext_NewRuntimeContext(t *testing.T) {
 	default:
 		// Expected behavior
 	}
-
 	// Test cancellation
 	runtime.Cancel()
 	select {
@@ -52,7 +50,6 @@ func TestRuntimeContext_NewRuntimeContext(t *testing.T) {
 func TestRuntimeContext_ShutdownChannel(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	runtime := NewRuntimeContext(mockLogger)
-
 	// Test that shutdown channel is buffered
 	if cap(runtime.ShutdownCh) == 0 {
 		t.Error("Shutdown channel should be buffered")
@@ -62,7 +59,6 @@ func TestRuntimeContext_ShutdownChannel(t *testing.T) {
 func TestApp_NewApp(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
-
 	if app == nil {
 		t.Fatal("NewApp returned nil")
 	}
@@ -80,7 +76,6 @@ func TestApp_NewApp(t *testing.T) {
 func TestApp_ServiceAccessors(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
-
 	// Test accessor methods with nil services
 	if app.Audio() != nil {
 		t.Error("Audio() should return nil when service is not set")
@@ -97,7 +92,6 @@ func TestApp_ServiceAccessors(t *testing.T) {
 	if app.Hotkeys() != nil {
 		t.Error("Hotkeys() should return nil when service is not set")
 	}
-
 	// Test accessor methods with nil Services container
 	app.Services = nil
 	if app.Audio() != nil {
@@ -125,7 +119,6 @@ func TestApp_Shutdown_NilServices(t *testing.T) {
 	if err := app.Shutdown(); err != nil {
 		t.Errorf("Shutdown should not error with nil services: %v", err)
 	}
-
 	// Verify context was cancelled
 	select {
 	case <-app.Runtime.Ctx.Done():
@@ -149,7 +142,6 @@ func (m *mockServiceWithShutdown) Shutdown() error {
 func TestApp_Integration_Shutdown_WithServices(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
-
 	// Create a mock service container with our mock service
 	mockServices := &services.ServiceContainer{}
 
@@ -174,7 +166,6 @@ func TestApp_Integration_Shutdown_WithServices(t *testing.T) {
 func TestApp_Integration_AppLifecycle(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
-
 	// Test initial state
 	if app.Runtime.Ctx.Err() != nil {
 		t.Error("Context should not be cancelled initially")
@@ -195,7 +186,6 @@ func TestApp_HandlerMethods_NilServices(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
 	app.Services = nil
-
 	// Test all handler methods with nil services
 	if err := app.handleStartRecording(); err == nil {
 		t.Error("handleStartRecording should fail with nil services")
@@ -223,7 +213,6 @@ func TestApp_HandlerMethods_NilSpecificServices(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	app := NewApp(mockLogger)
 	// Services container exists but individual services are nil
-
 	if err := app.handleStartRecording(); err == nil {
 		t.Error("handleStartRecording should fail with nil audio service")
 	}
