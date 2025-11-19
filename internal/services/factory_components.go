@@ -63,7 +63,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	if cleanupTimeout <= 0 {
 		cleanupTimeout = 30 * time.Minute
 	}
-	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout)
+	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout, cf.config.Logger)
 	components.TempFileManager.Start()
 	// Initialize audio recorder
 	components.Recorder, err = factory.GetRecorder(cf.config.Config, cf.config.Logger, components.TempFileManager)
@@ -71,7 +71,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 		return nil, fmt.Errorf("failed to initialize audio recorder: %w", err)
 	}
 	// Initialize whisper engine
-	components.WhisperEngine, err = whisper.NewWhisperEngine(cf.config.Config, modelFilePath)
+	components.WhisperEngine, err = whisper.NewWhisperEngine(cf.config.Config, modelFilePath, cf.config.Logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize whisper engine: %w", err)
 	}

@@ -76,7 +76,7 @@ func (a *App) Initialize(configFile string, debug bool) error {
 // Load and validate the application configuration
 func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, error) {
 	a.Runtime.Logger.Info("Loading configuration from: %s", configFile)
-	cfg, err := config.LoadConfig(configFile)
+	cfg, err := config.LoadConfig(configFile, a.Runtime.Logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
@@ -231,28 +231,24 @@ func (a *App) Audio() services.AudioServiceInterface {
 	}
 	return nil
 }
-
 func (a *App) UI() services.UIServiceInterface {
 	if a.Services != nil {
 		return a.Services.UI
 	}
 	return nil
 }
-
 func (a *App) IO() services.IOServiceInterface {
 	if a.Services != nil {
 		return a.Services.IO
 	}
 	return nil
 }
-
 func (a *App) Config() services.ConfigServiceInterface {
 	if a.Services != nil {
 		return a.Services.Config
 	}
 	return nil
 }
-
 func (a *App) Hotkeys() services.HotkeyServiceInterface {
 	if a.Services != nil {
 		return a.Services.Hotkeys

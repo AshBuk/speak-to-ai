@@ -5,13 +5,13 @@ package processing
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
@@ -23,15 +23,23 @@ type TempFileManager struct {
 	running        bool
 	stopChan       chan bool
 	stopClosed     bool
+	logger         logger.Logger
 }
 
 // Create a new TempFileManager instance
-func NewTempFileManager(cleanupTimeout time.Duration) *TempFileManager {
+func NewTempFileManager(cleanupTimeout time.Duration, loggers ...logger.Logger) *TempFileManager {
+	var logSink logger.Logger
+	if len(loggers) > 0 && loggers[0] != nil {
+		logSink = loggers[0]
+	} else {
+		logSink = logger.NewDefaultLogger(logger.WarningLevel)
+	}
 	return &TempFileManager{
 		tempFiles:      make(map[string]time.Time),
 		cleanupTimeout: cleanupTimeout,
 		stopChan:       make(chan bool),
 		stopClosed:     false,
+		logger:         logSink,
 	}
 }
 
@@ -43,7 +51,6 @@ func (t *TempFileManager) Start() {
 	if t.running {
 		return
 	}
-
 	t.running = true
 	utils.Go(func() { t.cleanupRoutine() })
 }
@@ -65,7 +72,7 @@ func (t *TempFileManager) RemoveFile(path string, shouldDelete bool) {
 	if shouldDelete {
 		if _, err := os.Stat(path); err == nil {
 			if err := os.Remove(path); err != nil {
-				log.Printf("Error removing temp file %s: %v", path, err)
+				t.logger.Warning("Error removing temp file %s: %v", path, err)
 			}
 		}
 	}
@@ -98,7 +105,7 @@ func (t *TempFileManager) cleanupOldFiles() {
 		if now.Sub(timestamp) > t.cleanupTimeout {
 			if _, err := os.Stat(path); err == nil {
 				if err := os.Remove(path); err != nil {
-					log.Printf("Error removing old temp file %s: %v", path, err)
+					t.logger.Warning("Error removing old temp file %s: %v", path, err)
 				}
 			}
 			delete(t.tempFiles, path)
@@ -114,7 +121,7 @@ func (t *TempFileManager) CleanupAll() {
 	for path := range t.tempFiles {
 		if _, err := os.Stat(path); err == nil {
 			if err := os.Remove(path); err != nil {
-				log.Printf("Error removing temp file %s: %v", path, err)
+				t.logger.Warning("Error removing temp file %s: %v", path, err)
 			}
 		}
 		delete(t.tempFiles, path)
@@ -144,12 +151,10 @@ func (t *TempFileManager) CreateTempWav(baseDir string) (string, error) {
 	if dir == "" {
 		dir = os.TempDir()
 	}
-
 	// Ensure the target directory exists
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %w", err)
 	}
-
 	// Generate a unique filename based on the current timestamp
 	timestamp := time.Now().Format("20060102-150405")
 	path := filepath.Join(dir, fmt.Sprintf("audio_%s.wav", timestamp))

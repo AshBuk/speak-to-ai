@@ -8,12 +8,12 @@ package whisper
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
@@ -26,6 +26,7 @@ type WhisperEngine struct {
 	config    *config.Config
 	model     whisper.Model
 	modelPath string
+	logger    logger.Logger
 }
 
 // Return the underlying whisper.Model for advanced or direct interactions
@@ -40,20 +41,23 @@ func (w *WhisperEngine) GetConfig() *config.Config {
 
 // Initialize and load a new Whisper model from the given path.
 // Return an error if the model file is not found or fails to load
-func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {
+func NewWhisperEngine(config *config.Config, modelPath string, loggers ...logger.Logger) (*WhisperEngine, error) {
 	if !utils.IsValidFile(modelPath) {
 		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
-
 	model, err := whisper.New(modelPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load whisper model: %w", err)
 	}
-
+	var logSink logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
+	if len(loggers) > 0 && loggers[0] != nil {
+		logSink = loggers[0]
+	}
 	return &WhisperEngine{
 		config:    config,
 		model:     model,
 		modelPath: modelPath,
+		logger:    logSink,
 	}, nil
 }
 
@@ -112,7 +116,6 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 		transcript.WriteString(segment.Text)
 		transcript.WriteString(" ")
 	}
-
 	result := strings.TrimSpace(transcript.String())
 	result = utils.SanitizeTranscript(result)
 	return result, nil
@@ -155,20 +158,17 @@ func (w *WhisperEngine) loadAudioData(audioFile string) ([]float32, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Printf("Failed to close audio file: %v", err)
+			w.logger.Warning("Failed to close audio file: %v", err)
 		}
 	}()
-
 	decoder := wav.NewDecoder(file)
 	if decoder == nil {
 		return nil, fmt.Errorf("failed to create WAV decoder")
 	}
-
 	audioBuffer, err := decoder.FullPCMBuffer()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read audio buffer: %w", err)
 	}
-
 	// Convert integer PCM samples to float32 samples normalized to [-1.0, 1.0]
 	samples := make([]float32, audioBuffer.NumFrames())
 	for i := 0; i < audioBuffer.NumFrames(); i++ {
