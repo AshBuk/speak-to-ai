@@ -7,36 +7,43 @@ import (
 	"log"
 )
 
-// Represents the level of logging
+// LogLevel represents the severity level for log messages
+// Lower values are more verbose (DebugLevel=0), higher values filter more (ErrorLevel=3)
 type LogLevel int
 
 const (
-	DebugLevel LogLevel = iota
-	InfoLevel
-	WarningLevel
-	ErrorLevel
+	DebugLevel   LogLevel = iota // Most verbose - development diagnostics
+	InfoLevel                    // Normal operations and state changes
+	WarningLevel                 // Potential issues or degraded functionality
+	ErrorLevel                   // Critical errors requiring attention
 )
 
-// Defines the contract for a logger that supports different log levels
+// Logger defines the contract for structured logging across the application
+// All logging must go through this interface to maintain consistency
+// Usage pattern:
+//   - Components accept logger via dependency injection (variadic ...logger.Logger)
+//   - Default fallback: logger.NewDefaultLogger(logger.WarningLevel)
+//   - Production: injected logger with appropriate level for context
 type Logger interface {
-	Debug(format string, args ...interface{})
-	Info(format string, args ...interface{})
-	Warning(format string, args ...interface{})
-	Error(format string, args ...interface{})
+	Debug(format string, args ...interface{})   // Detailed debugging information
+	Info(format string, args ...interface{})    // General informational messages
+	Warning(format string, args ...interface{}) // Warning messages about potential issues
+	Error(format string, args ...interface{})   // Error messages about failures
 }
 
-// Contains logger configuration
+// Config holds logger initialization settings
 type Config struct {
-	Level LogLevel
+	Level LogLevel // min level
 }
 
-// Implements the Logger interface using the standard log package
+// Thread-safe implementation wrapping log.Printf with level filtering
 type DefaultLogger struct {
-	level    LogLevel
-	stdFlags int
+	level    LogLevel // min level
+	stdFlags int      // formatting flags for log output
 }
 
-// Create a new default logger with the specified log level
+// NewDefaultLogger Constructor - creates logger with sensible defaults
+// Output format: timestamp + file:line + [LEVEL] + message
 func NewDefaultLogger(level LogLevel) *DefaultLogger {
 	return &DefaultLogger{
 		level:    level,
@@ -44,35 +51,36 @@ func NewDefaultLogger(level LogLevel) *DefaultLogger {
 	}
 }
 
-// Set up the logger with the given configuration
+// Configure Factory Method - creates and configures logger from Config struct
+// Sets global log flags for consistent formatting across application
 func Configure(config Config) (*DefaultLogger, error) {
 	logger := NewDefaultLogger(config.Level)
 	log.SetFlags(logger.stdFlags)
 	return logger, nil
 }
 
-// Log a debug message
+// Debug logs detailed diagnostic information
 func (l *DefaultLogger) Debug(format string, args ...interface{}) {
 	if l.level <= DebugLevel {
 		log.Printf("[DEBUG] "+format, args...)
 	}
 }
 
-// Log an informational message
+// Info logs general operational messages
 func (l *DefaultLogger) Info(format string, args ...interface{}) {
 	if l.level <= InfoLevel {
 		log.Printf("[INFO] "+format, args...)
 	}
 }
 
-// Log a warning message
+// Warning logs potential issues or degraded functionality
 func (l *DefaultLogger) Warning(format string, args ...interface{}) {
 	if l.level <= WarningLevel {
 		log.Printf("[WARNING] "+format, args...)
 	}
 }
 
-// Log an error message
+// Error logs critical failures requiring attention
 func (l *DefaultLogger) Error(format string, args ...interface{}) {
 	if l.level <= ErrorLevel {
 		log.Printf("[ERROR] "+format, args...)
