@@ -19,7 +19,7 @@ import (
 // If the file doesn't exist, log a warning and return a default configuration.
 // The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate
 func LoadConfig(filename string, loggers ...logger.Logger) (*models.Config, error) {
-	var logSink logger.Logger = logger.NewDefaultLogger(logger.InfoLevel)
+	var logSink logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
 	if len(loggers) > 0 && loggers[0] != nil {
 		logSink = loggers[0]
 	}
@@ -35,8 +35,7 @@ func LoadConfig(filename string, loggers ...logger.Logger) (*models.Config, erro
 	// #nosec G304 -- Path is cleaned and validated, mitigating directory traversal risks.
 	data, err := os.ReadFile(clean)
 	if err != nil {
-		logSink.Warning("Could not read config file: %v", err)
-		logSink.Info("Using default configuration")
+		logSink.Info("Could not read config file: %v, using defaults", err)
 		return &config, nil
 	}
 	// Parse the YAML content into the config struct
@@ -117,17 +116,14 @@ func SaveConfig(filename string, config *models.Config) error {
 	if strings.Contains(safe, "..") {
 		return fmt.Errorf("invalid config path: %s", filename)
 	}
-
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
-
 	// Ensure the directory exists before writing the file
 	if err := os.MkdirAll(filepath.Dir(safe), 0o750); err != nil {
 		return err
 	}
-
 	// Write with restrictive permissions (read/write for owner only)
 	return os.WriteFile(safe, data, 0o600)
 }

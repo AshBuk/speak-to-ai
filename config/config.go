@@ -60,18 +60,18 @@ func SanitizeCommandArgs(args []string) []string {
 }
 
 // Verify if the configuration file has been tampered with.
-func VerifyConfigIntegrity(filename string, config *Config) error {
-	return security.VerifyConfigIntegrity(filename, config)
+func VerifyConfigIntegrity(filename string, config *Config, loggers ...logger.Logger) error {
+	return security.VerifyConfigIntegrity(filename, config, loggers...)
 }
 
 // Calculate and update the integrity hash for the configuration file.
-func UpdateConfigHash(filename string, config *Config) error {
-	return security.UpdateConfigHash(filename, config)
+func UpdateConfigHash(filename string, config *Config, loggers ...logger.Logger) error {
+	return security.UpdateConfigHash(filename, config, loggers...)
 }
 
 // Compute the SHA-256 hash of a file.
-func CalculateFileHash(filename string) (string, error) {
-	return security.CalculateFileHash(filename)
+func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error) {
+	return security.CalculateFileHash(filename, loggers...)
 }
 
 // Enforce that a file does not exceed the configured size limit.
