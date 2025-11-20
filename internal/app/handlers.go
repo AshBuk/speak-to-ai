@@ -9,9 +9,22 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
 
-// Defines hotkey handler methods that delegate to the appropriate services
+// Hotkey Handlers - Adapter layer between HotkeyService and Business Services
+//
+// Architecture Flow:
+//   User presses hotkey
+//       ↓
+//   Provider (evdev/dbus/dummy)
+//       ↓
+//   HotkeyManager (hotkeys/manager)
+//       ↓
+//   HotkeyService (internal/services/hotkey_service.go)
+//       ↓
+//   Handler methods (this file) ← adapter/facade layer
+//       ↓
+//   Business Services (AudioService/ConfigService/UIService)
 
-// Handle the start recording hotkey
+// handleStartRecording Adapter - delegates start recording hotkey to AudioService
 func (a *App) handleStartRecording() error {
 	if a.Services == nil || a.Services.Audio == nil {
 		return fmt.Errorf("audio service not available")
@@ -19,7 +32,7 @@ func (a *App) handleStartRecording() error {
 	return a.Services.Audio.HandleStartRecording()
 }
 
-// Handle the stop recording hotkey
+// handleStopRecordingAndTranscribe Adapter - delegates stop recording hotkey to AudioService
 func (a *App) handleStopRecordingAndTranscribe() error {
 	if a.Services == nil || a.Services.Audio == nil {
 		return fmt.Errorf("audio service not available")
@@ -36,7 +49,7 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 //	return a.Services.Config.ToggleVAD()
 // }
 
-// Handle the show config hotkey
+// handleShowConfig Adapter - delegates show config hotkey to UIService
 func (a *App) handleShowConfig() error {
 	if a.Services == nil || a.Services.UI == nil {
 		return fmt.Errorf("UI service not available")
@@ -44,7 +57,9 @@ func (a *App) handleShowConfig() error {
 	return a.Services.UI.ShowConfigFile()
 }
 
-// Handle the reset to defaults hotkey
+// handleResetToDefaults coordinates config reset + hotkey reload
+// Multi-service coordination: ConfigService.ResetToDefaults() → HotkeyService.ReloadFromConfig()
+// Ensures new default hotkey bindings are applied immediately without restart
 func (a *App) handleResetToDefaults() error {
 	if a.Services == nil || a.Services.Config == nil {
 		return fmt.Errorf("config service not available")
@@ -52,16 +67,11 @@ func (a *App) handleResetToDefaults() error {
 	if err := a.Services.Config.ResetToDefaults(); err != nil {
 		return err
 	}
-	// Reload hotkeys to apply the new default bindings immediately
 	if a.Services.Hotkeys != nil {
 		cfgProvider := func() adapters.HotkeyConfig {
 			if cfg := a.Services.Config.GetConfig(); cfg != nil {
 				return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
-					WithAdditionalHotkeys(
-						"",
-						cfg.Hotkeys.ShowConfig,
-						cfg.Hotkeys.ResetToDefaults,
-					)
+					WithAdditionalHotkeys("", cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
 			}
 			return adapters.NewConfigAdapter("", "auto")
 		}
