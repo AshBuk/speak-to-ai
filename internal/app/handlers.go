@@ -10,6 +10,7 @@ import (
 )
 
 // Hotkey Handlers - Adapter layer between HotkeyService and Business Services
+// Event-driven hotkey callbacks (async, fire-and-forget)
 //
 // Architecture Flow:
 //   User presses hotkey
