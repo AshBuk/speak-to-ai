@@ -16,8 +16,6 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-var securityLogger logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
-
 // Check if a command is in the security whitelist.
 // It checks only the base name of the command, ignoring the path, to ensure
 // that path-based bypasses are not possible (e.g., /usr/bin/evil is treated as evil)
@@ -42,48 +40,47 @@ func SanitizeCommandArgs(args []string) []string {
 			sanitized = append(sanitized, arg)
 		}
 	}
-
 	return sanitized
 }
 
 // Verify the config file against a stored hash to ensure
 // it has not been modified without authorization
-func VerifyConfigIntegrity(filename string, config *models.Config) error {
+func VerifyConfigIntegrity(filename string, config *models.Config, loggers ...logger.Logger) error {
 	if !config.Security.CheckIntegrity {
 		return nil
 	}
-
 	if config.Security.ConfigHash == "" {
 		// No hash to compare against, so we can't verify
 		return nil
 	}
 
-	hash, err := CalculateFileHash(filename)
+	hash, err := CalculateFileHash(filename, loggers...)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
-
 	if hash != config.Security.ConfigHash {
 		return fmt.Errorf("config file integrity check failed: hash mismatch")
 	}
-
 	return nil
 }
 
 // Calculate a new hash for the configuration file and store it
 // within the config struct. This is used to "seal" the config after valid changes
-func UpdateConfigHash(filename string, config *models.Config) error {
-	hash, err := CalculateFileHash(filename)
+func UpdateConfigHash(filename string, config *models.Config, loggers ...logger.Logger) error {
+	hash, err := CalculateFileHash(filename, loggers...)
 	if err != nil {
 		return fmt.Errorf("failed to calculate config file hash: %w", err)
 	}
-
 	config.Security.ConfigHash = hash
 	return nil
 }
 
 // Compute the SHA-256 hash of a file's content
-func CalculateFileHash(filename string) (string, error) {
+func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error) {
+	var logSink logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
+	if len(loggers) > 0 && loggers[0] != nil {
+		logSink = loggers[0]
+	}
 	// Clean the path to prevent null byte and other injection attacks
 	safe := filepath.Clean(filename)
 	if strings.Contains(safe, "\x00") {
@@ -98,7 +95,7 @@ func CalculateFileHash(filename string) (string, error) {
 	defer func() {
 		if err := f.Close(); err != nil {
 			// Log the error but don't return it, as the primary operation (hashing) succeeded
-			securityLogger.Warning("Failed to close file %s: %v", filename, err)
+			logSink.Warning("Failed to close file %s: %v", filename, err)
 		}
 	}()
 
@@ -106,7 +103,6 @@ func CalculateFileHash(filename string) (string, error) {
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
 	}
-
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
@@ -122,6 +118,5 @@ func EnforceFileSizeLimit(filename string, config *models.Config) error {
 		return fmt.Errorf("file size exceeds limit: %d bytes (limit: %d bytes)",
 			info.Size(), config.Security.MaxTempFileSize)
 	}
-
 	return nil
 }
