@@ -13,37 +13,56 @@ import (
 	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
 
-// Defines the display server type
+// EnvironmentType identifies Linux display server protocol for tool selection
 type EnvironmentType string
 
 const (
-	// EnvironmentX11 represents X11 display server
-	EnvironmentX11 EnvironmentType = "X11"
-	// EnvironmentWayland represents Wayland display server
-	EnvironmentWayland EnvironmentType = "Wayland"
-	// EnvironmentUnknown represents an unknown display server
-	EnvironmentUnknown EnvironmentType = "Unknown"
+	EnvironmentX11     EnvironmentType = "X11"     // X11 display server
+	EnvironmentWayland EnvironmentType = "Wayland" // Wayland display server
+	EnvironmentUnknown EnvironmentType = "Unknown" // fallback/unknown environment
 )
 
-// Creates output managers based on environment and configuration
+// Factory creates output managers (clipboard/typing) based on environment and configuration
+// Specialized subfactory used by ServiceFactory hierarchy
+//
+// Factory Hierarchy:
+//
+//	ServiceFactory (internal/services/factory.go)
+//	    │
+//	    ├── Stage 1: FactoryComponents
+//	    │       │
+//	    │       └── uses → outputFactory.GetOutputterFromConfig() (this file)
+//	    │                     │
+//	    │                     └── creates → ClipboardOutputter or TypeOutputter
+//	    │
+//	    ├── Stage 2: FactoryAssembler
+//	    └── Stage 3: FactoryWirer
+//
+// Tool Selection Strategy:
+//   - Auto-detection: checks environment (X11/Wayland/GNOME) and tool availability
+//   - Priority chains: Wayland: wl-copy | X11: xsel (clipboard)
+//     GNOME+Wayland: ydotool>wtype | Other Wayland: wtype>ydotool | X11: xdotool (typing)
+//   - Config override: manual tool selection via config.Output.ClipboardTool/TypeTool
+//   - Security: allowlist validation via config.IsCommandAllowed
+//
+// Usage:
+//
+//	GetOutputterFromConfig(config, EnvironmentWayland) // one-line creation
 type Factory struct {
 	config *config.Config
 }
 
-// Create a new output factory
+// NewFactory Constructor - initializes factory with config for tool selection
 func NewFactory(config *config.Config) *Factory {
-	return &Factory{
-		config: config,
-	}
+	return &Factory{config: config}
 }
 
-// selectClipboardTool chooses an appropriate clipboard tool based on environment
+// selectClipboardTool Tool selection - chooses clipboard tool based on environment
+// Config override: returns config.Output.ClipboardTool if not "auto"
 func (f *Factory) selectClipboardTool(env EnvironmentType) string {
-	clipboardTool := f.config.Output.ClipboardTool
-	if clipboardTool != "auto" {
-		return clipboardTool
+	if tool := f.config.Output.ClipboardTool; tool != "auto" {
+		return tool
 	}
-
 	switch env {
 	case EnvironmentWayland:
 		return "wl-copy"
@@ -54,13 +73,12 @@ func (f *Factory) selectClipboardTool(env EnvironmentType) string {
 	}
 }
 
-// selectTypeTool chooses an appropriate typing tool based on environment
+// selectTypeTool Tool selection - chooses typing tool based on environment
+// Config override: returns config.Output.TypeTool if not "auto"
 func (f *Factory) selectTypeTool(env EnvironmentType) string {
-	typeTool := f.config.Output.TypeTool
-	if typeTool != "auto" {
-		return typeTool
+	if tool := f.config.Output.TypeTool; tool != "auto" {
+		return tool
 	}
-
 	switch env {
 	case EnvironmentWayland:
 		return f.selectWaylandTypeTool()
@@ -71,7 +89,7 @@ func (f *Factory) selectTypeTool(env EnvironmentType) string {
 	}
 }
 
-// selectWaylandTypeTool selects the best typing tool for Wayland
+// selectWaylandTypeTool Wayland-specific selection - delegates to GNOME vs non-GNOME chains
 func (f *Factory) selectWaylandTypeTool() string {
 	if platform.IsGNOMEWithWayland() {
 		return f.selectGNOMEWaylandTypeTool()
@@ -79,7 +97,8 @@ func (f *Factory) selectWaylandTypeTool() string {
 	return f.selectNonGNOMEWaylandTypeTool()
 }
 
-// selectGNOMEWaylandTypeTool selects typing tool for GNOME/Wayland
+// selectGNOMEWaylandTypeTool GNOME+Wayland priority chain
+// Priority: ydotool (best compatibility) → wtype → xdotool (XWayland fallback)
 func (f *Factory) selectGNOMEWaylandTypeTool() string {
 	if f.isToolAvailable("ydotool") {
 		return "ydotool"
@@ -90,7 +109,8 @@ func (f *Factory) selectGNOMEWaylandTypeTool() string {
 	return "xdotool"
 }
 
-// selectNonGNOMEWaylandTypeTool selects typing tool for non-GNOME Wayland
+// selectNonGNOMEWaylandTypeTool Non-GNOME Wayland priority chain
+// Priority: wtype (native Wayland) → ydotool → xdotool (XWayland fallback)
 func (f *Factory) selectNonGNOMEWaylandTypeTool() string {
 	if f.isToolAvailable("wtype") {
 		return "wtype"
@@ -101,10 +121,10 @@ func (f *Factory) selectNonGNOMEWaylandTypeTool() string {
 	return "xdotool"
 }
 
-// selectFallbackTypeTool auto-detects the best available typing tool
+// selectFallbackTypeTool Unknown environment - auto-detect first available tool
+// Priority: xdotool (widest compatibility) → wtype → ydotool
 func (f *Factory) selectFallbackTypeTool() string {
-	tools := []string{"xdotool", "wtype", "ydotool"}
-	for _, tool := range tools {
+	for _, tool := range []string{"xdotool", "wtype", "ydotool"} {
 		if f.isToolAvailable(tool) {
 			return tool
 		}
@@ -112,20 +132,19 @@ func (f *Factory) selectFallbackTypeTool() string {
 	return "xdotool"
 }
 
-// Create an appropriate outputter based on the environment
+// GetOutputter Factory Method - creates outputter instance from environment + config
+// Process: tool selection → security validation → outputter creation
+// Security: validates tools via config.IsCommandAllowed before instantiation
+// Returns ClipboardOutputter or TypeOutputter based on config.Output.DefaultMode
 func (f *Factory) GetOutputter(env EnvironmentType) (interfaces.Outputter, error) {
 	clipboardTool := f.selectClipboardTool(env)
 	typeTool := f.selectTypeTool(env)
-
-	// Security: Validate selected tool commands against the allowlist
 	if clipboardTool != "" && !config.IsCommandAllowed(f.config, clipboardTool) {
 		return nil, fmt.Errorf("clipboard tool not allowed: %s", clipboardTool)
 	}
 	if typeTool != "" && !config.IsCommandAllowed(f.config, typeTool) {
 		return nil, fmt.Errorf("type tool not allowed: %s", typeTool)
 	}
-
-	// Create the appropriate outputter based on the default mode
 	switch f.config.Output.DefaultMode {
 	case config.OutputModeClipboard:
 		return outputters.NewClipboardOutputter(clipboardTool, f.config)
