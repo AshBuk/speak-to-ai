@@ -16,27 +16,52 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
-// Creates appropriate audio recorder instances based on configuration
+// AudioRecorderFactory creates audio recorder instances based on configuration
+// Specialized subfactory used by ServiceFactory hierarchy
+//
+// Factory Hierarchy:
+//
+//	ServiceFactory (internal/services/factory.go)
+//	    │
+//	    ├── Stage 1: FactoryComponents
+//	    │       │
+//	    │       └── uses → AudioRecorderFactory (this file)
+//	    │                     │
+//	    │                     └── creates → ArecordRecorder or FFmpegRecorder
+//	    │
+//	    ├── Stage 2: FactoryAssembler
+//	    └── Stage 3: FactoryWirer
+//
+// Design:
+//   - Factory Method: creates different recorder implementations (arecord, ffmpeg)
+//   - Strategy: recorders implement common AudioRecorder interface
+//   - Fallback: automatic fallback to working recorder method
+//   - Diagnostics Pattern: pre-creation system validation
+//
+// Usage:
+//
+//	GetRecorder(config, logger, tempManager)             // simple creation
+//	GetRecorderWithFallback(config, logger, tempManager) // with auto-fallback
 type AudioRecorderFactory struct {
 	config      *config.Config
 	logger      logger.Logger
 	tempManager *processing.TempFileManager
 }
 
-// Create a new factory instance
+// NewAudioRecorderFactory Constructor - initializes factory with required dependencies
 func NewAudioRecorderFactory(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) *AudioRecorderFactory {
-	return &AudioRecorderFactory{
-		config:      config,
-		logger:      logger,
-		tempManager: tempManager,
+	return &AudioRecorderFactory{ // Injected:
+		config:      config,      // (recorder selection)
+		logger:      logger,      // (diagnostics)
+		tempManager: tempManager, // (file handling)
 	}
 }
 
-// Create a recorder based on the method specified in the configuration
+// CreateRecorder Factory Method implementation - creates recorder instance from config
+// Returns AudioRecorder interface with arecord or ffmpeg concrete implementation
+// Runs diagnostics before creation to aid troubleshooting if recorder fails later
 func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error) {
-	// Diagnose the audio system before creating the recorder
 	f.DiagnoseAudioSystem()
-
 	switch f.config.Audio.RecordingMethod {
 	case "arecord":
 		return recorders.NewArecordRecorder(f.config, f.logger, f.tempManager), nil
@@ -47,11 +72,12 @@ func (f *AudioRecorderFactory) CreateRecorder() (interfaces.AudioRecorder, error
 	}
 }
 
-// Perform audio system diagnostics to help debug configuration issues
+// DiagnoseAudioSystem Pre-creation validation - checks tools and devices before recording
+// Logs warnings for missing tools (ffmpeg/arecord) and available audio devices
+// Helps troubleshoot "recorder created but fails to record" scenarios
 func (f *AudioRecorderFactory) DiagnoseAudioSystem() {
 	f.logger.Info("[AUDIO DIAGNOSTICS] Recording method: %s, Device: %s",
 		f.config.Audio.RecordingMethod, f.config.Audio.Device)
-	// Check if the required command-line tools are available and log device info
 	switch f.config.Audio.RecordingMethod {
 	case "ffmpeg":
 		if _, err := exec.LookPath("ffmpeg"); err != nil {
@@ -78,16 +104,16 @@ func (f *AudioRecorderFactory) DiagnoseAudioSystem() {
 	}
 }
 
-// Test if a specific recording method works correctly
+// TestRecorderMethod Validates recorder by attempting short capture (0.5-1s)
+// Creates temporary config with tested method, runs actual audio capture command
+// Used by CreateRecorderWithFallback to find working method on multi-recorder systems
+// Security: uses command allowlist and argument sanitization (config.IsCommandAllowed)
 func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
-	// Create a temporary test configuration
 	testConfig := *f.config
 	testConfig.Audio.RecordingMethod = method
-
 	f.logger.Info("[AUDIO TEST] Testing %s recorder...", method)
 	var testArgs []string
 	var cmdName string
-
 	switch method {
 	case "ffmpeg":
 		cmdName = "ffmpeg"
@@ -104,15 +130,12 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 		return fmt.Errorf("unsupported test method: %s", method)
 	}
 
-	// Run the test command with a timeout to prevent hangs
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	// Security: validate the command and sanitize arguments before execution
 	if !config.IsCommandAllowed(&testConfig, cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
 	}
 	safeArgs := config.SanitizeCommandArgs(testArgs)
-
 	// #nosec G204 -- Safe: command is allowlisted and arguments are sanitized.
 	cmd := exec.CommandContext(ctx, cmdName, safeArgs...)
 	output, err := cmd.CombinedOutput()
@@ -121,53 +144,49 @@ func (f *AudioRecorderFactory) TestRecorderMethod(method string) error {
 		f.logger.Info("[AUDIO TEST] %s output: %s", method, string(output))
 		return fmt.Errorf("%s test failed: %w", method, err)
 	}
-
 	f.logger.Info("[AUDIO TEST] %s test passed", method)
 	return nil
 }
 
-// Create a recorder using the configured method, but fall back to other supported
-// methods if the primary one fails a functionality test
+// CreateRecorderWithFallback Resilient creation - tries configured method, falls back if test fails
+// Fallback sequence: configured method → arecord → ffmpeg (skips original if already tested)
+// Mutates config.Audio.RecordingMethod on successful fallback for session persistence
+// Use case: handle systems where configured recorder is unavailable but alternative exists
 func (f *AudioRecorderFactory) CreateRecorderWithFallback() (interfaces.AudioRecorder, error) {
-	// First, try the configured method
 	recorder, err := f.CreateRecorder()
 	if err != nil {
 		return nil, err
 	}
-	// Test if the method actually works
 	testErr := f.TestRecorderMethod(f.config.Audio.RecordingMethod)
 	if testErr == nil {
 		f.logger.Info("[AUDIO] Using configured recorder: %s", f.config.Audio.RecordingMethod)
 		return recorder, nil
 	}
-
 	f.logger.Warning("[AUDIO] Configured method %s failed test: %v", f.config.Audio.RecordingMethod, testErr)
-	// Try fallback methods if the configured one fails
 	fallbacks := []string{"arecord", "ffmpeg"}
 	originalMethod := f.config.Audio.RecordingMethod
-
 	for _, method := range fallbacks {
 		if method == originalMethod {
-			continue // Skip the already failed method
+			continue
 		}
-
 		if f.TestRecorderMethod(method) == nil {
 			f.logger.Info("[AUDIO] Automatically switching to %s (fallback)", method)
 			f.config.Audio.RecordingMethod = method
 			return f.CreateRecorder()
 		}
 	}
-
 	return nil, fmt.Errorf("no working audio recorder found (tested: %s)", f.config.Audio.RecordingMethod)
 }
 
-// Create a recorder directly from a configuration
+// GetRecorder Convenience function - one-line recorder creation without factory instance
+// Calls CreateRecorder() - no fallback, fails if configured method unavailable
 func GetRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) (interfaces.AudioRecorder, error) {
 	factory := NewAudioRecorderFactory(config, logger, tempManager)
 	return factory.CreateRecorder()
 }
 
-// Create a recorder with automatic fallback functionality
+// GetRecorderWithFallback Convenience function - one-line recorder creation with auto-fallback
+// Calls CreateRecorderWithFallback() - automatically tries alternative methods on failure
 func GetRecorderWithFallback(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) (interfaces.AudioRecorder, error) {
 	factory := NewAudioRecorderFactory(config, logger, tempManager)
 	return factory.CreateRecorderWithFallback()
