@@ -60,18 +60,15 @@ func validateWebServerConfig(config *models.Config, errors *[]string) {
 	if !config.WebServer.Enabled {
 		return
 	}
-
 	if config.WebServer.Port <= 0 || config.WebServer.Port > 65535 {
 		*errors = append(*errors, fmt.Sprintf("invalid port: %d, correcting to 8080", config.WebServer.Port))
 		config.WebServer.Port = 8080
 	}
-
 	// Host must be a valid hostname
 	if config.WebServer.Host == "" {
 		config.WebServer.Host = "localhost"
 		return
 	}
-
 	// Basic validation to prevent injection of malicious characters
 	hostRegex := regexp.MustCompile(`^[a-zA-Z0-9.-]+$`)
 	if !hostRegex.MatchString(config.WebServer.Host) {
@@ -95,7 +92,6 @@ func validateSecurityConfig(config *models.Config, errors *[]string) {
 // always run with a sane configuration
 func ValidateConfig(config *models.Config) error {
 	var errors []string
-
 	validateGeneralConfig(config, &errors)
 	validateAudioConfig(config, &errors)
 	validateWebServerConfig(config, &errors)
@@ -104,6 +100,5 @@ func ValidateConfig(config *models.Config) error {
 	if len(errors) > 0 {
 		return fmt.Errorf("configuration validation issues: %s", strings.Join(errors, "; "))
 	}
-
 	return nil
 }

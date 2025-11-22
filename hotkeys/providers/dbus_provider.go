@@ -48,7 +48,6 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 			p.logger.Error("Failed to close D-Bus connection: %v", err)
 		}
 	}()
-
 	// Check if the GlobalShortcuts portal is available by introspecting the desktop portal
 	obj := conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 	call := obj.Call("org.freedesktop.DBus.Introspectable.Introspect", 0)
@@ -91,7 +90,6 @@ func (p *DbusKeyboardProvider) Start() error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to session bus (D-Bus unavailable): %w", err)
 	}
-
 	// Register hotkeys via the GlobalShortcuts portal
 	if err := p.registerHotkeys(); err != nil {
 		if closeErr := p.conn.Close(); closeErr != nil {
@@ -101,7 +99,6 @@ func (p *DbusKeyboardProvider) Start() error {
 		p.logger.Info("Hint: In Flatpak/AppImage, global shortcuts may require user consent")
 		return fmt.Errorf("failed to register hotkeys (GlobalShortcuts portal unavailable): %w", err)
 	}
-
 	p.isListening = true
 	p.logger.Info("D-Bus hotkey provider started successfully")
 	return nil
@@ -115,7 +112,6 @@ func (p *DbusKeyboardProvider) Stop() {
 	if !p.isListening {
 		return
 	}
-
 	// Close D-Bus connection to unblock signal channel
 	if p.conn != nil {
 		if err := p.conn.Close(); err != nil {
@@ -125,7 +121,6 @@ func (p *DbusKeyboardProvider) Stop() {
 	}
 
 	p.isListening = false
-
 	// Wait for listener goroutine to exit
 	p.wg.Wait()
 
@@ -225,16 +220,13 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	if err != nil {
 		return fmt.Errorf("failed to get session handle: %w", err)
 	}
-
 	p.sessionHandle = sessionHandle
-
 	// Step 2: Prepare shortcuts for binding (include accelerator)
 	// Format according to GlobalShortcuts portal spec: a(sa{sv})
 	shortcuts := make([]struct {
 		ID   string
 		Data map[string]dbus.Variant
 	}, 0, len(p.callbacks))
-
 	for hotkey := range p.callbacks {
 		accel := convertHotkeyToAccelerator(hotkey)
 		p.logger.Info("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
@@ -251,7 +243,6 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 			Data: shortcutData,
 		})
 	}
-
 	// Step 3: Bind shortcuts to the session
 	bindOptions := map[string]dbus.Variant{}
 	p.logger.Info("DBus: Binding %d shortcuts to session %s", len(shortcuts), sessionHandle)
@@ -263,7 +254,6 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	}
 
 	p.logger.Info("DBus: Successfully bound shortcuts")
-
 	// Step 4: Start listening for shortcut activations in tracked goroutine
 	p.wg.Add(1)
 	go func() {
@@ -282,11 +272,9 @@ func (p *DbusKeyboardProvider) waitForSessionResponse(requestHandle dbus.ObjectP
 	if err != nil {
 		return "", fmt.Errorf("failed to add match rule: %w", err)
 	}
-
 	// Create a channel to receive the signal
 	c := make(chan *dbus.Signal, 1)
 	p.conn.Signal(c)
-
 	// Wait for the Response signal with a timeout
 	timeout := time.After(5 * time.Second)
 	select {
@@ -328,7 +316,6 @@ func (p *DbusKeyboardProvider) listenForShortcuts() {
 	// Add a signal match rule for the session
 	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.GlobalShortcuts',member='Activated',path='%s'", p.sessionHandle)
 	p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule)
-
 	// Listen for signals
 	c := make(chan *dbus.Signal, 10)
 	p.conn.Signal(c)

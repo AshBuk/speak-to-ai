@@ -10,4 +10,5 @@
 //   - manager:    Implement the core HotkeyManager logic, including provider selection and fallback
 //   - adapters:   Provide adapters for configuration structs
 //   - utils:      Offer utility functions for parsing and handling key combinations
+//   - mocks:      Supply test doubles for end-to-end and integration scenarios
 package hotkeys

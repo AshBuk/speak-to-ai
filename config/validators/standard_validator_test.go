@@ -115,14 +115,12 @@ func TestValidateConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			config := tt.setupConfig()
 			err := ValidateConfig(config)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
 			if !tt.expectError && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-
 			// Check expected values
 			if whisperModel, ok := tt.expectedValues["whisperModel"]; ok {
 				if config.General.WhisperModel != whisperModel {

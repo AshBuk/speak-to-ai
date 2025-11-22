@@ -8,29 +8,32 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // GetIconMicOff returns the binary data for the microphone-off icon
-func GetIconMicOff() []byte {
+func GetIconMicOff(loggers ...logger.Logger) []byte {
+	logSink := resolveLogger(loggers...)
 	if data, ok := loadIconFromAppImage(); ok {
 		return data
 	}
-	return mustDecodeIcon(iconMicOffBase64)
+	return mustDecodeIcon(iconMicOffBase64, logSink)
 }
 
 // GetIconMicOn returns the binary data for the microphone-on icon
-func GetIconMicOn() []byte {
+func GetIconMicOn(loggers ...logger.Logger) []byte {
+	logSink := resolveLogger(loggers...)
 	if data, ok := loadIconFromAppImage(); ok {
 		return data
 	}
-	return mustDecodeIcon(iconMicOnBase64)
+	return mustDecodeIcon(iconMicOnBase64, logSink)
 }
 
 // mustDecodeIcon decodes a base64-gzipped icon
-func mustDecodeIcon(encoded string) []byte {
+func mustDecodeIcon(encoded string, logSink logger.Logger) []byte {
 	compressed, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
 		panic("Failed to decode icon: " + err.Error())
@@ -42,7 +45,7 @@ func mustDecodeIcon(encoded string) []byte {
 	}
 	defer func() {
 		if err := gzipReader.Close(); err != nil {
-			log.Printf("Warning: failed to close gzip reader for icon: %v", err)
+			logSink.Warning("Failed to close gzip reader for icon: %v", err)
 		}
 	}()
 
@@ -73,6 +76,13 @@ func loadIconFromAppImage() ([]byte, bool) {
 		}
 	}
 	return nil, false
+}
+
+func resolveLogger(loggers ...logger.Logger) logger.Logger {
+	if len(loggers) > 0 && loggers[0] != nil {
+		return loggers[0]
+	}
+	return logger.NewDefaultLogger(logger.WarningLevel)
 }
 
 // Base64-encoded gzipped PNG icons

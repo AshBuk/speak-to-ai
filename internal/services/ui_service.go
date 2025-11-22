@@ -69,13 +69,11 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 // Update visual feedback during active recording
 func (us *UIService) UpdateRecordingUI(isRecording bool, level float64) {
 	us.SetRecordingState(isRecording)
-
 }
 
 // Display error notification and log for debugging
 func (us *UIService) SetError(message string) {
 	us.logger.Error("UI Error: %s", message)
-
 	if us.notifyManager != nil {
 		if err := us.sendNotification(constants.NotifyError, message, "dialog-error"); err != nil {
 			us.logger.Warning("Failed to show error notification: %v", err)
@@ -86,7 +84,6 @@ func (us *UIService) SetError(message string) {
 // Display success notification for completed operations
 func (us *UIService) SetSuccess(message string) {
 	us.logger.Info("UI Success: %s", message)
-
 	if us.notifyManager != nil {
 		if err := us.sendNotification(constants.NotifySuccess, message, "dialog-ok-apply"); err != nil {
 			us.logger.Warning("Failed to show success notification: %v", err)
@@ -97,33 +94,28 @@ func (us *UIService) SetSuccess(message string) {
 // Create temporary HTML file and open with system browser
 func (us *UIService) ShowAboutPage() error {
 	us.logger.Info("Showing about page...")
-
 	tmpFile, err := os.CreateTemp("", "speak-to-ai-about-*.html")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 	// Note: temp file for browser access
-
 	if _, err := tmpFile.WriteString(assets.AboutHTML); err != nil {
 		return fmt.Errorf("failed to write HTML content: %w", err)
 	}
 	if err := tmpFile.Close(); err != nil {
 		return fmt.Errorf("failed to close temp file: %w", err)
 	}
-
 	return us.openWithSystem(tmpFile.Name())
 }
 
 // Open configuration file with system default editor
 func (us *UIService) ShowConfigFile() error {
 	us.logger.Info("Showing config file...")
-
 	path, ok := us.getConfigPath()
 	if !ok {
 		us.logger.Warning("Could not determine config file path")
 		return fmt.Errorf("could not determine config file path")
 	}
-
 	// Open with system handler using sanitized environment (AppImage-safe)
 	if err := us.openWithSystem(path); err != nil {
 		us.logger.Info("Config file open failed, trying directory: %v", err)
@@ -134,13 +126,11 @@ func (us *UIService) ShowConfigFile() error {
 			return fmt.Errorf("failed to open config file or directory: %w", err)
 		}
 	}
-
 	if us.notifyManager != nil {
 		if err := us.sendNotification("Configuration", "Config file opened", "preferences-desktop"); err != nil {
 			us.logger.Error("Failed to show config notification: %v", err)
 		}
 	}
-
 	return nil
 }
 

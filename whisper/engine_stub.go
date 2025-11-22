@@ -10,6 +10,7 @@ import (
 	"errors"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 )
 
@@ -17,7 +18,7 @@ import (
 type WhisperEngine struct{}
 
 // NewWhisperEngine returns an error indicating that CGO is required
-func NewWhisperEngine(config *config.Config, modelPath string) (*WhisperEngine, error) {
+func NewWhisperEngine(config *config.Config, modelPath string, _ ...logger.Logger) (*WhisperEngine, error) {
 	return nil, errors.New("whisper engine is unavailable: built without cgo")
 }
 

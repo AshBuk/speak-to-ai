@@ -94,7 +94,6 @@ func (b *BaseRecorder) updateAudioLevel(level float64) {
 	b.currentAudioLevel = level
 	callback := b.audioLevelCallback
 	b.levelMutex.Unlock()
-
 	if callback != nil {
 		callback(level)
 	}
@@ -105,7 +104,6 @@ func (b *BaseRecorder) calculateAudioLevel(data []byte) float64 {
 	if len(data) == 0 {
 		return 0.0
 	}
-
 	// Assume 16-bit PCM data
 	var sum int64
 	samples := len(data) / 2
@@ -119,7 +117,6 @@ func (b *BaseRecorder) calculateAudioLevel(data []byte) float64 {
 	if samples == 0 {
 		return 0.0
 	}
-
 	// Calculate Root Mean Square (RMS) and normalize to a 0-1 range
 	rms := float64(sum) / float64(samples)
 	rms = rms / (32768.0 * 32768.0)
@@ -141,11 +138,9 @@ func (b *BaseRecorder) CleanupFile() error {
 		b.buffer.Reset()
 		return nil
 	}
-
 	if b.outputFile == "" {
 		return nil // Nothing to clean up
 	}
-
 	// Use the temp file manager for cleanup
 	b.tempManager.RemoveFile(b.outputFile, true)
 	return nil
@@ -191,11 +186,9 @@ func (b *BaseRecorder) monitorAudioLevel(reader io.Reader) {
 				}
 				return
 			}
-
 			if n > 0 {
 				// Write to the in-memory buffer
 				b.buffer.Write(buf[:n])
-
 				// Calculate and update the audio level
 				level := b.calculateAudioLevel(buf[:n])
 				b.updateAudioLevel(level)
@@ -209,7 +202,6 @@ func (b *BaseRecorder) waitForProcess() error {
 	if b.cmd == nil {
 		return fmt.Errorf("no command to wait for")
 	}
-
 	b.waitOnce.Do(func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -321,7 +313,6 @@ func (b *BaseRecorder) sendSIGINTAndWait() bool {
 
 	done := make(chan error, 1)
 	go func() { done <- b.waitForProcess() }()
-
 	select {
 	case err := <-done:
 		b.logProcessExit(err)
@@ -401,9 +392,7 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	if b.cmd != nil && b.cmd.Process != nil {
 		return fmt.Errorf("recording already in progress")
 	}
-
 	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
-
 	// Set up the output file or in-memory buffer
 	if b.useBuffer {
 		b.buffer.Reset()
@@ -412,30 +401,24 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 			return err
 		}
 	}
-
 	// Add the output file to the command arguments if not using a buffer
 	finalArgs := args
 	if !b.useBuffer {
 		finalArgs = append(args, b.outputFile)
 	}
-
 	// Security: validate the command and sanitize arguments before execution
 	if !config.IsCommandAllowed(b.config, cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
 	}
 	safeArgs := config.SanitizeCommandArgs(finalArgs)
-
 	// Create the command with context
 	// #nosec G204 -- Safe: command name is from an allowlist and arguments are sanitized.
 	b.cmd = exec.CommandContext(b.ctx, cmdName, safeArgs...)
-
 	// Log full command at Debug level for troubleshooting
 	b.logger.Debug("Executing command: %s %v", cmdName, safeArgs)
-
 	// Capture stderr for diagnostics
 	b.stderrBuf.Reset()
 	b.cmd.Stderr = &b.stderrBuf
-
 	// If using a buffer, set up a pipe to read stdout for audio level monitoring
 	if b.useBuffer {
 		stdout, err := b.cmd.StdoutPipe()
@@ -445,7 +428,6 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		}
 		go b.monitorAudioLevel(stdout)
 	}
-
 	// Reset wait state and start the process
 	b.waitOnce = sync.Once{}
 	b.processErr = nil
@@ -457,6 +439,5 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 	// Verify process started successfully
 	startTime := time.Now()
 	b.logger.Info("Recording process started: PID=%d, command=%s", b.cmd.Process.Pid, cmdName)
-
 	return b.verifyProcessStarted(startTime)
 }

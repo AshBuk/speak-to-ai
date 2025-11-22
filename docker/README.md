@@ -15,6 +15,7 @@ The project uses a **single-service Docker Compose setup** with one `dev` contai
   - GUI libraries (libayatana-appindicator3, libgtk-3, etc.)
   - Build tools (cmake, gcc, pkg-config)
   - CLI utilities (xsel, wl-clipboard, xdotool, ydotool, ffmpeg)
+  - Note: wtype is also supported by the application for Wayland typing (auto-detected if available on target system)
 - **Usage**: All `make` commands run inside this container
 
 ## Docker Volumes

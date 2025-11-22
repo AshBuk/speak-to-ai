@@ -5,22 +5,25 @@ package loaders
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config/models"
 	"github.com/AshBuk/speak-to-ai/config/validators"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 	yaml "gopkg.in/yaml.v2"
 )
 
 // Read a configuration file, apply defaults, and validate the result.
 // If the file doesn't exist, log a warning and return a default configuration.
 // The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate
-func LoadConfig(filename string) (*models.Config, error) {
+func LoadConfig(filename string, loggers ...logger.Logger) (*models.Config, error) {
+	var logSink logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
+	if len(loggers) > 0 && loggers[0] != nil {
+		logSink = loggers[0]
+	}
 	var config models.Config
-
 	// Start with a default configuration to ensure all fields are initialized
 	SetDefaultConfig(&config)
 
@@ -29,24 +32,20 @@ func LoadConfig(filename string) (*models.Config, error) {
 	if strings.Contains(clean, "..") {
 		return nil, fmt.Errorf("invalid config path: %s", filename)
 	}
-
 	// #nosec G304 -- Path is cleaned and validated, mitigating directory traversal risks.
 	data, err := os.ReadFile(clean)
 	if err != nil {
-		log.Printf("Warning: could not read config file: %v", err)
-		log.Println("Using default configuration")
+		logSink.Info("Could not read config file: %v, using defaults", err)
 		return &config, nil
 	}
-
 	// Parse the YAML content into the config struct
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-
 	// Validate the loaded configuration and apply corrections if necessary
 	if err := validators.ValidateConfig(&config); err != nil {
-		log.Printf("Configuration validation error: %v", err)
-		log.Println("Using validated configuration with corrections")
+		logSink.Warning("Configuration validation error: %v", err)
+		logSink.Info("Using validated configuration with corrections")
 	}
 
 	return &config, nil
@@ -117,17 +116,14 @@ func SaveConfig(filename string, config *models.Config) error {
 	if strings.Contains(safe, "..") {
 		return fmt.Errorf("invalid config path: %s", filename)
 	}
-
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
-
 	// Ensure the directory exists before writing the file
 	if err := os.MkdirAll(filepath.Dir(safe), 0o750); err != nil {
 		return err
 	}
-
 	// Write with restrictive permissions (read/write for owner only)
 	return os.WriteFile(safe, data, 0o600)
 }

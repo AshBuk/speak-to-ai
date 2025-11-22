@@ -32,7 +32,6 @@ func setupRecorderWithCleanup(t *testing.T, cfg *config.Config) audiointerfaces.
 	if err != nil {
 		t.Skipf("Audio not available: %v", err)
 	}
-
 	// Ensure cleanup happens even if test fails
 	t.Cleanup(func() {
 		// Force stop and cleanup (ignore any errors)
@@ -48,7 +47,6 @@ func forceStopRecorder(recorder audiointerfaces.AudioRecorder) {
 	_, _ = recorder.StopRecording()
 	// Cleanup any remaining resources
 	_ = recorder.CleanupFile()
-
 	// Give time for background goroutines to finish
 	time.Sleep(50 * time.Millisecond)
 }
@@ -69,7 +67,6 @@ func TestEndToEndWorkflow(t *testing.T) {
 		cfg.Output.DefaultMode = "clipboard" // Safe for testing
 		cfg.Audio.RecordingMethod = "arecord"
 		cfg.Audio.Device = "default"
-
 		// Validate configuration
 		err := config.ValidateConfig(cfg)
 		if err != nil {
@@ -78,7 +75,6 @@ func TestEndToEndWorkflow(t *testing.T) {
 
 		// Test audio recording
 		recorder := setupRecorderWithCleanup(t, cfg)
-
 		// Start recording
 		err = recorder.StartRecording()
 		if err != nil {
@@ -87,7 +83,6 @@ func TestEndToEndWorkflow(t *testing.T) {
 
 		// Simulate short recording
 		time.Sleep(200 * time.Millisecond)
-
 		// Stop recording
 		audioFile, err := recorder.StopRecording()
 		if err != nil {
@@ -100,7 +95,6 @@ func TestEndToEndWorkflow(t *testing.T) {
 				t.Errorf("Audio file not created: %v", err)
 			}
 		}
-
 		// Test output system
 		outputFactory := outputfactory.NewFactory(cfg)
 		outputter, err := outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
@@ -133,7 +127,6 @@ func TestApplicationInitializationFlow(t *testing.T) {
 		tempDir := t.TempDir()
 		cfg.General.TempAudioPath = tempDir
 		cfg.WebServer.Enabled = false // Disable web server for testing
-
 		// Test configuration loading
 		t.Log("Testing configuration...")
 		err := config.ValidateConfig(cfg)
@@ -192,22 +185,18 @@ func TestRealWorldScenarios(t *testing.T) {
 	config.SetDefaultConfig(cfg)
 	tempDir := t.TempDir()
 	cfg.General.TempAudioPath = tempDir
-
 	t.Run("quick_recording_session", func(t *testing.T) {
 		// Simulate a quick voice note recording
 		recorder := setupRecorderWithCleanup(t, cfg)
 
 		files := []string{}
-
 		// Record multiple short sessions
 		for i := 0; i < 3; i++ {
 			// Ensure clean state before starting
 			forceStopRecorder(recorder)
-
 			// Clear session state between recordings for isolation
 			tempManager := processing.NewTempFileManager(30 * time.Minute)
 			tempManager.CleanupAll()
-
 			// Give time for cleanup to complete
 			time.Sleep(100 * time.Millisecond)
 
@@ -215,7 +204,6 @@ func TestRealWorldScenarios(t *testing.T) {
 			if err != nil {
 				t.Skipf("Could not start recording %d: %v", i+1, err)
 			}
-
 			// Wait longer for process to fully start
 			time.Sleep(200 * time.Millisecond)
 
@@ -227,11 +215,9 @@ func TestRealWorldScenarios(t *testing.T) {
 			} else if audioFile != "" {
 				files = append(files, audioFile)
 			}
-
 			// Wait for stop to complete before next iteration
 			time.Sleep(100 * time.Millisecond)
 		}
-
 		// Verify all files were created (if any recording succeeded)
 		successfulRecordings := 0
 		for i, file := range files {
@@ -254,7 +240,6 @@ func TestRealWorldScenarios(t *testing.T) {
 	t.Run("error_recovery_scenarios", func(t *testing.T) {
 		// Test error recovery in various scenarios
 		recorder := setupRecorderWithCleanup(t, cfg)
-
 		// Test stopping without starting
 		_, err := recorder.StopRecording()
 		if err == nil {
@@ -268,7 +253,6 @@ func TestRealWorldScenarios(t *testing.T) {
 		if err != nil {
 			t.Skipf("Could not start first recording: %v", err)
 		}
-
 		// Wait for first recording to fully start
 		time.Sleep(100 * time.Millisecond)
 
@@ -281,7 +265,6 @@ func TestRealWorldScenarios(t *testing.T) {
 		if err != nil {
 			t.Logf("Stop recording error: %v", err)
 		}
-
 		// Force stop to ensure cleanup
 		forceStopRecorder(recorder)
 
@@ -291,7 +274,6 @@ func TestRealWorldScenarios(t *testing.T) {
 	t.Run("concurrent_operations", func(t *testing.T) {
 		// Test that concurrent operations are handled safely
 		tempManager := processing.NewTempFileManager(30 * time.Minute)
-
 		// Add files concurrently
 		errChan := make(chan error, 10)
 
@@ -309,7 +291,6 @@ func TestRealWorldScenarios(t *testing.T) {
 				errChan <- nil
 			}(i)
 		}
-
 		// Collect results
 		errors := 0
 		for i := 0; i < 10; i++ {
@@ -332,7 +313,6 @@ func TestSystemResourceManagement(t *testing.T) {
 	t.Run("temporary_file_cleanup", func(t *testing.T) {
 		tempDir := t.TempDir()
 		tempManager := processing.NewTempFileManager(30 * time.Minute)
-
 		// Create several temp files
 		testFiles := []string{}
 		for i := 0; i < 5; i++ {
@@ -346,14 +326,12 @@ func TestSystemResourceManagement(t *testing.T) {
 			testFiles = append(testFiles, file)
 			tempManager.AddFile(file)
 		}
-
 		// Verify files exist
 		for _, file := range testFiles {
 			if _, err := os.Stat(file); err != nil {
 				t.Errorf("Test file not found: %v", err)
 			}
 		}
-
 		// Test cleanup
 		tempManager.Stop()
 		time.Sleep(100 * time.Millisecond)
@@ -365,7 +343,6 @@ func TestSystemResourceManagement(t *testing.T) {
 		// Test that memory usage stays reasonable during operation
 		cfg := &config.Config{}
 		config.SetDefaultConfig(cfg)
-
 		// Create and destroy multiple components
 		for i := 0; i < 5; i++ {
 			// Skip whisper engine (requires CGO)
@@ -396,7 +373,6 @@ func TestCrossComponentIntegration(t *testing.T) {
 	t.Run("audio_to_output_pipeline", func(t *testing.T) {
 		// Test the complete pipeline from audio to output
 		recorder := setupRecorderWithCleanup(t, cfg)
-
 		outputFactory := outputfactory.NewFactory(cfg)
 		outputter, err := outputFactory.GetOutputter(outputfactory.EnvironmentUnknown)
 		if err != nil {
@@ -411,10 +387,8 @@ func TestCrossComponentIntegration(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 		_, _ = recorder.StopRecording()
-
 		// Simulate transcription result
 		mockTranscription := "This is a test transcription result"
-
 		// Test output
 		if outputter != nil {
 			err = outputter.CopyToClipboard(mockTranscription)
@@ -422,7 +396,6 @@ func TestCrossComponentIntegration(t *testing.T) {
 				t.Logf("Output operation failed (expected): %v", err)
 			}
 		}
-
 		// Ensure proper cleanup
 		forceStopRecorder(recorder)
 		t.Log("Audio to output pipeline test completed")

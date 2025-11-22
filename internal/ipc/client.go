@@ -20,7 +20,6 @@ func SendRequest(socketPath string, req Request, timeout time.Duration) (Respons
 	if socketPath == "" {
 		return Response{}, fmt.Errorf("ipc socket path not provided")
 	}
-
 	if timeout <= 0 {
 		timeout = defaultDialTimeout
 	}
@@ -30,7 +29,6 @@ func SendRequest(socketPath string, req Request, timeout time.Duration) (Respons
 		return Response{}, fmt.Errorf("failed to connect to ipc server: %w", err)
 	}
 	defer func() { _ = conn.Close() }()
-
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		return Response{}, fmt.Errorf("failed to set ipc deadline: %w", err)
 	}
@@ -40,7 +38,6 @@ func SendRequest(socketPath string, req Request, timeout time.Duration) (Respons
 		return Response{}, fmt.Errorf("failed to encode request: %w", err)
 	}
 	payload = append(payload, '\n')
-
 	if _, err := conn.Write(payload); err != nil {
 		return Response{}, fmt.Errorf("failed to send request: %w", err)
 	}
@@ -55,7 +52,6 @@ func SendRequest(socketPath string, req Request, timeout time.Duration) (Respons
 	if err := json.Unmarshal(line, &resp); err != nil {
 		return Response{}, fmt.Errorf("failed to decode response: %w", err)
 	}
-
 	if !resp.OK {
 		if resp.Message != "" {
 			return resp, fmt.Errorf("%s", resp.Message)

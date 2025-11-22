@@ -17,7 +17,6 @@ func TestNewAudioRecorderFactory(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	tempManager := processing.NewTempFileManager(30 * time.Minute)
 	factory := NewAudioRecorderFactory(config, mockLogger, tempManager)
-
 	if factory.config != config {
 		t.Errorf("expected config to be set correctly")
 	}
@@ -65,7 +64,6 @@ func TestAudioRecorderFactory_CreateRecorder(t *testing.T) {
 			tempManager := processing.NewTempFileManager(30 * time.Minute)
 			factory := NewAudioRecorderFactory(config, mockLogger, tempManager)
 			recorder, err := factory.CreateRecorder()
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
@@ -110,7 +108,6 @@ func TestGetRecorder(t *testing.T) {
 			mockLogger := testutils.NewMockLogger()
 			tempManager := processing.NewTempFileManager(30 * time.Minute)
 			recorder, err := GetRecorder(config, mockLogger, tempManager)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}

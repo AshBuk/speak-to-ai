@@ -76,7 +76,6 @@ func TestParseHotkey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := utils.ParseHotkey(tt.input)
-
 			if result.Key != tt.expectedKey {
 				t.Errorf("Expected key '%s', got '%s'", tt.expectedKey, result.Key)
 			}
@@ -84,7 +83,6 @@ func TestParseHotkey(t *testing.T) {
 			if len(result.Modifiers) != len(tt.expectedModifiers) {
 				t.Errorf("Expected %d modifiers, got %d", len(tt.expectedModifiers), len(result.Modifiers))
 			}
-
 			for i, expectedModifier := range tt.expectedModifiers {
 				if i >= len(result.Modifiers) {
 					t.Errorf("Missing modifier at index %d", i)

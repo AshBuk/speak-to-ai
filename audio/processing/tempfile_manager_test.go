@@ -17,15 +17,12 @@ func TestNewTempFileManager(t *testing.T) {
 	if manager == nil {
 		t.Fatal("Expected manager to be created, got nil")
 	}
-
 	if manager.tempFiles == nil {
 		t.Error("Expected tempFiles map to be initialized")
 	}
-
 	if manager.stopChan == nil {
 		t.Error("Expected stopChan to be initialized")
 	}
-
 	if manager.cleanupTimeout != 30*time.Minute {
 		t.Error("Expected cleanupTimeout to be set to 30 minutes")
 	}
@@ -37,7 +34,6 @@ func TestTempFileManager_AddFile(t *testing.T) {
 
 	testPath := "/tmp/test_audio.wav"
 	manager.AddFile(testPath)
-
 	manager.mutex.Lock()
 	_, exists := manager.tempFiles[testPath]
 	manager.mutex.Unlock()
@@ -58,13 +54,11 @@ func TestTempFileManager_RemoveFile(t *testing.T) {
 	}
 	testPath := tmpFile.Name()
 	tmpFile.Close()
-
 	// Add file to tracking
 	manager.AddFile(testPath)
 
 	// Remove file (with deletion)
 	manager.RemoveFile(testPath, true)
-
 	// Verify file is no longer tracked
 	manager.mutex.Lock()
 	_, exists := manager.tempFiles[testPath]
@@ -73,7 +67,6 @@ func TestTempFileManager_RemoveFile(t *testing.T) {
 	if exists {
 		t.Error("Expected file to be removed from tracking")
 	}
-
 	// Verify file was deleted from disk
 	if _, err := os.Stat(testPath); !os.IsNotExist(err) {
 		t.Error("Expected file to be deleted from disk")
@@ -92,15 +85,12 @@ func TestTempFileManager_CleanupOldFiles(t *testing.T) {
 	}
 	testPath := tmpFile.Name()
 	tmpFile.Close()
-
 	// Add file with old timestamp
 	manager.mutex.Lock()
 	manager.tempFiles[testPath] = time.Now().Add(-200 * time.Millisecond)
 	manager.mutex.Unlock()
-
 	// Run cleanup
 	manager.cleanupOldFiles()
-
 	// Verify file was removed
 	manager.mutex.Lock()
 	_, exists := manager.tempFiles[testPath]
@@ -120,12 +110,10 @@ func TestTempFileManager_CreateTempWav(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp wav: %v", err)
 	}
-
 	// Verify file exists
 	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
 		t.Errorf("Expected file to exist at %s", path)
 	}
-
 	// Verify file is tracked
 	manager.mutex.Lock()
 	_, exists := manager.tempFiles[path]
@@ -134,7 +122,6 @@ func TestTempFileManager_CreateTempWav(t *testing.T) {
 	if !exists {
 		t.Error("Expected file to be tracked")
 	}
-
 	// Cleanup
 	manager.RemoveFile(path, true)
 }
@@ -152,12 +139,10 @@ func TestTempFileManager_CreateTempWav_CustomDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp wav in custom dir: %v", err)
 	}
-
 	// Verify file exists
 	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
 		t.Errorf("Expected file to exist at %s", path)
 	}
-
 	// Cleanup
 	manager.RemoveFile(path, true)
 }
@@ -190,7 +175,6 @@ func TestTempFileManager_CleanupAll(t *testing.T) {
 	if trackedCount != 0 {
 		t.Errorf("Expected 0 tracked files, got %d", trackedCount)
 	}
-
 	// Verify all files were deleted
 	for _, path := range paths {
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
@@ -234,17 +218,14 @@ func TestTempFileManager_StartStop(t *testing.T) {
 
 	// Start the background routine
 	manager.Start()
-
 	if !manager.running {
 		t.Error("Expected manager to be running after Start()")
 	}
-
 	// Stop the background routine
 	manager.Stop()
 
 	// Give it a moment to stop
 	time.Sleep(100 * time.Millisecond)
-
 	if manager.running {
 		t.Error("Expected manager to be stopped after Stop()")
 	}
@@ -258,13 +239,11 @@ func TestTempFileManager_StopIdempotent(t *testing.T) {
 	// Stop multiple times should not panic
 	manager.Stop()
 
-	// Second stop should be safe (no-op)
+	// Second stop should be safe (no-op) - protected by stopClosed flag
 	defer func() {
 		if r := recover(); r != nil {
 			t.Error("Stop() panicked on second call")
 		}
 	}()
-
-	// This would panic if stopChan is already closed
-	// manager.Stop() // Actually, we can't safely call this as the channel is closed
+	manager.Stop()
 }

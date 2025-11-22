@@ -43,7 +43,6 @@ func (m *ModelManager) Initialize() error {
 // Do not fall back to any other path; the bundled model must exist
 func (m *ModelManager) GetModelPath() (string, error) {
 	modelPath := m.pathResolver.GetBundledModelPath()
-
 	if !utils.IsValidFile(modelPath) {
 		return "", fmt.Errorf("bundled small-q5_1 model not found at %s", modelPath)
 	}

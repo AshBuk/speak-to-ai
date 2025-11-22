@@ -10,9 +10,7 @@ import (
 )
 
 func TestNewDbusKeyboardProvider(t *testing.T) {
-
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	if provider == nil {
 		t.Fatal("NewDbusKeyboardProvider returned nil")
 	}
@@ -27,7 +25,6 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 
 func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	// Test IsSupported - this will likely return false in test environment
 	supported := provider.IsSupported()
 
@@ -42,19 +39,16 @@ func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
 
 func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	callbackCalled := false
 	callback := func() error {
 		callbackCalled = true
 		return nil
 	}
-
 	// Test registering a hotkey
 	err := provider.RegisterHotkey("ctrl+shift+a", callback)
 	if err != nil {
 		t.Errorf("unexpected error registering hotkey: %v", err)
 	}
-
 	// Check that callback is stored
 	if len(provider.callbacks) != 1 {
 		t.Errorf("expected 1 callback, got %d", len(provider.callbacks))
@@ -79,15 +73,12 @@ func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	callback := func() error { return nil }
-
 	// Register first hotkey
 	err := provider.RegisterHotkey("ctrl+a", callback)
 	if err != nil {
 		t.Errorf("unexpected error registering first hotkey: %v", err)
 	}
-
 	// Try to register the same hotkey again
 	err = provider.RegisterHotkey("ctrl+a", callback)
 	if err == nil {
@@ -100,7 +91,6 @@ func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 
 func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	// Set isListening to true to simulate already started
 	provider.isListening = true
 
@@ -115,10 +105,8 @@ func TestDbusKeyboardProvider_Start_AlreadyStarted(t *testing.T) {
 
 func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	// Stop should not panic even if not started
 	provider.Stop()
-
 	// Verify state
 	if provider.isListening {
 		t.Error("isListening should remain false")
@@ -127,7 +115,6 @@ func TestDbusKeyboardProvider_Stop_NotStarted(t *testing.T) {
 
 func TestDbusKeyboardProvider_Stop_WhenStarted(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 	// Simulate started state
 	provider.isListening = true
 

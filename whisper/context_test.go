@@ -24,16 +24,13 @@ func TestTranscribeWithContextCancellation(t *testing.T) {
 		config:    cfg,
 		modelPath: "/nonexistent/model.bin",
 	}
-
 	// Create context with immediate cancellation
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
-
 	// TranscribeWithContext should return quickly with context error
 	start := time.Now()
 	_, err := engine.TranscribeWithContext(ctx, "test.wav")
 	duration := time.Since(start)
-
 	// Should fail with context error
 	if err == nil {
 		t.Error("Expected error due to cancelled context")
@@ -44,7 +41,6 @@ func TestTranscribeWithContextCancellation(t *testing.T) {
 		t.Logf("Error type: %v", err)
 		// Note: might also be "model not found" error if context check happens after
 	}
-
 	// Should return quickly (< 100ms)
 	if duration > 100*time.Millisecond {
 		t.Errorf("Cancellation took too long: %v (expected < 100ms)", duration)
@@ -66,16 +62,13 @@ func TestTranscribeWithContextTimeout(t *testing.T) {
 	// Create context with very short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
-
 	// Should timeout
 	start := time.Now()
 	_, err := engine.TranscribeWithContext(ctx, "test.wav")
 	duration := time.Since(start)
-
 	if err == nil {
 		t.Error("Expected timeout error")
 	}
-
 	// Should timeout around 10ms (allow some slack)
 	if duration > 100*time.Millisecond {
 		t.Errorf("Timeout took too long: %v (expected ~10ms)", duration)
@@ -96,7 +89,6 @@ func TestTranscribeWithContextNoLeak(t *testing.T) {
 		config:    cfg,
 		modelPath: "/nonexistent/model.bin",
 	}
-
 	// Run multiple cancellations
 	for i := 0; i < 10; i++ {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -107,7 +99,6 @@ func TestTranscribeWithContextNoLeak(t *testing.T) {
 
 		_, _ = engine.TranscribeWithContext(ctx, "test.wav")
 	}
-
 	// If goroutines leaked, this test would eventually hang or OOM
 	// (Best verified manually with `go test -race` or profiling)
 	time.Sleep(100 * time.Millisecond)

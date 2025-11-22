@@ -75,8 +75,10 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 **For system tray integration on GNOME, [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
 > KDE and other DEs have built-in system tray support out of the box
 
-**For automatic typing on Wayland (GNOME and others) — [set up ydotool](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---ydotool-setup-recommended-user-unit) ↑**
-> X11 has native typing support with xdotool out of the box
+**For automatic typing on Wayland — [see setup guide](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---tool-options) ↑**
+> **GNOME/Wayland**: Requires ydotool setup  
+> **Other Wayland compositors** (KDE, Sway, etc.): wtype works without setup — automatically detected!  
+> **X11**: Native support with xdotool out of the box
 
 > If automatic typing doesn't appear automatically, the app falls back to clipboard (Ctrl + V) mode
 
@@ -109,7 +111,7 @@ Technical dive into architecture and engineering challenges: [Building Speak-to-
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the excellent C++ implementation of OpenAI Whisper
 - [fyne.io/systray](https://github.com/fyne-io/systray) for cross-platform system tray support
-- [ydotool](https://github.com/ReimuNotMoe/ydotool) for Wayland-compatible input automation
+- [ydotool](https://github.com/ReimuNotMoe/ydotool) and [wtype](https://github.com/atx/wtype) for Wayland-compatible input automation
 - OpenAI for the original Whisper model
 
 ## ✦ MIT [LICENSE](LICENSE)

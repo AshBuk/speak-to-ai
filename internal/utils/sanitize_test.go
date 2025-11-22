@@ -126,7 +126,6 @@ func TestSanitizeTranscript_Performance(t *testing.T) {
 	largeInput := strings.Repeat("Hello [MUSIC] world [NOISE] ", 1000)
 
 	result := SanitizeTranscript(largeInput)
-
 	// Should not panic and should produce expected result
 	expectedPattern := strings.Repeat("Hello world ", 1000)
 	expectedPattern = strings.TrimSpace(expectedPattern)

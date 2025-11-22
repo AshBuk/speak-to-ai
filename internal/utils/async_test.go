@@ -24,17 +24,14 @@ func TestGoNoGoroutineLeak(t *testing.T) {
 			time.Sleep(10 * time.Millisecond)
 		})
 	}
-
 	// Wait for all goroutines
 	if !WaitAll(1 * time.Second) {
 		t.Error("WaitAll timed out")
 	}
-
 	// Verify all goroutines executed
 	if atomic.LoadInt32(&counter) != 10 {
 		t.Errorf("Expected 10 goroutines, got %d", counter)
 	}
-
 	// goleak will fail if any goroutines leaked
 }
 
@@ -44,7 +41,6 @@ func TestWaitAllTimeout(t *testing.T) {
 	Go(func() {
 		time.Sleep(5 * time.Second)
 	})
-
 	// WaitAll with short timeout should return false
 	start := time.Now()
 	result := WaitAll(100 * time.Millisecond)
@@ -53,7 +49,6 @@ func TestWaitAllTimeout(t *testing.T) {
 	if result {
 		t.Error("WaitAll should have timed out")
 	}
-
 	// Should timeout around 100ms
 	if duration < 90*time.Millisecond || duration > 200*time.Millisecond {
 		t.Errorf("Timeout duration unexpected: %v (expected ~100ms)", duration)
@@ -73,7 +68,6 @@ func TestWaitAllSuccess(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 		completed.Store(true)
 	})
-
 	// Wait with sufficient timeout
 	start := time.Now()
 	result := WaitAll(500 * time.Millisecond)
@@ -86,7 +80,6 @@ func TestWaitAllSuccess(t *testing.T) {
 	if !completed.Load() {
 		t.Error("Goroutine did not complete")
 	}
-
 	// Should complete around 50ms, not wait full timeout
 	if duration > 150*time.Millisecond {
 		t.Errorf("WaitAll took too long: %v (goroutine finished in ~50ms)", duration)
@@ -112,12 +105,10 @@ func TestConcurrentGoLaunches(t *testing.T) {
 			}
 		}()
 	}
-
 	// Wait for all 50 goroutines
 	if !WaitAll(2 * time.Second) {
 		t.Error("WaitAll timed out")
 	}
-
 	// Verify count
 	if atomic.LoadInt32(&counter) != 50 {
 		t.Errorf("Expected 50 goroutines, got %d", counter)

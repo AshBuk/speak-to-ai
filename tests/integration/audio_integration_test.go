@@ -25,10 +25,8 @@ func TestAudioRecordingIntegration(t *testing.T) {
 	// Test real audio recording functionality
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	tempDir := t.TempDir()
 	cfg.General.TempAudioPath = tempDir
-
 	t.Run("arecord_real_device", func(t *testing.T) {
 		// Test with real audio device if available
 		cfg.Audio.RecordingMethod = "arecord"
@@ -50,7 +48,6 @@ func TestAudioRecordingIntegration(t *testing.T) {
 
 		// Record for a short time
 		time.Sleep(100 * time.Millisecond)
-
 		// Ensure cleanup happens even if test fails
 		defer func() {
 			recorder.StopRecording()
@@ -61,7 +58,6 @@ func TestAudioRecordingIntegration(t *testing.T) {
 		if err != nil {
 			t.Skipf("Failed to stop recording (audio device issue): %v", err)
 		}
-
 		// Check that file was created
 		if outputFile != "" {
 			if _, err := os.Stat(outputFile); err != nil {
@@ -112,7 +108,6 @@ func TestAudioDeviceDetection(t *testing.T) {
 	// Test that audio devices can be detected and configured
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	t.Run("default_device_available", func(t *testing.T) {
 		cfg.Audio.Device = "default"
 		cfg.Audio.RecordingMethod = "arecord"

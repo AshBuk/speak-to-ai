@@ -4,6 +4,11 @@
 // Provides a high-level facade for interacting with the speech-to-text
 // functionality. It abstracts the underlying implementation details of model management
 // and transcription, exposing a simple entry point for external packages.
+//
+// Subpackages:
+//   - interfaces: Define contracts for model lifecycle and transcription flows
+//   - manager:    Provide the default model manager implementation
+//   - providers:  Supply adapters for resolving bundled and custom model paths
 package whisper
 
 import (

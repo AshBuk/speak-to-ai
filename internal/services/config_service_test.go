@@ -29,7 +29,6 @@ func TestConfigService_NewConfigService(t *testing.T) {
 	testConfig := createTestConfig()
 
 	service := NewConfigService(mockLogger, testConfig, "/test/config.yaml")
-
 	if service == nil {
 		t.Fatal("NewConfigService returned nil")
 	}
@@ -68,7 +67,6 @@ func TestConfigService_UpdateLanguage(t *testing.T) {
 	}
 
 	service := NewConfigService(mockLogger, testConfig, configPath)
-
 	if err := service.UpdateLanguage("ru"); err != nil {
 		t.Errorf("UpdateLanguage failed: %v", err)
 	}
@@ -94,7 +92,6 @@ func TestConfigService_ToggleWorkflowNotifications(t *testing.T) {
 	}
 
 	service := NewConfigService(mockLogger, testConfig, configPath)
-
 	// Initial state should be true
 	if !service.config.Notifications.EnableWorkflowNotifications {
 		t.Error("Initial workflow notifications state should be true")
@@ -155,7 +152,6 @@ func TestConfigService_ResetToDefaults(t *testing.T) {
 	tempFile.Close()
 
 	service := NewConfigService(mockLogger, testConfig, tempFile.Name())
-
 	// Modify some settings first
 	service.config.General.Language = "fr"
 	// TODO: Next feature - VAD implementation
@@ -164,7 +160,6 @@ func TestConfigService_ResetToDefaults(t *testing.T) {
 	if err := service.ResetToDefaults(); err != nil {
 		t.Errorf("ResetToDefaults failed: %v", err)
 	}
-
 	// Verify settings were reset to defaults
 	if service.config.General.Language != "en" {
 		t.Error("Language should be reset to default 'en'")

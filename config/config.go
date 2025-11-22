@@ -16,6 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/config/models"
 	"github.com/AshBuk/speak-to-ai/config/security"
 	"github.com/AshBuk/speak-to-ai/config/validators"
+	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // Config is a type alias for the main configuration structure defined in the models package.
@@ -29,8 +30,8 @@ const (
 )
 
 // Load configuration from the specified file using the configured loader.
-func LoadConfig(filename string) (*Config, error) {
-	return loaders.LoadConfig(filename)
+func LoadConfig(filename string, loggers ...logger.Logger) (*Config, error) {
+	return loaders.LoadConfig(filename, loggers...)
 }
 
 // Write the configuration to the specified file.
@@ -59,18 +60,18 @@ func SanitizeCommandArgs(args []string) []string {
 }
 
 // Verify if the configuration file has been tampered with.
-func VerifyConfigIntegrity(filename string, config *Config) error {
-	return security.VerifyConfigIntegrity(filename, config)
+func VerifyConfigIntegrity(filename string, config *Config, loggers ...logger.Logger) error {
+	return security.VerifyConfigIntegrity(filename, config, loggers...)
 }
 
 // Calculate and update the integrity hash for the configuration file.
-func UpdateConfigHash(filename string, config *Config) error {
-	return security.UpdateConfigHash(filename, config)
+func UpdateConfigHash(filename string, config *Config, loggers ...logger.Logger) error {
+	return security.UpdateConfigHash(filename, config, loggers...)
 }
 
 // Compute the SHA-256 hash of a file.
-func CalculateFileHash(filename string) (string, error) {
-	return security.CalculateFileHash(filename)
+func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error) {
+	return security.CalculateFileHash(filename, loggers...)
 }
 
 // Enforce that a file does not exceed the configured size limit.

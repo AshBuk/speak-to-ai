@@ -33,7 +33,6 @@ func TestNewTypeOutputter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{}
 			outputter, err := NewTypeOutputter(tt.typeTool, cfg)
-
 			if tt.expectError && err == nil {
 				t.Errorf("expected error but got none")
 			}
@@ -63,7 +62,6 @@ func TestNewTypeOutputter_WithExistingTool(t *testing.T) {
 
 	cfg := &config.Config{}
 	outputter, err := NewTypeOutputter(existingTool, cfg)
-
 	if err != nil {
 		t.Errorf("unexpected error with existing tool: %v", err)
 	}
@@ -92,7 +90,6 @@ func TestTypeOutputter_TypeToActiveWindow_CommandNotAllowed(t *testing.T) {
 		typeTool: "xdotool",
 		config:   cfg,
 	}
-
 	err := outputter.TypeToActiveWindow("test text")
 	if err == nil {
 		t.Error("expected error for disallowed command")
@@ -110,7 +107,6 @@ func TestTypeOutputter_TypeToActiveWindow_UnsupportedTool(t *testing.T) {
 		typeTool: "unsupported-tool",
 		config:   cfg,
 	}
-
 	err := outputter.TypeToActiveWindow("test text")
 	if err == nil {
 		t.Error("expected error for unsupported tool")

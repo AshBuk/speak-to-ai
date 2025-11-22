@@ -27,7 +27,6 @@ func TestWaylandCompatibility(t *testing.T) {
 	// Test Wayland-specific functionality
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	t.Run("wayland_output_tools", func(t *testing.T) {
 		// Test that Wayland output tools are properly configured
 		factory := outputfactory.NewFactory(cfg)
@@ -44,7 +43,6 @@ func TestWaylandCompatibility(t *testing.T) {
 	t.Run("wayland_hotkeys", func(t *testing.T) {
 		// Test DBus hotkey provider
 		provider := providers.NewDbusKeyboardProvider(testutils.NewMockLogger())
-
 		if provider.IsSupported() {
 			t.Log("DBus GlobalShortcuts portal is available")
 		} else {
@@ -56,7 +54,6 @@ func TestWaylandCompatibility(t *testing.T) {
 		// Test environment detection logic
 		env := platform.DetectEnvironment()
 		t.Logf("Detected environment: %s", env)
-
 		// Environment detection should not crash
 		if env == "" {
 			t.Error("Environment detection returned empty string")
@@ -72,7 +69,6 @@ func TestX11Compatibility(t *testing.T) {
 	// Test X11-specific functionality
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	t.Run("x11_output_tools", func(t *testing.T) {
 		// Test that X11 output tools are properly configured
 		factory := outputfactory.NewFactory(cfg)
@@ -89,7 +85,6 @@ func TestX11Compatibility(t *testing.T) {
 	t.Run("x11_hotkeys", func(t *testing.T) {
 		// Test evdev hotkey provider
 		provider := providers.NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
 		if provider.IsSupported() {
 			t.Log("Evdev input devices are available")
 		} else {
@@ -102,7 +97,6 @@ func TestCrossplatformToolFallbacks(t *testing.T) {
 	// Test that tool fallback logic works correctly
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	factory := outputfactory.NewFactory(cfg)
 
 	environments := []outputfactory.EnvironmentType{
@@ -129,7 +123,6 @@ func TestSecurityValidation(t *testing.T) {
 	// Test that security validation is working
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
-
 	// Test allowed commands
 	allowedCommands := []string{"xdotool", "wtype", "wl-copy", "arecord"}
 	for _, cmd := range allowedCommands {
@@ -137,7 +130,6 @@ func TestSecurityValidation(t *testing.T) {
 			t.Errorf("Command %s should be allowed but isn't", cmd)
 		}
 	}
-
 	// Test disallowed commands
 	disallowedCommands := []string{"rm", "curl", "wget", "sh", "bash"}
 	for _, cmd := range disallowedCommands {
@@ -145,7 +137,6 @@ func TestSecurityValidation(t *testing.T) {
 			t.Errorf("Command %s should not be allowed but is", cmd)
 		}
 	}
-
 	// Test argument sanitization
 	testArgs := []string{
 		"normal-arg",

@@ -44,7 +44,6 @@ func selectProviderForEnvironment(config adapters.HotkeyConfig, environment inte
 		logger.Info("Hotkeys provider override: dbus")
 		return createDbusProvider(config, environment, logger)
 	}
-
 	// Auto-select the provider based on the runtime environment
 	switch detectRuntimeEnvironment() {
 	case envAppImage:
@@ -59,18 +58,15 @@ func selectProviderForEnvironment(config adapters.HotkeyConfig, environment inte
 // Select the provider for an AppImage environment
 func selectAppImageProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
 	logger.Info("AppImage detected - checking evdev first for better compatibility")
-
 	// Try evdev first, as it is often more reliable in AppImage contexts
 	if evdevProvider := createEvdevProvider(config, environment, logger); evdevProvider.IsSupported() {
 		logger.Info("Using evdev keyboard provider (AppImage mode)")
 		return evdevProvider
 	}
-
 	logger.Info("evdev not available in AppImage, falling back to D-Bus")
 	logger.Info("HOTKEY SETUP: For reliable hotkeys in AppImage, run:")
 	logger.Info("  sudo usermod -a -G input $USER")
 	logger.Info("  Then reboot or log out/in")
-
 	// Fallback to D-Bus if evdev is not available
 	return createDbusProvider(config, environment, logger)
 }
@@ -78,7 +74,6 @@ func selectAppImageProvider(config adapters.HotkeyConfig, environment interfaces
 // Select the provider for a Flatpak environment
 func selectFlatpakProvider(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
 	logger.Info("Flatpak detected - using D-Bus provider only (evdev blocked by sandbox)")
-
 	// Only D-Bus is available within the Flatpak sandbox
 	return createDbusProvider(config, environment, logger)
 }
@@ -90,9 +85,7 @@ func selectSystemProvider(config adapters.HotkeyConfig, environment interfaces.E
 		logger.Info("Using D-Bus keyboard provider (GNOME/KDE)")
 		return dbusProvider
 	}
-
 	logger.Info("D-Bus GlobalShortcuts portal not available, trying evdev...")
-
 	// Fallback to evdev if D-Bus is not available
 	if evdevProvider := createEvdevProvider(config, environment, logger); evdevProvider.IsSupported() {
 		logger.Info("Using evdev keyboard provider (requires root permissions)")

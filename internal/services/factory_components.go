@@ -25,76 +25,72 @@ import (
 	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
-// ComponentFactory is responsible for creating components
-type ComponentFactory struct {
-	config ServiceFactoryConfig
+// FactoryComponents is responsible for creating low-level components
+// Stage 1 of Multi-Stage Factory Pattern (see factory.go)
+type FactoryComponents struct {
+	config ServiceFactoryConfig // Factory configuration (logger, config, environment)
 }
 
-func NewComponentFactory(config ServiceFactoryConfig) *ComponentFactory {
-	return &ComponentFactory{config: config}
+// NewFactoryComponents creates a new component factory
+func NewFactoryComponents(config ServiceFactoryConfig) *FactoryComponents {
+	return &FactoryComponents{config: config}
 }
 
-// Initializes all components
-func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
+// InitializeComponents creates all low-level components in dependency order
+// Dependency-aware initialization:
+//  1. ModelManager → TempFileManager → Recorder → WhisperEngine (core pipeline)
+//  2. OutputManager (with Graceful Degradation fallback)
+//  3. HotkeyManager, WebSocketServer, TrayManager, NotifyManager (UI/control)
+func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	components := &Components{}
-
 	// Initialize model manager
 	components.ModelManager = whisper.NewModelManager(cf.config.Config)
 	if err := components.ModelManager.Initialize(); err != nil {
 		cf.config.Logger.Warning("Failed to initialize model manager: %v", err)
 	}
-
 	// Ensure model is available
 	if err := cf.ensureModelAvailable(components.ModelManager); err != nil {
 		return nil, fmt.Errorf("failed to ensure model availability: %w", err)
 	}
-
 	// Get model file path
 	modelFilePath, err := components.ModelManager.GetModelPath()
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve model path: %w", err)
 	}
 	cf.config.Logger.Info("Model path resolved: %s", modelFilePath)
-
 	// Initialize temp file manager
 	cleanupTimeout := time.Duration(cf.config.Config.Audio.TempFileCleanupTime) * time.Minute
 	if cleanupTimeout <= 0 {
 		cleanupTimeout = 30 * time.Minute
 	}
-	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout)
+	components.TempFileManager = processing.NewTempFileManager(cleanupTimeout, cf.config.Logger)
 	components.TempFileManager.Start()
-
 	// Initialize audio recorder
 	components.Recorder, err = factory.GetRecorder(cf.config.Config, cf.config.Logger, components.TempFileManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize audio recorder: %w", err)
 	}
-
 	// Initialize whisper engine
-	components.WhisperEngine, err = whisper.NewWhisperEngine(cf.config.Config, modelFilePath)
+	components.WhisperEngine, err = whisper.NewWhisperEngine(cf.config.Config, modelFilePath, cf.config.Logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize whisper engine: %w", err)
 	}
-
-	// Initialize output manager
+	// Initialize output manager with graceful degradation
+	// If typing fails fallback to clipboard only
 	outputEnv := cf.convertEnvironmentType()
 	components.OutputManager, err = outputFactory.GetOutputterFromConfig(cf.config.Config, outputEnv)
 	if err != nil {
 		cf.config.Logger.Warning("Failed to initialize text outputter: %v", err)
-		// Fallback to clipboard only
 		if fallbackOut := cf.createFallbackOutputManager(outputEnv); fallbackOut != nil {
 			components.OutputManager = fallbackOut
 		} else {
 			return nil, fmt.Errorf("failed to initialize any output manager")
 		}
 	}
-
 	// Initialize hotkey manager
 	components.HotkeyManager = cf.createHotkeyManager()
-
 	// Initialize WebSocket server (always initialized but may not be started)
 	components.WebSocketServer = cf.createWebSocketServer(components.Recorder, components.WhisperEngine)
-
 	// Initialize tray manager
 	components.TrayManager = cf.createTrayManager()
 	// Start tray manager (no-op in mock). Ensures systray is initialized early.
@@ -102,7 +98,6 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 		components.TrayManager.Start()
 		components.TrayManager.UpdateSettings(cf.config.Config)
 	}
-
 	// Initialize notification manager
 	components.NotifyManager = notify.NewNotificationManager("Speak-to-AI", cf.config.Config)
 
@@ -110,7 +105,7 @@ func (cf *ComponentFactory) InitializeComponents() (*Components, error) {
 }
 
 // ensureModelAvailable ensures the whisper model is available
-func (cf *ComponentFactory) ensureModelAvailable(modelManager whisper.ModelManager) error {
+func (cf *FactoryComponents) ensureModelAvailable(modelManager whisper.ModelManager) error {
 	// Try to get the model path, which will download if needed
 	_, err := modelManager.GetModelPath()
 	if err != nil {
@@ -121,7 +116,9 @@ func (cf *ComponentFactory) ensureModelAvailable(modelManager whisper.ModelManag
 }
 
 // convertEnvironmentType converts platform environment to output factory type
-func (cf *ComponentFactory) convertEnvironmentType() outputFactory.EnvironmentType {
+// Adapter - adapts platform.EnvironmentType → outputFactory.EnvironmentType
+// (different packages define their own environment types)
+func (cf *FactoryComponents) convertEnvironmentType() outputFactory.EnvironmentType {
 	switch cf.config.Environment {
 	case platform.EnvironmentWayland:
 		return outputFactory.EnvironmentWayland
@@ -133,7 +130,7 @@ func (cf *ComponentFactory) convertEnvironmentType() outputFactory.EnvironmentTy
 }
 
 // createFallbackOutputManager creates fallback clipboard-only output manager
-func (cf *ComponentFactory) createFallbackOutputManager(outputEnv outputFactory.EnvironmentType) outputInterfaces.Outputter {
+func (cf *FactoryComponents) createFallbackOutputManager(outputEnv outputFactory.EnvironmentType) outputInterfaces.Outputter {
 	clipboardTool := ""
 	if outputEnv == outputFactory.EnvironmentWayland {
 		if _, err := exec.LookPath("wl-copy"); err == nil {
@@ -145,7 +142,6 @@ func (cf *ComponentFactory) createFallbackOutputManager(outputEnv outputFactory.
 			clipboardTool = "xsel"
 		}
 	}
-
 	if clipboardTool != "" {
 		cf.config.Logger.Info("Falling back to clipboard output using %s", clipboardTool)
 		oldMode := cf.config.Config.Output.DefaultMode
@@ -155,16 +151,14 @@ func (cf *ComponentFactory) createFallbackOutputManager(outputEnv outputFactory.
 		if out, err := outputters.NewClipboardOutputter(clipboardTool, cf.config.Config); err == nil {
 			return out
 		}
-
 		// Restore original mode if fallback failed
 		cf.config.Config.Output.DefaultMode = oldMode
 	}
-
 	return nil
 }
 
 // createHotkeyManager creates and configures hotkey manager
-func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
+func (cf *FactoryComponents) createHotkeyManager() *manager.HotkeyManager {
 	// Convert platform environment to hotkey interfaces environment
 	var hotkeyEnv hotkeyInterfaces.EnvironmentType
 	switch cf.config.Environment {
@@ -175,7 +169,6 @@ func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
 	default:
 		hotkeyEnv = hotkeyInterfaces.EnvironmentX11
 	}
-
 	configAdapter := adapters.NewConfigAdapter(cf.config.Config.Hotkeys.StartRecording, cf.config.Config.Hotkeys.Provider).
 		WithAdditionalHotkeys(
 			// TODO: Next feature - VAD implementation
@@ -184,18 +177,18 @@ func (cf *ComponentFactory) createHotkeyManager() *manager.HotkeyManager {
 			cf.config.Config.Hotkeys.ShowConfig,
 			cf.config.Config.Hotkeys.ResetToDefaults,
 		)
-
 	return manager.NewHotkeyManager(configAdapter, hotkeyEnv, cf.config.Logger)
 }
 
 // createWebSocketServer creates WebSocket server
-func (cf *ComponentFactory) createWebSocketServer(recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine) *websocket.WebSocketServer {
+func (cf *FactoryComponents) createWebSocketServer(recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine) *websocket.WebSocketServer {
 	return websocket.NewWebSocketServer(cf.config.Config, recorder, whisperEngine, cf.config.Logger)
 }
 
 // createTrayManager creates system tray manager
-func (cf *ComponentFactory) createTrayManager() tray.TrayManagerInterface {
-	// Create tray manager with placeholder callbacks (will be set later)
+// Placeholder Callbacks - real callbacks wired later in Stage 3 (CallbackWirer)
+// This allows tray to be created before services are assembled
+func (cf *FactoryComponents) createTrayManager() tray.TrayManagerInterface {
 	return tray.CreateTrayManagerWithConfig(cf.config.Config,
 		cf.config.Logger,
 		func() { // onExit

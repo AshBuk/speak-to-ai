@@ -62,7 +62,6 @@ func (lf *LockFile) TryLock() error {
 	if err != nil {
 		return fmt.Errorf("failed to create lock file: %w", err)
 	}
-
 	// Try to acquire exclusive lock
 	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = file.Close()
@@ -71,7 +70,6 @@ func (lf *LockFile) TryLock() error {
 		}
 		return fmt.Errorf("failed to acquire lock: %w", err)
 	}
-
 	// Write current PID to lock file
 	if _, err := file.WriteString(strconv.Itoa(os.Getpid())); err != nil {
 		_ = file.Close()
@@ -87,17 +85,14 @@ func (lf *LockFile) Unlock() error {
 	if lf.file == nil {
 		return nil
 	}
-
 	// Release the lock
 	_ = syscall.Flock(int(lf.file.Fd()), syscall.LOCK_UN)
-
 	// Close the file
 	if err := lf.file.Close(); err != nil {
 		return fmt.Errorf("failed to close lock file: %w", err)
 	}
 
 	lf.file = nil
-
 	// Remove the lock file
 	if err := os.Remove(lf.path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove lock file: %w", err)
@@ -129,7 +124,6 @@ func (lf *LockFile) CheckExistingInstance() (bool, int, error) {
 	if err != nil {
 		return false, 0, nil // Invalid PID
 	}
-
 	// Check if process with this PID is still running and is our application
 	if isOurProcess(pid) {
 		return true, pid, nil // Process is running and is speak-to-ai
@@ -144,7 +138,6 @@ func isOurProcess(pid int) bool {
 	if err := syscall.Kill(pid, 0); err != nil {
 		return false // Process doesn't exist or no permission
 	}
-
 	// Check if the process is actually speak-to-ai by reading cmdline
 	// Validate PID to prevent path traversal
 	if pid <= 0 || pid > 4194304 { // Reasonable PID range
@@ -155,12 +148,10 @@ func isOurProcess(pid int) bool {
 	if err != nil {
 		return false // Can't read cmdline
 	}
-
 	// Convert null-terminated string to regular string
 	cmdline := string(cmdlineData)
 	cmdline = strings.ReplaceAll(cmdline, "\x00", " ")
 	cmdline = strings.TrimSpace(cmdline)
-
 	// Check if this is our speak-to-ai process
 	// Handle direct execution, Flatpak, and AppImage cases
 	return (strings.Contains(cmdline, "speak-to-ai") ||

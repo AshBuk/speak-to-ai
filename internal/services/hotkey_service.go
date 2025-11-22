@@ -50,18 +50,14 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
 	}
-
 	hs.logger.Info("Setting up hotkey callbacks...")
-
 	// Register the main recording callbacks
 	hs.hotkeyManager.RegisterCallbacks(startRecording, stopRecording)
-
 	// Register additional hotkey actions
 	// TODO: Next feature - VAD implementation
 	// hs.hotkeyManager.RegisterHotkeyAction("toggle_vad", toggleVAD)
 	hs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
 	hs.hotkeyManager.RegisterHotkeyAction("reset_to_defaults", resetToDefaults)
-
 	hs.logger.Info("Hotkey callbacks configured successfully")
 	return nil
 }
@@ -71,7 +67,6 @@ func (hs *HotkeyService) RegisterHotkeys() error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
 	}
-
 	hs.logger.Info("Registering hotkeys...")
 	if err := hs.hotkeyManager.Start(); err != nil {
 		// Provide helpful guidance for AppImage users when evdev/dbus fails
@@ -90,9 +85,7 @@ func (hs *HotkeyService) UnregisterHotkeys() error {
 	if hs.hotkeyManager == nil {
 		return nil
 	}
-
 	hs.logger.Info("Unregistering hotkeys...")
-
 	hs.hotkeyManager.Stop()
 	return nil
 }
@@ -104,7 +97,6 @@ func (hs *HotkeyService) Shutdown() error {
 		hs.logger.Error("Error unregistering hotkeys: %v", err)
 		return err
 	}
-
 	hs.logger.Info("HotkeyService shutdown complete")
 	return nil
 }

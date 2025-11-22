@@ -54,7 +54,6 @@ func (ios *IOService) BeginTranscription() {
 	ios.transcriptionInProgress = true
 	// Reset result channel for a new transcription session
 	ios.transcriptionResultChan = make(chan string, 1)
-
 	// Clear clipboard to prevent race condition with old content
 	// Only when clipboard mode is active to avoid unnecessary side-effects
 	if ios.outputManager != nil && ios.config.Output.DefaultMode == "clipboard" {
@@ -86,11 +85,9 @@ func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error
 	inProgress := ios.transcriptionInProgress
 	ch := ios.transcriptionResultChan
 	ios.mu.Unlock()
-
 	if !inProgress || ch == nil {
 		return "", nil
 	}
-
 	select {
 	case res := <-ch:
 		return res, nil
@@ -108,9 +105,7 @@ func (ios *IOService) OutputText(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
 	}
-
 	ios.logger.Info("Outputting text: %s", text)
-
 	switch ios.config.Output.DefaultMode {
 	case "clipboard":
 		if err := ios.outputManager.CopyToClipboard(text); err != nil {
@@ -128,7 +123,6 @@ func (ios *IOService) OutputText(text string) error {
 			return ios.fallbackToClipboard(text, err)
 		}
 	}
-
 	return nil
 }
 
@@ -137,12 +131,10 @@ func (ios *IOService) OutputToClipboard(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
 	}
-
 	if err := ios.outputManager.CopyToClipboard(text); err != nil {
 		ios.logger.Error("Failed to copy to clipboard: %v", err)
 		return fmt.Errorf("failed to copy to clipboard: %w", err)
 	}
-
 	return nil
 }
 
@@ -151,24 +143,20 @@ func (ios *IOService) OutputByTyping(text string) error {
 	if ios.outputManager == nil {
 		return fmt.Errorf("output manager not available")
 	}
-
 	if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
 		ios.logger.Error("Failed to type to active window: %v", err)
 		return fmt.Errorf("failed to type to active window: %w", err)
 	}
-
 	return nil
 }
 
 // Switch output mode and persist setting with UI refresh
 func (ios *IOService) SetOutputMethod(method string) error {
 	ios.logger.Info("Setting output method to: %s", method)
-
 	// Validate method
 	if method != "clipboard" && method != "active_window" {
 		return fmt.Errorf("invalid output method: %s (must be 'clipboard' or 'active_window')", method)
 	}
-
 	// Persist via ConfigService if available
 	if ios.cfg != nil {
 		if err := ios.cfg.UpdateOutputMode(method); err != nil {
@@ -177,7 +165,6 @@ func (ios *IOService) SetOutputMethod(method string) error {
 	} else {
 		ios.config.Output.DefaultMode = method
 	}
-
 	// Recreate output manager immediately to reflect new mode
 	env := ios.detectOutputEnvironment()
 	out, err := outputFactory.GetOutputterFromConfig(ios.config, env)
@@ -185,12 +172,10 @@ func (ios *IOService) SetOutputMethod(method string) error {
 		return fmt.Errorf("failed to reinitialize output manager: %w", err)
 	}
 	ios.outputManager = out
-
 	// Notify UI to refresh settings display
 	if ios.ui != nil {
 		ios.ui.UpdateSettings(ios.config)
 	}
-
 	ios.logger.Info("Output method set to: %s", method)
 	return nil
 }
@@ -200,9 +185,7 @@ func (ios *IOService) StartWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return fmt.Errorf("WebSocket server not configured")
 	}
-
 	ios.logger.Info("Starting WebSocket server...")
-
 	// Start the WebSocket server
 	return ios.webSocketServer.Start()
 }
@@ -212,9 +195,7 @@ func (ios *IOService) StopWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return nil
 	}
-
 	ios.logger.Info("Stopping WebSocket server...")
-
 	// Stop the WebSocket server
 	ios.webSocketServer.Stop()
 	return nil
@@ -231,13 +212,11 @@ func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
 // Ensure all connections are closed before termination
 func (ios *IOService) Shutdown() error {
 	var lastErr error
-
 	// Stop WebSocket server
 	if err := ios.StopWebSocketServer(); err != nil {
 		ios.logger.Error("Error stopping WebSocket server: %v", err)
 		lastErr = err
 	}
-
 	ios.logger.Info("IOService shutdown complete")
 	return lastErr
 }
@@ -263,30 +242,24 @@ func (ios *IOService) SetConfigService(cfg ConfigServiceInterface) { ios.cfg = c
 // fallbackToTyping switches to typing mode and executes the output
 func (ios *IOService) fallbackToTyping(text string, originalErr error) error {
 	ios.logger.Warning("Clipboard method failed: %v. Switching to active_window mode.", originalErr)
-
 	if err := ios.switchOutputMode(config.OutputModeActiveWindow, "clipboard failed"); err != nil {
 		return fmt.Errorf("failed to switch output mode: %w", err)
 	}
-
 	if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
 		return fmt.Errorf("both clipboard and typing failed - clipboard: %w, typing: %v", originalErr, err)
 	}
-
 	return nil
 }
 
 // fallbackToClipboard switches to clipboard mode and executes the output
 func (ios *IOService) fallbackToClipboard(text string, originalErr error) error {
 	ios.logger.Warning("Active window method failed: %v. Switching to clipboard mode.", originalErr)
-
 	if err := ios.switchOutputMode(config.OutputModeClipboard, "typing failed"); err != nil {
 		return fmt.Errorf("failed to switch output mode: %w", err)
 	}
-
 	if err := ios.outputManager.CopyToClipboard(text); err != nil {
 		return fmt.Errorf("both typing and clipboard failed - typing: %w, clipboard: %v", originalErr, err)
 	}
-
 	ios.logger.Debug("Successfully copied text to clipboard (after switch)")
 	return nil
 }
@@ -294,7 +267,6 @@ func (ios *IOService) fallbackToClipboard(text string, originalErr error) error 
 // switchOutputMode switches the output mode and persists it in the config
 func (ios *IOService) switchOutputMode(mode string, reason string) error {
 	ios.logger.Warning("Switching output mode to '%s' due to '%s'", mode, reason)
-
 	// Update and persist config if service is available
 	if ios.cfg != nil {
 		if err := ios.cfg.UpdateOutputMode(mode); err != nil {
@@ -306,7 +278,6 @@ func (ios *IOService) switchOutputMode(mode string, reason string) error {
 		ios.config.Output.DefaultMode = mode
 		ios.logger.Warning("ConfigService not available; switched output mode in memory from %s to %s", old, mode)
 	}
-
 	// Recreate output manager for the new mode based on current environment
 	env := ios.detectOutputEnvironment()
 	out, err := outputFactory.GetOutputterFromConfig(ios.config, env)
@@ -315,14 +286,12 @@ func (ios *IOService) switchOutputMode(mode string, reason string) error {
 		return fmt.Errorf("failed to reinitialize output manager after mode switch: %w", err)
 	}
 	ios.outputManager = out
-
 	// Notify user
 	if ios.ui != nil {
 		msg := fmt.Sprintf("Switched to %s due to %s", mode, reason)
 		ios.ui.ShowNotification("Output Fallback", msg)
 		ios.ui.UpdateSettings(ios.config)
 	}
-
 	ios.logger.Info("Output mode switched to '%s' and persisted", mode)
 	return nil
 }

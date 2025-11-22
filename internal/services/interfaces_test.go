@@ -47,14 +47,12 @@ func TestServiceContainer(t *testing.T) {
 func TestServiceContainer_Shutdown(t *testing.T) {
 	t.Run("Shutdown_AllServicesSuccess", func(t *testing.T) {
 		container := NewServiceContainer()
-
 		// Create mock services
 		audioMock := &mocks.MockAudioService{}
 		uiMock := &mocks.MockUIService{}
 		ioMock := &mocks.MockIOService{}
 		configMock := &mocks.MockConfigService{}
 		hotkeyMock := &mocks.MockHotkeyService{}
-
 		// Assign mock services
 		container.Audio = audioMock
 		container.UI = uiMock
@@ -66,7 +64,6 @@ func TestServiceContainer_Shutdown(t *testing.T) {
 		if err != nil {
 			t.Errorf("Shutdown should succeed, got error: %v", err)
 		}
-
 		// Verify all shutdown methods were called
 		if !audioMock.WasShutdownCalled() {
 			t.Error("Audio service shutdown was not called")
@@ -87,7 +84,6 @@ func TestServiceContainer_Shutdown(t *testing.T) {
 
 	t.Run("Shutdown_ServiceError", func(t *testing.T) {
 		container := NewServiceContainer()
-
 		expectedError := errors.New("shutdown failed")
 		audioMock := &mocks.MockAudioService{}
 		audioMock.SetShutdownError(expectedError)
@@ -103,7 +99,6 @@ func TestServiceContainer_Shutdown(t *testing.T) {
 		if err != expectedError {
 			t.Errorf("Expected error %v, got %v", expectedError, err)
 		}
-
 		// Both services should still be called even if one fails
 		if !audioMock.WasShutdownCalled() {
 			t.Error("Audio service shutdown was not called")
