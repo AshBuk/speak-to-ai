@@ -23,11 +23,10 @@
 
 </div>
 
- **A minimalist, privacy-focused desktop application for offline speech-to-text.
-  Converts voice input directly into any active window (editors, browsers, IDEs, AI assistants)
-  Uses the Whisper model locally for speech recognition.
-  Written in Go, an optimized desktop application for Linux.**
+**Speak to AI** is a **minimalist**, **privacy-focused** desktop application for **offline voice recognition** directly into any active window (editors, browsers, IDEs, AI assistants).  
 
+Written in pure **[Go](https://github.com/golang/go)**, it leverages **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for fast, offline transcription.
+The architecture is built from the ground up without external frameworks, featuring a **custom dependency injection factory** and a **minimal set of dependencies**, ensuring **lean and maintainable**.
 https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
