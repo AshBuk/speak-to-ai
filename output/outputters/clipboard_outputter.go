@@ -61,7 +61,6 @@ func (o *ClipboardOutputter) CopyToClipboard(text string) error {
 	if err != nil {
 		return fmt.Errorf("failed to copy to clipboard: %w", err)
 	}
-
 	return nil
 }
 

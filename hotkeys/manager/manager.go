@@ -100,7 +100,6 @@ func (h *HotkeyManager) Start() error {
 	if h.provider == nil {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
-
 	h.isListening = true
 
 	h.logger.Info("Starting hotkey manager...")
@@ -115,7 +114,6 @@ func (h *HotkeyManager) Start() error {
 		h.isListening = false
 		return startFallbackAfterRegistration(h, err)
 	}
-
 	return nil
 }
 
@@ -164,7 +162,6 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	default:
 		return fmt.Errorf("unknown hotkey: %s", hotkeyName)
 	}
-
 	return nil
 }
 
@@ -174,7 +171,6 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 		h.provider.Stop()
 		h.isListening = false
 	}
-
 	h.config = newConfig
 	h.provider = selectProviderForEnvironment(h.config, h.environment, h.logger)
 	if h.provider == nil {
@@ -184,11 +180,9 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if err := h.registerAllHotkeysOn(h.provider); err != nil {
 		return err
 	}
-
 	if err := h.provider.Start(); err != nil {
 		return startFallbackAfterRegistration(h, err)
 	}
-
 	h.isListening = true
 	return nil
 }
@@ -210,12 +204,10 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 			}
 			return "", fmt.Errorf("evdev not available")
 		}
-
 		result, err := captureProvider.CaptureOnce(timeout)
 		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
 			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
 		}
-
 		return result, err
 	}
 	// For dbus: use evdev fallback (dbus doesn't support CaptureOnce)
@@ -226,7 +218,6 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 		}
 		return "", fmt.Errorf("evdev not available")
 	}
-
 	return "", fmt.Errorf("capture not supported")
 }
 

@@ -105,6 +105,5 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 			return nil
 		}
 	}
-
 	return fmt.Errorf("failed to start keyboard provider: %w", startErr)
 }

@@ -15,7 +15,6 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 	if s.config.WebServer.AuthToken == "" {
 		return true
 	}
-
 	// Check for token in query params or headers
 	queryToken := r.URL.Query().Get("token")
 	headerToken := r.Header.Get("Authorization")
@@ -24,7 +23,6 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 	if len(headerToken) > 7 && headerToken[:7] == "Bearer " {
 		headerToken = headerToken[7:]
 	}
-
 	// Check if either token matches using constant-time comparison to prevent timing attacks
 	queryMatch := subtle.ConstantTimeCompare([]byte(queryToken), []byte(s.config.WebServer.AuthToken)) == 1
 	headerMatch := subtle.ConstantTimeCompare([]byte(headerToken), []byte(s.config.WebServer.AuthToken)) == 1
@@ -38,10 +36,8 @@ func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused //
 	if s.config.WebServer.AuthToken == "" {
 		return false
 	}
-
 	// Trim whitespace
 	token = strings.TrimSpace(token)
-
 	// Compare with configured token using constant-time comparison
 	return subtle.ConstantTimeCompare([]byte(token), []byte(s.config.WebServer.AuthToken)) == 1
 }
@@ -54,13 +50,11 @@ func getClientIP(r *http.Request) string { // nolint:unused // used in tests
 		// Take the first IP in the list
 		return strings.Split(forwardedFor, ",")[0]
 	}
-
 	// Check for X-Real-IP header
 	realIP := r.Header.Get("X-Real-IP")
 	if realIP != "" {
 		return realIP
 	}
-
 	// Fall back to RemoteAddr
 	return strings.Split(r.RemoteAddr, ":")[0]
 }

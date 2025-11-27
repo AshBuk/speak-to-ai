@@ -55,7 +55,6 @@ func (p *EvdevKeyboardProvider) IsSupported() bool {
 			p.logger.Error("Failed to close evdev device: %v", err)
 		}
 	}
-
 	return true
 }
 
@@ -86,7 +85,6 @@ func (p *EvdevKeyboardProvider) findKeyboardDevices() ([]*evdev.InputDevice, err
 			}
 		}
 	}
-
 	return devices, nil
 }
 
@@ -146,7 +144,6 @@ func (p *EvdevKeyboardProvider) Start() error {
 			p.listenDevice(deviceIdx)
 		}(idx)
 	}
-
 	return nil
 }
 
@@ -181,7 +178,6 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 			}
 			return
 		}
-
 		if event.Type == evdev.EV_KEY {
 			p.handleKeyEvent(idx, event)
 		}
@@ -195,7 +191,6 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	if keyName == "" {
 		keyName = fmt.Sprintf("KEY_%d", keyCode)
 	}
-
 	// Track the state of modifier keys
 	if utils.IsModifierKey(keyName) {
 		// Value 1 = key down, 0 = key up

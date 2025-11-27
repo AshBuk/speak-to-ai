@@ -46,7 +46,6 @@ func (m *ModelManager) GetModelPath() (string, error) {
 	if !utils.IsValidFile(modelPath) {
 		return "", fmt.Errorf("bundled small-q5_1 model not found at %s", modelPath)
 	}
-
 	return modelPath, nil
 }
 
@@ -56,16 +55,13 @@ func (m *ModelManager) ValidateModel(modelPath string) error {
 	if !utils.IsValidFile(modelPath) {
 		return fmt.Errorf("model file not found: %s", modelPath)
 	}
-
 	size, err := utils.GetFileSize(modelPath)
 	if err != nil {
 		return fmt.Errorf("error checking model file: %w", err)
 	}
-
 	// Sanity check: the model should be at least 10MB
 	if size < 10*1024*1024 {
 		return fmt.Errorf("model file is too small (%d bytes), might be corrupted", size)
 	}
-
 	return nil
 }
