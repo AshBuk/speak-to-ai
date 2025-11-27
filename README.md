@@ -27,6 +27,7 @@
 
 Written in pure **[Go](https://github.com/golang/go)**, it leverages **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for fast, offline transcription.
 The architecture is built from the ground up without external frameworks, featuring a **custom dependency injection factory** and a **minimal set of dependencies**, ensuring **lean and maintainable**.
+
 https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 ## Features
