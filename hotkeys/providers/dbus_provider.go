@@ -61,12 +61,10 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 		p.logger.Error("Failed to get introspection data: %v", err)
 		return false
 	}
-
 	if len(introspectData) > 0 && containsGlobalShortcuts(introspectData) {
 		p.logger.Info("D-Bus portal GlobalShortcuts detected")
 		return true
 	}
-
 	p.logger.Info("D-Bus portal GlobalShortcuts not available")
 	return false
 }
@@ -186,7 +184,6 @@ func convertHotkeyToAccelerator(hotkey string) string {
 	case "delete", "del":
 		key = "Delete"
 	}
-
 	return prefix.String() + key
 }
 
@@ -199,12 +196,10 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 		"handle_token":         dbus.MakeVariant("speak_to_ai_session"),
 		"session_handle_token": dbus.MakeVariant("speak_to_ai_session_handle"),
 	}
-
 	call := obj.Call("org.freedesktop.portal.GlobalShortcuts.CreateSession", 0, sessionOptions)
 	if call.Err != nil {
 		return fmt.Errorf("failed to create GlobalShortcuts session: %w", call.Err)
 	}
-
 	// Get the request handle from the call
 	if len(call.Body) == 0 {
 		return fmt.Errorf("no request handle returned from CreateSession")
@@ -260,7 +255,6 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 		defer p.wg.Done()
 		p.listenForShortcuts()
 	}()
-
 	return nil
 }
 

@@ -24,7 +24,6 @@ func NewTypeOutputter(typeTool string, cfg *config.Config) (interfaces.Outputter
 	if _, err := exec.LookPath(typeTool); err != nil {
 		return nil, fmt.Errorf("type tool not found: %s", typeTool)
 	}
-
 	return &TypeOutputter{
 		typeTool: typeTool,
 		config:   cfg,
@@ -37,7 +36,6 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	if !config.IsCommandAllowed(o.config, o.typeTool) {
 		return fmt.Errorf("typing tool not allowed: %s", o.typeTool)
 	}
-
 	// Proactive fallback: ydotool on Wayland does not support non-ASCII characters
 	if platform.DetectEnvironment() == platform.EnvironmentWayland && o.typeTool == "ydotool" && isNonASCII(text) {
 		return fmt.Errorf("ydotool on Wayland doesn't support non-ASCII characters, use clipboard fallback")
