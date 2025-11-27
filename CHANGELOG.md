@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.3] - 2025-11-27
+
+### Maintainability
+- Improving long-term project maintainability: Key design components are now clarified so developers can understand the flow more quickly.
+- Includes: comments, formatting, code style, and light stylistic refactoring.
+- Excludes: any functional changes
+
+Based on #55.
+
 ---
 ## [1.3.2] - 2025-11-13
 
@@ -32,8 +41,6 @@ All notable changes to this project will be documented in this file.
 - **IPC Communication:** CLI commands communicate with daemon via Unix socket for low-latency operations
 - **JSON Output:** `--json` flag for machine-readable responses, perfect for automation and scripts
 - **High-Resolution Icon:** Upgraded tray icon to 500x500 resolution for crisp display on HiDPI screens
-
-### Contributors
 
 Thanks to [@BigMitchGit](https://github.com/BigMitchGit) for implementing CLI/Daemon unification and Unix socket IPC! (PR [#49](https://github.com/AshBuk/speak-to-ai/pull/49)).
 

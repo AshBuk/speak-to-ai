@@ -17,11 +17,13 @@
     </p>
     <p>Features:</p>
     <ul>
-      <li>Portable: AppImage package</li>
-      <li>Cross-platform support for X11 and Wayland</li>
-      <li>Desktop Environment Support: Native integration with GNOME, KDE, and other Linux DEs</li>
-      <li>Privacy-first: desktop, no data sent to external servers</li>
-      <li>Support: multi-language, global hotkeys, automatic typing &amp; clipboard, system tray integration, visual notifications, WebSocket API (optional)</li>
+      <li><b>Offline speech-to-text, privacy-first</b>: all processing happens locally</li>
+      <li><b>Portable</b>: AppImage package</li>
+      <li><b>Cross-platform support</b> for X11 and Wayland</li>
+      <li><b>Linux DEs</b>: native integration with GNOME, KDE, and others</li>
+      <li><b>Voice typing or clipboard mode</b></li>
+      <li><b>Flexible audio recording</b>: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see <a href="docs/AUDIO_PIPELINE_DIAGRAM.txt">audio pipeline</a></li>
+      <li><b>Multi-language support, custom hotkey binding, visual notifications</b></li>
     </ul>
   </description>
   <screenshots>
@@ -45,27 +47,17 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.3.2" date="2025-11-13">
+    <release version="1.3.3" date="2025-11-27">
       <description>
-        <p>Maintainability improvements:</p>
+        <p>Improving long-term project maintainability: Key design components are now clarified so developers can understand the flow more quickly.</p>
         <ul>
-          <li>Renamed the AppImage file to follow the standard nomenclature (speak-to-ai-VERSION-ARCH.AppImage) for better catalog integration</li>
-          <li>Reduced cyclomatic complexity: Refactored several modules (validators, factories, providers, recorders) to improve code readability and maintainability</li>
-          <li>Enhanced linting: Upgraded golangci-lint to v2.6.1 and enabled the gocyclo linter for stricter complexity checks</li>
+          <li>Includes: comments, formatting, code style, and light stylistic refactoring.</li>
+          <li>Excludes: any functional changes</li>
         </ul>
       </description>
     </release>
-    <release version="1.3.1" date="2025-10-31">
-      <description>
-        <p>Dependency updates and DevOps improvements:</p>
-        <ul>
-          <li>Updated Go dependencies to latest compatible versions (Go 1.24.1)</li>
-          <li>Bump Whisper.cpp to v1.8.2 for improved performance and stability</li>
-          <li>Simplified Docker workflow with Docker-first approach</li>
-          <li>Clear Docker-based make targets for reproducible AppImage builds</li>
-        </ul>
-      </description>
-    </release>
+    <release version="1.3.2" date="2025-11-13"/>
+    <release version="1.3.1" date="2025-10-31"/>
     <release version="1.3.0" date="2025-10-29"/>
     <release version="1.2.0" date="2025-10-17"/>
     <release version="1.1.0" date="2025-10-06"/>
