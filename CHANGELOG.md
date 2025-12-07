@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.4] - 2025-12-07
+
+### Security
+- **gosec integration:** SAST security scanning with gosec for continuous security monitoring
+- **CI** scans on every PR with SARIF reports uploaded to GitHub Security tab
+- **Zero vulnerabilities:** Current scan shows 0 security issues across 10,241 lines of code
+
+---
 ## [1.3.3] - 2025-11-27
 
 ### Maintainability

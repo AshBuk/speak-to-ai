@@ -5,7 +5,7 @@
 .PHONY: test test-integration test-integration-full
 
 # Code quality
-.PHONY: fmt lint
+.PHONY: fmt lint gosec
 
 # Packaging
 .PHONY: appimage appimage-host flatpak
@@ -43,6 +43,11 @@ fmt:
 lint: deps whisper-libs
 	@echo "=== Running linter in Docker ==="
 	$(DOCKER_RUN) bash -c 'go build -v github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper && golangci-lint run --verbose --timeout=5m && go install golang.org/x/tools/cmd/goimports@latest && goimports -l . | grep -v "^build/" | tee /dev/stderr | (! read)'
+
+# Security scan with gosec
+gosec:
+	@echo "=== Running gosec security scanner in Docker ==="
+	$(DOCKER_RUN) bash -c 'go install github.com/securego/gosec/v2/cmd/gosec@latest && gosec -fmt=json -out=gosec-report.json ./... || true && gosec ./...'
 
 # -----------------------------------------------------------------------------
 # Test targets
@@ -238,6 +243,7 @@ help:
 	@echo "  whisper-libs          - Build whisper.cpp libraries"
 	@echo "  fmt                   - Format Go code (go fmt + goimports)"
 	@echo "  lint                  - Run linter and code quality checks"
+	@echo "  gosec                 - Run security scanner (SAST)"
 	@echo "  clean                 - Clean build artifacts"
 	@echo ""
 	@echo "Tests:"

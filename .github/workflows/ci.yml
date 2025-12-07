@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write  # Required for uploading SARIF results to Security tab
 
 jobs:
   lint:
@@ -105,6 +106,22 @@ jobs:
         run: |
           golangci-lint version
           golangci-lint run -v --build-tags=systray --timeout=5m
+
+      - name: Install gosec
+        run: |
+          curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | \
+            sh -s -- -b $(go env GOPATH)/bin latest
+
+      - name: Run gosec security scanner
+        run: |
+          gosec -fmt=sarif -out=gosec-results.sarif ./... || true
+          gosec ./...
+
+      - name: Upload gosec results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
 
   test:
     runs-on: ubuntu-22.04

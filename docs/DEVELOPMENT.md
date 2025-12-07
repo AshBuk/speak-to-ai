@@ -33,6 +33,7 @@ make appimage-host         # Build AppImage on host (requires tools installed)
 make clean                 # Clean build artifacts
 make fmt                   # Format Go code (go fmt + goimports)
 make lint                  # Run linter and code quality checks
+make gosec                 # Run security scanner (SAST)
 make check-tools           # Verify required tools (local check)
 ```
 

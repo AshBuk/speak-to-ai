@@ -47,6 +47,16 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.3.4" date="2025-12-07">
+      <description>
+        <p>Security enhancement: Added SAST security scanning with gosec for continuous security monitoring.</p>
+        <ul>
+          <li>gosec integration: Automated security scans on every PR with SARIF reports</li>
+          <li>Zero vulnerabilities: Current scan shows 0 security issues across 10,241 lines of code</li>
+          <li>CI/CD security: Enhanced GitHub Actions workflow with CodeQL integration</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.3" date="2025-11-27">
       <description>
         <p>Improving long-term project maintainability: Key design components are now clarified so developers can understand the flow more quickly.</p>

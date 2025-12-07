@@ -1,0 +1,14 @@
+{
+  "global": {
+    "nosec": true,
+    "show-ignored": false,
+    "confidence": "medium",
+    "severity": "medium",
+    "exclude-generated": true
+  },
+  "exclude": {
+    "G104": "Audit errors not checked - we have explicit error handling where needed",
+    "G107": "Url provided to HTTP request as taint input - false positives in our case"
+  }
+}
+

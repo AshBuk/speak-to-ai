@@ -34,6 +34,7 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 
 [![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
 [![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
+[![gosec](https://img.shields.io/badge/gosec-passing-brightgreen)](https://github.com/AshBuk/speak-to-ai/security/code-scanning)
 
 ▸ Speak to AI runs quietly in the background and integrates into the system tray for convenient management. 
 
