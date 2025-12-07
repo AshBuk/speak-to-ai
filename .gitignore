@@ -36,7 +36,6 @@ coverage.out
 
 # Security scan reports
 gosec-report.json
-gosec-report.sarif
 gosec-results.sarif
 
 # planned for development
