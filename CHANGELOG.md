@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-12-15
+
+### Features
+- **Full multi-language support:** All 99 Whisper-supported languages now available
+- **Improved language menu:** Alphabetical grouping (A..., B..., etc.) for easy navigation
+- **Current language display:** Shows selected language at menu top for quick reference
+
+---
 ## [1.3.4] - 2025-12-07
 
 ### Security
