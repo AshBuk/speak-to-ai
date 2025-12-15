@@ -76,7 +76,9 @@ func (tm *TrayManager) setupAudioRecorderMenu() {
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
 }
 
-// setupLanguageMenu creates and configures the language selection submenu with alphabetical grouping
+// setupLanguageMenu creates and configures the language selection submenu.
+// Uses flat alphabetical list for GNOME compatibility
+// (GNOME AppIndicator has 3-level menu depth limit).
 func (tm *TrayManager) setupLanguageMenu() {
 	// Create current language display at the top
 	currentLang := constants.LanguageByCode(tm.config.General.Language)
@@ -90,32 +92,23 @@ func (tm *TrayManager) setupLanguageMenu() {
 	)
 	tm.languageItems["current"].Disable()
 
-	// Create alphabetical group submenus
-	groups := constants.LanguageGroups()
-	for _, letter := range constants.LanguageGroupKeys() {
-		langs := groups[letter]
-		// Create submenu for this letter group
-		groupMenu := tm.languageMenu.AddSubMenuItem(letter+"...", "Languages starting with "+letter)
-
-		// Add languages to group
-		for _, lang := range langs {
-			indicator := "○ "
-			if tm.config.General.Language == lang.Code {
-				indicator = "● "
-			}
-			itm := groupMenu.AddSubMenuItem(indicator+lang.Name, lang.Code)
-			tm.languageItems["lang_"+lang.Code] = itm
-
-			// Set up click handler
-			langCode := lang.Code
-			tm.handleRadioItemClick(
-				itm,
-				langCode,
-				"Language switched to %s (UI)",
-				tm.updateLanguageRadioUI,
-				tm.onSelectLang,
-			)
+	// Flat list of all languages (GNOME-compatible, 3 levels: Settings > Set Language > Language)
+	for _, lang := range constants.WhisperLanguages {
+		indicator := "○ "
+		if tm.config.General.Language == lang.Code {
+			indicator = "● "
 		}
+		itm := tm.languageMenu.AddSubMenuItem(indicator+lang.Name+" ("+lang.Code+")", lang.Code)
+		tm.languageItems["lang_"+lang.Code] = itm
+
+		langCode := lang.Code
+		tm.handleRadioItemClick(
+			itm,
+			langCode,
+			"Language switched to %s (UI)",
+			tm.updateLanguageRadioUI,
+			tm.onSelectLang,
+		)
 	}
 }
 
@@ -339,9 +332,9 @@ func (tm *TrayManager) updateLanguageRadioUI(lang string) {
 	for _, l := range constants.WhisperLanguages {
 		if itm := tm.languageItems["lang_"+l.Code]; itm != nil {
 			if l.Code == lang {
-				itm.SetTitle("● " + l.Name)
+				itm.SetTitle("● " + l.Name + " (" + l.Code + ")")
 			} else {
-				itm.SetTitle("○ " + l.Name)
+				itm.SetTitle("○ " + l.Name + " (" + l.Code + ")")
 			}
 		}
 	}
