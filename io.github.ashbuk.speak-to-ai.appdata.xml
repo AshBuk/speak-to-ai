@@ -47,6 +47,16 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.4.0" date="2025-12-15">
+      <description>
+        <p>Full multi-language support with all 99 Whisper-supported languages.</p>
+        <ul>
+          <li>All Whisper languages: From Afrikaans to Yoruba, complete language coverage</li>
+          <li>Alphabetical grouping: Easy navigation with A-Z submenus</li>
+          <li>Quick reference: Current language displayed at menu top</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.4" date="2025-12-07">
       <description>
         <p>Security enhancement: Added SAST security scanning with gosec for continuous security monitoring.</p>
