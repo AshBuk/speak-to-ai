@@ -7,6 +7,7 @@ package tray
 
 import (
 	"fyne.io/systray"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
@@ -75,37 +76,41 @@ func (tm *TrayManager) setupAudioRecorderMenu() {
 	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
 }
 
-// setupLanguageMenu creates and configures the language selection submenu
+// setupLanguageMenu creates and configures the language selection submenu with alphabetical grouping
 func (tm *TrayManager) setupLanguageMenu() {
-	langDefs := []struct{ key, title string }{
-		{"en", "English"}, {"de", "German"}, {"fr", "French"},
-		{"es", "Spanish"}, {"he", "Hebrew"}, {"ru", "Russian"},
+	// Create current language display at the top
+	currentLang := constants.LanguageByCode(tm.config.General.Language)
+	currentName := tm.config.General.Language
+	if currentLang != nil {
+		currentName = currentLang.Name + " (" + currentLang.Code + ")"
 	}
-
-	// Create language menu items
-	for _, l := range langDefs {
-		indicator := "○ "
-		if tm.config.General.Language == l.key {
-			indicator = "● "
-		}
-		itm := tm.languageMenu.AddSubMenuItem(indicator+l.title, "")
-		tm.languageItems["lang_"+l.key] = itm
-	}
-
-	// Create language display (gray text)
-	tm.languageItems["language"] = tm.languageMenu.AddSubMenuItem(
-		"Current: "+tm.config.General.Language,
-		"Current language setting",
+	tm.languageItems["current"] = tm.languageMenu.AddSubMenuItem(
+		"● "+currentName,
+		"Current language",
 	)
-	tm.languageItems["language"].Disable()
+	tm.languageItems["current"].Disable()
 
-	// Set up click handlers
-	for _, k := range []string{"en", "de", "fr", "es", "he", "ru"} {
-		if itm := tm.languageItems["lang_"+k]; itm != nil {
-			key := k
+	// Create alphabetical group submenus
+	groups := constants.LanguageGroups()
+	for _, letter := range constants.LanguageGroupKeys() {
+		langs := groups[letter]
+		// Create submenu for this letter group
+		groupMenu := tm.languageMenu.AddSubMenuItem(letter+"...", "Languages starting with "+letter)
+
+		// Add languages to group
+		for _, lang := range langs {
+			indicator := "○ "
+			if tm.config.General.Language == lang.Code {
+				indicator = "● "
+			}
+			itm := groupMenu.AddSubMenuItem(indicator+lang.Name, lang.Code)
+			tm.languageItems["lang_"+lang.Code] = itm
+
+			// Set up click handler
+			langCode := lang.Code
 			tm.handleRadioItemClick(
 				itm,
-				key,
+				langCode,
 				"Language switched to %s (UI)",
 				tm.updateLanguageRadioUI,
 				tm.onSelectLang,
@@ -330,24 +335,25 @@ func (tm *TrayManager) updateRecorderRadioUI(method string) {
 
 // updateLanguageRadioUI updates selection marks for language menu
 func (tm *TrayManager) updateLanguageRadioUI(lang string) {
-	langDefs := map[string]string{
-		"en": "English", "de": "German", "fr": "French",
-		"es": "Spanish", "he": "Hebrew", "ru": "Russian",
-	}
-
-	for key, title := range langDefs {
-		if itm := tm.languageItems["lang_"+key]; itm != nil {
-			if key == lang {
-				itm.SetTitle("● " + title)
+	// Update all language items
+	for _, l := range constants.WhisperLanguages {
+		if itm := tm.languageItems["lang_"+l.Code]; itm != nil {
+			if l.Code == lang {
+				itm.SetTitle("● " + l.Name)
 			} else {
-				itm.SetTitle("○ " + title)
+				itm.SetTitle("○ " + l.Name)
 			}
 		}
 	}
 
-	// Update the gray text display
-	if langDisplay := tm.languageItems["language"]; langDisplay != nil {
-		langDisplay.SetTitle("Current: " + lang)
+	// Update the current language display at the top
+	if currentDisplay := tm.languageItems["current"]; currentDisplay != nil {
+		currentLang := constants.LanguageByCode(lang)
+		currentName := lang
+		if currentLang != nil {
+			currentName = currentLang.Name + " (" + currentLang.Code + ")"
+		}
+		currentDisplay.SetTitle("● " + currentName)
 	}
 }
 
