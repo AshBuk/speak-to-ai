@@ -114,16 +114,6 @@ var WhisperLanguages = []Language{
 	{"yo", "Yoruba"},
 }
 
-// LanguageGroups returns languages grouped by first letter of their name
-func LanguageGroups() map[string][]Language {
-	groups := make(map[string][]Language)
-	for _, lang := range WhisperLanguages {
-		firstLetter := string(lang.Name[0])
-		groups[firstLetter] = append(groups[firstLetter], lang)
-	}
-	return groups
-}
-
 // LanguageByCode returns language by its code, or nil if not found
 func LanguageByCode(code string) *Language {
 	for _, lang := range WhisperLanguages {
@@ -132,18 +122,4 @@ func LanguageByCode(code string) *Language {
 		}
 	}
 	return nil
-}
-
-// LanguageGroupKeys returns sorted group keys (letters) for menu ordering
-func LanguageGroupKeys() []string {
-	seen := make(map[string]bool)
-	var keys []string
-	for _, lang := range WhisperLanguages {
-		firstLetter := string(lang.Name[0])
-		if !seen[firstLetter] {
-			seen[firstLetter] = true
-			keys = append(keys, firstLetter)
-		}
-	}
-	return keys
 }
