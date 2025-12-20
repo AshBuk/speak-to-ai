@@ -37,14 +37,11 @@ make gosec                 # Run security scanner (SAST)
 make check-tools           # Verify required tools (local check)
 ```
 
-### 2. Bash Scripts - Orchestration & Dependencies  
+### 2. Bash Scripts - Orchestration & Dependencies
 Handle complex build logic and dependency management:
 ```bash
 bash-scripts/build-appimage.sh     # AppImage creation with linuxdeploy fallbacks
 bash-scripts/dev-env.sh           # CGO environment configuration
-# Flatpak tooling is planned and currently commented out
-# bash-scripts/build-flatpak.sh
-# bash-scripts/flatpak-runtime.sh
 ```
 
 ### 3. Docker - Containers
@@ -93,8 +90,6 @@ System (GNOME/KDE):  DBus (primary) → Evdev (fallback)
 AppImage:            Evdev (primary) → DBus (fallback)
                        ↑                 ↑
                  (direct input)       (portal)
-
-Flatpak:             DBus only (evdev blocked by sandbox)
 ```
 
 ### Module Structure
@@ -106,7 +101,7 @@ hotkeys/
 │   ├── manager.go       # Main orchestrator
 │   └── provider_fallback.go # Fallback registration
 ├── providers/           # Hotkey providers implementation
-│   ├── dbus_provider.go # GlobalShortcuts portal (GNOME/KDE/Flatpak)
+│   ├── dbus_provider.go # GlobalShortcuts portal (GNOME/KDE)
 │   ├── evdev_provider.go # Direct input devices (i3/XFCE/AppImage)
 │   └── dummy_provider.go # Testing provider
 ├── utils/               # Parser utilities

@@ -195,11 +195,6 @@ make docker-appimage APP_VERSION=v1.2.3
 - **Usage**: `docker build -f docker/Dockerfile.appimage --target artifacts --output dist .`
 - **Output**: `dist/speak-to-ai-<version>.AppImage`
 
-### `Dockerfile.flatpak` (Disabled)
-- **Status**: Exists but not actively used
-- **Reason**: Flatpak build moved to native flatpak-builder workflow
-- **Note**: May be re-enabled in future
-
 ## Benefits
 
 1. **No System Dependencies**: No need to install GUI libraries, CGO, or whisper.cpp on host
