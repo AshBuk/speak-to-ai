@@ -19,7 +19,7 @@ import (
 // Execution flow:
 //  1. Parse flags (--config, --debug)
 //  2. Bootstrap logger (Info/Debug level)
-//  3. Adjust config paths (AppImage/Flatpak environment detection)
+//  3. Adjust config paths (AppImage environment detection)
 //  4. Single-instance lock (prevent multiple daemon processes)
 //  5. App lifecycle: NewApp() → Initialize() → RunAndWait()
 func runDaemon(args []string) int {
@@ -38,7 +38,6 @@ func runDaemon(args []string) int {
 	appLogger := logger.NewDefaultLogger(logLevel) // create logger early
 	// Environment detection
 	configPath := adjustPathsForAppImage(appLogger, opts.configFile)
-	configPath = adjustPathsForFlatpak(appLogger, configPath)
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
