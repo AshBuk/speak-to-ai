@@ -90,12 +90,6 @@ sudo usermod -a -G input $USER
 # Log out and log back in for changes to take effect
 ```
 
-<!-- ### **Flatpak Package - upcoming feature!**
-- **All DEs:** **D-Bus GlobalShortcuts portal only** (evdev blocked by sandbox security)
-- **GNOME/KDE:** Works out-of-box via GlobalShortcuts portal
-- **Other DEs:** Limited functionality if GlobalShortcuts portal unavailable
-- **Experience:** Best on modern DEs with portal support -->
-
 ### **Alternative for Tiling WMs**
 - **CLI commands:** Direct hotkey binding via WM config (i3, sway, bspwm, etc.)
 - **Example (i3/sway):**
@@ -105,5 +99,5 @@ sudo usermod -a -G input $USER
   ```
 - See [CLI Usage Guide](CLI_USAGE.md) for command reference
 
-*Last updated: 2025-10-29*  
+*Last updated: 2025-12-21*  
 *Tested on: Fedora 42, Ubuntu 24.04*

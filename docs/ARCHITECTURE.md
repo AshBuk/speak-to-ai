@@ -79,7 +79,7 @@ The application follows a **dual-mode daemon architecture** with clear separatio
   - `daemon.go`: Daemon mode initialization and flag parsing
   - `cli.go`: CLI mode commands (start/stop/status/transcript) via IPC
   - `usage.go`: Unified help system for both modes
-  - `environment.go`: AppImage/Flatpak environment detection
+  - `environment.go`: AppImage environment detection
 - **Responsibilities**:
   - Dual-mode routing (daemon for background service, CLI for commands)
   - Command-line flag processing (`--config`, `--debug` for daemon; `--socket`, `--json`, `--timeout` for CLI)
@@ -143,7 +143,6 @@ Related constants:
 - **Override** (config): `hotkeys.provider: auto | dbus | evdev` (default: `auto`)
 - **System (GNOME/KDE)**: D-Bus primary → evdev fallback
 - **AppImage**: evdev primary → D-Bus fallback
-- **Flatpak**: D-Bus only (evdev blocked by sandbox)
 - **Failover**: Seamless re-registration on provider switching
 
 ### **Speech Recognition** (`whisper/`)
@@ -214,19 +213,15 @@ Related constants:
 
 #### Bash Scripts (`bash-scripts/`)
 - **`build-appimage.sh`**: AppImage creation with dependencies
-- **`build-flatpak.sh`**: Flatpak development helper
 - **`check-license-headers.sh`**: License compliance validation
 - **`dev-env.sh`**: Development environment setup
-- **`flatpak-runtime.sh`**: Flatpak runtime wrapper
 
 #### Docker Configuration (`docker/`)
 - **`Dockerfile.dev`**: Development environment
 - **`Dockerfile.appimage`**: AppImage build environment
-- **`Dockerfile.flatpak`**: Flatpak build environment (WIP - not in release pipeline yet)
 - **`docker-compose.yml`**: Multi-service development setup
 
 #### Package Metadata
-- **`io.github.ashbuk.speak-to-ai.json`**: Flatpak manifest
 - **`io.github.ashbuk.speak-to-ai.desktop`**: Desktop entry
 - **`io.github.ashbuk.speak-to-ai.appdata.xml`**: AppStream metadata
 
@@ -246,4 +241,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-11-06*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2025-12-21*
