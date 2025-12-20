@@ -195,34 +195,13 @@ func TestModelAvailability(t *testing.T) {
 	})
 }
 
-func TestFlatpakCompatibility(t *testing.T) {
-	// Test Flatpak-specific considerations
-	t.Run("flatpak_paths", func(t *testing.T) {
-		// Check if we're running in Flatpak environment
-		if os.Getenv("FLATPAK_ID") != "" {
-			t.Log("Running in Flatpak environment")
-
-			// Test Flatpak-specific paths
-			flatpakConfigDir := os.Getenv("XDG_CONFIG_HOME")
-			if flatpakConfigDir == "" {
-				t.Log("XDG_CONFIG_HOME not set in Flatpak")
-			} else {
-				t.Logf("Flatpak config dir: %s", flatpakConfigDir)
-			}
-		} else {
-			t.Log("Not running in Flatpak environment")
-		}
-	})
-
-	t.Run("sandboxed_tools", func(t *testing.T) {
-		// Test that sandboxed tools are available
-		// These would be built as modules in Flatpak
+func TestToolsAvailability(t *testing.T) {
+	// Test that required tools are available in the system
+	t.Run("required_tools", func(t *testing.T) {
 		tools := []string{"arecord", "xdotool", "wl-copy", "wtype"}
 
 		for _, tool := range tools {
 			t.Run(tool, func(t *testing.T) {
-				// In Flatpak, tools should be available in /app/bin
-				// Outside Flatpak, they might be in system PATH
 				t.Logf("Testing availability of %s", tool)
 			})
 		}
