@@ -40,6 +40,5 @@ README.md
 LICENSE
 DEVELOPMENT.md
 
-# Flatpak specific
-*.flatpak
+# Package artifacts
 *.AppImage
