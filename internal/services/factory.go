@@ -24,7 +24,7 @@ type ServiceFactoryConfig struct {
 	Logger      logger.Logger            // Application-wide logger
 	Config      *config.Config           // Loaded YAML configuration
 	ConfigFile  string                   // Path to config file for reloading
-	Environment platform.EnvironmentType // Runtime environment (Native/AppImage/Flatpak)
+	Environment platform.EnvironmentType // Runtime environment (Native/AppImage)
 }
 
 // Components holds all initialized low-level application components
