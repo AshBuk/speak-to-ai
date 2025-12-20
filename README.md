@@ -76,8 +76,7 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 **For system tray integration on GNOME, [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
 > KDE and other DEs have built-in system tray support out of the box
 
-**For automatic typing on Wayland — [see setup guide](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---tool-options) ↑**
-> **GNOME/Wayland**: Requires ydotool setup  
+**For automatic typing on GNOME — [see setup guide](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---tool-options) ↑**  
 > **Other Wayland compositors** (KDE, Sway, etc.): wtype works without setup — automatically detected!  
 > **X11**: Native support with xdotool out of the box
 
