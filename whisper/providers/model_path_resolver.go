@@ -11,7 +11,7 @@ import (
 )
 
 // Implements the logic for resolving the path to the bundled model
-// based on the execution environment (e.g., Flatpak, AppImage)
+// based on the execution environment (e.g., AppImage)
 type ModelPathResolver struct {
 	config *config.Config
 }
@@ -24,13 +24,8 @@ func NewModelPathResolver(config *config.Config) *ModelPathResolver {
 }
 
 // Return the platform-specific path to the bundled `small-q5_1.bin` model.
-// Check for Flatpak and AppImage environments to determine the correct relative path
+// Check for AppImage environment to determine the correct relative path
 func (r *ModelPathResolver) GetBundledModelPath() string {
-	// In a Flatpak environment, the model is at a fixed path within the sandbox
-	if os.Getenv("FLATPAK_ID") != "" {
-		return "/app/share/speak-to-ai/models/small-q5_1.bin"
-	}
-
 	// In an AppImage environment, the model is located relative to the AppDir
 	if appDir := os.Getenv("APPDIR"); appDir != "" {
 		return filepath.Join(appDir, "sources/language-models/small-q5_1.bin")
