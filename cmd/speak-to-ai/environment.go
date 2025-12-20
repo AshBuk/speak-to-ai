@@ -44,24 +44,3 @@ func adjustPathsForAppImage(logger logger.Logger, configPath string) string {
 
 	return configPath
 }
-
-// Check for a Flatpak environment and, if detected,
-// modify the config file path to use the standard Flatpak configuration path.
-func adjustPathsForFlatpak(logger logger.Logger, configPath string) string {
-	flatpakInfo := os.Getenv("FLATPAK_ID")
-	if flatpakInfo == "" {
-		return configPath
-	}
-
-	logger.Info("Running inside Flatpak: %s", flatpakInfo)
-
-	if configPath == "config.yaml" {
-		flatpakConfigPath := "/app/share/speak-to-ai/config.yaml"
-		if _, err := os.Stat(flatpakConfigPath); err == nil {
-			logger.Info("Using Flatpak config: %s", flatpakConfigPath)
-			return flatpakConfigPath
-		}
-	}
-
-	return configPath
-}
