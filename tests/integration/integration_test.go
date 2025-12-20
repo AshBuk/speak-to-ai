@@ -160,29 +160,12 @@ func TestModelManagement(t *testing.T) {
 
 		if err != nil {
 			t.Logf("Bundled model not found (expected in development): %v", err)
-			// In development this is expected - bundled models only exist in AppImage/Flatpak
+			// In development this is expected - bundled models only exist in AppImage
 		} else {
 			t.Logf("Bundled model path resolved to: %s", modelPath)
 
-			// Verify the path is one of the expected bundled paths
-			expectedPaths := []string{
-				"/app/share/speak-to-ai/models/small-q5_1.bin", // Flatpak
-			}
-
-			isValidPath := false
-			for _, expected := range expectedPaths {
-				if modelPath == expected {
-					isValidPath = true
-					break
-				}
-			}
-
-			// Also check for AppImage pattern (contains sources/language-models)
-			if !isValidPath && strings.Contains(modelPath, "sources/language-models/small-q5_1.bin") {
-				isValidPath = true
-			}
-
-			if !isValidPath {
+			// Check for AppImage pattern (contains sources/language-models)
+			if !strings.Contains(modelPath, "sources/language-models/small-q5_1.bin") {
 				t.Errorf("Unexpected bundled model path: %s", modelPath)
 			}
 		}
