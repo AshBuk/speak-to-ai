@@ -153,10 +153,9 @@ func isOurProcess(pid int) bool {
 	cmdline = strings.ReplaceAll(cmdline, "\x00", " ")
 	cmdline = strings.TrimSpace(cmdline)
 	// Check if this is our speak-to-ai process
-	// Handle direct execution, Flatpak, and AppImage cases
-	return (strings.Contains(cmdline, "speak-to-ai") ||
-		strings.Contains(cmdline, "AppRun")) &&
-		!strings.Contains(cmdline, "flatpak-runtime.sh") // Exclude wrapper script
+	// Handle direct execution and AppImage cases
+	return strings.Contains(cmdline, "speak-to-ai") ||
+		strings.Contains(cmdline, "AppRun")
 }
 
 // GetLockFilePath returns the path to the lock file
