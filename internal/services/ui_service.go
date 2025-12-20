@@ -172,24 +172,20 @@ func (us *UIService) openWithSystem(target string) error {
 	return nil
 }
 
-// Locate config file across different installation methods (AppImage/Flatpak)
+// Locate config file
 func (us *UIService) getConfigPath() (string, bool) {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
 		return "", false
 	}
-	appImagePath := filepath.Join(home, ".config", "speak-to-ai", "config.yaml")
-	flatpakPath := filepath.Join(home, ".var", "app", "io.github.ashbuk.speak-to-ai", "config", "speak-to-ai", "config.yaml")
+	configPath := filepath.Join(home, ".config", "speak-to-ai", "config.yaml")
 
-	// Prefer existing file
-	if _, err := os.Stat(appImagePath); err == nil {
-		return appImagePath, true
+	// Check if file exists
+	if _, err := os.Stat(configPath); err == nil {
+		return configPath, true
 	}
-	if _, err := os.Stat(flatpakPath); err == nil {
-		return flatpakPath, true
-	}
-	// Fallback to default AppImage path even if not present (opener will show dialog)
-	return appImagePath, true
+	// Fallback to default path even if not present (opener will show dialog)
+	return configPath, true
 }
 
 // Route notification to appropriate handler based on message type
