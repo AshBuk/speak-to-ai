@@ -8,7 +8,7 @@
 .PHONY: fmt lint gosec
 
 # Packaging
-.PHONY: appimage appimage-host flatpak
+.PHONY: appimage appimage-host
 
 # Docker targets
 .PHONY: docker-build docker-up docker-down docker-stop docker-shell
@@ -137,11 +137,6 @@ appimage-host: build
 	@echo "⚠️  Warning: This requires linuxdeploy and appimagetool installed on host"
 	bash bash-scripts/build-appimage.sh
 
-# Build Flatpak (disabled)
-# flatpak: build
-#	@echo "=== Building Flatpak ==="
-#	bash bash-scripts/build-flatpak.sh
-
 # Clean build artifacts
 clean:
 	@echo "=== Cleaning build artifacts ==="
@@ -179,10 +174,6 @@ docker-stop:
 docker-down:
 	@echo "=== Stopping all Docker services ==="
 	docker compose down -v --remove-orphans
-
-# docker-flatpak:
-# 	@echo "=== Building Flatpak via docker build (multi-stage) ==="
-# 	docker build -f docker/Dockerfile.flatpak --target artifacts --output type=local,dest=$(DIST_DIR)/flatpak .
 
 # Docker CI pipeline
 docker-ci:
@@ -253,8 +244,7 @@ help:
 	@echo ""
 	@echo "Packaging:"
 	@echo "  appimage              - Build AppImage (Docker-based, recommended)"
-	@echo "  appimage-host        - Build AppImage locally (requires tools on host)"
-	# @echo "  flatpak               - Build Flatpak"
+	@echo "  appimage-host         - Build AppImage locally (requires tools on host)"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-up             - Start development services (docker compose up -d)"
