@@ -8,4 +8,3 @@ Categories=Utility;AudioVideo;Office;
 Keywords=speech;voice;transcription;ai;whisper;offline;privacy;copilot;
 Terminal=false
 StartupNotify=true
-X-Flatpak-RenamedFrom=speak-to-ai.desktop; 

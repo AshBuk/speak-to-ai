@@ -92,7 +92,7 @@
 
 - name: "area: packaging"
   color: "e377c2"
-  description: "AppImage, Flatpak, and distribution"
+  description: "AppImage and distribution"
 
 - name: "area: ci-cd"
   color: "7f7f7f"

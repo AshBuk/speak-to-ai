@@ -26,7 +26,6 @@ coverage.out
 # Build artifacts and external dependencies
 /build/
 /build/whisper.cpp
-.flatpak-builder/
 /tools/
 
 # Temporary directories and logs
