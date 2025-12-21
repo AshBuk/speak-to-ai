@@ -118,13 +118,10 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	return nil
 }
 
-// Establish communication channels between services
-// Manual Dependency Injection - wire services together
+// setupServiceDependencies is a no-op placeholder for future cross-service wiring
+// Note: All dependency injection is handled in FactoryAssembler.Assemble()
 func (a *App) setupServiceDependencies() {
-	// Example: AudioService needs UIService for status updates and IOService for output
-	if audioSvc, ok := a.Services.Audio.(*services.AudioService); ok {
-		audioSvc.SetDependencies(a.Services.UI, a.Services.IO)
-	}
+	// Wiring done in factory_assembler.go (Step 4: Late wiring)
 }
 
 // Connect hotkey manager events to their corresponding handler methods
