@@ -118,15 +118,13 @@ func (cw *FactoryWirer) makeResetToDefaultsCallback(container *ServiceContainer)
 }
 func (cw *FactoryWirer) makeRecorderSelectionCallback(container *ServiceContainer) func(string) error {
 	return func(method string) error {
-		if container == nil || container.Config == nil {
-			return fmt.Errorf("config service not available")
+		if container == nil || container.Config == nil || container.Audio == nil {
+			return fmt.Errorf("services not available")
 		}
 		if err := container.Config.UpdateRecordingMethod(method); err != nil {
 			return err
 		}
-		if audioSvc, ok := container.Audio.(*AudioService); ok { // Type Assertion - access concrete type
-			audioSvc.clearSession() // clearSession() only available on *AudioService, not interface
-		}
+		container.Audio.ClearSession()
 		cw.updateUISettings(container)
 		return nil
 	}
@@ -174,10 +172,7 @@ func (cw *FactoryWirer) makeGetOutputToolsCallback(container *ServiceContainer) 
 		if container == nil || container.IO == nil {
 			return "unknown", "unknown"
 		}
-		if ioSvc, ok := container.IO.(*IOService); ok && ioSvc != nil {
-			return ioSvc.GetOutputToolNames()
-		}
-		return "unknown", "unknown"
+		return container.IO.GetOutputToolNames()
 	}
 }
 func (cw *FactoryWirer) makeCaptureOnceSupportCallback(container *ServiceContainer) func() bool {
@@ -231,56 +226,38 @@ func (cw *FactoryWirer) reloadHotkeysFromConfig(container *ServiceContainer) err
 }
 func (cw *FactoryWirer) makeConfigProvider(container *ServiceContainer) func() adapters.HotkeyConfig {
 	return func() adapters.HotkeyConfig { // Adapter Pattern - converts Config → HotkeyConfig
-		cfgSvc, ok := container.Config.(*ConfigService)
-		if !ok || cfgSvc == nil {
+		if container.Config == nil {
 			return adapters.NewConfigAdapter("", "auto") // Graceful Degradation - return default
 		}
-
-		cfg := cfgSvc.GetConfig()
+		cfg := container.Config.GetConfig()
 		if cfg == nil {
 			return adapters.NewConfigAdapter("", "auto")
 		}
-
 		return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
 			WithAdditionalHotkeys("", cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
 	}
 }
 func (cw *FactoryWirer) updateUISettings(container *ServiceContainer) {
-	uiSvc, ok := container.UI.(*UIService)
-	if !ok || uiSvc == nil {
+	if container.UI == nil || container.Config == nil {
 		return
 	}
-
-	cfgSvc, ok := container.Config.(*ConfigService)
-	if !ok || cfgSvc == nil {
-		return
-	}
-
-	if cfg := cfgSvc.GetConfig(); cfg != nil {
-		uiSvc.UpdateSettings(cfg)
+	if cfg := container.Config.GetConfig(); cfg != nil {
+		container.UI.UpdateSettings(cfg)
 	}
 }
 func (cw *FactoryWirer) updateTraySettings(container *ServiceContainer, trayManager interface{ UpdateSettings(*config.Config) }) {
 	if container == nil || container.Config == nil {
 		return
 	}
-
-	cfgSvc, ok := container.Config.(*ConfigService)
-	if !ok || cfgSvc == nil {
-		return
-	}
-
-	if cfg := cfgSvc.GetConfig(); cfg != nil {
+	if cfg := container.Config.GetConfig(); cfg != nil {
 		trayManager.UpdateSettings(cfg)
 	}
 }
 func (cw *FactoryWirer) getNotificationStatus(container *ServiceContainer) string {
-	cfgSvc, ok := container.Config.(*ConfigService)
-	if !ok || cfgSvc == nil {
+	if container.Config == nil {
 		return "disabled"
 	}
-
-	cfg := cfgSvc.GetConfig()
+	cfg := container.Config.GetConfig()
 	if cfg != nil && cfg.Notifications.EnableWorkflowNotifications {
 		return "enabled"
 	}

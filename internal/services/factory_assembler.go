@@ -58,17 +58,10 @@ func (sa *FactoryAssembler) Assemble(components *Components) *ServiceContainer {
 	container.TempFileManager = components.TempFileManager
 
 	// Step 4: Late wiring - cross-dependencies after container is ready
-	sa.SetupDependencies(container) // Audio → UI, Audio → IO, Audio → Config
+	audioSvc.SetDependencies(container.UI, container.IO)
+	audioSvc.SetConfig(container.Config)
 
 	return container
-}
-
-// SetupDependencies sets up the dependencies between the services
-func (sa *FactoryAssembler) SetupDependencies(container *ServiceContainer) {
-	if audioSvc, ok := container.Audio.(*AudioService); ok {
-		audioSvc.SetDependencies(container.UI, container.IO)
-		audioSvc.SetConfig(container.Config)
-	}
 }
 
 // Builders - construct services from components
