@@ -73,11 +73,11 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 
 📋 **[Desktop Environment Support Guide](docs/Desktop_Environment_Support.md)** - help us test different desktop environments!
 
-**For system tray integration on GNOME, [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
+**For system tray integration on GNOME — [install the AppIndicator extension](docs/Desktop_Environment_Support.md#for-system-tray-on-gnome---to-have-full-featured-ux-with-menu) ↑**
 > KDE and other DEs have built-in system tray support out of the box
 
 **For automatic typing on GNOME — [see setup guide](docs/Desktop_Environment_Support.md#direct-typing-on-wayland---tool-options) ↑**  
-> **Other Wayland compositors** (KDE, Sway, etc.): wtype works without setup — automatically detected!  
+> **Other Wayland compositors** (KDE, Hyprland, Sway, etc.): wtype works without setup — automatically detected!  
 > **X11**: Native support with xdotool out of the box
 
 > If automatic typing doesn't appear automatically, the app falls back to clipboard (Ctrl + V) mode
