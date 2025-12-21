@@ -193,8 +193,8 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider == nil {
 		return "", fmt.Errorf("no keyboard provider available")
 	}
-	// For evdev: stop to release devices, capture on new instance, restart
-	if _, isEvdev := h.provider.(*providers.EvdevKeyboardProvider); isEvdev {
+	// Provider supports capture: stop to release devices, capture on fresh instance, restart
+	if h.provider.SupportsCaptureOnce() {
 		h.provider.Stop()
 
 		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
@@ -210,13 +210,10 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 		}
 		return result, err
 	}
-	// For dbus: use evdev fallback (dbus doesn't support CaptureOnce)
-	if _, isDbus := h.provider.(*providers.DbusKeyboardProvider); isDbus {
-		fallback := providers.NewEvdevKeyboardProvider(h.logger)
-		if fallback != nil && fallback.IsSupported() {
-			return fallback.CaptureOnce(timeout)
-		}
-		return "", fmt.Errorf("evdev not available")
+	// Provider doesn't support capture: use evdev fallback
+	fallback := providers.NewEvdevKeyboardProvider(h.logger)
+	if fallback != nil && fallback.IsSupported() {
+		return fallback.CaptureOnce(timeout)
 	}
 	return "", fmt.Errorf("capture not supported")
 }
@@ -226,9 +223,5 @@ func (h *HotkeyManager) SupportsCaptureOnce() bool {
 	if h.provider == nil {
 		return false
 	}
-	// evdev supports capture-once, dbus does not
-	if _, ok := h.provider.(*providers.EvdevKeyboardProvider); ok {
-		return true
-	}
-	return false
+	return h.provider.SupportsCaptureOnce()
 }

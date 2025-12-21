@@ -118,27 +118,19 @@ func (a *App) ipcHandleLastTranscript(ipc.Request) (ipc.Response, error) {
 }
 
 // waitForTranscription Blocks until transcription ready or timeout expires
-// Type assertion: accesses IOService.WaitForTranscription (not in interface)
 // Used by ipcHandleStopRecording to provide synchronous CLI response
 func (a *App) waitForTranscription(timeout time.Duration) (string, error) {
 	if a.Services == nil || a.Services.IO == nil {
 		return "", fmt.Errorf("io service not available")
 	}
-	if ioSvc, ok := a.Services.IO.(*services.IOService); ok && ioSvc != nil {
-		return ioSvc.WaitForTranscription(timeout)
-	}
-	return "", fmt.Errorf("io service does not support transcription wait")
+	return a.Services.IO.WaitForTranscription(timeout)
 }
 
 // getLastTranscript Returns cached transcript without waiting
-// Type assertion: accesses AudioService.GetLastTranscript (not in interface)
 // Used by status/last-transcript commands for immediate response
 func (a *App) getLastTranscript() string {
 	if a.Services == nil || a.Services.Audio == nil {
 		return ""
 	}
-	if audioSvc, ok := a.Services.Audio.(*services.AudioService); ok && audioSvc != nil {
-		return audioSvc.GetLastTranscript()
-	}
-	return ""
+	return a.Services.Audio.GetLastTranscript()
 }
