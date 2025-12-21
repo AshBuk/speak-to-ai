@@ -4,6 +4,8 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 )
@@ -15,6 +17,8 @@ type HotkeyManagerInterface interface {
 	RegisterCallbacks(startRecording, stopRecording func() error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
+	CaptureOnce(timeout time.Duration) (string, error)
+	SupportsCaptureOnce() bool
 }
 
 // MockHotkeyManager implements HotkeyManagerInterface for testing
@@ -67,6 +71,10 @@ func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager
 }
 
 func (m *MockHotkeyManager) ReloadConfig(_ adapters.HotkeyConfig) error { return nil }
+
+func (m *MockHotkeyManager) CaptureOnce(_ time.Duration) (string, error) { return "alt+r", nil }
+
+func (m *MockHotkeyManager) SupportsCaptureOnce() bool { return true }
 
 // Test helper methods
 func (m *MockHotkeyManager) WasStartCalled() bool { return m.startCalled }

@@ -19,6 +19,8 @@ type HotkeyManagerInterface interface {
 	RegisterCallbacks(startRecording, stopRecording func() error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
+	CaptureOnce(timeout time.Duration) (string, error)
+	SupportsCaptureOnce() bool
 }
 
 // Bridges hotkey events to application handlers

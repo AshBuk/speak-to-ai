@@ -16,6 +16,9 @@ type AudioServiceInterface interface {
 	HandleStopRecording() error
 	IsRecording() bool
 
+	// Session management
+	ClearSession()
+
 	// TODO: Next feature - VAD implementation
 	// VAD (Voice Activity Detection) operations
 	// HandleStartVADRecording() error
@@ -49,6 +52,13 @@ type IOServiceInterface interface {
 	// Text output
 	OutputText(text string) error
 	SetOutputMethod(method string) error
+
+	// Transcription synchronization
+	BeginTranscription()
+	CompleteTranscription(result string)
+
+	// Debug info
+	GetOutputToolNames() (clipboardTool, typeTool string)
 
 	// WebSocket operations
 	StartWebSocketServer() error
