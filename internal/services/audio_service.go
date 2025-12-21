@@ -130,7 +130,7 @@ func (as *AudioService) HandleStopRecording() error {
 				_ = as.cfg.UpdateRecordingMethod("arecord")
 			}
 			as.config.Audio.RecordingMethod = "arecord"
-			as.clearSession()
+			as.ClearSession()
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
 				// Refresh tray to reflect new method
@@ -154,9 +154,7 @@ func (as *AudioService) HandleStopRecording() error {
 	}
 	// Signal IO that transcription is starting to protect clipboard reads
 	if as.io != nil {
-		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
-			ioSvc.BeginTranscription()
-		}
+		as.io.BeginTranscription()
 	}
 	// Start async transcription
 	go as.transcribeAsync(audioFile)
@@ -310,9 +308,7 @@ func (as *AudioService) handleTranscriptionResult(transcript string, err error) 
 	}
 	// Notify IO about completion for clipboard protection release
 	if as.io != nil {
-		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
-			ioSvc.CompleteTranscription(sanitized)
-		}
+		as.io.CompleteTranscription(sanitized)
 	}
 	// Update UI
 	if as.ui != nil {
@@ -329,9 +325,7 @@ func (as *AudioService) handleTranscriptionError(err error) {
 	}
 	// Release clipboard protection
 	if as.io != nil {
-		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
-			ioSvc.CompleteTranscription("")
-		}
+		as.io.CompleteTranscription("")
 	}
 }
 
@@ -362,14 +356,12 @@ func (as *AudioService) handleTranscriptionCancellation(err error) {
 	}
 	// Release clipboard protection
 	if as.io != nil {
-		if ioSvc, ok := as.io.(*IOService); ok && ioSvc != nil {
-			ioSvc.CompleteTranscription("")
-		}
+		as.io.CompleteTranscription("")
 	}
 }
 
-// clearSession clears audio session state and temp files
-func (as *AudioService) clearSession() {
+// ClearSession clears audio session state and temp files
+func (as *AudioService) ClearSession() {
 	if as.recorder != nil {
 		_ = as.recorder.CleanupFile()
 	}

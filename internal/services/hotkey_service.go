@@ -122,10 +122,7 @@ func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 	if timeoutMs <= 0 {
 		timeoutMs = 3000
 	}
-	if hm, ok := hs.hotkeyManager.(*manager.HotkeyManager); ok {
-		return hm.CaptureOnce(time.Duration(timeoutMs) * time.Millisecond)
-	}
-	return "", fmt.Errorf("capture not supported by manager")
+	return hs.hotkeyManager.CaptureOnce(time.Duration(timeoutMs) * time.Millisecond)
 }
 
 // Check if interactive hotkey binding is available
@@ -133,8 +130,5 @@ func (hs *HotkeyService) SupportsCaptureOnce() bool {
 	if hs.hotkeyManager == nil {
 		return false
 	}
-	if hm, ok := hs.hotkeyManager.(*manager.HotkeyManager); ok {
-		return hm.SupportsCaptureOnce()
-	}
-	return false
+	return hs.hotkeyManager.SupportsCaptureOnce()
 }
