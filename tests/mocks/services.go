@@ -4,6 +4,8 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
@@ -23,6 +25,7 @@ func (m *MockAudioService) HandleStartRecording() error { return nil }
 func (m *MockAudioService) HandleStopRecording() error  { return nil }
 func (m *MockAudioService) IsRecording() bool           { return false }
 func (m *MockAudioService) ClearSession()               {}
+func (m *MockAudioService) GetLastTranscript() string   { return "" }
 
 // TODO: Next feature - VAD implementation
 // func (m *MockAudioService) HandleStartVADRecording() error                  { return nil }
@@ -68,13 +71,14 @@ func (m *MockIOService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockIOService) OutputText(text string) error         { return nil }
-func (m *MockIOService) SetOutputMethod(method string) error  { return nil }
-func (m *MockIOService) BeginTranscription()                  {}
-func (m *MockIOService) CompleteTranscription(result string)  {}
-func (m *MockIOService) GetOutputToolNames() (string, string) { return "mock-clipboard", "mock-typing" }
-func (m *MockIOService) StartWebSocketServer() error          { return nil }
-func (m *MockIOService) StopWebSocketServer() error           { return nil }
+func (m *MockIOService) OutputText(text string) error                               { return nil }
+func (m *MockIOService) SetOutputMethod(method string) error                        { return nil }
+func (m *MockIOService) BeginTranscription()                                        {}
+func (m *MockIOService) CompleteTranscription(result string)                        {}
+func (m *MockIOService) WaitForTranscription(timeout time.Duration) (string, error) { return "", nil }
+func (m *MockIOService) GetOutputToolNames() (string, string)                       { return "mock-clipboard", "mock-typing" }
+func (m *MockIOService) StartWebSocketServer() error                                { return nil }
+func (m *MockIOService) StopWebSocketServer() error                                 { return nil }
 
 // Test helper methods
 func (m *MockIOService) WasShutdownCalled() bool { return m.shutdownCalled }

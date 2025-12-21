@@ -73,6 +73,9 @@ func (p *DummyKeyboardProvider) RegisterHotkey(hotkey string, callback func() er
 	return nil
 }
 
+// SupportsCaptureOnce returns false as dummy provider has no real functionality
+func (p *DummyKeyboardProvider) SupportsCaptureOnce() bool { return false }
+
 // Return an error as this functionality is not supported
 func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dummy provider")

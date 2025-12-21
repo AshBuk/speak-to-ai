@@ -139,6 +139,9 @@ func (p *DbusKeyboardProvider) RegisterHotkey(hotkey string, callback func() err
 	return nil
 }
 
+// SupportsCaptureOnce returns false as D-Bus GlobalShortcuts portal doesn't support one-shot capture
+func (p *DbusKeyboardProvider) SupportsCaptureOnce() bool { return false }
+
 // Return an error as this provider does not support capture-once functionality
 func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dbus provider")
