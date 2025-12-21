@@ -80,9 +80,8 @@ func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 	if isAppImage {
 		h.logger.Info("AppImage detected - allowing evdev fallback for better hotkey compatibility")
 	}
-	// Only fall back from DBus to evdev if evdev is supported
-	switch h.provider.(type) {
-	case *providers.DbusKeyboardProvider:
+	// Only fall back to evdev if current provider doesn't support capture (i.e., D-Bus)
+	if !h.provider.SupportsCaptureOnce() {
 		fallback := providers.NewEvdevKeyboardProvider(h.logger)
 		if fallback != nil && fallback.IsSupported() {
 			h.logger.Info("Falling back to evdev keyboard provider")
