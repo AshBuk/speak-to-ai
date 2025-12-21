@@ -4,6 +4,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
@@ -18,6 +20,9 @@ type AudioServiceInterface interface {
 
 	// Session management
 	ClearSession()
+
+	// Transcript access
+	GetLastTranscript() string
 
 	// TODO: Next feature - VAD implementation
 	// VAD (Voice Activity Detection) operations
@@ -56,6 +61,7 @@ type IOServiceInterface interface {
 	// Transcription synchronization
 	BeginTranscription()
 	CompleteTranscription(result string)
+	WaitForTranscription(timeout time.Duration) (string, error)
 
 	// Debug info
 	GetOutputToolNames() (clipboardTool, typeTool string)

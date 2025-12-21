@@ -17,6 +17,8 @@ type KeyboardEventProvider interface {
 	IsSupported() bool
 	// Capture a single hotkey combination within a given timeout
 	CaptureOnce(timeout time.Duration) (string, error)
+	// Check if the provider supports one-shot hotkey capture
+	SupportsCaptureOnce() bool
 }
 
 // Represents a hotkey combination

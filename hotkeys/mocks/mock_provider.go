@@ -119,6 +119,9 @@ func (m *MockHotkeyProvider) CaptureOnce(_ time.Duration) (string, error) {
 	return "alt+r", nil
 }
 
+// SupportsCaptureOnce returns true for mock provider
+func (m *MockHotkeyProvider) SupportsCaptureOnce() bool { return true }
+
 // Test helper methods
 
 // SetSupported configures whether the provider is supported
