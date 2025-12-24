@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2025-12-24
+
+### Improvements
+- **Hotkey rebind optimization:** Reduced latency from ~1-2s to ~100ms ([#60](https://github.com/AshBuk/speak-to-ai/pull/60))
+- **Deterministic shutdown:** Per-component goroutine ownership with WaitGroup tracking ([#60](https://github.com/AshBuk/speak-to-ai/pull/60))
+- **Architecture:** Remove type assertions, use interfaces directly (DIP compliance) ([#58](https://github.com/AshBuk/speak-to-ai/pull/58), [#59](https://github.com/AshBuk/speak-to-ai/pull/59))
+- Drop Flatpak support. Details: [#57](https://github.com/AshBuk/speak-to-ai/pull/57)
+
+---
 ## [1.4.0] - 2025-12-15
 
 ### Features
@@ -25,7 +34,7 @@ All notable changes to this project will be documented in this file.
 - Includes: comments, formatting, code style, and light stylistic refactoring.
 - Excludes: any functional changes
 
-Based on #55.
+Based on [#55](https://github.com/AshBuk/speak-to-ai/pull/55).
 
 ---
 ## [1.3.2] - 2025-11-13
