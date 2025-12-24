@@ -197,20 +197,17 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider.SupportsCaptureOnce() {
 		h.provider.Stop()
 
+		// Skip IsSupported() check - if evdev provider was running, evdev is available
+		// CaptureOnce will return error if no devices found
 		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
-		if !captureProvider.IsSupported() {
-			if err := h.ReloadConfig(h.config); err != nil {
-				h.logger.Error("Failed to restart hotkeys after failed capture: %v", err)
-			}
-			return "", fmt.Errorf("evdev not available")
-		}
 		result, err := captureProvider.CaptureOnce(timeout)
 		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
 			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
 		}
 		return result, err
 	}
-	// Provider doesn't support capture: use evdev fallback
+	// Provider doesn't support capture: use evdev fallback (D-Bus case)
+	// Here we need IsSupported() since evdev wasn't the active provider
 	fallback := providers.NewEvdevKeyboardProvider(h.logger)
 	if fallback != nil && fallback.IsSupported() {
 		return fallback.CaptureOnce(timeout)

@@ -6,11 +6,13 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
@@ -157,6 +159,10 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 	}
 	dev := p.devices[idx]
 	p.mutex.RUnlock()
+
+	// Set non-blocking mode for fast Stop() without waiting for ReadOne()
+	_ = dev.NonBlock()
+
 	for {
 		select {
 		case <-p.stopListening:
@@ -169,6 +175,11 @@ func (p *EvdevKeyboardProvider) listenDevice(idx int) {
 		}
 		event, err := dev.ReadOne()
 		if err != nil {
+			// EAGAIN/EWOULDBLOCK means no data available in non-blocking mode
+			if errors.Is(err, syscall.EAGAIN) || errors.Is(err, syscall.EWOULDBLOCK) {
+				time.Sleep(5 * time.Millisecond)
+				continue
+			}
 			// Exit on device read error to avoid infinite loops
 			// "file already closed" is expected when device is released for rebind/reload
 			if strings.Contains(err.Error(), "file already closed") || atomic.LoadInt32(&p.stopping) == 1 {
@@ -270,8 +281,8 @@ func (p *EvdevKeyboardProvider) Stop() {
 	}
 
 	p.isListening = false
-	// go-evdev ReadOne() can block for seconds even after Close()
-	// Wait with timeout to avoid indefinite blocking
+	// With non-blocking mode, goroutines exit immediately after Close()
+	// Short timeout as safety net
 	done := make(chan struct{})
 	go func() {
 		p.wg.Wait()
@@ -282,13 +293,11 @@ func (p *EvdevKeyboardProvider) Stop() {
 	case <-done:
 		// All listener goroutines exited cleanly
 		p.logger.Info("Evdev listeners stopped cleanly")
-		// Clean up state only if goroutines finished (protected by mutex)
 		p.devices = nil
 		atomic.StoreInt32(&p.stopping, 0)
-	case <-time.After(500 * time.Millisecond):
-		// Timeout - goroutines still blocked in ReadOne()
-		// Release mutex and allow restart, cleanup old devices asynchronously
-		p.logger.Warning("Evdev stop timeout (500ms) - proceeding with restart")
+	case <-time.After(50 * time.Millisecond):
+		// Timeout - unexpected, but proceed to allow restart
+		p.logger.Warning("Evdev stop timeout (50ms) - proceeding with restart")
 		oldDevices := p.devices
 		p.devices = nil
 		atomic.StoreInt32(&p.stopping, 0)
@@ -356,17 +365,30 @@ func (cs *captureSession) processKeyEvent(ev *evdev.InputEvent) (shouldStop bool
 	return true, combo
 }
 
-// listenDevice listens for events on a single device during capture
+// listenDevice listens for events on a single device during capture (non-blocking mode)
 func (cs *captureSession) listenDevice(idx int) {
 	defer cs.wg.Done()
+
+	dev := cs.devices[idx]
+	// Set non-blocking mode for fast cleanup on stop
+	_ = dev.NonBlock()
+
 	for {
 		select {
 		case <-cs.stopCh:
 			return
 		default:
 		}
-		ev, err := cs.devices[idx].ReadOne()
+
+		ev, err := dev.ReadOne()
 		if err != nil {
+			// EAGAIN/EWOULDBLOCK means no data available in non-blocking mode
+			if errors.Is(err, syscall.EAGAIN) || errors.Is(err, syscall.EWOULDBLOCK) {
+				// Short sleep to avoid busy-loop, then retry
+				time.Sleep(5 * time.Millisecond)
+				continue
+			}
+			// Any other error (including closed device) - exit
 			return
 		}
 
@@ -387,7 +409,6 @@ func (cs *captureSession) cleanup() {
 	for _, d := range cs.devices {
 		_ = d.Close()
 	}
-
 	captureDone := make(chan struct{})
 	go func() {
 		cs.wg.Wait()
@@ -396,7 +417,7 @@ func (cs *captureSession) cleanup() {
 
 	select {
 	case <-captureDone:
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(50 * time.Millisecond):
 	}
 }
 
