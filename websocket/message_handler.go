@@ -35,11 +35,12 @@ func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 			continue
 		}
 		// Process message based on type
+		// Synchronous handling per-connection provides natural backpressure
 		switch msg.Type {
 		case "start-recording":
-			go s.handleStartRecording(conn, msg.RequestID)
+			s.handleStartRecording(conn, msg.RequestID)
 		case "stop-recording":
-			go s.handleStopRecording(conn, msg.RequestID)
+			s.handleStopRecording(conn, msg.RequestID)
 		case "ping":
 			s.sendMessage(conn, "pong", nil)
 		default:
