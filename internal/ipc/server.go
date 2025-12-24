@@ -33,6 +33,7 @@ type Server struct {
 	mu       sync.RWMutex
 	stopCh   chan struct{}
 	stopOnce sync.Once
+	wg       sync.WaitGroup // Tracks acceptLoop and connection handlers
 }
 
 // NewServer constructs a new IPC server bound to the specified socket path.
@@ -82,12 +83,14 @@ func (s *Server) Start() error {
 
 	s.listener = ln
 
+	s.wg.Add(1)
 	go s.acceptLoop()
 	s.log.Info("IPC server listening on %s", s.path)
 	return nil
 }
 
 func (s *Server) acceptLoop() {
+	defer s.wg.Done()
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
@@ -109,11 +112,13 @@ func (s *Server) acceptLoop() {
 			s.log.Error("IPC accept error: %v", err)
 			return
 		}
+		s.wg.Add(1)
 		go s.handleConnection(conn)
 	}
 }
 
 func (s *Server) handleConnection(conn net.Conn) {
+	defer s.wg.Done()
 	defer func() {
 		_ = conn.Close()
 	}()
@@ -191,6 +196,21 @@ func (s *Server) Stop() {
 		if s.listener != nil {
 			_ = s.listener.Close()
 		}
+
+		// Wait for acceptLoop and connection handlers with timeout
+		done := make(chan struct{})
+		go func() {
+			s.wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			s.log.Info("IPC server stopped cleanly")
+		case <-time.After(2 * time.Second):
+			s.log.Warning("IPC server stop timeout - handlers may still be running")
+		}
+
 		if s.path != "" {
 			if err := os.RemoveAll(s.path); err != nil && !os.IsNotExist(err) {
 				s.log.Debug("Failed to remove IPC socket: %v", err)
