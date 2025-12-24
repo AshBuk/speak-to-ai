@@ -229,17 +229,21 @@ func (as *AudioService) ensureAudioRecorderAvailable() error {
 
 // Shutdown gracefully shuts down the audio service
 func (as *AudioService) Shutdown() error {
-	as.mu.Lock()
-	// Cancel context first to signal all operations and prevent new goroutines
-	as.cancel()
+	// Use function scope to ensure mutex is released even on panic
+	func() {
+		as.mu.Lock()
+		defer as.mu.Unlock()
 
-	if as.isRecording && as.recorder != nil {
-		if _, err := as.recorder.StopRecording(); err != nil {
-			as.logger.Error("Error stopping recording during shutdown: %v", err)
+		// Cancel context first to signal all operations and prevent new goroutines
+		as.cancel()
+
+		if as.isRecording && as.recorder != nil {
+			if _, err := as.recorder.StopRecording(); err != nil {
+				as.logger.Error("Error stopping recording during shutdown: %v", err)
+			}
+			as.isRecording = false
 		}
-		as.isRecording = false
-	}
-	as.mu.Unlock()
+	}()
 
 	// Wait for background transcription tasks with timeout
 	done := make(chan struct{})
@@ -281,7 +285,11 @@ func (as *AudioService) startStandardRecording() error {
 	return nil
 }
 
-// transcribeAsync performs async transcription
+// transcribeAsync performs async transcription.
+// Note: The inner goroutine calling TranscribeWithContext is intentionally not tracked
+// by the WaitGroup. Whisper.cpp CGO calls cannot be cancelled, so tracking them would
+// cause Shutdown() to block for up to 2 minutes. Instead, we accept that the CGO work
+// may outlive shutdown (bounded to ~30s max). See whisper/engine.go for details.
 func (as *AudioService) transcribeAsync(audioFile string) {
 	ctx, cancel := context.WithTimeout(as.ctx, 2*time.Minute)
 	defer cancel()
