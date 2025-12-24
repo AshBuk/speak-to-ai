@@ -35,6 +35,9 @@ type AudioService struct {
 	lastTranscript           string
 	audioRecorderNeedsReinit bool
 
+	// Goroutine ownership: tracks background transcription tasks
+	wg sync.WaitGroup
+
 	// Context for operations
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -121,7 +124,7 @@ func (as *AudioService) HandleStopRecording() error {
 	audioFile, err := as.recorder.StopRecording()
 	if err != nil {
 		as.logger.Warning("StopRecording returned error: %v", err)
-		go as.handleRecordingError(err)
+		as.handleRecordingError(err)
 
 		// Auto-fallback to arecord if using ffmpeg
 		if as.config.Audio.RecordingMethod == "ffmpeg" {
@@ -152,12 +155,23 @@ func (as *AudioService) HandleStopRecording() error {
 		as.ui.SetRecordingState(false)
 		as.ui.ShowNotification(constants.NotifyRecordingStopped, constants.NotifyRecordingStopMsg)
 	}
+	// Check if shutdown is in progress before starting transcription
+	select {
+	case <-as.ctx.Done():
+		as.logger.Warning("Shutdown in progress, skipping transcription")
+		return nil
+	default:
+	}
 	// Signal IO that transcription is starting to protect clipboard reads
 	if as.io != nil {
 		as.io.BeginTranscription()
 	}
-	// Start async transcription
-	go as.transcribeAsync(audioFile)
+	// Start async transcription with ownership tracking
+	as.wg.Add(1)
+	go func() {
+		defer as.wg.Done()
+		as.transcribeAsync(audioFile)
+	}()
 	return nil
 }
 
@@ -216,7 +230,7 @@ func (as *AudioService) ensureAudioRecorderAvailable() error {
 // Shutdown gracefully shuts down the audio service
 func (as *AudioService) Shutdown() error {
 	as.mu.Lock()
-	defer as.mu.Unlock()
+	// Cancel context first to signal all operations and prevent new goroutines
 	as.cancel()
 
 	if as.isRecording && as.recorder != nil {
@@ -225,7 +239,21 @@ func (as *AudioService) Shutdown() error {
 		}
 		as.isRecording = false
 	}
-	as.logger.Info("AudioService shutdown complete")
+	as.mu.Unlock()
+
+	// Wait for background transcription tasks with timeout
+	done := make(chan struct{})
+	go func() {
+		as.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		as.logger.Info("AudioService shutdown complete")
+	case <-time.After(5 * time.Second):
+		as.logger.Warning("AudioService shutdown timeout - transcription may still be running")
+	}
 	return nil
 }
 
