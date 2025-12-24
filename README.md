@@ -46,9 +46,24 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
 - **Linux DEs**: native integration with GNOME, KDE, and others
-- **Voice typing or clipboard mode** 
+- **Voice typing or clipboard mode**
 - **Flexible audio recording**: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see [audio pipeline](docs/AUDIO_PIPELINE_DIAGRAM.txt)
 - **Multi-language support, custom hotkey binding, visual notifications**
+
+## Beyond Minimalism
+
+Intuitive minimalist UX, **robust STT infrastructure**. A foundation for voice-controlled automation:
+
+- **Dual API**: Unix socket IPC + WebSocket — script locally or integrate remotely
+- **Interface-driven**: 50+ contracts — swap STT engines, add I/O methods, extend hotkey providers
+- **Daemon + CLI**: background hub + stateless commands — perfect for IoT pipelines
+- **Graceful degradation**: provider fallbacks, optional components, no crashes
+
+```bash
+# Voice command → smart home action
+transcript=$(speak-to-ai stop-recording | jq -r '.data.transcript')
+[[ "$transcript" == *"lights off"* ]] && curl -X POST http://hub/lights/off
+```
 
 ## ✦ Installation
 
