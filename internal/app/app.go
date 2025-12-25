@@ -140,8 +140,6 @@ func (a *App) setupHotkeyCallbacks() error {
 	); err != nil {
 		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
 	}
-
-	a.Runtime.Logger.Info("Hotkey callbacks configured successfully")
 	return nil
 }
 
