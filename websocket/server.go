@@ -14,7 +14,6 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
 	"github.com/AshBuk/speak-to-ai/whisper"
 	"github.com/gorilla/websocket"
 )
@@ -52,6 +51,7 @@ type WebSocketServer struct {
 	started     bool
 	retryCount  map[*websocket.Conn]int // Track retry attempts
 	logger      logger.Logger
+	wg          sync.WaitGroup
 }
 
 // Protocol structure for bidirectional client communication
@@ -133,14 +133,16 @@ func (s *WebSocketServer) Start() error {
 		WriteTimeout: serverWriteTimeout,
 		IdleTimeout:  serverIdleTimeout,
 	}
-	// Start HTTP server in a tracked goroutine
-	utils.Go(func() {
+	// Start HTTP server in background goroutine
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
 		s.logger.Info("Starting WebSocket server on %s", addr)
 		s.started = true
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.logger.Error("WebSocket server error: %v", err)
 		}
-	})
+	}()
 
 	return nil
 }
@@ -165,7 +167,8 @@ func (s *WebSocketServer) Stop() {
 		} else {
 			s.logger.Info("WebSocket server stopped")
 		}
-
+		// Wait for server goroutine to finish
+		s.wg.Wait()
 		s.started = false
 	}
 }
@@ -223,8 +226,8 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		"server":      "Speak-to-AI",
 		"api_version": s.config.WebServer.APIVersion,
 	})
-	// Start ping/pong in tracked goroutine
-	utils.Go(func() { s.pingClient(conn) })
+	// Start ping/pong goroutine (fire-and-forget, exits when conn closes)
+	go func() { s.pingClient(conn) }()
 	// Process messages from client
 	s.processMessages(conn)
 }

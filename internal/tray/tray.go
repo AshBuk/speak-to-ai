@@ -8,12 +8,12 @@ package tray
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // TrayManager manages the system tray icon and menu
@@ -66,6 +66,7 @@ type TrayManager struct {
 	// Cancellation context for background menu handlers
 	ctx    context.Context
 	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 // NewTrayManager creates a new tray manager instance
@@ -102,7 +103,11 @@ func (tm *TrayManager) Start() {
 		tm.cancel()
 	}
 	tm.ctx, tm.cancel = context.WithCancel(context.Background())
-	utils.Go(func() { systray.Run(tm.onReady, tm.onExit) })
+	tm.wg.Add(1)
+	go func() {
+		defer tm.wg.Done()
+		systray.Run(tm.onReady, tm.onExit)
+	}()
 }
 
 // onReady sets up the system tray when it's ready
@@ -131,7 +136,11 @@ func (tm *TrayManager) onReady() {
 	systray.AddSeparator()
 	tm.exitItem = systray.AddMenuItem(fmt.Sprintf("%s Quit", constants.IconError), "Quit Speak-to-AI")
 	// Handle menu item clicks
-	utils.Go(func() { tm.handleMenuClicks() })
+	tm.wg.Add(1)
+	go func() {
+		defer tm.wg.Done()
+		tm.handleMenuClicks()
+	}()
 
 	// Apply the current recording state once menu items are ready
 	// This avoids missing early state updates before systray initialization
@@ -226,6 +235,7 @@ func (tm *TrayManager) Stop() {
 		tm.cancel()
 	}
 	systray.Quit()
+	tm.wg.Wait()
 }
 
 // SetAudioActions sets callbacks for audio-related actions (recorder selection)
