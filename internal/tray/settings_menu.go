@@ -8,7 +8,6 @@ package tray
 import (
 	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Create settings submenus
@@ -415,10 +414,12 @@ func (tm *TrayManager) updateOutputUI() {
 
 // Helper functions for menu handling
 
-// handleMenuItemClick creates a tracked goroutine that handles menu item clicks
+// handleMenuItemClick creates a goroutine that handles menu item clicks
 // with context cancellation support. This helper reduces boilerplate for menu handlers.
 func (tm *TrayManager) handleMenuItemClick(item *systray.MenuItem, handler func()) {
-	utils.Go(func() {
+	tm.wg.Add(1)
+	go func() {
+		defer tm.wg.Done()
 		ch := item.ClickedCh
 		for {
 			select {
@@ -431,7 +432,7 @@ func (tm *TrayManager) handleMenuItemClick(item *systray.MenuItem, handler func(
 				handler()
 			}
 		}
-	})
+	}()
 }
 
 // handleRadioItemClick handles radio button menu items with automatic logging and UI update.

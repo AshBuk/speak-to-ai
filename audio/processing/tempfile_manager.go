@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Manages the lifecycle of temporary audio files
@@ -24,6 +23,7 @@ type TempFileManager struct {
 	stopChan       chan bool
 	stopClosed     bool
 	logger         logger.Logger
+	wg             sync.WaitGroup
 }
 
 // Create a new TempFileManager instance
@@ -52,7 +52,11 @@ func (t *TempFileManager) Start() {
 		return
 	}
 	t.running = true
-	utils.Go(func() { t.cleanupRoutine() })
+	t.wg.Add(1)
+	go func() {
+		defer t.wg.Done()
+		t.cleanupRoutine()
+	}()
 }
 
 // Add a file to the manager for tracking and eventual cleanup
@@ -142,6 +146,7 @@ func (t *TempFileManager) Stop() {
 	if ch != nil {
 		close(ch)
 	}
+	t.wg.Wait()
 }
 
 // Create a new temporary .wav file and register it for cleanup
