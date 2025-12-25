@@ -9,14 +9,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/ipc"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/services"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // Manages application lifecycle and context
@@ -195,8 +193,9 @@ func (a *App) RunAndWait() error {
 	return a.Shutdown()
 }
 
-// Graceful Shutdown - ensures clean resource cleanup with timeout
-// Shutdown sequence: Cancel() → Stop IPC → Shutdown Services → Wait(5s timeout)
+// Graceful Shutdown - ensures clean resource cleanup
+// Shutdown sequence: Cancel() → Stop IPC → Shutdown Services
+// Each service is responsible for waiting on its own goroutines via WaitGroup
 func (a *App) Shutdown() error {
 	a.Runtime.Logger.Info("Shutting down application...")
 	a.Runtime.Cancel() // Signal all goroutines to stop
@@ -209,13 +208,6 @@ func (a *App) Shutdown() error {
 			return err
 		}
 	}
-	// Wait for background goroutines with timeout
-	if ok := utils.WaitAll(5 * time.Second); ok {
-		a.Runtime.Logger.Info("Background tasks completed")
-	} else {
-		a.Runtime.Logger.Warning("Shutdown timeout - forcing exit")
-	}
-
 	a.Runtime.Logger.Info("Application shutdown complete")
 	return nil
 }
