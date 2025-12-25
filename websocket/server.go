@@ -226,8 +226,12 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		"server":      "Speak-to-AI",
 		"api_version": s.config.WebServer.APIVersion,
 	})
-	// Start ping/pong goroutine (fire-and-forget, exits when conn closes)
-	go func() { s.pingClient(conn) }()
+	// Start ping/pong goroutine (tracked, exits when conn closes)
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.pingClient(conn)
+	}()
 	// Process messages from client
 	s.processMessages(conn)
 }
