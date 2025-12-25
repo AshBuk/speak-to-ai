@@ -190,7 +190,7 @@ jobs:
       run: |
         VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
         awk -v version="$VERSION" '
-          $0 ~ "## \[" version "\]" {
+          index($0, "## [" version "]") {
             in_section=1
             next
           }
