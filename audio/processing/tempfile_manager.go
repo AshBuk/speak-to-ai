@@ -84,7 +84,6 @@ func (t *TempFileManager) RemoveFile(path string, shouldDelete bool) {
 
 // Run a background routine to periodically remove old files
 func (t *TempFileManager) cleanupRoutine() {
-	t.running = true
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
@@ -93,7 +92,9 @@ func (t *TempFileManager) cleanupRoutine() {
 		case <-ticker.C:
 			t.cleanupOldFiles()
 		case <-t.stopChan:
+			t.mutex.Lock()
 			t.running = false
+			t.mutex.Unlock()
 			return
 		}
 	}
