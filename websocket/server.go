@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -49,6 +50,7 @@ type WebSocketServer struct {
 	whisper     *whisper.WhisperEngine
 	server      *http.Server
 	started     bool
+	stopping    atomic.Bool             // Prevents wg.Add() after Stop() begins
 	retryCount  map[*websocket.Conn]int // Track retry attempts
 	logger      logger.Logger
 	wg          sync.WaitGroup
@@ -150,6 +152,7 @@ func (s *WebSocketServer) Start() error {
 // Ensure clean client disconnection before termination
 func (s *WebSocketServer) Stop() {
 	if s.server != nil && s.started {
+		s.stopping.Store(true) // Prevent new goroutines from being added
 		s.logger.Info("Stopping WebSocket server...")
 		// Create a context with timeout for shutdown
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -227,11 +230,13 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		"api_version": s.config.WebServer.APIVersion,
 	})
 	// Start ping/pong goroutine (tracked, exits when conn closes)
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
-		s.pingClient(conn)
-	}()
+	if !s.stopping.Load() {
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			s.pingClient(conn)
+		}()
+	}
 	// Process messages from client
 	s.processMessages(conn)
 }
