@@ -103,16 +103,26 @@ See changes: [CHANGELOG.md](CHANGELOG.md)
 
 ### System Requirements
 
-- **OS**: Linux with glibc 2.35+
-  - **Ubuntu-based:** Ubuntu 22.04+, Linux Mint 21+, Pop!_OS 22.04+, Elementary OS 7+, Zorin OS 17+
-  - **Debian-based:** Debian 12+
-  - **Fedora:** Fedora 36+
-  - **Rolling release:** Arch Linux, Manjaro, EndeavourOS, openSUSE Tumbleweed
-- **Desktop**: X11 or Wayland environment
-- **Audio**: Microphone/recording capability
-- **Storage**: ~277MB (Whisper small-q5 model + dependencies)
-- **Memory**: ~300MB RAM during operation
-- **CPU**: AVX-capable processor (Intel/AMD 2011+)
+| Category | Requirement |
+|----------|-------------|
+| **OS** | Linux with glibc 2.35+ |
+| **Desktop** | X11 or Wayland |
+| **Audio** | Microphone capability |
+| **Storage** | ~277MB |
+| **Memory** | ~300MB RAM |
+| **CPU** | AVX-capable (Intel/AMD 2011+) |
+
+<details>
+<summary><b>📋 Supported Distributions</b></summary>
+
+| Family | Distributions |
+|--------|---------------|
+| **Ubuntu-based** | Ubuntu 22.04+, Linux Mint 21+, Pop!_OS 22.04+, Elementary OS 7+, Zorin OS 17+ |
+| **Debian-based** | Debian 12+ |
+| **Fedora** | Fedora 36+ |
+| **Rolling release** | Arch Linux, Manjaro, EndeavourOS, openSUSE Tumbleweed |
+
+</details>
 
 
 ## For Developers
