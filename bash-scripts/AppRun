@@ -40,7 +40,7 @@ setup_first_launch() {
     else
         echo "Warning: Hotkeys may not work without additional setup."
         echo "For GNOME/KDE: Ensure D-Bus session is running"
-        echo "For other DEs: sudo usermod -a -G input \$USER"
+        echo "For other DEs: sudo usermod -a -G input $USER"
     fi
 }
 
