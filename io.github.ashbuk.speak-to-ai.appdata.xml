@@ -47,26 +47,18 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.4.1" date="2025-12-25">
+    <release version="1.4.2" date="2025-12-29">
       <description>
-        <p>Performance and architecture improvements.</p>
+        <p>Code quality and build improvements.</p>
         <ul>
-          <li>Hotkey rebind optimization: latency reduced from ~1-2s to ~100ms</li>
-          <li>Deterministic shutdown with per-component goroutine ownership</li>
-          <li>Architecture cleanup: DIP compliance, removed Flatpak support</li>
+          <li>Concurrency cleanup: standard WaitGroup patterns replace custom tracker</li>
+          <li>AppImage build refactoring: simplified script, extracted AppRun template</li>
+          <li>Updated supported distributions documentation for glibc 2.35+</li>
         </ul>
       </description>
     </release>
-    <release version="1.4.0" date="2025-12-15">
-      <description>
-        <p>Full multi-language support with all 99 Whisper-supported languages.</p>
-        <ul>
-          <li>All Whisper languages: From Afrikaans to Yoruba, complete language coverage</li>
-          <li>Alphabetical grouping: Easy navigation with A-Z submenus</li>
-          <li>Quick reference: Current language displayed at menu top</li>
-        </ul>
-      </description>
-    </release>
+    <release version="1.4.1" date="2025-12-25"/>
+    <release version="1.4.0" date="2025-12-15"/>
     <release version="1.3.4" date="2025-12-07"/>
     <release version="1.3.3" date="2025-11-27"/>
     <release version="1.3.2" date="2025-11-13"/>
