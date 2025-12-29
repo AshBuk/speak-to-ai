@@ -25,13 +25,19 @@ echo "=== Starting AppImage build for ${APP_NAME} v${APP_VERSION} ==="
 # Prepare build environment
 prepare_environment() {
     echo "Preparing environment..."
-    [ -f "bash-scripts/dev-env.sh" ] && source bash-scripts/dev-env.sh || true
-    [ ! -f "lib/whisper.h" ] && make internal-whisper-libs
+    if [ -f "bash-scripts/dev-env.sh" ]; then
+        source bash-scripts/dev-env.sh || true
+    fi
+    if [ ! -f "lib/whisper.h" ]; then
+        make internal-whisper-libs
+    fi
 }
 
 # Download Whisper model if missing
 download_model() {
-    [ -f "sources/language-models/small-q5_1.bin" ] && return
+    if [ -f "sources/language-models/small-q5_1.bin" ]; then
+        return
+    fi
     echo "Downloading Whisper small-q5_1 model..."
     mkdir -p sources/language-models
     curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
