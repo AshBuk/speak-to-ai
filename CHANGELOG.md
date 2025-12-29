@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2025-12-29
+
+### Improvements
+- **Concurrency cleanup:** Replace custom goroutine tracker with standard WaitGroup patterns ([#61](https://github.com/AshBuk/speak-to-ai/pull/61))
+- **AppImage build refactoring:** Extract AppRun template, simplify build script (-62% lines) ([#62](https://github.com/AshBuk/speak-to-ai/pull/62))
+- **Documentation:** Update supported distributions list for glibc 2.35+
+
+---
 ## [1.4.1] - 2025-12-24
 
 ### Improvements
