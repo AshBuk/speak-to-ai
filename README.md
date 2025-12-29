@@ -103,10 +103,14 @@ See changes: [CHANGELOG.md](CHANGELOG.md)
 
 ### System Requirements
 
-- **OS**: Linux (Ubuntu 20.04+, Fedora 35+, or similar)
+- **OS**: Linux with glibc 2.35+
+  - **Ubuntu-based:** Ubuntu 22.04+, Linux Mint 21+, Pop!_OS 22.04+, Elementary OS 7+, Zorin OS 17+
+  - **Debian-based:** Debian 12+
+  - **Fedora:** Fedora 36+
+  - **Rolling release:** Arch Linux, Manjaro, EndeavourOS, openSUSE Tumbleweed
 - **Desktop**: X11 or Wayland environment
 - **Audio**: Microphone/recording capability
-- **Storage**: 277.4MB (whisper small q5 model, dependencies, go-binary)
+- **Storage**: ~277MB (Whisper small-q5 model + dependencies)
 - **Memory**: ~300MB RAM during operation
 - **CPU**: AVX-capable processor (Intel/AMD 2011+)
 
