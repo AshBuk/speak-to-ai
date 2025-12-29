@@ -4,14 +4,14 @@
 
 | Metric | Value |
 | --- | --- |
-| **Go files (total)** | 131 |
+| **Go files (total)** | 129 |
 | **Production files** | 83 |
-| **Test files** | 43 |
-| **Mock files** | 6 |
-| **Production code** | 10,301 LOC |
-| **Test code** | 10,059 LOC |
-| **Mock code** | 1,194 LOC |
-| **Total codebase** | 21,554 LOC |
+| **Test files** | 42 |
+| **Mock files** | 5 |
+| **Production code** | 10,396 LOC |
+| **Test code** | 9,943 LOC |
+| **Mock code** | 1,107 LOC |
+| **Total codebase** | 21,446 LOC |
 
 ---
 
@@ -19,10 +19,10 @@
 
 | Metric | Value |
 | --- | --- |
-| **Test/Production ratio** | 0.97 (97%) |
-| **Average production file size** | ~124 lines |
-| **Average test file size** | ~233 lines |
-| **Average mock file size** | ~199 lines |
+| **Test/Production ratio** | 0.95 (95%) |
+| **Average production file size** | ~125 lines |
+| **Average test file size** | ~237 lines |
+| **Average mock file size** | ~221 lines |
 | **Test coverage** | High (includes unit and integration tests) |
 | **golangci-lint warnings** | 0 |
 | **Goroutine leaks** | 0 |
@@ -33,6 +33,6 @@
 | Metric | Value |
 | --- | --- |
 | **Development time** | ~8 months (Apr 2024 - Dec 2025) |
-| **Total commits** | 353 |
+| **Total commits** | 379 |
 
-**Last Updated:** 2025-12-21 (based on commit c0eecba)
+**Last Updated:** 2025-12-29 (based on commit f55a04d)
