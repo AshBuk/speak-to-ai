@@ -47,7 +47,7 @@ setup_first_launch() {
 # Desktop integration
 integrate_desktop() {
     local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
-    local icon_dir="${HOME}/.local/share/icons/hicolor/256x256/apps"
+    local icon_dir="${HOME}/.local/share/icons/hicolor/128x128/apps"
 
     if [ -f "$desktop_file" ]; then
         return
@@ -73,7 +73,7 @@ Terminal=false
 StartupNotify=true
 EOF
     chmod +x "$desktop_file"
-    cp "${HERE}/speak-to-ai.png" "$icon_dir/" 2>/dev/null || true
+    cp "${HERE}/io.github.ashbuk.speak-to-ai.png" "$icon_dir/speak-to-ai.png" 2>/dev/null || true
     command -v update-desktop-database >/dev/null 2>&1 && \
         update-desktop-database "${HOME}/.local/share/applications" 2>/dev/null || true
 }

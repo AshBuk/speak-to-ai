@@ -78,15 +78,14 @@ build_appdir() {
     cp "io.github.ashbuk.speak-to-ai.desktop" "${APPDIR}/usr/share/applications/${APP_NAME}.desktop"
     cp "io.github.ashbuk.speak-to-ai.appdata.xml" "${APPDIR}/usr/share/metainfo/${APP_NAME}.appdata.xml"
     # Copy icon with name matching Icon= field in .desktop file
-    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/io.github.ashbuk.speak-to-ai.png"
-    # Also copy as short name for compatibility
-    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+    mkdir -p "${APPDIR}/usr/share/icons/hicolor/128x128/apps"
+    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png"
+    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"
 
     # Create symlinks for AppImage standard
     ln -sf "usr/share/applications/${APP_NAME}.desktop" "${APPDIR}/${APP_NAME}.desktop"
-    ln -sf "usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "${APPDIR}/${APP_NAME}.png"
-    # Icon name must match Icon= field in .desktop file
-    ln -sf "usr/share/icons/hicolor/256x256/apps/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/io.github.ashbuk.speak-to-ai.png"
+    ln -sf "usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" "${APPDIR}/${APP_NAME}.png"
+    ln -sf "usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/io.github.ashbuk.speak-to-ai.png"
 }
 
 # Download AppImage tools

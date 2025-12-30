@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Speak-to-AI
-Comment=Offline speech-to-text for AI assistants
+Name=Speak to AI
+Comment=Offline STT
 Exec=speak-to-ai
 Icon=io.github.ashbuk.speak-to-ai
 Type=Application
-Categories=Utility;AudioVideo;Office;
-Keywords=speech;voice;transcription;ai;whisper;offline;privacy;copilot;
+Categories=AudioVideo;Audio;Utility;Accessibility;
+Keywords=speech;voice;transcription;ai;whisper;offline;privacy;
 Terminal=false
 StartupNotify=true
