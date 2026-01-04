@@ -14,8 +14,8 @@ OUTPUT_DIR="dist"
 APPDIR="${OUTPUT_DIR}/${APP_NAME}.AppDir"
 TOOLS_DIR="$(pwd)/tools"
 # Determine script directory (works both locally and in Docker)
-if [ -f "bash-scripts/AppRun" ]; then
-    SCRIPT_DIR="$(pwd)/bash-scripts"
+if [ -f "packaging/appimage/AppRun" ]; then
+    SCRIPT_DIR="$(pwd)/packaging/appimage"
 else
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi

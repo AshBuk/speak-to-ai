@@ -11,7 +11,7 @@ Concise commands for local development and CI-compatible builds.
 - Isolated whisper.cpp compilation
 
 ```
-Makefile → bash-scripts/ → docker/ → CI/CD
+Makefile → packaging/ → docker/ → CI/CD
    ↑           ↑            ↑        ↑
 simple     orchestration containers production
 command    dependencies
@@ -40,8 +40,10 @@ make check-tools           # Verify required tools (local check)
 ### 2. Bash Scripts - Orchestration & Dependencies
 Handle complex build logic and dependency management:
 ```bash
-bash-scripts/build-appimage.sh     # AppImage creation with linuxdeploy fallbacks
-bash-scripts/dev-env.sh           # CGO environment configuration
+packaging/appimage/build-appimage.sh  # AppImage creation with linuxdeploy fallbacks
+packaging/fedora/speak-to-ai.spec     # RPM spec for Fedora/RHEL
+packaging/fedora/create-srpm.sh       # SRPM creation script
+bash-scripts/dev-env.sh               # CGO environment configuration
 ```
 
 ### 3. Docker - Containers

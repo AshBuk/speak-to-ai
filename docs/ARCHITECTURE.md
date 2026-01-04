@@ -211,6 +211,11 @@ Related constants:
 
 ### **Build & Packaging**
 
+#### Packaging (`packaging/`)
+Distribution-specific packaging scripts and configurations:
+- `appimage/` - AppImage build scripts
+- `fedora/` - RPM spec and SRPM creation for Fedora/RHEL
+
 #### Bash Scripts (`bash-scripts/`)
 - **`build-appimage.sh`**: AppImage creation with dependencies
 - **`check-license-headers.sh`**: License compliance validation
@@ -241,4 +246,4 @@ Related constants:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2025-12-21*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2026-01-04*
