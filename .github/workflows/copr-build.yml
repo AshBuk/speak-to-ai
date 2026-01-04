@@ -1,0 +1,91 @@
+name: COPR Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-srpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:43
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          dnf install -y golang rpm-build rpmlint curl copr-cli
+
+      - name: Vendor Go dependencies
+        run: go mod vendor
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Update spec version
+        run: |
+          sed -i "s/^%global app_version.*/%global app_version     ${{ steps.version.outputs.VERSION }}/" \
+            packaging/fedora/speak-to-ai.spec
+
+      - name: Lint spec file
+        run: rpmlint -f packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
+
+      - name: Create SRPM
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          
+          # Copy spec
+          cp packaging/fedora/speak-to-ai.spec ~/rpmbuild/SPECS/
+          
+          # Create vendored tarball
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          tar --transform "s,^,speak-to-ai-${VERSION}/," \
+              --exclude='.git' \
+              --exclude='build' \
+              --exclude='dist' \
+              --exclude='lib' \
+              -czf ~/rpmbuild/SOURCES/speak-to-ai-${VERSION}-vendored.tar.gz \
+              cmd/ config/ hotkeys/ audio/ whisper/ output/ websocket/ internal/ \
+              vendor/ \
+              go.mod go.sum \
+              Makefile LICENSE README.md CHANGELOG.md \
+              config.yaml \
+              io.github.ashbuk.speak-to-ai.desktop \
+              io.github.ashbuk.speak-to-ai.appdata.xml \
+              icons/ docs/ packaging/
+          
+          # Download whisper.cpp
+          WHISPER_VERSION=$(grep -E '^%global whisper_version' packaging/fedora/speak-to-ai.spec | awk '{print $3}')
+          curl -L -o ~/rpmbuild/SOURCES/whisper-cpp-${WHISPER_VERSION}.tar.gz \
+            "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v${WHISPER_VERSION}.tar.gz"
+          
+          # Build SRPM
+          rpmbuild -bs ~/rpmbuild/SPECS/speak-to-ai.spec
+
+      - name: Upload SRPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: srpm
+          path: ~/rpmbuild/SRPMS/*.src.rpm
+
+      - name: Submit to COPR
+        env:
+          COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
+        run: |
+          # Configure copr-cli
+          mkdir -p ~/.config
+          cat > ~/.config/copr <<EOF
+          [copr-cli]
+          copr_url = https://copr.fedorainfracloud.org
+          login = ${{ secrets.COPR_LOGIN }}
+          username = ${{ secrets.COPR_USERNAME }}
+          token = ${COPR_API_TOKEN}
+          EOF
+          chmod 600 ~/.config/copr
+          
+          # Submit build
+          SRPM=~/rpmbuild/SRPMS/speak-to-ai-${{ steps.version.outputs.VERSION }}-1.fc43.src.rpm
+          copr-cli build speak-to-ai "$SRPM"
