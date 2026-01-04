@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install rpmlint
-        run: dnf install -y rpmlint
+        run: dnf install -y rpmlint glibc-langpack-en
 
       - name: Lint spec file
-        run: rpmlint -f packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
+        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec

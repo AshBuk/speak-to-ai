@@ -1,14 +1,8 @@
 # rpmlint configuration for speak-to-ai
-# Suppress known/expected warnings
 
-# We intentionally bundle whisper.cpp (declared with Provides: bundled())
-addFilter("W: devel-file-in-non-devel-package")
-
-# Go binary is statically linked, large size expected
-addFilter("W: file-contains-date-and-time")
-
-# Private lib directory is intentional for bundled whisper libs
-addFilter("W: hidden-file-or-dir")
-
-# We use ExclusiveArch: x86_64 intentionally (whisper.cpp AVX optimizations)
-addFilter("W: arch-dependent-file-in-usr-share")
+Filters = [
+    # Source0 is a local vendored tarball, not a URL
+    ".*invalid-url Source0.*",
+    # Locale warning in CI container (not our issue)
+    ".*specfile-warning.*setlocale.*",
+]

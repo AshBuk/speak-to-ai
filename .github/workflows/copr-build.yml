@@ -16,7 +16,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          dnf install -y golang rpm-build rpmlint curl copr-cli
+          dnf install -y golang rpm-build rpmlint curl copr-cli glibc-langpack-en
 
       - name: Vendor Go dependencies
         run: go mod vendor
@@ -31,7 +31,7 @@ jobs:
             packaging/fedora/speak-to-ai.spec
 
       - name: Lint spec file
-        run: rpmlint -f packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
+        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
 
       - name: Create SRPM
         run: |
