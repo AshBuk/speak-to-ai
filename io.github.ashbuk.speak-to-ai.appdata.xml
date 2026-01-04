@@ -12,7 +12,7 @@
       using the Whisper model locally for speech recognition.
     </p>
     <p>
-      📋 For system tray integration on GNOME (install AppIndicator extension) and automatic typing on Wayland (setup ydotool),
+      For system tray integration on GNOME (install AppIndicator extension) and automatic typing on Wayland (setup ydotool),
       see <a href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/Desktop_Environment_Support.md">Desktop Environment Support Guide</a>.
     </p>
     <p>Features:</p>
@@ -30,10 +30,6 @@
     <screenshot type="default">
       <caption>Quick demo: Voice recording and automatic text output</caption>
       <video>https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587</video>
-    </screenshot>
-    <screenshot>
-      <caption>System tray integration with recording status indicators</caption>
-      <image>https://raw.githubusercontent.com/AshBuk/speak-to-ai/master/icons/io.github.ashbuk.speak-to-ai.png</image>
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/AshBuk/speak-to-ai</url>
