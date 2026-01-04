@@ -135,7 +135,7 @@ appimage:
 appimage-host: build
 	@echo "=== Building AppImage locally (host environment) ==="
 	@echo "⚠️  Warning: This requires linuxdeploy and appimagetool installed on host"
-	bash bash-scripts/build-appimage.sh
+	bash packaging/appimage/build-appimage.sh
 
 # Clean build artifacts
 clean:

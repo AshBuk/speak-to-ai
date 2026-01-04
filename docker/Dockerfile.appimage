@@ -45,9 +45,10 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p lib sources build dist
 
-# Build script for AppImage (use unified script from bash-scripts)
-COPY bash-scripts/build-appimage.sh /usr/local/bin/build-appimage.sh
-RUN chmod +x /usr/local/bin/build-appimage.sh
+# Build script and template for AppImage
+COPY packaging/appimage/build-appimage.sh /usr/local/bin/build-appimage.sh
+COPY packaging/appimage/AppRun /usr/local/bin/AppRun
+RUN chmod +x /usr/local/bin/build-appimage.sh /usr/local/bin/AppRun
 
 # Set environment variables for CGO
 ENV CGO_ENABLED=1
