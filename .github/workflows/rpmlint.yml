@@ -1,0 +1,25 @@
+name: RPM Spec Lint
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'packaging/fedora/**'
+  pull_request:
+    paths:
+      - 'packaging/fedora/**'
+
+jobs:
+  rpmlint:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:43
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install rpmlint
+        run: dnf install -y rpmlint
+
+      - name: Lint spec file
+        run: rpmlint -f packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
