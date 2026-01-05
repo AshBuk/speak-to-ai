@@ -60,7 +60,7 @@ Recommends:     wl-clipboard
 # Text input automation (X11: xdotool, Wayland: ydotool or wtype)
 Requires:       xdotool
 Recommends:     ydotool
-Suggests:       wtype
+Recommends:     wtype
 
 # Desktop notifications
 Requires:       libnotify
