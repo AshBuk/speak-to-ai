@@ -8,8 +8,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SPEC_FILE="$SCRIPT_DIR/speak-to-ai.spec"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-# Parse version from spec file
-APP_VERSION=$(grep -E '^%global app_version' "$SPEC_FILE" | awk '{print $3}')
+# Get version from git tag (single source of truth)
+APP_VERSION_RAW="${APP_VERSION:-${GITHUB_REF_NAME:-$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")}}"
+APP_VERSION=$(echo "${APP_VERSION_RAW}" | sed 's/^v//')
+
+# Patch spec file with version from git tag
+sed -i "s/^%global app_version.*/%global app_version     ${APP_VERSION}/" "$SPEC_FILE"
+
 WHISPER_VERSION=$(grep -E '^%global whisper_version' "$SPEC_FILE" | awk '{print $3}')
 
 echo "=== Creating SRPM for speak-to-ai v${APP_VERSION} ==="
