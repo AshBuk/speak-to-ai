@@ -37,13 +37,21 @@ make gosec                 # Run security scanner (SAST)
 make check-tools           # Verify required tools (local check)
 ```
 
-### 2. Bash Scripts - Orchestration & Dependencies
-Handle complex build logic and dependency management:
+### 2. Packaging Scripts
+Handle complex build logic and package creation:
 ```bash
-packaging/appimage/build-appimage.sh  # AppImage creation with linuxdeploy fallbacks
-packaging/fedora/speak-to-ai.spec     # RPM spec for Fedora/RHEL
-packaging/fedora/create-srpm.sh       # SRPM creation script
-bash-scripts/dev-env.sh               # CGO environment configuration
+packaging/
+├── appimage/
+│   ├── AppRun                    # AppImage entrypoint
+│   └── build-appimage.sh         # AppImage creation with linuxdeploy
+├── arch/
+│   └── PKGBUILD                  # Arch Linux AUR package
+└── fedora/
+    ├── speak-to-ai.spec          # RPM spec for Fedora/RHEL
+    ├── create-srpm.sh            # SRPM creation script
+    └── .rpmlintrc                # rpmlint configuration
+
+bash-scripts/dev-env.sh           # CGO environment configuration
 ```
 
 ### 3. Docker - Containers
@@ -62,7 +70,16 @@ make docker-clean-all  # Clean everything including images
 ```
 
 ### 4. CI/CD - Production
-GitHub Actions handle complex builds, releases, and distribution.
+GitHub Actions handle complex builds, releases, and distribution:
+```
+.github/workflows/
+├── ci.yml                  # Main CI (lint, test, build)
+├── lint-arch.yml           # PKGBUILD validation (namcap)
+├── lint-rpm.yml            # Spec validation (rpmlint)
+├── release-appimage.yml    # AppImage build & GitHub Release
+├── release-arch.yml        # AUR publish (on tag)
+└── release-fedora.yml      # COPR submit (on tag)
+```
 
 ### Test Types & Current Coverage 
 
@@ -114,4 +131,4 @@ hotkeys/
 
 See [`config.yaml`](../config.yaml) for the complete configuration file with all available options and detailed comments.
 
-*Last updated: 2025-10-31*
+*Last updated: 2026-01-06*
