@@ -1,4 +1,4 @@
-name: Build Releases
+name: Release AppImage
 
 on:
   push:
@@ -141,8 +141,8 @@ jobs:
       env:
         APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
-        chmod +x bash-scripts/build-appimage.sh
-        bash -x bash-scripts/build-appimage.sh
+        chmod +x packaging/appimage/build-appimage.sh
+        bash -x packaging/appimage/build-appimage.sh
         
     - name: Verify AppImage
       run: |

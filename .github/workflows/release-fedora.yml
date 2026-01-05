@@ -1,4 +1,4 @@
-name: COPR Build
+name: Release Fedora
 
 on:
   push:

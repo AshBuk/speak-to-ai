@@ -1,4 +1,4 @@
-name: RPM Spec Lint
+name: Lint RPM
 
 on:
   push:
