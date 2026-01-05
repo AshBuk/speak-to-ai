@@ -1,0 +1,86 @@
+name: Release Arch
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  aur-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Generate checksums
+        id: checksums
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          WHISPER_VERSION=$(grep -E '^_whisper_version=' packaging/arch/PKGBUILD | cut -d= -f2)
+
+          # Download and checksum main source
+          curl -sL -o source.tar.gz \
+            "https://github.com/AshBuk/speak-to-ai/archive/refs/tags/v${VERSION}.tar.gz"
+          MAIN_SHA256=$(sha256sum source.tar.gz | cut -d' ' -f1)
+
+          # Download and checksum whisper.cpp
+          curl -sL -o whisper.tar.gz \
+            "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v${WHISPER_VERSION}.tar.gz"
+          WHISPER_SHA256=$(sha256sum whisper.tar.gz | cut -d' ' -f1)
+
+          echo "MAIN_SHA256=${MAIN_SHA256}" >> $GITHUB_OUTPUT
+          echo "WHISPER_SHA256=${WHISPER_SHA256}" >> $GITHUB_OUTPUT
+
+          rm -f source.tar.gz whisper.tar.gz
+
+      - name: Update PKGBUILD version and checksums
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          MAIN_SHA256="${{ steps.checksums.outputs.MAIN_SHA256 }}"
+          WHISPER_SHA256="${{ steps.checksums.outputs.WHISPER_SHA256 }}"
+
+          cd packaging/arch
+
+          # Update version
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+          # Update checksums
+          sed -i "s/'SKIP'  # TODO: Update on release/'${MAIN_SHA256}'/" PKGBUILD
+          sed -i "s/'SKIP'  # whisper.cpp checksum/'${WHISPER_SHA256}'/" PKGBUILD
+
+      - name: Generate .SRCINFO
+        uses: docker://archlinux:latest
+        with:
+          entrypoint: /bin/bash
+          args: |
+            -c "
+              pacman -Syu --noconfirm pacman-contrib
+              cd packaging/arch
+              makepkg --printsrcinfo > .SRCINFO
+            "
+
+      - name: Lint PKGBUILD
+        uses: docker://archlinux:latest
+        with:
+          entrypoint: /bin/bash
+          args: |
+            -c "
+              pacman -Syu --noconfirm namcap
+              namcap packaging/arch/PKGBUILD
+            "
+
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
+        with:
+          pkgname: speak-to-ai
+          pkgbuild: packaging/arch/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to ${{ steps.version.outputs.VERSION }}"
+          force_push: false
