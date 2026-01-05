@@ -1,0 +1,31 @@
+name: Lint Arch
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'packaging/arch/**'
+  pull_request:
+    paths:
+      - 'packaging/arch/**'
+
+jobs:
+  namcap:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install namcap
+        run: pacman -Syu --noconfirm namcap pacman-contrib
+
+      - name: Lint PKGBUILD
+        run: namcap packaging/arch/PKGBUILD
+
+      - name: Validate .SRCINFO generation
+        run: |
+          cd packaging/arch
+          makepkg --printsrcinfo > .SRCINFO.test
+          echo "SRCINFO generated successfully"
