@@ -26,6 +26,8 @@ jobs:
 
       - name: Validate .SRCINFO generation
         run: |
-          cd packaging/arch
-          makepkg --printsrcinfo > .SRCINFO.test
+          useradd -m builder
+          cp -r packaging/arch /home/builder/
+          chown -R builder:builder /home/builder/arch
+          su builder -c 'cd /home/builder/arch && makepkg --printsrcinfo > .SRCINFO'
           echo "SRCINFO generated successfully"
