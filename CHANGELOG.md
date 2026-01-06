@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-01-06
+
+### Features
+- **Version flag:** Added `--version` / `-v` flag to display version information
+- **Package repositories:** Official packages now available for Arch Linux (AUR) and Fedora (COPR)
+
+### Installation
+- **Arch Linux (AUR):** `yay -S speak-to-ai`
+- **Fedora (COPR):** `sudo dnf copr enable ashbuk/speak-to-ai && sudo dnf install speak-to-ai`
+
+---
 ## [1.4.2] - 2025-12-29
 
 ### Improvements

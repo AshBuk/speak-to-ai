@@ -74,12 +74,23 @@ Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-
 
 ```bash
 # Download the file, then:
- chmod +x speak-to-ai-*.AppImage
- # Ensure user is in input group for hotkeys to work:
- sudo usermod -a -G input $USER
- # then logout/login or reboot
- # Open via GUI or with terminal command:
- ./speak-to-ai-*.AppImage
+chmod +x speak-to-ai-*.AppImage
+# Ensure user is in input group for hotkeys to work:
+sudo usermod -a -G input $USER
+# then logout/login or reboot
+# Open via GUI or with terminal command:
+./speak-to-ai-*.AppImage
+```
+
+### Arch Linux [AUR](https://aur.archlinux.org/packages/speak-to-ai):
+```bash
+yay -S speak-to-ai
+```
+
+### Fedora [COPR](https://copr.fedorainfracloud.org/coprs/ashbuk/speak-to-ai/):
+```bash
+sudo dnf copr enable ashbuk/speak-to-ai
+sudo dnf install speak-to-ai
 ```
 
 ## Desktop Environment Compatibility
