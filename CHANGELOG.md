@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [1.5.1] - 2026-01-06
 
 ### Features
-- **Support runtime model download for Fedora/Arch builds:** Whisper small-q5_1 model is downloaded to `~/.local/share/speak-to-ai/models/` on first run if not found in bundled locations
+- **Runtime model download:** Whisper small-q5_1 model auto-downloads to `~/.local/share/speak-to-ai/models/` on first run
+
+### Fixes
+- **D-Bus GlobalShortcuts:** Fix race condition - subscribe to Response signal before CreateSession call
+- **System tray icon:** Load icon from XDG system paths for native packages (RPM/AUR)
+- **Show Config:** Create default config file if it doesn't exist instead of failing silently
 
 ---
 ## [1.5.0] - 2026-01-06
