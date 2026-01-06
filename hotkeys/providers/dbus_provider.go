@@ -194,27 +194,38 @@ func convertHotkeyToAccelerator(hotkey string) string {
 func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 
+	// Generate unique token for this request
+	handleToken := fmt.Sprintf("speak_to_ai_%d", time.Now().UnixNano())
+	sessionHandleToken := fmt.Sprintf("speak_to_ai_session_%d", time.Now().UnixNano())
+
+	// Build expected request path from sender name and token
+	senderName := strings.ReplaceAll(p.conn.Names()[0], ".", "_")
+	senderName = strings.TrimPrefix(senderName, ":")
+	expectedRequestPath := dbus.ObjectPath(fmt.Sprintf("/org/freedesktop/portal/desktop/request/%s/%s", senderName, handleToken))
+
+	p.logger.Info("DBus: Expected request path: %s", expectedRequestPath)
+
+	// Subscribe to Response signal BEFORE calling CreateSession to avoid race condition
+	signalChan := make(chan *dbus.Signal, 1)
+	p.conn.Signal(signalChan)
+
+	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.Request',member='Response',path='%s'", expectedRequestPath)
+	if err := p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule).Err; err != nil {
+		return fmt.Errorf("failed to add match rule: %w", err)
+	}
+
 	// Step 1: Create a session using Request/Response pattern
 	sessionOptions := map[string]dbus.Variant{
-		"handle_token":         dbus.MakeVariant("speak_to_ai_session"),
-		"session_handle_token": dbus.MakeVariant("speak_to_ai_session_handle"),
+		"handle_token":         dbus.MakeVariant(handleToken),
+		"session_handle_token": dbus.MakeVariant(sessionHandleToken),
 	}
 	call := obj.Call("org.freedesktop.portal.GlobalShortcuts.CreateSession", 0, sessionOptions)
 	if call.Err != nil {
 		return fmt.Errorf("failed to create GlobalShortcuts session: %w", call.Err)
 	}
-	// Get the request handle from the call
-	if len(call.Body) == 0 {
-		return fmt.Errorf("no request handle returned from CreateSession")
-	}
-
-	requestHandle, ok := call.Body[0].(dbus.ObjectPath)
-	if !ok {
-		return fmt.Errorf("invalid request handle type from CreateSession")
-	}
 
 	// Wait for the Response signal to get the session handle
-	sessionHandle, err := p.waitForSessionResponse(requestHandle)
+	sessionHandle, err := p.waitForSessionResponseOnChannel(signalChan, expectedRequestPath)
 	if err != nil {
 		return fmt.Errorf("failed to get session handle: %w", err)
 	}
@@ -261,50 +272,50 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	return nil
 }
 
-// Wait for the Response signal from a CreateSession request
-func (p *DbusKeyboardProvider) waitForSessionResponse(requestHandle dbus.ObjectPath) (string, error) {
-	// Subscribe to the Response signal
-	rule := fmt.Sprintf("type='signal',interface='org.freedesktop.portal.Request',member='Response',path='%s'", requestHandle)
-	err := p.conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0, rule).Err
-	if err != nil {
-		return "", fmt.Errorf("failed to add match rule: %w", err)
-	}
-	// Create a channel to receive the signal
-	c := make(chan *dbus.Signal, 1)
-	p.conn.Signal(c)
-	// Wait for the Response signal with a timeout
+// Wait for the Response signal on a pre-subscribed channel
+func (p *DbusKeyboardProvider) waitForSessionResponseOnChannel(signalChan chan *dbus.Signal, expectedPath dbus.ObjectPath) (string, error) {
 	timeout := time.After(5 * time.Second)
-	select {
-	case sig := <-c:
-		if sig.Name == "org.freedesktop.portal.Request.Response" && sig.Path == requestHandle {
-			if len(sig.Body) >= 2 {
-				// Body[0] is response code, Body[1] is results
-				responseCode, ok := sig.Body[0].(uint32)
-				if !ok || responseCode != 0 {
-					return "", fmt.Errorf("CreateSession request failed with code %v", responseCode)
-				}
+	for {
+		select {
+		case sig := <-signalChan:
+			p.logger.Info("DBus: Received signal %s on path %s", sig.Name, sig.Path)
+			if sig.Name == "org.freedesktop.portal.Request.Response" && sig.Path == expectedPath {
+				if len(sig.Body) >= 2 {
+					// Body[0] is response code, Body[1] is results
+					// Response codes: 0=success, 1=user cancelled, 2=other error/rejected
+					responseCode, ok := sig.Body[0].(uint32)
+					if !ok || responseCode != 0 {
+						if responseCode == 1 {
+							return "", fmt.Errorf("user cancelled the permission dialog")
+						}
+						if responseCode == 2 {
+							return "", fmt.Errorf("permission denied - GlobalShortcuts requires app to be installed or user approval")
+						}
+						return "", fmt.Errorf("CreateSession request failed with code %v", responseCode)
+					}
 
-				results, ok := sig.Body[1].(map[string]dbus.Variant)
-				if !ok {
-					return "", fmt.Errorf("invalid results format in Response signal")
-				}
+					results, ok := sig.Body[1].(map[string]dbus.Variant)
+					if !ok {
+						return "", fmt.Errorf("invalid results format in Response signal")
+					}
 
-				sessionHandleVariant, exists := results["session_handle"]
-				if !exists {
-					return "", fmt.Errorf("session_handle not found in Response results")
-				}
+					sessionHandleVariant, exists := results["session_handle"]
+					if !exists {
+						return "", fmt.Errorf("session_handle not found in Response results")
+					}
 
-				sessionHandle, ok := sessionHandleVariant.Value().(string)
-				if !ok {
-					return "", fmt.Errorf("invalid session_handle type in Response results")
-				}
+					sessionHandle, ok := sessionHandleVariant.Value().(string)
+					if !ok {
+						return "", fmt.Errorf("invalid session_handle type in Response results")
+					}
 
-				return sessionHandle, nil
+					return sessionHandle, nil
+				}
 			}
+			// Continue waiting for the expected signal
+		case <-timeout:
+			return "", fmt.Errorf("timeout waiting for CreateSession response")
 		}
-		return "", fmt.Errorf("unexpected signal received: %s", sig.Name)
-	case <-timeout:
-		return "", fmt.Errorf("timeout waiting for CreateSession response")
 	}
 }
 
