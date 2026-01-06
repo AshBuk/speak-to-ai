@@ -60,8 +60,10 @@ jobs:
           args: |
             -c "
               pacman -Syu --noconfirm pacman-contrib
+              useradd -m builder
+              chown -R builder:builder packaging/arch
               cd packaging/arch
-              makepkg --printsrcinfo > .SRCINFO
+              su builder -c 'makepkg --printsrcinfo > .SRCINFO'
             "
 
       - name: Lint PKGBUILD

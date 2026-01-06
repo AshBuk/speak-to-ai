@@ -134,7 +134,7 @@ jobs:
         echo "Library structure:"
         ls -la lib/
         echo "AppImage script exists:"
-        ls -la bash-scripts/build-appimage.sh
+        ls -la packaging/appimage/build-appimage.sh
         echo "========================"
         
     - name: Build AppImage
