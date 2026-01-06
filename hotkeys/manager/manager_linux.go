@@ -59,19 +59,19 @@ func selectAppImageProvider(logger logger.Logger) interfaces.KeyboardEventProvid
 
 // Select the provider for a standard system environment
 func selectSystemProvider(logger logger.Logger) interfaces.KeyboardEventProvider {
-	// Try D-Bus first, as it works without root permissions on modern desktops
+	// Try evdev first - more reliable, works if user is in 'input' group
+	if evdevProvider := providers.NewEvdevKeyboardProvider(logger); evdevProvider.IsSupported() {
+		logger.Info("Using evdev keyboard provider")
+		return evdevProvider
+	}
+	logger.Info("evdev not available (user not in 'input' group?), trying D-Bus...")
+	// Fallback to D-Bus GlobalShortcuts portal
 	if dbusProvider := providers.NewDbusKeyboardProvider(logger); dbusProvider.IsSupported() {
 		logger.Info("Using D-Bus keyboard provider (GNOME/KDE)")
 		return dbusProvider
 	}
-	logger.Info("D-Bus GlobalShortcuts portal not available, trying evdev...")
-	// Fallback to evdev if D-Bus is not available
-	if evdevProvider := providers.NewEvdevKeyboardProvider(logger); evdevProvider.IsSupported() {
-		logger.Info("Using evdev keyboard provider (requires root permissions)")
-		return evdevProvider
-	}
 
-	logger.Info("evdev not available, hotkeys will be disabled")
+	logger.Info("No hotkey provider available")
 	return createFallbackProvider(logger)
 }
 
