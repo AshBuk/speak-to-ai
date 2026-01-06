@@ -17,7 +17,7 @@ import (
 // GetIconMicOff returns the binary data for the microphone-off icon
 func GetIconMicOff(loggers ...logger.Logger) []byte {
 	logSink := resolveLogger(loggers...)
-	if data, ok := loadIconFromAppImage(); ok {
+	if data, ok := loadIconFromSystem(); ok {
 		return data
 	}
 	return mustDecodeIcon(iconMicOffBase64, logSink)
@@ -26,7 +26,7 @@ func GetIconMicOff(loggers ...logger.Logger) []byte {
 // GetIconMicOn returns the binary data for the microphone-on icon
 func GetIconMicOn(loggers ...logger.Logger) []byte {
 	logSink := resolveLogger(loggers...)
-	if data, ok := loadIconFromAppImage(); ok {
+	if data, ok := loadIconFromSystem(); ok {
 		return data
 	}
 	return mustDecodeIcon(iconMicOnBase64, logSink)
@@ -59,16 +59,31 @@ func mustDecodeIcon(encoded string, logSink logger.Logger) []byte {
 	return buf.Bytes()
 }
 
-// loadIconFromAppImage tries to load an icon shipped inside the AppImage
-func loadIconFromAppImage() ([]byte, bool) {
-	appDir := os.Getenv("APPDIR")
-	if appDir == "" {
-		return nil, false
+// loadIconFromSystem tries to load an icon from system paths (AppImage, XDG, native installs)
+func loadIconFromSystem() ([]byte, bool) {
+	var candidates []string
+
+	// AppImage paths
+	if appDir := os.Getenv("APPDIR"); appDir != "" {
+		candidates = append(candidates,
+			filepath.Join(appDir, "speak-to-ai.png"),
+			filepath.Join(appDir, "usr/share/icons/hicolor/256x256/apps/speak-to-ai.png"),
+		)
 	}
-	candidates := []string{
-		filepath.Join(appDir, "speak-to-ai.png"),
-		filepath.Join(appDir, "usr/share/icons/hicolor/256x256/apps/speak-to-ai.png"),
+
+	// XDG data paths for native packages (RPM, DEB, etc.)
+	// Note: systray only supports PNG format, not SVG
+	xdgDataDirs := os.Getenv("XDG_DATA_DIRS")
+	if xdgDataDirs == "" {
+		xdgDataDirs = "/usr/local/share:/usr/share"
 	}
+	for _, dir := range filepath.SplitList(xdgDataDirs) {
+		candidates = append(candidates,
+			filepath.Join(dir, "icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png"),
+			filepath.Join(dir, "icons/hicolor/256x256/apps/io.github.ashbuk.speak-to-ai.png"),
+		)
+	}
+
 	for _, p := range candidates {
 		clean := filepath.Clean(p)
 		if data, err := os.ReadFile(clean); err == nil && len(data) > 0 {
