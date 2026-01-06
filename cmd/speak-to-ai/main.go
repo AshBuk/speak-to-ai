@@ -17,6 +17,13 @@ import (
 func main() {
 	args := os.Args[1:]
 
+	// Handle --version / -v before anything else
+	for _, arg := range args {
+		if isVersionFlag(arg) {
+			printVersion()
+		}
+	}
+
 	if handled, exitCode := maybeRunCLI(args); handled {
 		os.Exit(exitCode)
 	}
