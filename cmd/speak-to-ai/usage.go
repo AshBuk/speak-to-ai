@@ -57,7 +57,7 @@ func reportUsageError(err error) {
 
 func printCombinedUsage(w io.Writer, daemonFS *flag.FlagSet) {
 	name := filepath.Base(os.Args[0])
-	if _, err := fmt.Fprintf(w, "Usage:\n  %s [daemon flags]\n  %s [CLI flags] <start|stop|status|transcript>\n\n", name, name); err != nil {
+	if _, err := fmt.Fprintf(w, "Usage:\n  %s [daemon flags]\n  %s [CLI flags] <start|stop|status|transcript>\n  %s --version\n\n", name, name, name); err != nil {
 		reportUsageError(err)
 		return
 	}
