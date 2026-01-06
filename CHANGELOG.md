@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2026-01-06
+
+### Features
+- **Support runtime model download for Fedora/Arch builds:** Whisper small-q5_1 model is downloaded to `~/.local/share/speak-to-ai/models/` on first run if not found in bundled locations
+
+---
 ## [1.5.0] - 2026-01-06
 
 ### Features

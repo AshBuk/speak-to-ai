@@ -43,6 +43,14 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.5.1" date="2026-01-06">
+      <description>
+        <p>Auto-download model for package builds.</p>
+        <ul>
+          <li>Whisper model downloaded to ~/.local/share/speak-to-ai/models/ on first run</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.0" date="2026-01-06">
       <description>
         <p>Version flag and native package support.</p>
@@ -52,16 +60,7 @@
         </ul>
       </description>
     </release>
-    <release version="1.4.2" date="2025-12-29">
-      <description>
-        <p>Code quality and build improvements.</p>
-        <ul>
-          <li>Concurrency cleanup: standard WaitGroup patterns replace custom tracker</li>
-          <li>AppImage build refactoring: simplified script, extracted AppRun template</li>
-          <li>Updated supported distributions documentation for glibc 2.35+</li>
-        </ul>
-      </description>
-    </release>
+    <release version="1.4.2" date="2025-12-29"/>
     <release version="1.4.1" date="2025-12-25"/>
     <release version="1.4.0" date="2025-12-15"/>
     <release version="1.3.4" date="2025-12-07"/>

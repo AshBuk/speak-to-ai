@@ -11,7 +11,7 @@ import (
 
 // Version information - injected at build time via ldflags:
 //
-//	go build -ldflags "-X main.version=1.5.0"
+//	go build -ldflags "-X main.version=x.y.z"
 //
 // Defaults to "dev" for development builds.
 var version = "dev"

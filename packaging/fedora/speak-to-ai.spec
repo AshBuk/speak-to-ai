@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.5.0
+%global app_version     1.5.1
 %global go_version      1.21
 %global whisper_version 1.8.2
 
@@ -228,6 +228,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
+- Auto-download whisper model to ~/.local/share/speak-to-ai/models/ on first run
+
 * Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.0-1
 - Add --version flag for version information display
 
