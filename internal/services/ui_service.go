@@ -116,6 +116,14 @@ func (us *UIService) ShowConfigFile() error {
 		us.logger.Warning("Could not determine config file path")
 		return fmt.Errorf("could not determine config file path")
 	}
+	// Create config file with defaults if it doesn't exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		us.logger.Info("Config file does not exist, creating with defaults: %s", path)
+		if err := us.createDefaultConfig(path); err != nil {
+			us.logger.Error("Failed to create default config: %v", err)
+			return fmt.Errorf("failed to create config file: %w", err)
+		}
+	}
 	// Open with system handler using sanitized environment (AppImage-safe)
 	if err := us.openWithSystem(path); err != nil {
 		us.logger.Info("Config file open failed, trying directory: %v", err)
@@ -132,6 +140,23 @@ func (us *UIService) ShowConfigFile() error {
 		}
 	}
 	return nil
+}
+
+// Create a default config file at the specified path
+func (us *UIService) createDefaultConfig(path string) error {
+	// Ensure directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	// Use current config if available, otherwise create default
+	cfg := us.config
+	if cfg == nil {
+		cfg = &config.Config{}
+		config.SetDefaultConfig(cfg)
+	}
+	return config.SaveConfig(path, cfg)
 }
 
 // Open file with system handler while cleaning AppImage environment variables
