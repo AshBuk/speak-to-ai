@@ -21,8 +21,18 @@ type ModelManager interface {
 
 // Defines the contract for resolving the path to the small-q5_1 model
 type ModelPathResolver interface {
-	// Return the platform-specific path to the bundled model file
+	// Return the platform-specific path to the model file (searches multiple locations)
 	GetBundledModelPath() string
+	// Return the user data directory path for downloading the model
+	GetUserDataModelPath() string
+}
+
+// Defines the contract for downloading the whisper model
+type ModelDownloader interface {
+	// Download the model to the specified destination path
+	Download(destPath string) error
+	// Return the download URL
+	GetModelURL() string
 }
 
 // Represents a whisper.Model type without a direct CGO dependency
