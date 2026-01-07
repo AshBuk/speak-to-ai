@@ -20,8 +20,8 @@ func getDefaultConfigPath() string {
 	return filepath.Join(home, ".config", "speak-to-ai", "config.yaml")
 }
 
-// Check for an AppImage environment and, if detected,
-// modify the config file path to use the bundled configuration if available.
+// Check for an AppImage environment and log detection.
+// AppImage always uses XDG config path since AppImage filesystem is read-only.
 func adjustPathsForAppImage(logger logger.Logger, configPath string) string {
 	appImagePath := os.Getenv("APPIMAGE")
 	if appImagePath == "" {
@@ -34,20 +34,10 @@ func adjustPathsForAppImage(logger logger.Logger, configPath string) string {
 			appDir = filepath.Dir(argv0)
 		}
 	}
-	if appDir == "" {
-		logger.Warning("Running in AppImage but could not detect AppDir")
-		return configPath
+	if appDir != "" {
+		logger.Info("Running inside AppImage, base path: %s", appDir)
 	}
-	logger.Info("Running inside AppImage, base path: %s", appDir)
-
-	// For AppImage, prefer bundled config if using default path
-	defaultPath := getDefaultConfigPath()
-	if configPath == defaultPath || configPath == "config.yaml" {
-		bundledConfig := filepath.Join(appDir, "config.yaml")
-		if _, err := os.Stat(bundledConfig); err == nil {
-			logger.Info("Using AppImage bundled config: %s", bundledConfig)
-			return bundledConfig
-		}
-	}
-	return configPath
+	// AppImage filesystem is read-only (squashfs), always use XDG path for config
+	// This ensures config changes (rebind, language, etc.) can be saved
+	return getDefaultConfigPath()
 }
