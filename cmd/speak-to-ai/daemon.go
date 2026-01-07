@@ -86,7 +86,7 @@ type daemonOptions struct {
 // Returns parsed options or flag.ErrHelp if --help was requested
 func parseDaemonOptions(args []string) (*daemonOptions, error) {
 	opts := &daemonOptions{
-		configFile: "config.yaml",
+		configFile: getDefaultConfigPath(),
 	}
 
 	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError) // pls don't panic on parse error
