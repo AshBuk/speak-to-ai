@@ -43,23 +43,17 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.5.1" date="2026-01-06">
+    <release version="1.5.2" date="2026-01-07">
       <description>
-        <p>Auto-download model for package builds.</p>
+        <p>Hotkey and config improvements.</p>
         <ul>
-          <li>Whisper model downloaded to ~/.local/share/speak-to-ai/models/ on first run</li>
+          <li>Hotkey provider: evdev is now the default (more reliable)</li>
+          <li>Config path: use XDG path for all installations</li>
         </ul>
       </description>
     </release>
-    <release version="1.5.0" date="2026-01-06">
-      <description>
-        <p>Version flag and native package support.</p>
-        <ul>
-          <li>Added --version / -v flag to display version information</li>
-          <li>Native packages: Arch Linux (AUR) and Fedora (COPR)</li>
-        </ul>
-      </description>
-    </release>
+    <release version="1.5.1" date="2026-01-06"/>
+    <release version="1.5.0" date="2026-01-06"/>
     <release version="1.4.2" date="2025-12-29"/>
     <release version="1.4.1" date="2025-12-25"/>
     <release version="1.4.0" date="2025-12-15"/>
