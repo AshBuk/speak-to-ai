@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] - 2026-01-07
+
+### Changes
+- **Hotkey provider:** evdev is now the default (was D-Bus GlobalShortcuts). More reliable when user is in `input` group. D-Bus available as fallback.
+
+### Fixes
+- **AppImage config (for 1.5.X versions):** Use XDG config, fixing key rebinding and settings persistence.
+
+---
 ## [1.5.1] - 2026-01-06
 
 ### Features

@@ -85,12 +85,16 @@ sudo usermod -a -G input $USER
 ### Arch Linux [AUR](https://aur.archlinux.org/packages/speak-to-ai):
 ```bash
 yay -S speak-to-ai
+# Ensure user is in input group:
+sudo usermod -a -G input $USER
 ```
 
 ### Fedora [COPR](https://copr.fedorainfracloud.org/coprs/ashbuk/speak-to-ai/):
 ```bash
 sudo dnf copr enable ashbuk/speak-to-ai
 sudo dnf install speak-to-ai
+# Ensure user is in input group:
+sudo usermod -a -G input $USER
 ```
 
 ## Desktop Environment Compatibility

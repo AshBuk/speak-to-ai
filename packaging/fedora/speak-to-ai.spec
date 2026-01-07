@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.5.1
+%global app_version     1.5.2
 %global go_version      1.21
 %global whisper_version 1.8.2
 
@@ -228,6 +228,10 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Tue Jan 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.2-1
+- Hotkey provider: evdev is now the default (more reliable)
+- Config path: use XDG path for all installations
+
 * Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
 - Auto-download whisper model to ~/.local/share/speak-to-ai/models/ on first run
 
