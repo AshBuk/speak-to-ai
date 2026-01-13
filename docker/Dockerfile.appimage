@@ -27,6 +27,9 @@ RUN apt-get update && apt-get install -y \
     xdotool \
     ydotool \
     libnotify-bin \
+    # Vulkan SDK for GPU acceleration
+    libvulkan-dev \
+    glslang-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go

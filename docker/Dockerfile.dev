@@ -20,6 +20,9 @@ RUN apt-get update && apt-get -y dist-upgrade && apt-get install -y --no-install
     git \
     curl \
     ca-certificates \
+    # Vulkan SDK for GPU acceleration
+    libvulkan-dev \
+    glslang-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Install golangci-lint
