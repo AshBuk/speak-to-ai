@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.5.2
+%global app_version     1.6.0
 %global go_version      1.21
 %global whisper_version 1.8.2
 
@@ -45,6 +45,10 @@ BuildRequires:  pkgconfig(ayatana-appindicator3-0.1)
 # D-Bus for hotkey support
 BuildRequires:  pkgconfig(dbus-1)
 
+# Vulkan SDK for GPU acceleration
+BuildRequires:  vulkan-devel
+BuildRequires:  glslang
+
 # =============================================================================
 # Runtime dependencies
 # =============================================================================
@@ -71,6 +75,9 @@ Requires:       gtk3
 
 # D-Bus for hotkeys
 Requires:       dbus
+
+# Vulkan runtime for GPU acceleration (optional, falls back to CPU)
+Recommends:     vulkan-loader
 
 # =============================================================================
 # Bundled provides (Fedora requires declaring all bundled deps)
@@ -135,7 +142,8 @@ cmake -B build \
     -DGGML_AVX=ON \
     -DGGML_AVX2=ON \
     -DGGML_FMA=ON \
-    -DGGML_F16C=ON
+    -DGGML_F16C=ON \
+    -DGGML_VULKAN=ON
 cmake --build build --parallel %{_smp_build_ncpus}
 popd
 
@@ -228,6 +236,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Tue Jan 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.0-1
+- GPU acceleration: Vulkan backend support (auto-fallback to CPU)
+
 * Tue Jan 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.2-1
 - Hotkey provider: evdev is now the default (more reliable)
 - Config path: use XDG path for all installations
