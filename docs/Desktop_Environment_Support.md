@@ -2,7 +2,7 @@
 
 > Tested on major Linux distributions (Fedora, Ubuntu, Arch Linux) and tiling window managers (Hyprland, Sway)
 
-> If you encounter issues with your desktop environment, feel free to [open an issue](https://github.com/asherbuk/speak-to-ai/issues). 
+> If you encounter issues with your desktop environment, feel free to [open an issue](https://github.com/AshBuk/speak-to-ai/issues). 
 
 ### **For system tray on GNOME - to have full-featured UX with menu**:
 ```bash
