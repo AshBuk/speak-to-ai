@@ -53,6 +53,12 @@ func NewWhisperEngine(config *config.Config, modelPath string, loggers ...logger
 	if len(loggers) > 0 && loggers[0] != nil {
 		logSink = loggers[0]
 	}
+
+	// Log system info including GPU backend status
+	if ctx, err := model.NewContext(); err == nil {
+		logSink.Info("Whisper %s", ctx.SystemInfo())
+	}
+
 	return &WhisperEngine{
 		config:    config,
 		model:     model,
