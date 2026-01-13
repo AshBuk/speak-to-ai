@@ -1,8 +1,8 @@
 ## 🖥️ Desktop Environment Support
 
-> This document requires validation and testing across different environments. I have Fedora 42 (GNOME/Wayland).
+> Tested on major Linux distributions (Fedora, Ubuntu, Arch Linux) and tiling window managers (Hyprland, Sway)
 
-> Open GitHub issues and community contributions can help make this project an excellent `speak to text` solution for the Linux community. 
+> If you encounter issues with your desktop environment, feel free to [open an issue](https://github.com/asherbuk/speak-to-ai/issues). 
 
 ### **For system tray on GNOME - to have full-featured UX with menu**:
 ```bash

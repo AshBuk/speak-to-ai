@@ -37,7 +37,5 @@ func adjustPathsForAppImage(logger logger.Logger, configPath string) string {
 	if appDir != "" {
 		logger.Info("Running inside AppImage, base path: %s", appDir)
 	}
-	// AppImage filesystem is read-only (squashfs), always use XDG path for config
-	// This ensures config changes (rebind, language, etc.) can be saved
 	return getDefaultConfigPath()
 }
