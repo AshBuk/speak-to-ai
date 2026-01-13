@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-01-14
+
+### Features
+- **GPU acceleration:** Vulkan backend support for faster transcription (auto-fallback to CPU)
+
+---
 ## [1.5.2] - 2026-01-07
 
 ### Changes

@@ -43,6 +43,11 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.6.0" date="2026-01-14">
+      <description>
+        <p>GPU acceleration: Vulkan backend support (auto-fallback to CPU)</p>
+      </description>
+    </release>
     <release version="1.5.2" date="2026-01-07">
       <description>
         <p>Hotkey and config improvements.</p>
