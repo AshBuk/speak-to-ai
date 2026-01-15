@@ -20,10 +20,19 @@ RUN apt-get update && apt-get -y dist-upgrade && apt-get install -y --no-install
     git \
     curl \
     ca-certificates \
-    # Vulkan SDK for GPU acceleration
+    # Vulkan runtime library (SDK installed separately for glslc + headers)
     libvulkan-dev \
-    glslang-tools \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Vulkan SDK (glslc + headers) - required for whisper.cpp Vulkan backend
+ENV VULKAN_SDK_VERSION=1.3.290.0
+RUN curl -fsSL "https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.xz" -o /tmp/vulkan-sdk.tar.xz \
+    && mkdir -p /opt/vulkan-sdk \
+    && tar -xJf /tmp/vulkan-sdk.tar.xz -C /opt/vulkan-sdk --strip-components=1 \
+    && cp /opt/vulkan-sdk/x86_64/bin/glslc /usr/local/bin/ \
+    && cp -r /opt/vulkan-sdk/x86_64/include/vulkan /usr/include/ \
+    && cp -r /opt/vulkan-sdk/x86_64/include/vk_video /usr/include/ \
+    && rm -rf /tmp/vulkan-sdk.tar.xz /opt/vulkan-sdk
 
 # Install golangci-lint
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
