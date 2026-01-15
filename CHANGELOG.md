@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.6.0] - 2026-01-14
+## [1.6.0] - 2026-01-15
 
 ### Features
 - **GPU acceleration:** Vulkan backend support for faster transcription (auto-fallback to CPU)
+- **Bump whisper.cpp to v1.8.3:** 12x performance boost with integrated graphics, VAD improvements
 
 ---
 ## [1.5.2] - 2026-01-07
