@@ -141,10 +141,18 @@ jobs:
           go env -w GOPROXY=https://proxy.golang.org,direct
           go env -w GO111MODULE=on
 
-      - name: Install build tools
+      - name: Install build tools and Vulkan SDK
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake git
+          sudo apt-get install -y build-essential cmake git libvulkan-dev
+          # Install Vulkan SDK (glslc) for whisper.cpp GPU backend
+          curl -fsSL "https://sdk.lunarg.com/sdk/download/1.3.290.0/linux/vulkansdk-linux-x86_64-1.3.290.0.tar.xz" -o /tmp/vulkan-sdk.tar.xz
+          sudo mkdir -p /opt/vulkan-sdk
+          sudo tar -xJf /tmp/vulkan-sdk.tar.xz -C /opt/vulkan-sdk --strip-components=1
+          sudo cp /opt/vulkan-sdk/x86_64/bin/glslc /usr/local/bin/
+          sudo cp -r /opt/vulkan-sdk/x86_64/include/vulkan /usr/include/
+          sudo cp -r /opt/vulkan-sdk/x86_64/include/vk_video /usr/include/
+          rm /tmp/vulkan-sdk.tar.xz
 
       - name: Build whisper.cpp libs
         run: make whisper-libs
