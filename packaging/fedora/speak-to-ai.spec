@@ -47,7 +47,7 @@ BuildRequires:  pkgconfig(dbus-1)
 
 # Vulkan SDK for GPU acceleration
 BuildRequires:  vulkan-devel
-BuildRequires:  glslang
+BuildRequires:  shaderc
 
 # =============================================================================
 # Runtime dependencies
