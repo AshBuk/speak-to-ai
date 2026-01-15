@@ -33,7 +33,7 @@ makedepends=(
     'git'
     # Vulkan SDK for GPU acceleration
     'vulkan-headers'
-    'glslang'
+    'shaderc'
 )
 options=('!lto')
 # Whisper.cpp version (pinned for reproducibility)
