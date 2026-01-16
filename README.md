@@ -47,7 +47,7 @@ https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587
 - **Portable**: AppImage package
 - **Cross-platform support** for X11 and Wayland
 - **Linux DEs**: native integration with GNOME, KDE, and others
-- **GPU acceleration**: Vulkan backend for faster transcription (auto-fallback to CPU)
+- **GPU + CPU support**: Vulkan backend for faster transcription (auto-fallback to CPU)
 - **Voice typing or clipboard mode**
 - **Flexible audio recording**: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see [audio pipeline](docs/AUDIO_PIPELINE_DIAGRAM.txt)
 - **Multi-language support, custom hotkey binding, visual notifications**
