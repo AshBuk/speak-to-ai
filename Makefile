@@ -131,7 +131,7 @@ build-systray: deps whisper-libs
 # Build AppImage (Docker-based, recommended)
 appimage:
 	@echo "=== Building AppImage via Docker (Ubuntu 22.04) ==="
-	docker build -f docker/Dockerfile.appimage --target artifacts --output type=local,dest=$(DIST_DIR) .
+	docker build -f docker/Dockerfile.appimage --build-arg APP_VERSION=$(VERSION) --target artifacts --output type=local,dest=$(DIST_DIR) .
 
 # Build AppImage locally (without Docker, requires linuxdeploy/appimagetool on host)
 appimage-host: build

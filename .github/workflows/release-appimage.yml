@@ -27,124 +27,22 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.24.1'
-        
-    - name: Export CGO environment  
-      run: |
-        echo "=== Setting up CGO environment ==="
-        echo "CGO_ENABLED=1" >> $GITHUB_ENV
-        echo "CGO_CFLAGS=-I$PWD/lib" >> $GITHUB_ENV
-        echo "CGO_LDFLAGS=-L$PWD/lib -lwhisper -lggml-cpu -lggml" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=$PWD/lib" >> $GITHUB_ENV
-        echo "PKG_CONFIG_PATH=$PWD/lib" >> $GITHUB_ENV
-        
-    # Temporarily disable Go modules cache due to tar extraction issues
-    # - name: Cache Go modules  
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: |
-    #       ~/.cache/go-build
-    #       ~/go/pkg/mod
-    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-go-
-        
-    - name: Debug - Show environment
-      run: |
-        echo "=== Environment Debug ==="
-        echo "Go version: $(go version)"
-        echo "Working directory: $(pwd)"
-        echo "Directory contents:"
-        ls -la
-        echo "Go mod contents:"
-        cat go.mod
-        echo "========================"
-        
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          pkg-config \
-          git \
-          curl \
-          wget \
-          libayatana-appindicator3-dev \
-          libgtk-3-dev \
-          libglib2.0-dev \
-          libdbus-1-dev \
-          ffmpeg \
-          alsa-utils \
-          file \
-          desktop-file-utils \
-          xclip \
-          wl-clipboard \
-          xdotool \
-          ydotool \
-          libnotify-bin \
-          imagemagick \
-          make
           
-    - name: Create application icon
-      run: |
-        # Create a simple icon if not exists
-        if [ ! -f "icons/io.github.ashbuk.speak-to-ai.png" ]; then
-          echo "Creating application icon..."
-          mkdir -p icons
-          # Create a simple microphone icon
-          convert -size 256x256 xc:'#2196F3' \
-            -fill white -draw "circle 128,128 128,48" \
-            -fill '#1976D2' -pointsize 120 -gravity center \
-            -annotate +0+0 "🎤" \
-            icons/io.github.ashbuk.speak-to-ai.png
-          echo "✅ Icon created successfully"
-        else
-          echo "✅ Icon already exists"
-        fi
-          
-    - name: Build application
-      run: |
-        echo "=== Building application with Makefile ==="
-        make all
-        echo "Build successful, binary info:"
-        ls -la speak-to-ai
-        file speak-to-ai
-        echo "========================"
-          
-    - name: Download Whisper model if not present
-      run: |
-        if [ ! -f "sources/language-models/small-q5_1.bin" ]; then
-          echo "Downloading Whisper small-q5_1 model..."
-          mkdir -p sources/language-models
-          curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
-            echo "❌ Failed to download small-q5_1 model"; exit 1;
-          }
-          mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
-          echo "Model downloaded, size: $(ls -lh sources/language-models/small-q5_1.bin)"
-        fi
-
-
-        
-    - name: Debug - Pre-build status
-      run: |
-        echo "=== Pre-build Debug ==="
-        echo "Library structure:"
-        ls -la lib/
-        echo "AppImage script exists:"
-        ls -la packaging/appimage/build-appimage.sh
-        echo "========================"
-        
-    - name: Build AppImage
+    - name: Build AppImage via Docker
       env:
         APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
       run: |
-        chmod +x packaging/appimage/build-appimage.sh
-        bash -x packaging/appimage/build-appimage.sh
+        echo "=== Building AppImage via Docker (includes Vulkan SDK) ==="
+        echo "Version: ${APP_VERSION}"
+        docker --version
+        # Build with APP_VERSION passed as build arg
+        docker build \
+          -f docker/Dockerfile.appimage \
+          --build-arg APP_VERSION="${APP_VERSION}" \
+          --target artifacts \
+          --output type=local,dest=dist .
+        echo "=== Build completed ==="
+        ls -la dist/
         
     - name: Verify AppImage
       run: |
