@@ -153,6 +153,8 @@ cp build/whisper.cpp/build/src/libwhisper.so* lib/
 cp build/whisper.cpp/include/whisper.h lib/
 cp build/whisper.cpp/ggml/include/*.h lib/ 2>/dev/null || :
 cp build/whisper.cpp/build/ggml/src/libggml*.so* lib/ 2>/dev/null || :
+# Copy Vulkan backend library from subdirectory
+cp build/whisper.cpp/build/ggml/src/ggml-vulkan/libggml-vulkan.so* lib/ 2>/dev/null || :
 
 # =============================================================================
 # 2) Build Go binary with systray support (using vendored deps)
@@ -161,7 +163,7 @@ export CGO_ENABLED=1
 export C_INCLUDE_PATH=$(pwd)/lib
 export LIBRARY_PATH=$(pwd)/lib
 export CGO_CFLAGS="-I$(pwd)/lib"
-export CGO_LDFLAGS="-L$(pwd)/lib -lwhisper -lggml -lggml-cpu"
+export CGO_LDFLAGS="-L$(pwd)/lib -lwhisper -lggml -lggml-cpu -lggml-vulkan"
 export LD_LIBRARY_PATH=$(pwd)/lib
 
 # Set RPATH at build time to find bundled libraries at runtime
