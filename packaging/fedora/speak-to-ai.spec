@@ -180,9 +180,28 @@ go build -v \
 install -D -m 0755 %{name} %{buildroot}%{_bindir}/%{name}
 
 # Bundled whisper libraries (private prefix to avoid conflicts)
+# Install only versioned .so files and create symlinks to avoid duplicating large binaries
 install -d %{buildroot}%{_libdir}/%{name}
-cp -a lib/libwhisper.so* %{buildroot}%{_libdir}/%{name}/
-cp -a lib/libggml*.so* %{buildroot}%{_libdir}/%{name}/ 2>/dev/null || :
+
+# Find and install the actual versioned libraries, create symlinks for unversioned names
+for lib in lib/libwhisper.so lib/libggml.so lib/libggml-base.so lib/libggml-cpu.so lib/libggml-vulkan.so; do
+    [ ! -f "$lib" ] && continue
+    base=$(basename "$lib" .so)
+    # Find the fully versioned file (e.g., libwhisper.so.1.8.3)
+    versioned=$(ls -1 ${lib}.*.* 2>/dev/null | grep -E '\.so\.[0-9]+\.[0-9]+' | head -1)
+    if [ -n "$versioned" ]; then
+        # Install the versioned library
+        install -m 0755 "$versioned" %{buildroot}%{_libdir}/%{name}/
+        versioned_name=$(basename "$versioned")
+        # Create symlinks: libfoo.so -> libfoo.so.X -> libfoo.so.X.Y.Z
+        major=$(echo "$versioned_name" | sed -E 's/.*\.so\.([0-9]+).*/\1/')
+        ln -sf "$versioned_name" %{buildroot}%{_libdir}/%{name}/${base}.so.${major}
+        ln -sf "${base}.so.${major}" %{buildroot}%{_libdir}/%{name}/${base}.so
+    else
+        # No versioned file, just install as-is
+        install -m 0755 "$lib" %{buildroot}%{_libdir}/%{name}/
+    fi
+done
 
 # Desktop entry
 install -D -m 0644 io.github.ashbuk.speak-to-ai.desktop \
