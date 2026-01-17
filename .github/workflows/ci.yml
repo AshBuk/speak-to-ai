@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Asher Buk
+# SPDX-License-Identifier: MIT
+
 name: CI
 
 on:
@@ -19,20 +22,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker dev image
-        run: docker compose build dev
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker dev image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.dev
+          load: true
+          tags: speak-to-ai-dev:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Format check (gofmt)
-        run: |
-          docker compose run --rm dev bash -c '
-            files=$(git ls-files "*.go")
-            if [ -n "$files" ]; then
-              fmt_out=$(echo "$files" | xargs -r gofmt -s -l)
-              if [ -n "$fmt_out" ]; then
-                echo "The following files are not gofmt formatted:" && echo "$fmt_out" && exit 1
-              fi
-            fi
-          '
+        run: docker compose run --rm dev bash -c 'test -z "$(gofmt -s -l . | tee /dev/stderr)"'
 
       - name: License header check
         run: docker compose run --rm dev ./bash-scripts/check-license-headers.sh
