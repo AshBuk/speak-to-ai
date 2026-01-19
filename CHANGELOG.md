@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.1] - 2026-01-19
+
+### Features
+- **Enhanced status command:** `speak-to-ai status` now shows full configuration (model, language, output mode, audio method, hotkeys, WebSocket settings)
+
+### DevOps
+- **Pre-release validation workflow:** RC tags (`v*-rc.*`) build all artifacts before production release — catches issues early, especially for RPM builds
+- **Docker layer caching:** GHA cache for CI, local cache for AppImage builds
+- **Simplified gofmt check:** One-liner idiomatic check
+
+---
 ## [1.6.0] - 2026-01-15
 
 ### Features

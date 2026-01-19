@@ -43,20 +43,13 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.6.0" date="2026-01-14">
+    <release version="1.6.1" date="2026-01-19">
       <description>
-        <p>GPU acceleration: Vulkan backend support (auto-fallback to CPU)</p>
+        <p>Enhanced status command shows full configuration. Pre-release validation workflow for reliable releases.</p>
       </description>
     </release>
-    <release version="1.5.2" date="2026-01-07">
-      <description>
-        <p>Hotkey and config improvements.</p>
-        <ul>
-          <li>Hotkey provider: evdev is now the default (more reliable)</li>
-          <li>Config path: use XDG path for all installations</li>
-        </ul>
-      </description>
-    </release>
+    <release version="1.6.0" date="2026-01-14"/>
+    <release version="1.5.2" date="2026-01-07"/>
     <release version="1.5.1" date="2026-01-06"/>
     <release version="1.5.0" date="2026-01-06"/>
     <release version="1.4.2" date="2025-12-29"/>
