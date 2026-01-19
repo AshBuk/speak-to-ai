@@ -13,7 +13,7 @@ Speak-to-AI provides a dual-mode binary that works as both a background daemon a
 ```bash
 ./speak-to-ai-*.AppImage start        # Begin recording
 ./speak-to-ai-*.AppImage stop         # Stop and show transcript
-./speak-to-ai-*.AppImage status       # Show recording status
+./speak-to-ai-*.AppImage status       # Show state and configuration
 ./speak-to-ai-*.AppImage transcript   # Show last transcript
 ```
 
