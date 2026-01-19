@@ -29,7 +29,7 @@ func printCLIUsage(w io.Writer, fs *flag.FlagSet) {
 		reportUsageError(err)
 		return
 	}
-	if _, err := fmt.Fprintln(w, "  status       Show current recording status"); err != nil {
+	if _, err := fmt.Fprintln(w, "  status       Show current state and configuration"); err != nil {
 		reportUsageError(err)
 		return
 	}
@@ -81,7 +81,7 @@ func printCombinedUsage(w io.Writer, daemonFS *flag.FlagSet) {
 	commandRows := []string{
 		"  start        Start recording",
 		"  stop         Stop recording and return transcript",
-		"  status       Show current recording status",
+		"  status       Show current state and configuration",
 		"  transcript   Show the last transcript",
 	}
 	for _, row := range commandRows {
