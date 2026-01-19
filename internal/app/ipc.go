@@ -96,17 +96,40 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 	}), nil
 }
 
-// ipcHandleStatus Command handler - returns current recording state + last transcript
+// ipcHandleStatus Command handler - returns current state and configuration
 // Non-blocking: returns immediately without waiting for transcription
 func (a *App) ipcHandleStatus(ipc.Request) (ipc.Response, error) {
 	recording := false
 	if a.Services != nil && a.Services.Audio != nil {
 		recording = a.Services.Audio.IsRecording()
 	}
-	return ipc.NewSuccessResponse("status", map[string]any{
-		"recording":       recording,
-		"last_transcript": a.getLastTranscript(),
-	}), nil
+
+	status := map[string]any{
+		"recording": recording,
+	}
+
+	// Add config if available
+	if a.Services != nil && a.Services.Config != nil {
+		cfg := a.Services.Config.GetConfig()
+		if cfg != nil {
+			status["config"] = map[string]any{
+				"model":        cfg.General.WhisperModel,
+				"language":     cfg.General.Language,
+				"output_mode":  cfg.Output.DefaultMode,
+				"audio_method": cfg.Audio.RecordingMethod,
+			}
+			status["hotkeys"] = map[string]any{
+				"start_stop":  cfg.Hotkeys.StartRecording,
+				"show_config": cfg.Hotkeys.ShowConfig,
+			}
+			status["websocket"] = map[string]any{
+				"enabled": cfg.WebServer.Enabled,
+				"host":    cfg.WebServer.Host,
+				"port":    cfg.WebServer.Port,
+			}
+		}
+	}
+	return ipc.NewSuccessResponse("status", status), nil
 }
 
 // ipcHandleLastTranscript Command handler - returns last saved transcript
