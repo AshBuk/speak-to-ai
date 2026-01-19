@@ -230,11 +230,7 @@ func printResponse(command string, resp ipc.Response) {
 			fmt.Println("Recording stopped (no transcript available).")
 		}
 	case "status":
-		recording := getBoolOr(data, "recording", false)
-		fmt.Printf("Recording: %t\n", recording)
-		if transcript, ok := getString(data, "last_transcript"); ok && transcript != "" {
-			fmt.Printf("Last transcript: %s\n", transcript)
-		}
+		printStatusResponse(data)
 	case "transcript":
 		if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
 			fmt.Println(transcript)
@@ -277,4 +273,68 @@ func getBoolOr(data map[string]any, key string, fallback bool) bool {
 		}
 	}
 	return fallback
+}
+
+func getMap(data map[string]any, key string) map[string]any {
+	if value, ok := data[key]; ok {
+		if m, ok := value.(map[string]any); ok {
+			return m
+		}
+	}
+	return nil
+}
+
+func getIntOr(data map[string]any, key string, fallback int) int {
+	if value, ok := data[key]; ok {
+		switch v := value.(type) {
+		case int:
+			return v
+		case float64:
+			return int(v)
+		}
+	}
+	return fallback
+}
+
+func printStatusResponse(data map[string]any) {
+	recording := getBoolOr(data, "recording", false)
+	fmt.Printf("Recording: %t\n", recording)
+
+	// Config section
+	if cfg := getMap(data, "config"); cfg != nil {
+		fmt.Println("\nConfig:")
+		if model, ok := getString(cfg, "model"); ok && model != "" {
+			fmt.Printf("  Model: %s\n", model)
+		}
+		if lang, ok := getString(cfg, "language"); ok && lang != "" {
+			fmt.Printf("  Language: %s\n", lang)
+		}
+		if mode, ok := getString(cfg, "output_mode"); ok && mode != "" {
+			fmt.Printf("  Output mode: %s\n", mode)
+		}
+		if method, ok := getString(cfg, "audio_method"); ok && method != "" {
+			fmt.Printf("  Audio method: %s\n", method)
+		}
+	}
+	// Hotkeys section
+	if hotkeys := getMap(data, "hotkeys"); hotkeys != nil {
+		fmt.Println("\nHotkeys:")
+		if startStop, ok := getString(hotkeys, "start_stop"); ok && startStop != "" {
+			fmt.Printf("  Start/Stop: %s\n", startStop)
+		}
+		if showConfig, ok := getString(hotkeys, "show_config"); ok && showConfig != "" {
+			fmt.Printf("  Show config: %s\n", showConfig)
+		}
+	}
+	// WebSocket section
+	if ws := getMap(data, "websocket"); ws != nil {
+		enabled := getBoolOr(ws, "enabled", false)
+		if enabled {
+			host, _ := getString(ws, "host")
+			port := getIntOr(ws, "port", 0)
+			fmt.Printf("\nWebSocket: enabled (%s:%d)\n", host, port)
+		} else {
+			fmt.Println("\nWebSocket: disabled")
+		}
+	}
 }
