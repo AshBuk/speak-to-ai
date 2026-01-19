@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.6.0
+%global app_version     1.6.1
 %global go_version      1.21
 %global whisper_version 1.8.3
 
@@ -257,22 +257,20 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Sun Jan 19 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.1-1
+- Enhanced status command, CI/CD improvements
+
 * Tue Jan 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.0-1
 - GPU acceleration: Vulkan backend support (auto-fallback to CPU)
 
 * Tue Jan 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.2-1
-- Hotkey provider: evdev is now the default (more reliable)
-- Config path: use XDG path for all installations
+- Hotkey and config improvements
 
 * Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
 - Auto-download whisper model to ~/.local/share/speak-to-ai/models/ on first run
 
 * Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.0-1
-- Add --version flag for version information display
+- Add --version flag
 
 * Sun Jan 04 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.4.2-1
-- Initial RPM package for Fedora
-- Bundled whisper.cpp 1.8.2 for offline speech recognition
-- Vendored Go dependencies for offline builds
-- System tray integration with GNOME/KDE support
-- X11 and Wayland compatibility
+- Initial RPM package
