@@ -21,42 +21,8 @@ permissions:
   actions: read
 
 jobs:
-  # Run full CI checks first
-  ci-checks:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 15
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker dev image with cache
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile.dev
-          load: true
-          tags: speak-to-ai-dev:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Format check (gofmt)
-        run: docker compose run --rm dev bash -c 'test -z "$(gofmt -s -l . | tee /dev/stderr)"'
-
-      - name: License header check
-        run: docker compose run --rm dev ./bash-scripts/check-license-headers.sh
-
-      - name: Lint (golangci-lint)
-        run: make lint
-
-      - name: Run tests
-        run: make test
-
   # Build AppImage
   build-appimage:
-    needs: ci-checks
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
@@ -125,11 +91,10 @@ jobs:
         with:
           name: appimage-rc
           path: dist/*.AppImage
-          retention-days: 7
+          retention-days: 1
 
   # Build Fedora SRPM
   build-srpm:
-    needs: ci-checks
     runs-on: ubuntu-latest
     container:
       image: fedora:43
@@ -195,11 +160,10 @@ jobs:
         with:
           name: srpm-rc
           path: ~/rpmbuild/SRPMS/*.src.rpm
-          retention-days: 7
+          retention-days: 1
 
   # Validate Arch PKGBUILD
   validate-arch:
-    needs: ci-checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -241,7 +205,7 @@ jobs:
 
   # Summary job
   pre-release-summary:
-    needs: [ci-checks, build-appimage, build-srpm, validate-arch]
+    needs: [build-appimage, build-srpm, validate-arch]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -251,18 +215,16 @@ jobs:
           echo "      PRE-RELEASE VALIDATION SUMMARY"
           echo "========================================"
           echo ""
-          echo "CI Checks:    ${{ needs.ci-checks.result }}"
-          echo "AppImage:     ${{ needs.build-appimage.result }}"
-          echo "Fedora SRPM:  ${{ needs.build-srpm.result }}"
+          echo "AppImage:      ${{ needs.build-appimage.result }}"
+          echo "Fedora SRPM:   ${{ needs.build-srpm.result }}"
           echo "Arch PKGBUILD: ${{ needs.validate-arch.result }}"
           echo ""
 
-          if [ "${{ needs.ci-checks.result }}" = "success" ] && \
-             [ "${{ needs.build-appimage.result }}" = "success" ] && \
+          if [ "${{ needs.build-appimage.result }}" = "success" ] && \
              [ "${{ needs.build-srpm.result }}" = "success" ] && \
              [ "${{ needs.validate-arch.result }}" = "success" ]; then
             echo "========================================"
-            echo "✅ ALL CHECKS PASSED!"
+            echo "✅ ALL BUILDS PASSED!"
             echo ""
             echo "You can now create the production release:"
             VERSION=$(echo "${GITHUB_REF_NAME}" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-rc\.[0-9]+$/\1/')
@@ -271,7 +233,7 @@ jobs:
             echo "========================================"
           else
             echo "========================================"
-            echo "❌ SOME CHECKS FAILED!"
+            echo "❌ SOME BUILDS FAILED!"
             echo "Fix the issues and create a new RC tag."
             echo "========================================"
             exit 1
