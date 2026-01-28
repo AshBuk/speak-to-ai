@@ -12,6 +12,9 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/AshBuk/speak-to-ai/config/loaders"
 	"github.com/AshBuk/speak-to-ai/config/models"
 	"github.com/AshBuk/speak-to-ai/config/security"
@@ -23,11 +26,48 @@ import (
 // This provides a convenient way to reference the configuration type without importing the models package directly.
 type Config = models.Config
 
-// Output mode constants, aliased from the models package for convenience.
 const (
+	// Output mode constants, aliased from the models package for convenience.
 	OutputModeClipboard    = models.OutputModeClipboard
 	OutputModeActiveWindow = models.OutputModeActiveWindow
+
+	// AppName is the application identifier used in paths.
+	AppName = "speak-to-ai"
+	// ConfigFileName is the default configuration file name.
+	ConfigFileName = "config.yaml"
 )
+
+// ConfigDir returns the XDG config directory for the application.
+// Returns ~/.config/speak-to-ai
+func ConfigDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", AppName), nil
+}
+
+// ConfigFilePath returns the default configuration file path.
+// Returns ~/.config/speak-to-ai/config.yaml
+func ConfigFilePath() (string, error) {
+	dir, err := ConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, ConfigFileName), nil
+}
+
+// EnsureConfigDir creates the config directory if it doesn't exist.
+func EnsureConfigDir() (string, error) {
+	dir, err := ConfigDir()
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
 
 // Load configuration from the specified file using the configured loader.
 func LoadConfig(filename string, loggers ...logger.Logger) (*Config, error) {
