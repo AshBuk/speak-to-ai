@@ -199,17 +199,10 @@ func (us *UIService) openWithSystem(target string) error {
 
 // Locate config file
 func (us *UIService) getConfigPath() (string, bool) {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
+	configPath, err := config.ConfigFilePath()
+	if err != nil {
 		return "", false
 	}
-	configPath := filepath.Join(home, ".config", "speak-to-ai", "config.yaml")
-
-	// Check if file exists
-	if _, err := os.Stat(configPath); err == nil {
-		return configPath, true
-	}
-	// Fallback to default path even if not present (opener will show dialog)
 	return configPath, true
 }
 

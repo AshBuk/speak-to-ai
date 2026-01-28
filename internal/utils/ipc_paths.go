@@ -6,6 +6,8 @@ package utils
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 const (
@@ -19,12 +21,8 @@ func GetDefaultSocketPath() string {
 		return filepath.Join(runtimeDir, DefaultSocketFileName)
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err == nil {
-		socketDir := filepath.Join(homeDir, ".config", "speak-to-ai")
-		if err := os.MkdirAll(socketDir, 0o700); err == nil {
-			return filepath.Join(socketDir, DefaultSocketFileName)
-		}
+	if configDir, err := config.EnsureConfigDir(); err == nil {
+		return filepath.Join(configDir, DefaultSocketFileName)
 	}
 
 	return filepath.Join(os.TempDir(), DefaultSocketFileName)
