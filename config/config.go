@@ -38,8 +38,11 @@ const (
 )
 
 // ConfigDir returns the XDG config directory for the application.
-// Returns ~/.config/speak-to-ai
+// Returns $XDG_CONFIG_HOME/speak-to-ai or ~/.config/speak-to-ai
 func ConfigDir() (string, error) {
+	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
+		return filepath.Join(configHome, AppName), nil
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -48,7 +51,7 @@ func ConfigDir() (string, error) {
 }
 
 // ConfigFilePath returns the default configuration file path.
-// Returns ~/.config/speak-to-ai/config.yaml
+// Returns $XDG_CONFIG_HOME/speak-to-ai/config.yaml or ~/.config/speak-to-ai/config.yaml
 func ConfigFilePath() (string, error) {
 	dir, err := ConfigDir()
 	if err != nil {
