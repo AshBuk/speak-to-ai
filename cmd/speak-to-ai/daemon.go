@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/app"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
@@ -19,9 +20,8 @@ import (
 // Execution flow:
 //  1. Parse flags (--config, --debug)
 //  2. Bootstrap logger (Info/Debug level)
-//  3. Adjust config paths (AppImage environment detection)
-//  4. Single-instance lock (prevent multiple daemon processes)
-//  5. App lifecycle: NewApp() → Initialize() → RunAndWait()
+//  3. Single-instance lock (prevent multiple daemon processes)
+//  4. App lifecycle: NewApp() → Initialize() → RunAndWait()
 func runDaemon(args []string) int {
 	opts, err := parseDaemonOptions(args)
 	if err != nil {
@@ -35,9 +35,12 @@ func runDaemon(args []string) int {
 	if opts.debug {
 		logLevel = logger.DebugLevel
 	}
-	appLogger := logger.NewDefaultLogger(logLevel) // create logger early
-	// Environment detection
-	configPath := adjustPathsForAppImage(appLogger, opts.configFile)
+	appLogger := logger.NewDefaultLogger(logLevel)
+	// Log AppImage environment if detected
+	if appDir := os.Getenv("APPDIR"); appDir != "" {
+		appLogger.Info("Running inside AppImage, base path: %s", appDir)
+	}
+	configPath := opts.configFile
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
@@ -85,8 +88,12 @@ type daemonOptions struct {
 // Parse daemon command-line flags (--config, --debug)
 // Returns parsed options or flag.ErrHelp if --help was requested
 func parseDaemonOptions(args []string) (*daemonOptions, error) {
+	defaultConfigPath, err := config.ConfigFilePath()
+	if err != nil {
+		defaultConfigPath = "config.yaml" // fallback to current directory
+	}
 	opts := &daemonOptions{
-		configFile: getDefaultConfigPath(),
+		configFile: defaultConfigPath,
 	}
 
 	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError) // pls don't panic on parse error

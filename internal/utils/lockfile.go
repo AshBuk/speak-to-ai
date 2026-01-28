@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/AshBuk/speak-to-ai/config"
 )
 
 const (
@@ -38,12 +40,8 @@ func GetDefaultLockPath() string {
 	}
 
 	// Fall back to user config directory
-	homeDir, err := os.UserHomeDir()
-	if err == nil {
-		configDir := filepath.Join(homeDir, ".config", "speak-to-ai")
-		if err := os.MkdirAll(configDir, 0700); err == nil {
-			return filepath.Join(configDir, DefaultLockFileName)
-		}
+	if configDir, err := config.EnsureConfigDir(); err == nil {
+		return filepath.Join(configDir, DefaultLockFileName)
 	}
 
 	// Last resort: temp directory
