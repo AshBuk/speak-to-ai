@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.2] - 2026-02-07
+
+### Features
+- **CLI toggle command:** `speak-to-ai toggle` starts/stops recording with a single command — bind to a DE shortcut for one-key voice input
+
+### Changes
+- **Config - XDG compliance:** Support `$XDG_CONFIG_HOME`, centralize path logic
+
+---
 ## [1.6.1] - 2026-01-19
 
 ### Features

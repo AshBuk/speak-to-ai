@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.6.1
+%global app_version     1.6.2
 %global go_version      1.21
 %global whisper_version 1.8.3
 
@@ -257,6 +257,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Sat Feb 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.2-1
+- CLI toggle command, XDG config compliance
+
 * Sun Jan 19 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.1-1
 - Enhanced status command, CI/CD improvements
 
