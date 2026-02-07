@@ -10,7 +10,7 @@ import (
 // Application entry point
 // Strategy Pattern (Command Router)- routes execution between two modes:
 //
-//	→ CLI Mode (client):  start/stop/status/transcript → IPC
+//	→ CLI Mode (client):  start/stop/toggle/status/transcript → IPC
 //	→ Daemon Mode (server): app.NewApp() → Initialize() → RunAndWait()
 //
 // Early Return - try CLI first, fall to daemon orchestrator
