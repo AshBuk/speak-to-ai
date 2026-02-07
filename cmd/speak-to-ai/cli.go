@@ -165,7 +165,7 @@ func splitFlagNameAndValue(flagArg string) (name string, hasValue bool) {
 
 func isCLIVerb(command string) bool {
 	switch command {
-	case "start", "stop", "status", "transcript":
+	case "start", "stop", "toggle", "status", "transcript":
 		return true
 	default:
 		return false
@@ -189,6 +189,9 @@ func executeCLICommand(command, socketPath string, timeout time.Duration) (ipc.R
 	case "status":
 		req = ipc.Request{Command: "status"}
 		resp, err = ipc.SendRequest(socketPath, req, timeout)
+	case "toggle":
+		req = ipc.Request{Command: "toggle-recording"}
+		resp, err = ipc.SendRequest(socketPath, req, timeout)
 	case "transcript":
 		req = ipc.Request{Command: "last-transcript"}
 		resp, err = ipc.SendRequest(socketPath, req, timeout)
@@ -208,7 +211,7 @@ func deriveTimeout(command string, override int) time.Duration {
 	}
 
 	switch command {
-	case "stop":
+	case "stop", "toggle":
 		return defaultStopTimeout
 	default:
 		return defaultStatusTimeout
@@ -220,6 +223,17 @@ func printResponse(command string, resp ipc.Response) {
 	switch command {
 	case "start":
 		fmt.Println("Recording started.")
+	case "toggle":
+		recording := getBoolOr(data, "recording", false)
+		if recording {
+			fmt.Println("Recording started.")
+		} else {
+			if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
+				fmt.Println(transcript)
+			} else {
+				fmt.Println("Recording stopped.")
+			}
+		}
 	case "stop":
 		if warning, ok := getString(data, "warning"); ok && warning != "" {
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)

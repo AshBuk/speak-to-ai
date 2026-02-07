@@ -54,6 +54,7 @@ func (a *App) startIPCServer() error {
 func (a *App) registerIPCHandlers(server *ipc.Server) {
 	server.Register("start-recording", a.ipcHandleStartRecording)
 	server.Register("stop-recording", a.ipcHandleStopRecording)
+	server.Register("toggle-recording", a.ipcHandleToggleRecording)
 	server.Register("status", a.ipcHandleStatus)
 	server.Register("last-transcript", a.ipcHandleLastTranscript)
 }
@@ -94,6 +95,18 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 		"recording":  false,
 		"transcript": transcript,
 	}), nil
+}
+
+// ipcHandleToggleRecording Command handler - toggles recording state
+// Same logic as tray toggle (see factory_wirer.go makeToggleCallback)
+func (a *App) ipcHandleToggleRecording(ipc.Request) (ipc.Response, error) {
+	if a.Services == nil || a.Services.Audio == nil {
+		return ipc.Response{}, fmt.Errorf("audio service not available")
+	}
+	if a.Services.Audio.IsRecording() {
+		return a.ipcHandleStopRecording(ipc.Request{})
+	}
+	return a.ipcHandleStartRecording(ipc.Request{})
 }
 
 // ipcHandleStatus Command handler - returns current state and configuration

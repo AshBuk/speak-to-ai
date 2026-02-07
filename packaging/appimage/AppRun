@@ -17,7 +17,7 @@ mkdir -p "${CONFIG_DIR}"
 is_cli_command() {
     for arg in "$@"; do
         case "$arg" in
-            start|stop|status|transcript) return 0 ;;
+            start|stop|toggle|status|transcript) return 0 ;;
         esac
     done
     return 1
