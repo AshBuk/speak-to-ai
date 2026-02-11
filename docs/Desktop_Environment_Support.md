@@ -26,8 +26,9 @@ sudo pacman -S gnome-shell-extension-appindicator
 | **🟢 Sway/Other Wayland** | wtype → ydotool | clipboard | ✅ Auto-detected |
 | **🟢 X11 (all DEs)** | xdotool | clipboard | ✅ Works out-of-box |
 
- *GNOME/Wayland requires ydotool setup. Other Wayland compositors (KDE, Sway, etc.) may work with wtype without any setup*
- *RemoteDesktop Portal for GNOME/Wayland - Upcoming Feature!*
+ GNOME/Wayland requires ydotool setup. 
+ 
+ Other Wayland compositors (KDE, Sway, etc.) works with wtype out of the box.
 
 ## Direct typing on Wayland - Tool options
 
@@ -70,8 +71,10 @@ systemctl --user daemon-reload
 systemctl --user enable --now ydotool
 ```
 *This setup uses user service: safer and no root privileges needed*
+
+*For non-GNOME Wayland compositors, wtype work without any setup - the app will automatically try it first*
+
 *X11 works out-of-the-box without additional setups*
-*For non-GNOME Wayland compositors, wtype may work without any setup - the app will automatically try it first*
 
 **Clipboard fallback**
 - Works on **all** desktop environments  
@@ -80,24 +83,25 @@ systemctl --user enable --now ydotool
 
 ## ⌨️ **Hotkey Support Status (for hotkey registration and binding)**
 
-### **AppImage Package**
-- **All DEs:** **evdev first (requires input group)** → D-Bus GlobalShortcuts portal fallback
-- **Optimization:** AppImage prioritizes evdev due to potential D-Bus portal limitations in sandboxed environment
+### **All Packages (native & AppImage)**
+- **All DEs:** **evdev first (requires input group)** → D-Bus GlobalShortcuts portal fallback. **evdev** enables native hotkey capture and binding via system tray menu
 - **Fallback:** If evdev unavailable, attempts D-Bus GlobalShortcuts portal
-- **Setup input group:** 
+- **Setup input group:**
 ```bash
 sudo usermod -a -G input $USER
 # Log out and log back in for changes to take effect
 ```
 
-### **Alternative for Tiling WMs**
-- **CLI commands:** Direct hotkey binding via WM config (i3, sway, bspwm, etc.)
-- **Example (i3/sway):**
+### **Direct Hotkey Binding via DE/WM**
+Bind `speak-to-ai toggle` to any key via your DE settings or WM config to start/stop recording:
+- **GNOME:** Settings → Keyboard → Custom Shortcuts → `speak-to-ai toggle`
+- **KDE:** System Settings → Shortcuts → Custom Shortcuts → `speak-to-ai toggle`
+- **Tiling WMs** (i3, sway, Hyprland, bspwm, etc.):
   ```
-  bindsym $mod+r exec speak-to-ai start
-  bindsym $mod+Shift+r exec speak-to-ai stop
+  bindsym $mod+r exec speak-to-ai toggle
   ```
+- **Separate start/stop** also available: `speak-to-ai start` / `speak-to-ai stop`
 - See [CLI Usage Guide](CLI_USAGE.md) for command reference
 
-*Last updated: 2025-12-21*  
+*Last updated: 2026-02-11*
 *Tested on: Fedora 42, Ubuntu 24.04*
