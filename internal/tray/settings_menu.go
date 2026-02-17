@@ -55,20 +55,28 @@ func (tm *TrayManager) setupAudioRecorderMenu() {
 		"Use ffmpeg (PulseAudio)",
 	)
 
-	// Set up click handlers
+	// Set up click handlers.
+	// Use closure to read tm.onSelectRecorder at invocation time (not capture time),
+	// because callbacks are wired after tray setup via setter methods.
+	recorderCb := func(method string) error {
+		if tm.onSelectRecorder != nil {
+			return tm.onSelectRecorder(method)
+		}
+		return nil
+	}
 	tm.handleRadioItemClick(
 		tm.audioItems["recorder_arecord"],
 		"arecord",
 		"Audio recorder switched to %s (UI)",
 		tm.updateRecorderRadioUI,
-		tm.onSelectRecorder,
+		recorderCb,
 	)
 	tm.handleRadioItemClick(
 		tm.audioItems["recorder_ffmpeg"],
 		"ffmpeg",
 		"Audio recorder switched to %s (UI)",
 		tm.updateRecorderRadioUI,
-		tm.onSelectRecorder,
+		recorderCb,
 	)
 
 	// Update initial UI state
@@ -91,6 +99,14 @@ func (tm *TrayManager) setupLanguageMenu() {
 	)
 	tm.languageItems["current"].Disable()
 
+	// Use closure to read tm.onSelectLang at invocation time (not capture time)
+	langCb := func(code string) error {
+		if tm.onSelectLang != nil {
+			return tm.onSelectLang(code)
+		}
+		return nil
+	}
+
 	// Flat list of all languages (GNOME-compatible, 3 levels: Settings > Set Language > Language)
 	for _, lang := range constants.WhisperLanguages {
 		indicator := "○ "
@@ -106,7 +122,7 @@ func (tm *TrayManager) setupLanguageMenu() {
 			langCode,
 			"Language switched to %s (UI)",
 			tm.updateLanguageRadioUI,
-			tm.onSelectLang,
+			langCb,
 		)
 	}
 }
@@ -146,7 +162,14 @@ func (tm *TrayManager) setupOutputMenu() {
 	)
 	tm.outputItems["type_tool"].Disable()
 
-	// Set up click handlers
+	// Set up click handlers.
+	// Use closure to read tm.onSelectOutputMode at invocation time (not capture time)
+	outputCb := func(mode string) error {
+		if tm.onSelectOutputMode != nil {
+			return tm.onSelectOutputMode(mode)
+		}
+		return nil
+	}
 	for _, k := range []string{"clipboard", "active_window"} {
 		if itm := tm.outputItems["mode_"+k]; itm != nil {
 			key := k
@@ -155,7 +178,7 @@ func (tm *TrayManager) setupOutputMenu() {
 				key,
 				"Output mode switched to %s (UI)",
 				tm.updateOutputModeRadioUI,
-				tm.onSelectOutputMode,
+				outputCb,
 			)
 		}
 	}
