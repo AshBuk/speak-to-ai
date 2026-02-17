@@ -65,7 +65,7 @@ func (cw *FactoryWirer) Wire(container *ServiceContainer, components *Components
 		cw.makeOutputModeCallback(container),
 	)
 	// Step 4: Dynamic queries (output tools, capture once support)
-	components.TrayManager.SetGetOutputToolsCallback(cw.makeGetOutputToolsCallback(container))
+	components.TrayManager.OutputToolsCallback(cw.makeGetOutputToolsCallback(container))
 	components.TrayManager.SetCaptureOnceSupport(cw.makeCaptureOnceSupportCallback(container))
 	// Step 5: UI sync (update tray menu with current settings)
 	cw.updateTraySettings(container, components.TrayManager)

@@ -25,8 +25,8 @@ type TrayManagerInterface interface {
 		onToggleWorkflowNotifications func() error,
 		onSelectOutputMode func(mode string) error,
 	)
-	// SetGetOutputToolsCallback sets the callback for getting actual output tool names
-	SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string))
+	// OutputToolsCallback sets the callback for getting actual output tool names
+	OutputToolsCallback(callback func() (clipboardTool, typeTool string))
 	// SetCaptureOnceSupport sets a callback indicating whether capture once is supported
 	SetCaptureOnceSupport(callback func() bool)
 	Stop()
