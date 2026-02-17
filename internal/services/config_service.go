@@ -81,29 +81,6 @@ func (cs *ConfigService) GetConfig() *config.Config {
 	return cs.config
 }
 
-// TODO: Next feature - VAD implementation
-// UpdateVADSensitivity implements ConfigServiceInterface
-// func (cs *ConfigService) UpdateVADSensitivity(sensitivity string) error {
-//	cs.logger.Info("Updating VAD sensitivity to: %s", sensitivity)
-//
-//	s := strings.ToLower(sensitivity)
-//	switch s {
-//	case "low", "medium", "high":
-//	default:
-//		return fmt.Errorf("invalid VAD sensitivity: %s", sensitivity)
-//	}
-//	if cs.config.Audio.VADSensitivity == s {
-//		return nil
-//	}
-//	old := cs.config.Audio.VADSensitivity
-//	cs.config.Audio.VADSensitivity = s
-//	if err := cs.SaveConfig(); err != nil {
-//		cs.config.Audio.VADSensitivity = old
-//		return fmt.Errorf("failed to save config: %w", err)
-//	}
-//	return nil
-// }
-
 // Change whisper language setting with rollback on save failure
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)
@@ -142,14 +119,6 @@ func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.config.Notifications.EnableWorkflowNotifications = !cs.config.Notifications.EnableWorkflowNotifications
 	return cs.SaveConfig()
 }
-
-// TODO: Next feature - VAD implementation
-// ToggleVAD implements ConfigServiceInterface
-// func (cs *ConfigService) ToggleVAD() error {
-//	cs.logger.Info("Toggling VAD mode")
-//	cs.config.Audio.EnableVAD = !cs.config.Audio.EnableVAD
-//	return cs.SaveConfig()
-// }
 
 // Switch audio backend (arecord/ffmpeg) with validation and persistence
 func (cs *ConfigService) UpdateRecordingMethod(method string) error {

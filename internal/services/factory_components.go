@@ -171,9 +171,6 @@ func (cf *FactoryComponents) createHotkeyManager() *manager.HotkeyManager {
 	}
 	configAdapter := adapters.NewConfigAdapter(cf.config.Config.Hotkeys.StartRecording, cf.config.Config.Hotkeys.Provider).
 		WithAdditionalHotkeys(
-			// TODO: Next feature - VAD implementation
-			// cf.config.Config.Hotkeys.ToggleVAD,
-			"", // VAD hotkey placeholder
 			cf.config.Config.Hotkeys.ShowConfig,
 			cf.config.Config.Hotkeys.ResetToDefaults,
 		)

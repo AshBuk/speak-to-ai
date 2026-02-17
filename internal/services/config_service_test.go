@@ -17,9 +17,6 @@ func createTestConfig() *models.Config {
 	cfg := &models.Config{}
 	cfg.General.Language = "en"
 	cfg.General.WhisperModel = "small-q5_1"
-	// TODO: Next feature - VAD implementation
-	// cfg.Audio.VADSensitivity = "medium"
-	// cfg.Audio.EnableVAD = false
 	cfg.Notifications.EnableWorkflowNotifications = true
 	return cfg
 }
@@ -154,8 +151,6 @@ func TestConfigService_ResetToDefaults(t *testing.T) {
 	service := NewConfigService(mockLogger, testConfig, tempFile.Name())
 	// Modify some settings first
 	service.config.General.Language = "fr"
-	// TODO: Next feature - VAD implementation
-	// service.config.Audio.EnableVAD = true
 
 	if err := service.ResetToDefaults(); err != nil {
 		t.Errorf("ResetToDefaults failed: %v", err)
@@ -164,10 +159,6 @@ func TestConfigService_ResetToDefaults(t *testing.T) {
 	if service.config.General.Language != "en" {
 		t.Error("Language should be reset to default 'en'")
 	}
-	// TODO: Next feature - VAD implementation
-	// if service.config.Audio.EnableVAD != false {
-	//	t.Error("EnableVAD should be reset to default false")
-	// }
 }
 
 func TestConfigService_Shutdown(t *testing.T) {

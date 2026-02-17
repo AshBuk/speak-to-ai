@@ -29,10 +29,8 @@ type MockHotkeyManager struct {
 	registerHotkeyActionCalled map[string]bool
 	startError                 error
 	callbacks                  struct {
-		startRecording func() error
-		stopRecording  func() error
-		// TODO: Next feature - VAD implementation
-		// toggleVAD       manager.HotkeyAction
+		startRecording  func() error
+		stopRecording   func() error
 		showConfig      manager.HotkeyAction
 		resetToDefaults manager.HotkeyAction
 	}
@@ -60,9 +58,6 @@ func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager
 	m.registerHotkeyActionCalled[action] = true
 
 	switch action {
-	// TODO: Next feature - VAD implementation
-	// case "toggle_vad":
-	//	m.callbacks.toggleVAD = callback
 	case "show_config":
 		m.callbacks.showConfig = callback
 	case "reset_to_defaults":
@@ -101,11 +96,6 @@ func (m *MockHotkeyManager) TriggerCallback(callbackType string) error {
 		if m.callbacks.resetToDefaults != nil {
 			return m.callbacks.resetToDefaults()
 		}
-		// TODO: Next feature - VAD implementation
-		// case "toggleVAD":
-		// 	if m.callbacks.toggleVAD != nil {
-		// 		return m.callbacks.toggleVAD()
-		// 	}
 	}
 	return nil
 }

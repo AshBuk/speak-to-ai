@@ -101,12 +101,6 @@ func (as *AudioService) HandleStartRecording() error {
 		as.setUIError(constants.MsgRecorderUnavailable)
 		return fmt.Errorf("audio recorder not available: %w", err)
 	}
-	// Choose recording mode
-	// TODO: Next feature - VAD implementation
-	// if as.config.Audio.EnableVAD && as.config.Audio.AutoStartStop {
-	//	return as.HandleStartVADRecording()
-	// }
-
 	// Standard recording
 	return as.startStandardRecording()
 }
@@ -188,16 +182,6 @@ func (as *AudioService) GetLastTranscript() string {
 	defer as.mu.RUnlock()
 	return as.lastTranscript
 }
-
-// TODO: Next feature - VAD implementation
-// HandleStartVADRecording starts VAD-based recording
-// func (as *AudioService) HandleStartVADRecording() error {
-//	as.logger.Info("Starting VAD recording...")
-//
-//	// VAD implementation would go here
-//	// For now, fallback to standard recording
-//	return as.startStandardRecording()
-// }
 
 // ensureModelAvailable ensures whisper model is ready
 func (as *AudioService) ensureModelAvailable() error {

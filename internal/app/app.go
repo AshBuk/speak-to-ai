@@ -133,10 +133,8 @@ func (a *App) setupHotkeyCallbacks() error {
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
 		a.handleStartRecording,             // handlers.go: Start audio recording
 		a.handleStopRecordingAndTranscribe, // handlers.go: Stop recording and transcribe
-		// TODO: Next feature - VAD implementation
-		// a.handleToggleVAD,                 // handlers.go: Toggle Voice Activity Detection
-		a.handleShowConfig,      // handlers.go: Display configuration
-		a.handleResetToDefaults, // handlers.go: Reset settings to defaults
+		a.handleShowConfig,                 // handlers.go: Display configuration
+		a.handleResetToDefaults,            // handlers.go: Reset settings to defaults
 	); err != nil {
 		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
 	}

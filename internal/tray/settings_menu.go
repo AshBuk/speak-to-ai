@@ -16,12 +16,6 @@ func (tm *TrayManager) createSettingsSubmenus() {
 	tm.audioRecorderMenu = tm.settingsItem.AddSubMenuItem("Audio Recorder", "Select audio recorder")
 	tm.languageMenu = tm.settingsItem.AddSubMenuItem("Set Language", "Select recognition language")
 
-	// VAD Sensitivity submenu
-	// vadMenu := tm.settingsItem.AddSubMenuItem("VAD Sensitivity", "Select VAD sensitivity level")
-	// tm.audioItems["vad_low"] = vadMenu.AddSubMenuItem("○ Low", "Low sensitivity")
-	// tm.audioItems["vad_medium"] = vadMenu.AddSubMenuItem("○ Medium", "Medium sensitivity")
-	// tm.audioItems["vad_high"] = vadMenu.AddSubMenuItem("○ High", "High sensitivity")
-
 	tm.outputMenu = tm.settingsItem.AddSubMenuItem("Output", "Output settings")
 
 	// Populate with initial values if config is available
@@ -323,30 +317,6 @@ func (tm *TrayManager) updateRecorderRadioUI(method string) {
 		ffmpegItem.SetTitle("○ ffmpeg (PulseAudio)")
 	}
 }
-
-// updateVADRadioUI updates VAD sensitivity radio titles
-// func (tm *TrayManager) updateVADRadioUI(level string) {
-// 	low := tm.audioItems["vad_low"]
-// 	med := tm.audioItems["vad_medium"]
-// 	high := tm.audioItems["vad_high"]
-// 	if low == nil || med == nil || high == nil {
-// 		return
-// 	}
-// 	switch level {
-// 	case "low":
-// 		low.SetTitle("● Low")
-// 		med.SetTitle("○ Medium")
-// 		high.SetTitle("○ High")
-// 	case "high":
-// 		high.SetTitle("● High")
-// 		low.SetTitle("○ Low")
-// 		med.SetTitle("○ Medium")
-// 	default:
-// 		med.SetTitle("● Medium")
-// 		low.SetTitle("○ Low")
-// 		high.SetTitle("○ High")
-// 	}
-// }
 
 // updateLanguageRadioUI updates selection marks for language menu
 func (tm *TrayManager) updateLanguageRadioUI(lang string) {

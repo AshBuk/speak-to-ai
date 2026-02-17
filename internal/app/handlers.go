@@ -41,15 +41,6 @@ func (a *App) handleStopRecordingAndTranscribe() error {
 	return a.Services.Audio.HandleStopRecording()
 }
 
-// handleToggleVAD handles VAD toggle hotkey
-// TODO: Next feature - VAD implementation
-// func (a *App) handleToggleVAD() error {
-//	if a.Services == nil || a.Services.Config == nil {
-//		return fmt.Errorf("config service not available")
-//	}
-//	return a.Services.Config.ToggleVAD()
-// }
-
 // handleShowConfig Adapter - delegates show config hotkey to UIService
 func (a *App) handleShowConfig() error {
 	if a.Services == nil || a.Services.UI == nil {
@@ -72,7 +63,7 @@ func (a *App) handleResetToDefaults() error {
 		cfgProvider := func() adapters.HotkeyConfig {
 			if cfg := a.Services.Config.GetConfig(); cfg != nil {
 				return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
-					WithAdditionalHotkeys("", cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
+					WithAdditionalHotkeys(cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
 			}
 			return adapters.NewConfigAdapter("", "auto")
 		}
