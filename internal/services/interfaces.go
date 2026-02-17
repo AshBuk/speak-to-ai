@@ -24,10 +24,6 @@ type AudioServiceInterface interface {
 	// Transcript access
 	GetLastTranscript() string
 
-	// TODO: Next feature - VAD implementation
-	// VAD (Voice Activity Detection) operations
-	// HandleStartVADRecording() error
-
 	// Cleanup
 	Shutdown() error
 }
@@ -83,9 +79,6 @@ type ConfigServiceInterface interface {
 	GetConfig() *config.Config
 
 	// Settings updates
-	// TODO: Next feature - VAD implementation
-	// UpdateVADSensitivity(sensitivity string) error
-	// ToggleVAD() error
 	UpdateLanguage(language string) error
 	ToggleWorkflowNotifications() error
 	UpdateRecordingMethod(method string) error
@@ -102,7 +95,6 @@ type HotkeyServiceInterface interface {
 	SetupHotkeyCallbacks(
 		startRecording func() error,
 		stopRecording func() error,
-		// toggleVAD func() error,
 		showConfig func() error,
 		reloadConfig func() error,
 	) error

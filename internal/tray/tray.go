@@ -52,8 +52,6 @@ type TrayManager struct {
 	// Audio action callbacks
 	onSelectRecorder func(method string) error
 	// Settings callbacks
-	// onSelectVADSens sets the callback for VAD sensitivity selection.
-	// onSelectVADSens        func(sensitivity string) error
 	onSelectLang           func(language string) error
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
@@ -156,8 +154,6 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	tm.updateHotkeysMenuUI()
 	// The helpers gracefully no-op if items are not yet created
 	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
-	// TODO: Next feature - VAD implementation
-	// tm.updateVADRadioUI(config.Audio.VADSensitivity)
 	tm.updateLanguageRadioUI(config.General.Language)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
 	tm.updateOutputUI()
@@ -251,12 +247,10 @@ func (tm *TrayManager) SetExitAction(onExit func()) {
 
 // SetSettingsActions sets callbacks for general settings
 func (tm *TrayManager) SetSettingsActions(
-	// onSelectVADSensitivity func(sensitivity string) error,
 	onSelectLanguage func(language string) error,
 	onToggleWorkflowNotifications func() error,
 	onSelectOutputMode func(mode string) error,
 ) {
-	// tm.onSelectVADSens = onSelectVADSensitivity
 	tm.onSelectLang = onSelectLanguage
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode

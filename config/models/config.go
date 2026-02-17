@@ -27,8 +27,6 @@ type Config struct {
 		StopRecording   string `yaml:"stop_recording"`
 		ShowConfig      string `yaml:"show_config"`
 		ResetToDefaults string `yaml:"reset_to_defaults"`
-		// TODO: VAD hotkey to be implemented
-		// ToggleVAD       string `yaml:"toggle_vad"`
 	} `yaml:"hotkeys"`
 
 	Audio struct {
@@ -39,10 +37,6 @@ type Config struct {
 		ExpectedDuration    int    `yaml:"expected_duration"`      // Expected recording duration in seconds (0 for indefinite)
 		MaxRecordingTime    int    `yaml:"max_recording_time"`     // Maximum recording time in seconds to prevent runaway recordings
 		TempFileCleanupTime int    `yaml:"temp_file_cleanup_time"` // Cleanup timeout for temp files in minutes (default: 30)
-		// TODO: Next feature - VAD implementation
-		// EnableVAD         bool   `yaml:"enable_vad"`          // Enable Voice Activity Detection
-		// VADSensitivity    string `yaml:"vad_sensitivity"`     // VAD sensitivity: 'low', 'medium', 'high'
-		// AutoStartStop     bool   `yaml:"auto_start_stop"`     // Automatically start/stop recording based on voice activity
 	} `yaml:"audio"`
 
 	Output struct {

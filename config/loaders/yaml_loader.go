@@ -76,12 +76,6 @@ func SetDefaultConfig(config *models.Config) {
 	config.Audio.MaxRecordingTime = 300   // 5 minutes max by default
 	config.Audio.TempFileCleanupTime = 30 // 30 minutes cleanup timeout by default
 
-	// TODO: Next feature - VAD implementation
-	// config.Hotkeys.ToggleVAD = "alt+v"       // Start/stop VAD
-	// config.Audio.EnableVAD = false         // VAD disabled by default for compatibility
-	// config.Audio.VADSensitivity = "medium" // Balanced VAD sensitivity
-	// config.Audio.AutoStartStop = false     // Manual control by default
-
 	// Output settings
 	config.Output.DefaultMode = models.OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto" // auto-detect

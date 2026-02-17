@@ -10,16 +10,14 @@ import (
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
 type MockTrayManager struct {
-	isRecording       bool
-	logger            logger.Logger
-	onExit            func()
-	onToggle          func() error
-	onShowConfig      func() error
-	onShowAbout       func() error
-	onResetToDefaults func() error
-	onSelectRecorder  func(method string) error
-	// onSelectVADSens is the callback for VAD sensitivity selection
-	// onSelectVADSens        func(sensitivity string) error
+	isRecording            bool
+	logger                 logger.Logger
+	onExit                 func()
+	onToggle               func() error
+	onShowConfig           func() error
+	onShowAbout            func() error
+	onResetToDefaults      func() error
+	onSelectRecorder       func(method string) error
 	onSelectLang           func(language string) error
 	onToggleWorkflowNotify func() error
 	onGetOutputTools       func() (clipboardTool, typeTool string)
@@ -79,12 +77,10 @@ func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) 
 
 // SetSettingsActions sets callbacks for settings (mock implementation)
 func (tm *MockTrayManager) SetSettingsActions(
-	// onSelectVADSensitivity func(sensitivity string) error,
 	onSelectLanguage func(language string) error,
 	onToggleWorkflowNotifications func() error,
 	onSelectOutputMode func(mode string) error,
 ) {
-	// tm.onSelectVADSens = onSelectVADSensitivity
 	tm.onSelectLang = onSelectLanguage
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode

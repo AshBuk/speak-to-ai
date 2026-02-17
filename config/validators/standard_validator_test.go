@@ -22,10 +22,6 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.Audio.RecordingMethod = "arecord"
 	config.Audio.ExpectedDuration = 0
 	config.Audio.MaxRecordingTime = 300
-	// TODO: Next feature - VAD implementation
-	// config.Audio.EnableVAD = false
-	// config.Audio.VADSensitivity = "medium"
-	// config.Audio.AutoStartStop = false
 
 	config.Output.DefaultMode = models.OutputModeActiveWindow
 	config.Output.ClipboardTool = "auto"

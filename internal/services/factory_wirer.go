@@ -234,7 +234,7 @@ func (cw *FactoryWirer) makeConfigProvider(container *ServiceContainer) func() a
 			return adapters.NewConfigAdapter("", "auto")
 		}
 		return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
-			WithAdditionalHotkeys("", cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
+			WithAdditionalHotkeys(cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
 	}
 }
 func (cw *FactoryWirer) updateUISettings(container *ServiceContainer) {

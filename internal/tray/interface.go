@@ -18,9 +18,8 @@ type TrayManagerInterface interface {
 	SetAudioActions(onSelectRecorder func(method string) error)
 	// SetHotkeyRebindAction sets callback to rebind hotkeys by action name
 	SetHotkeyRebindAction(onRebind func(action string) error)
-	// SetSettingsActions sets callbacks for general settings from tray (VAD, Language, Notifications)
+	// SetSettingsActions sets callbacks for general settings from tray (Language, Notifications)
 	SetSettingsActions(
-		// onSelectVADSensitivity func(sensitivity string) error,
 		onSelectLanguage func(language string) error,
 		onToggleWorkflowNotifications func() error,
 		onSelectOutputMode func(mode string) error,

@@ -11,7 +11,6 @@ general:
 hotkeys:
   start_recording: "alt+r"            # Start/stop recording
   stop_recording: "alt+r"             # Same combination for start/stop
-  # toggle_vad: "altgr+shift+v"          # Toggle VAD on/off
   show_config: "alt+c"                # Open configuration file
   reset_to_defaults: "alt+d"          # Reset all settings to defaults
 
@@ -22,10 +21,6 @@ audio:
   format: "s16le"               # Note: audio is always recorded in mono (1 channel)
   recording_method: "arecord"   # Options: "arecord", "ffmpeg"
   temp_file_cleanup_time: 30    # Auto-delete temporary audio files older than X minutes (default: 30)
-  # TODO: Next feature - VAD implementation
-  # enable_vad: false           # Enable Voice Activity Detection
-  # vad_sensitivity: "medium"   # VAD sensitivity: "low", "medium", "high"
-  # auto_start_stop: false      # Auto start/stop recording based on VAD
 
 # Text output settings
 output:

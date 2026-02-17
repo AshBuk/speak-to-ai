@@ -13,10 +13,8 @@ type HotkeyConfig interface {
 
 // Adapts a generic configuration to the HotkeyConfig interface
 type ConfigAdapter struct {
-	startRecording string
-	provider       string
-	// Hotkey for toggling VAD
-	// toggleVAD       string
+	startRecording  string
+	provider        string
 	showConfig      string
 	resetToDefaults string
 }
@@ -30,8 +28,7 @@ func NewConfigAdapter(startRecording string, provider string) *ConfigAdapter {
 }
 
 // Set optional action hotkeys using a builder pattern
-func (c *ConfigAdapter) WithAdditionalHotkeys(toggleVAD, showConfig, resetToDefaults string) *ConfigAdapter {
-	// c.toggleVAD = toggleVAD
+func (c *ConfigAdapter) WithAdditionalHotkeys(showConfig, resetToDefaults string) *ConfigAdapter {
 	c.showConfig = showConfig
 	c.resetToDefaults = resetToDefaults
 	return c
@@ -53,8 +50,6 @@ func (c *ConfigAdapter) GetProvider() string {
 // Return the hotkey string for a given action name
 func (c *ConfigAdapter) GetActionHotkey(action string) string {
 	switch action {
-	// case "toggle_vad":
-	// 	return c.toggleVAD
 	case "show_config":
 		return c.showConfig
 	case "reset_to_defaults":
