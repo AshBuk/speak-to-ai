@@ -6,30 +6,23 @@
 package tray
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
 // CreateDefaultTrayManager creates the default tray manager
-// based on available dependencies
-func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
+// based on available dependencies.
+func CreateDefaultTrayManager(logger logger.Logger) TrayManagerInterface {
 	// Use the real systray implementation
 	iconMicOff := GetIconMicOff(logger)
 	iconMicOn := GetIconMicOn(logger)
 
-	// Try to detect AppImage dir (reserved for potential icon overrides)
-	_ = os.Getenv("APPDIR")
-	_ = filepath.Join
-
-	return NewTrayManager(iconMicOff, iconMicOn, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults, logger)
+	return NewTrayManager(iconMicOff, iconMicOn, logger)
 }
 
-// CreateTrayManagerWithConfig creates tray manager with initial configuration
-func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
-	trayManager := CreateDefaultTrayManager(logger, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults)
+// CreateTrayManagerWithConfig creates tray manager with initial configuration.
+func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger) TrayManagerInterface {
+	trayManager := CreateDefaultTrayManager(logger)
 	trayManager.UpdateSettings(config)
 	return trayManager
 }

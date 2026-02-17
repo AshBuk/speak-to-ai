@@ -26,16 +26,11 @@ type MockTrayManager struct {
 	onSelectOutputMode     func(mode string) error
 }
 
-// CreateMockTrayManager creates a mock tray manager that doesn't use systray
-func CreateMockTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
+// CreateMockTrayManager creates a mock tray manager that doesn't use systray.
+// Callbacks are wired later via setter methods.
+func CreateMockTrayManager(logger logger.Logger) TrayManagerInterface {
 	return &MockTrayManager{
-		isRecording:       false,
-		logger:            logger,
-		onExit:            onExit,
-		onToggle:          onToggle,
-		onShowConfig:      onShowConfig,
-		onShowAbout:       onShowAbout,
-		onResetToDefaults: onResetToDefaults,
+		logger: logger,
 	}
 }
 
