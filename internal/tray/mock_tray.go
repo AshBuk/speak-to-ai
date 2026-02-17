@@ -91,8 +91,8 @@ func (tm *MockTrayManager) SetSettingsActions(
 	tm.logger.Info("Mock tray: settings actions set")
 }
 
-// SetGetOutputToolsCallback sets the callback for getting actual output tool names (mock implementation)
-func (tm *MockTrayManager) SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
+// OutputToolsCallback sets the callback for getting actual output tool names (mock implementation)
+func (tm *MockTrayManager) OutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
 	tm.onGetOutputTools = callback
 	tm.logger.Info("Mock tray: get output tools callback set")
 }

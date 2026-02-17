@@ -267,8 +267,8 @@ func (tm *TrayManager) SetHotkeyRebindAction(onRebind func(action string) error)
 	tm.onRebindHotkey = onRebind
 }
 
-// SetGetOutputToolsCallback sets the callback for getting actual output tool names
-func (tm *TrayManager) SetGetOutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
+// OutputToolsCallback sets the callback for getting actual output tool names
+func (tm *TrayManager) OutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
 	tm.onGetOutputTools = callback
 }
 
