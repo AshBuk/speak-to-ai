@@ -8,10 +8,10 @@
 | **Production files** | 83 |
 | **Test files** | 44 |
 | **Mock files** | 5 |
-| **Production code** | 10,632 LOC |
-| **Test code** | 10,285 LOC |
-| **Mock code** | 847 LOC |
-| **Total codebase** | 21,764 LOC |
+| **Production code** | 10,263 LOC |
+| **Test code** | 10,262 LOC |
+| **Mock code** | 1,088 LOC |
+| **Total codebase** | 21,613 LOC |
 
 ---
 
@@ -19,10 +19,10 @@
 
 | Metric | Value |
 | --- | --- |
-| **Test/Production ratio** | 0.97 (97%) |
-| **Average production file size** | ~128 lines |
-| **Average test file size** | ~234 lines |
-| **Average mock file size** | ~169 lines |
+| **Test/Production ratio** | 1.00 (100%) |
+| **Average production file size** | ~127 lines |
+| **Average test file size** | ~233 lines |
+| **Average mock file size** | ~155 lines |
 | **Test coverage** | High (includes unit and integration tests) |
 | **golangci-lint warnings** | 0 |
 | **Goroutine leaks** | 0 |
@@ -32,7 +32,7 @@
 
 | Metric | Value |
 | --- | --- |
-| **Development time** | ~10 months (Apr 2025 - Jan 2026) |
-| **Total commits** | 443 |
+| **Development time** | ~11 months (Apr 2025 - Feb 2026) |
+| **Total commits** | 452 |
 
-**Last Updated:** 2026-01-28 (based on commit bdaa741)
+**Last Updated:** 2026-02-18 (based on commit 34383e9)
