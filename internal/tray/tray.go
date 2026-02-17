@@ -69,22 +69,17 @@ type TrayManager struct {
 	wg     sync.WaitGroup
 }
 
-// NewTrayManager creates a new tray manager instance
-func NewTrayManager(iconMicOff, iconMicOn []byte, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error, logger logger.Logger) *TrayManager {
+// NewTrayManager creates a new tray manager instance.
+// Callbacks are wired later via setter methods.
+func NewTrayManager(iconMicOff, iconMicOn []byte, logger logger.Logger) *TrayManager {
 	return &TrayManager{
-		isRecording:       false,
-		iconMicOff:        iconMicOff,
-		iconMicOn:         iconMicOn,
-		onExit:            onExit,
-		onToggle:          onToggle,
-		onShowConfig:      onShowConfig,
-		onShowAbout:       onShowAbout,
-		onResetToDefaults: onResetToDefaults,
-		hotkeyItems:       make(map[string]*systray.MenuItem),
-		audioItems:        make(map[string]*systray.MenuItem),
-		languageItems:     make(map[string]*systray.MenuItem),
-		outputItems:       make(map[string]*systray.MenuItem),
-		logger:            logger,
+		iconMicOff:    iconMicOff,
+		iconMicOn:     iconMicOn,
+		hotkeyItems:   make(map[string]*systray.MenuItem),
+		audioItems:    make(map[string]*systray.MenuItem),
+		languageItems: make(map[string]*systray.MenuItem),
+		outputItems:   make(map[string]*systray.MenuItem),
+		logger:        logger,
 	}
 }
 
@@ -106,7 +101,11 @@ func (tm *TrayManager) Start() {
 	tm.wg.Add(1)
 	go func() {
 		defer tm.wg.Done()
-		systray.Run(tm.onReady, tm.onExit)
+		systray.Run(tm.onReady, func() {
+			if tm.onExit != nil {
+				tm.onExit()
+			}
+		})
 	}()
 }
 
@@ -172,8 +171,10 @@ func (tm *TrayManager) handleMenuClicks() {
 			return
 		case <-tm.toggleItem.ClickedCh:
 			tm.logger.Info("Toggle recording clicked")
-			if err := tm.onToggle(); err != nil {
-				tm.logger.Error("Error toggling recording: %v", err)
+			if tm.onToggle != nil {
+				if err := tm.onToggle(); err != nil {
+					tm.logger.Error("Error toggling recording: %v", err)
+				}
 			}
 		case <-tm.showConfigItem.ClickedCh:
 			tm.logger.Info("Show config clicked")

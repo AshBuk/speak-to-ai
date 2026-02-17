@@ -185,29 +185,8 @@ func (cf *FactoryComponents) createWebSocketServer(recorder interfaces.AudioReco
 	return websocket.NewWebSocketServer(cf.config.Config, recorder, whisperEngine, cf.config.Logger)
 }
 
-// createTrayManager creates system tray manager
-// Placeholder Callbacks - real callbacks wired later in Stage 3 (CallbackWirer)
-// This allows tray to be created before services are assembled
+// createTrayManager creates system tray manager.
+// Callbacks are wired later in Stage 3 (FactoryWirer).
 func (cf *FactoryComponents) createTrayManager() tray.TrayManagerInterface {
-	return tray.CreateTrayManagerWithConfig(cf.config.Config,
-		cf.config.Logger,
-		func() { // onExit
-			cf.config.Logger.Info("Exit requested from tray")
-		},
-		func() error { // onToggle
-			cf.config.Logger.Info("Toggle requested from tray")
-			return nil
-		},
-		func() error { // onShowConfig
-			cf.config.Logger.Info("Show config requested from tray")
-			return nil
-		},
-		func() error { // onShowAbout
-			cf.config.Logger.Info("Show about requested from tray")
-			return nil
-		},
-		func() error { // onResetToDefaults
-			cf.config.Logger.Info("Reset to defaults requested from tray")
-			return nil
-		})
+	return tray.CreateTrayManagerWithConfig(cf.config.Config, cf.config.Logger)
 }

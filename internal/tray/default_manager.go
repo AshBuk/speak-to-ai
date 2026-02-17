@@ -11,15 +11,15 @@ import (
 )
 
 // CreateDefaultTrayManager creates the default tray manager
-// based on available dependencies
-func CreateDefaultTrayManager(logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
+// based on available dependencies.
+func CreateDefaultTrayManager(logger logger.Logger) TrayManagerInterface {
 	// Use the mock implementation as fallback when systray is not available
-	return CreateMockTrayManager(logger, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults)
+	return CreateMockTrayManager(logger)
 }
 
-// CreateTrayManagerWithConfig creates tray manager with initial configuration
-func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger, onExit func(), onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) TrayManagerInterface {
-	trayManager := CreateDefaultTrayManager(logger, onExit, onToggle, onShowConfig, onShowAbout, onResetToDefaults)
+// CreateTrayManagerWithConfig creates tray manager with initial configuration.
+func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger) TrayManagerInterface {
+	trayManager := CreateDefaultTrayManager(logger)
 	trayManager.UpdateSettings(config)
 	return trayManager
 }
