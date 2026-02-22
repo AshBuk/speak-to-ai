@@ -47,7 +47,6 @@ jobs:
       - name: Security scan (gosec)
         run: |
           docker compose run --rm dev bash -c '
-            go install github.com/securego/gosec/v2/cmd/gosec@v2.22.11
             gosec -exclude-dir=build -exclude-dir=vendor -fmt=sarif -out=gosec-results.sarif ./...
             # Fix paths: /app/ -> relative for GitHub
             sed -i "s|/app/||g" gosec-results.sarif

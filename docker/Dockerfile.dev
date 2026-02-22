@@ -38,6 +38,9 @@ RUN curl -fsSL "https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
     | sh -s -- -b /usr/local/bin v2.6.1
 
+# Install gosec
+RUN go install github.com/securego/gosec/v2/cmd/gosec@v2.22.11
+
 # Set working directory
 WORKDIR /app
 
