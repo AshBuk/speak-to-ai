@@ -29,8 +29,8 @@ type EvdevKeyboardProvider struct {
 	modifierState map[string]bool // Tracks the state of modifier keys
 	mutex         sync.RWMutex
 	logger        logger.Logger
-	wg            sync.WaitGroup // Tracks device listener goroutines
-	stopping      int32          // atomic flag to soften expected errors during shutdown
+	wg            *sync.WaitGroup // Tracks device listener goroutines; pointer to allow safe replacement on restart
+	stopping      int32           // atomic flag to soften expected errors during shutdown
 }
 
 // Create a new EvdevKeyboardProvider instance
@@ -41,6 +41,7 @@ func NewEvdevKeyboardProvider(logger logger.Logger) *EvdevKeyboardProvider {
 		isListening:   false,
 		modifierState: make(map[string]bool),
 		logger:        logger,
+		wg:            &sync.WaitGroup{},
 	}
 }
 
@@ -137,12 +138,15 @@ func (p *EvdevKeyboardProvider) Start() error {
 		return fmt.Errorf("no keyboard devices found")
 	}
 	p.isListening = true
+	// Fresh WaitGroup per Start() so previous Stop() timeout goroutine doesn't race with Add()
+	p.wg = &sync.WaitGroup{}
 	// Start a listener goroutine for each device
+	wg := p.wg
 	for i := range p.devices {
 		idx := i
-		p.wg.Add(1)
+		wg.Add(1)
 		go func(deviceIdx int) {
-			defer p.wg.Done()
+			defer wg.Done()
 			p.listenDevice(deviceIdx)
 		}(idx)
 	}
@@ -151,21 +155,21 @@ func (p *EvdevKeyboardProvider) Start() error {
 
 // listenDevice listens to one device events and exits on stop signal or critical read error
 func (p *EvdevKeyboardProvider) listenDevice(idx int) {
-	// Capture device reference at goroutine start to avoid race with Stop()
+	// Capture device and stop channel references under lock to avoid races with Stop()
 	p.mutex.RLock()
 	if p.devices == nil || idx >= len(p.devices) {
 		p.mutex.RUnlock()
 		return
 	}
 	dev := p.devices[idx]
-	p.mutex.RUnlock()
-
-	// Set non-blocking mode for fast Stop() without waiting for ReadOne()
+	stopCh := p.stopListening
+	// Set non-blocking mode under lock so it completes before Stop() can Close() the device
 	_ = dev.NonBlock()
+	p.mutex.RUnlock()
 
 	for {
 		select {
-		case <-p.stopListening:
+		case <-stopCh:
 			return
 		default:
 		}
@@ -283,9 +287,12 @@ func (p *EvdevKeyboardProvider) Stop() {
 	p.isListening = false
 	// With non-blocking mode, goroutines exit immediately after Close()
 	// Short timeout as safety net
+	// Capture current wg pointer so the goroutine waits on the correct instance
+	// even if a new Start() creates a replacement before this Wait() completes
+	currentWg := p.wg
 	done := make(chan struct{})
 	go func() {
-		p.wg.Wait()
+		currentWg.Wait()
 		close(done)
 	}()
 
