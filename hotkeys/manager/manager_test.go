@@ -361,7 +361,9 @@ func TestHotkeyManager_ConcurrentAccess(t *testing.T) {
 
 	go func() {
 		for i := 0; i < 100; i++ {
+			manager.hotkeysMutex.Lock()
 			manager.isRecording = i%2 == 0
+			manager.hotkeysMutex.Unlock()
 		}
 		done <- true
 	}()

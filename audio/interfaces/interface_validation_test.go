@@ -5,6 +5,7 @@ package interfaces_test
 
 import (
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -238,9 +239,12 @@ func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
 		mock.SetAudioLevelSequence(testSequence)
 		mock.EnableAudioLevelSimulation()
 
+		var mu sync.Mutex
 		var receivedLevels []float64
 		callback := func(level float64) {
+			mu.Lock()
 			receivedLevels = append(receivedLevels, level)
+			mu.Unlock()
 		}
 		mock.SetAudioLevelCallback(callback)
 
@@ -255,8 +259,13 @@ func TestAudioRecorderInterface_AudioLevelMonitoring(t *testing.T) {
 
 		// Stop recording
 		mock.StopRecording()
+		// Allow simulation goroutine to observe isRecording=false and exit
+		time.Sleep(150 * time.Millisecond)
 
-		if len(receivedLevels) == 0 {
+		mu.Lock()
+		count := len(receivedLevels)
+		mu.Unlock()
+		if count == 0 {
 			t.Error("expected to receive audio level updates")
 		}
 	})
@@ -321,9 +330,12 @@ func TestAudioRecorderInterface_ConcurrentAccess(t *testing.T) {
 	mock := mocks.NewMockAudioRecorder()
 
 	t.Run("ConcurrentLevelUpdates", func(t *testing.T) {
+		var mu sync.Mutex
 		var receivedLevels []float64
 		callback := func(level float64) {
+			mu.Lock()
 			receivedLevels = append(receivedLevels, level)
+			mu.Unlock()
 		}
 		mock.SetAudioLevelCallback(callback)
 
@@ -342,7 +354,10 @@ func TestAudioRecorderInterface_ConcurrentAccess(t *testing.T) {
 		}
 
 		// Should not crash and should have received some updates
-		if len(receivedLevels) == 0 {
+		mu.Lock()
+		count := len(receivedLevels)
+		mu.Unlock()
+		if count == 0 {
 			t.Error("expected to receive some audio level updates")
 		}
 	})
