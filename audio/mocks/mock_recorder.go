@@ -5,6 +5,7 @@ package mocks
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -12,6 +13,7 @@ import (
 
 // MockAudioRecorder implements AudioRecorder interface for testing
 type MockAudioRecorder struct {
+	mu                  sync.Mutex
 	isRecording         bool
 	outputFile          string
 	cleanupCalled       bool
@@ -40,6 +42,9 @@ func NewMockAudioRecorder() *MockAudioRecorder {
 
 // StartRecording simulates starting audio recording
 func (m *MockAudioRecorder) StartRecording() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.startError != nil {
 		return m.startError
 	}
@@ -56,6 +61,9 @@ func (m *MockAudioRecorder) StartRecording() error {
 
 // StopRecording simulates stopping audio recording
 func (m *MockAudioRecorder) StopRecording() (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.stopError != nil {
 		return "", m.stopError
 	}
@@ -68,11 +76,16 @@ func (m *MockAudioRecorder) StopRecording() (string, error) {
 
 // GetOutputFile returns the mock output file path
 func (m *MockAudioRecorder) GetOutputFile() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.outputFile
 }
 
 // CleanupFile simulates cleaning up the audio file
 func (m *MockAudioRecorder) CleanupFile() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.cleanupError != nil {
 		return m.cleanupError
 	}
@@ -82,11 +95,15 @@ func (m *MockAudioRecorder) CleanupFile() error {
 
 // SetAudioLevelCallback sets the callback for audio level monitoring
 func (m *MockAudioRecorder) SetAudioLevelCallback(callback interfaces.AudioLevelCallback) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.audioLevelCallback = callback
 }
 
 // GetAudioLevel returns the current mock audio level
 func (m *MockAudioRecorder) GetAudioLevel() float64 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.audioLevel
 }
 
@@ -94,46 +111,64 @@ func (m *MockAudioRecorder) GetAudioLevel() float64 {
 
 // SetStartError configures the mock to return an error on StartRecording
 func (m *MockAudioRecorder) SetStartError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.startError = err
 }
 
 // SetStopError configures the mock to return an error on StopRecording
 func (m *MockAudioRecorder) SetStopError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.stopError = err
 }
 
 // SetCleanupError configures the mock to return an error on CleanupFile
 func (m *MockAudioRecorder) SetCleanupError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.cleanupError = err
 }
 
 // SetRecordingResult sets the mock transcription result
 func (m *MockAudioRecorder) SetRecordingResult(result string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.recordingResult = result
 }
 
 // SetOutputFile sets the mock output file path
 func (m *MockAudioRecorder) SetOutputFile(path string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.outputFile = path
 }
 
 // IsRecording returns whether recording is in progress
 func (m *MockAudioRecorder) IsRecording() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.isRecording
 }
 
 // WasCleanupCalled returns whether CleanupFile was called
 func (m *MockAudioRecorder) WasCleanupCalled() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.cleanupCalled
 }
 
 // EnableAudioLevelSimulation enables automatic audio level updates
 func (m *MockAudioRecorder) EnableAudioLevelSimulation() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.simulateAudioLevels = true
 }
 
 // SetAudioLevelSequence sets a sequence of audio levels to simulate
 func (m *MockAudioRecorder) SetAudioLevelSequence(levels []float64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.audioLevelSequence = levels
 	m.audioLevelIndex = 0
 }
@@ -143,30 +178,49 @@ func (m *MockAudioRecorder) simulateAudioLevelUpdates() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for m.isRecording {
+	for {
 		<-ticker.C
+
+		m.mu.Lock()
+		if !m.isRecording {
+			m.mu.Unlock()
+			return
+		}
 		if m.audioLevelIndex < len(m.audioLevelSequence) {
 			m.audioLevel = m.audioLevelSequence[m.audioLevelIndex]
 			m.audioLevelIndex++
 		} else {
 			m.audioLevelIndex = 0
 		}
-		if m.audioLevelCallback != nil {
-			m.audioLevelCallback(m.audioLevel)
+		level := m.audioLevel
+		cb := m.audioLevelCallback
+		m.mu.Unlock()
+
+		// Call callback outside lock to avoid deadlock if callback calls mock methods
+		if cb != nil {
+			cb(level)
 		}
 	}
 }
 
 // SetAudioLevel manually sets the audio level (for testing)
 func (m *MockAudioRecorder) SetAudioLevel(level float64) {
+	m.mu.Lock()
 	m.audioLevel = level
-	if m.audioLevelCallback != nil {
-		m.audioLevelCallback(level)
+	cb := m.audioLevelCallback
+	m.mu.Unlock()
+
+	// Call callback outside lock to avoid deadlock if callback calls mock methods
+	if cb != nil {
+		cb(level)
 	}
 }
 
 // Reset clears all mock state
 func (m *MockAudioRecorder) Reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.isRecording = false
 	m.outputFile = "/tmp/test_audio.wav"
 	m.cleanupCalled = false
