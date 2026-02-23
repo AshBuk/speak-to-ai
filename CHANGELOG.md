@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.3] - 2026-02-23
+
+### Fixes
+- **Hotkey stability:** Fix potential crash on rapid hotkey provider restart during configuration changes
+
+### Maintenance
+- **Tray refactor:** Decouple callbacks from constructors — all wired via setter methods ([#74](https://github.com/AshBuk/speak-to-ai/pull/74))
+- **Dead code cleanup:** Remove unused VAD commented-out code across codebase ([#74](https://github.com/AshBuk/speak-to-ai/pull/74))
+- **Race safety:** Add mutex protection to test utilities, fix concurrent test callbacks
+
+---
 ## [1.6.2] - 2026-02-07
 
 ### Features

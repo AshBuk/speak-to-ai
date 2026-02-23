@@ -43,6 +43,11 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.6.3" date="2026-02-23">
+      <description>
+        <p>Fix potential crash on rapid hotkey restart. Tray refactor, dead code cleanup.</p>
+      </description>
+    </release>
     <release version="1.6.2" date="2026-02-07">
       <description>
         <p>CLI toggle command for one-key voice input. XDG config compliance.</p>
