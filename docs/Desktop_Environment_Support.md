@@ -104,4 +104,3 @@ Bind `speak-to-ai toggle` to any key via your DE settings or WM config to start/
 - See [CLI Usage Guide](CLI_USAGE.md) for command reference
 
 *Last updated: 2026-02-11*
-*Tested on: Fedora 42, Ubuntu 24.04*
