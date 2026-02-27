@@ -16,6 +16,8 @@ type TrayManagerInterface interface {
 	SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error)
 	// SetAudioActions sets callbacks for audio-related actions
 	SetAudioActions(onSelectRecorder func(method string) error)
+	// SetModelAction sets callback for whisper model selection
+	SetModelAction(onSelectModel func(modelID string) error)
 	// SetHotkeyRebindAction sets callback to rebind hotkeys by action name
 	SetHotkeyRebindAction(onRebind func(action string) error)
 	// SetSettingsActions sets callbacks for general settings from tray (Language, Notifications)

@@ -98,6 +98,11 @@ func (tm *MockTrayManager) SetCaptureOnceSupport(callback func() bool) {
 	tm.logger.Info("Mock tray: capture once support callback set")
 }
 
+// SetModelAction sets callback for whisper model selection (mock)
+func (tm *MockTrayManager) SetModelAction(onSelectModel func(modelID string) error) {
+	tm.logger.Info("Mock tray: model action set")
+}
+
 // SetHotkeyRebindAction sets callback for hotkey rebind (mock)
 func (tm *MockTrayManager) SetHotkeyRebindAction(onRebind func(action string) error) {
 	tm.logger.Info("Mock tray: hotkey rebind action set")
