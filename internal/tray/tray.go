@@ -41,16 +41,19 @@ type TrayManager struct {
 	hotkeysMenu       *systray.MenuItem
 	audioRecorderMenu *systray.MenuItem
 	languageMenu      *systray.MenuItem
+	modelMenu         *systray.MenuItem
 	outputMenu        *systray.MenuItem
 
 	// Dynamic settings items
 	hotkeyItems   map[string]*systray.MenuItem
 	audioItems    map[string]*systray.MenuItem
 	languageItems map[string]*systray.MenuItem
+	modelItems    map[string]*systray.MenuItem
 	outputItems   map[string]*systray.MenuItem
 
 	// Audio action callbacks
 	onSelectRecorder func(method string) error
+	onSelectModel    func(modelID string) error
 	// Settings callbacks
 	onSelectLang           func(language string) error
 	onToggleWorkflowNotify func() error
@@ -76,6 +79,7 @@ func NewTrayManager(iconMicOff, iconMicOn []byte, logger logger.Logger) *TrayMan
 		hotkeyItems:   make(map[string]*systray.MenuItem),
 		audioItems:    make(map[string]*systray.MenuItem),
 		languageItems: make(map[string]*systray.MenuItem),
+		modelItems:    make(map[string]*systray.MenuItem),
 		outputItems:   make(map[string]*systray.MenuItem),
 		logger:        logger,
 	}
@@ -155,6 +159,7 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	// The helpers gracefully no-op if items are not yet created
 	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
 	tm.updateLanguageRadioUI(config.General.Language)
+	tm.updateModelRadioUI(config.General.WhisperModel)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
 	tm.updateOutputUI()
 }
@@ -238,6 +243,11 @@ func (tm *TrayManager) Stop() {
 // SetAudioActions sets callbacks for audio-related actions (recorder selection)
 func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) error) {
 	tm.onSelectRecorder = onSelectRecorder
+}
+
+// SetModelAction sets callback for whisper model selection
+func (tm *TrayManager) SetModelAction(onSelectModel func(modelID string) error) {
+	tm.onSelectModel = onSelectModel
 }
 
 // SetExitAction allows overriding the exit callback (useful once services are wired)

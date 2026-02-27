@@ -58,6 +58,8 @@ func (cw *FactoryWirer) Wire(container *ServiceContainer, components *Components
 	)
 	// Step 2: Audio actions (recorder selection)
 	components.TrayManager.SetAudioActions(cw.makeRecorderSelectionCallback(container))
+	// Step 2b: Model selection
+	components.TrayManager.SetModelAction(cw.makeModelSelectionCallback(container))
 	// Step 3: Settings actions (language, notifications, output mode)
 	components.TrayManager.SetSettingsActions(
 		cw.makeLanguageCallback(container),
@@ -126,6 +128,30 @@ func (cw *FactoryWirer) makeRecorderSelectionCallback(container *ServiceContaine
 		}
 		container.Audio.ClearSession()
 		cw.updateUISettings(container)
+		return nil
+	}
+}
+func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) func(string) error {
+	return func(modelID string) error {
+		if container == nil || container.Audio == nil || container.Config == nil {
+			return fmt.Errorf("services not available")
+		}
+		if container.UI != nil {
+			container.UI.ShowNotification("Model Switch", fmt.Sprintf("Switching to %s...", modelID))
+		}
+		if err := container.Audio.SwitchModel(modelID); err != nil {
+			if container.UI != nil {
+				container.UI.ShowNotification("Model Switch Failed", err.Error())
+			}
+			return err
+		}
+		if err := container.Config.UpdateWhisperModel(modelID); err != nil {
+			return err
+		}
+		cw.updateUISettings(container)
+		if container.UI != nil {
+			container.UI.ShowNotification("Model Switch", fmt.Sprintf("Switched to %s", modelID))
+		}
 		return nil
 	}
 }

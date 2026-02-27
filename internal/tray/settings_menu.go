@@ -15,6 +15,7 @@ func (tm *TrayManager) createSettingsSubmenus() {
 	tm.hotkeysMenu = tm.settingsItem.AddSubMenuItem("Hotkeys", "Hotkey settings")
 	tm.audioRecorderMenu = tm.settingsItem.AddSubMenuItem("Audio Recorder", "Select audio recorder")
 	tm.languageMenu = tm.settingsItem.AddSubMenuItem("Set Language", "Select recognition language")
+	tm.modelMenu = tm.settingsItem.AddSubMenuItem("Whisper Model", "Select whisper model")
 
 	tm.outputMenu = tm.settingsItem.AddSubMenuItem("Output", "Output settings")
 
@@ -33,6 +34,7 @@ func (tm *TrayManager) populateSettingsMenus() {
 	tm.updateHotkeysMenuUI()
 	tm.setupAudioRecorderMenu()
 	tm.setupLanguageMenu()
+	tm.setupModelMenu()
 	tm.setupOutputMenu()
 	tm.setupWorkflowNotifications()
 }
@@ -118,6 +120,66 @@ func (tm *TrayManager) setupLanguageMenu() {
 			tm.updateLanguageRadioUI,
 			langCb,
 		)
+	}
+}
+
+// setupModelMenu creates and configures the whisper model selection submenu
+func (tm *TrayManager) setupModelMenu() {
+	currentModel := constants.ModelByID(tm.config.General.WhisperModel)
+	currentName := tm.config.General.WhisperModel
+	if currentModel != nil {
+		currentName = currentModel.Name
+	}
+	tm.modelItems["current"] = tm.modelMenu.AddSubMenuItem(
+		"● "+currentName,
+		"Current model",
+	)
+	tm.modelItems["current"].Disable()
+
+	modelCb := func(id string) error {
+		if tm.onSelectModel != nil {
+			return tm.onSelectModel(id)
+		}
+		return nil
+	}
+
+	for _, m := range constants.WhisperModels {
+		indicator := "○ "
+		if tm.config.General.WhisperModel == m.ID {
+			indicator = "● "
+		}
+		itm := tm.modelMenu.AddSubMenuItem(indicator+m.Name, m.ID)
+		tm.modelItems["model_"+m.ID] = itm
+
+		modelID := m.ID
+		tm.handleRadioItemClick(
+			itm,
+			modelID,
+			"Whisper model switched to %s (UI)",
+			tm.updateModelRadioUI,
+			modelCb,
+		)
+	}
+}
+
+// updateModelRadioUI updates selection marks for model menu
+func (tm *TrayManager) updateModelRadioUI(modelID string) {
+	for _, m := range constants.WhisperModels {
+		if itm := tm.modelItems["model_"+m.ID]; itm != nil {
+			if m.ID == modelID {
+				itm.SetTitle("● " + m.Name)
+			} else {
+				itm.SetTitle("○ " + m.Name)
+			}
+		}
+	}
+	if currentDisplay := tm.modelItems["current"]; currentDisplay != nil {
+		model := constants.ModelByID(modelID)
+		name := modelID
+		if model != nil {
+			name = model.Name
+		}
+		currentDisplay.SetTitle("● " + name)
 	}
 }
 
