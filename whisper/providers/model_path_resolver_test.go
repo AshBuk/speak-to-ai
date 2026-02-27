@@ -11,6 +11,8 @@ import (
 	"github.com/AshBuk/speak-to-ai/config"
 )
 
+const testModelFileName = "ggml-test-model.bin"
+
 func TestGetBundledModelPath_AppImage(t *testing.T) {
 	// Create temp directory structure for AppImage
 	appDir := t.TempDir()
@@ -18,7 +20,7 @@ func TestGetBundledModelPath_AppImage(t *testing.T) {
 	if err := os.MkdirAll(modelDir, 0o755); err != nil {
 		t.Fatalf("failed to create model dir: %v", err)
 	}
-	modelPath := filepath.Join(modelDir, ModelFileName)
+	modelPath := filepath.Join(modelDir, testModelFileName)
 	if err := os.WriteFile(modelPath, []byte("test"), 0o644); err != nil {
 		t.Fatalf("failed to create model file: %v", err)
 	}
@@ -26,9 +28,9 @@ func TestGetBundledModelPath_AppImage(t *testing.T) {
 	// Set APPDIR environment variable
 	t.Setenv("APPDIR", appDir)
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetBundledModelPath()
-	expected := filepath.Join(appDir, "sources/language-models", ModelFileName)
+	expected := filepath.Join(appDir, "sources/language-models", testModelFileName)
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
@@ -44,14 +46,14 @@ func TestGetBundledModelPath_UserData(t *testing.T) {
 	if err := os.MkdirAll(modelDir, 0o755); err != nil {
 		t.Fatalf("failed to create model dir: %v", err)
 	}
-	modelPath := filepath.Join(modelDir, ModelFileName)
+	modelPath := filepath.Join(modelDir, testModelFileName)
 	if err := os.WriteFile(modelPath, []byte("test"), 0o644); err != nil {
 		t.Fatalf("failed to create model file: %v", err)
 	}
 
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetBundledModelPath()
 	if result != modelPath {
 		t.Errorf("expected %q, got %q", modelPath, result)
@@ -69,7 +71,7 @@ func TestGetBundledModelPath_DevPath(t *testing.T) {
 	if err := os.MkdirAll(devModelDir, 0o755); err != nil {
 		t.Fatalf("failed to create dev model dir: %v", err)
 	}
-	devModelPath := filepath.Join(devModelDir, ModelFileName)
+	devModelPath := filepath.Join(devModelDir, testModelFileName)
 	if err := os.WriteFile(devModelPath, []byte("test"), 0o644); err != nil {
 		t.Fatalf("failed to create model file: %v", err)
 	}
@@ -81,9 +83,9 @@ func TestGetBundledModelPath_DevPath(t *testing.T) {
 	}
 	defer func() { _ = os.Chdir(oldWd) }()
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetBundledModelPath()
-	expected := filepath.Join("sources/language-models", ModelFileName)
+	expected := filepath.Join("sources/language-models", testModelFileName)
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
@@ -95,10 +97,10 @@ func TestGetBundledModelPath_FallbackToUserData(t *testing.T) {
 	dataHome := t.TempDir() // Empty directory
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetBundledModelPath()
 	// Should return user data path as default download location
-	expected := filepath.Join(dataHome, AppDataDirName, ModelsDirName, ModelFileName)
+	expected := filepath.Join(dataHome, AppDataDirName, ModelsDirName, testModelFileName)
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
@@ -108,9 +110,9 @@ func TestGetUserDataModelPath(t *testing.T) {
 	dataHome := "/custom/data/home"
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetUserDataModelPath()
-	expected := filepath.Join(dataHome, AppDataDirName, ModelsDirName, ModelFileName)
+	expected := filepath.Join(dataHome, AppDataDirName, ModelsDirName, testModelFileName)
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
@@ -120,10 +122,10 @@ func TestGetUserDataModelPath_DefaultHome(t *testing.T) {
 	// Clear XDG_DATA_HOME to use default
 	t.Setenv("XDG_DATA_HOME", "")
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetUserDataModelPath()
 	home, _ := os.UserHomeDir()
-	expected := filepath.Join(home, ".local", "share", AppDataDirName, ModelsDirName, ModelFileName)
+	expected := filepath.Join(home, ".local", "share", AppDataDirName, ModelsDirName, testModelFileName)
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
@@ -172,7 +174,7 @@ func TestModelPathResolver_Priority(t *testing.T) {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("failed to create dir %s: %v", dir, err)
 		}
-		modelPath := filepath.Join(dir, ModelFileName)
+		modelPath := filepath.Join(dir, testModelFileName)
 		if err := os.WriteFile(modelPath, []byte("test"), 0o644); err != nil {
 			t.Fatalf("failed to create model file: %v", err)
 		}
@@ -181,10 +183,10 @@ func TestModelPathResolver_Priority(t *testing.T) {
 	t.Setenv("APPDIR", appDir)
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	resolver := NewModelPathResolver(&config.Config{})
+	resolver := NewModelPathResolver(&config.Config{}, testModelFileName)
 	result := resolver.GetBundledModelPath()
 	// AppImage should take priority
-	expected := filepath.Join(appDir, "sources/language-models", ModelFileName)
+	expected := filepath.Join(appDir, "sources/language-models", testModelFileName)
 	if result != expected {
 		t.Errorf("AppImage path should take priority: expected %q, got %q", expected, result)
 	}

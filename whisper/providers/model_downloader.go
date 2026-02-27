@@ -11,21 +11,15 @@ import (
 	"path/filepath"
 )
 
-const (
-	// ModelDownloadURL is the URL to download the whisper small-q5_1 model
-	ModelDownloadURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin"
-	// MinModelSize is the minimum expected model size (180 MB)
-	MinModelSize = 180 * 1024 * 1024
-)
-
 // ModelDownloader handles downloading the whisper model from Hugging Face
 type ModelDownloader struct {
-	url string
+	url     string
+	minSize int64
 }
 
-// NewModelDownloader creates a new downloader with the default model URL
-func NewModelDownloader() *ModelDownloader {
-	return &ModelDownloader{url: ModelDownloadURL}
+// NewModelDownloaderForURL creates a downloader for the given URL and minimum size
+func NewModelDownloaderForURL(url string, minSize int64) *ModelDownloader {
+	return &ModelDownloader{url: url, minSize: minSize}
 }
 
 // Download downloads the model to the specified path
@@ -53,9 +47,9 @@ func (d *ModelDownloader) Download(destPath string) error {
 		_ = os.Remove(tmpPath)
 		return fmt.Errorf("failed to stat downloaded file: %w", err)
 	}
-	if info.Size() < MinModelSize {
+	if info.Size() < d.minSize {
 		_ = os.Remove(tmpPath)
-		return fmt.Errorf("downloaded model is too small (%d bytes), expected at least %d bytes", info.Size(), MinModelSize)
+		return fmt.Errorf("downloaded model is too small (%d bytes), expected at least %d bytes", info.Size(), d.minSize)
 	}
 
 	// Atomic rename
@@ -69,7 +63,7 @@ func (d *ModelDownloader) Download(destPath string) error {
 // downloadToFile downloads the model URL to the specified file
 func (d *ModelDownloader) downloadToFile(path string) error {
 	// Create HTTP request
-	resp, err := http.Get(d.url) // #nosec G107 -- URL is a constant, not user input
+	resp, err := http.Get(d.url) // #nosec G107 -- URL comes from hardcoded model definitions, not user input
 	if err != nil {
 		return fmt.Errorf("failed to download model: %w", err)
 	}
