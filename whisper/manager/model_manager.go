@@ -5,64 +5,40 @@ package manager
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
-	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
 	"github.com/AshBuk/speak-to-ai/whisper/providers"
 )
 
-// Implements the logic for managing the fixed `small-q5_1` Whisper model.
-// It relies on a path resolver to find the model file and a downloader to fetch it
+// Manages Whisper model lifecycle: resolution, download, and validation
 type ModelManager struct {
-	config       *config.Config
-	pathResolver *providers.ModelPathResolver
-	downloader   interfaces.ModelDownloader
+	config *config.Config
 }
 
 // Create a new manager responsible for the Whisper model
 func NewModelManager(config *config.Config) *ModelManager {
-	pathResolver := providers.NewModelPathResolver(config)
-	downloader := providers.NewModelDownloader()
-
-	return &ModelManager{
-		config:       config,
-		pathResolver: pathResolver,
-		downloader:   downloader,
-	}
+	return &ModelManager{config: config}
 }
 
-// Verify that the `small-q5_1` model is present and valid.
-// If not found, attempts to download it to user data directory
+// Initialize validates the configured model is present, downloading if needed
 func (m *ModelManager) Initialize() error {
-	modelPath := m.pathResolver.GetBundledModelPath()
-
-	// Check if model exists
-	if _, err := os.Stat(modelPath); err == nil {
-		return m.ValidateModel(modelPath)
-	}
-
-	// Model not found - try to download to user data directory
-	downloadPath := m.pathResolver.GetUserDataModelPath()
-	if err := m.downloadModel(downloadPath); err != nil {
-		return fmt.Errorf("model not found and download failed: %w", err)
-	}
-
-	return m.ValidateModel(downloadPath)
+	_, err := m.resolveModel(m.configuredModelID())
+	return err
 }
 
-// Return the path to the `small-q5_1` model
+// GetModelPath returns the absolute path to the configured model file
 func (m *ModelManager) GetModelPath() (string, error) {
-	modelPath := m.pathResolver.GetBundledModelPath()
-	if !utils.IsValidFile(modelPath) {
-		return "", fmt.Errorf("small-q5_1 model not found at %s", modelPath)
-	}
-	return modelPath, nil
+	return m.resolveModel(m.configuredModelID())
 }
 
-// Check if the model file at the given path is a valid model file
-// Perform a basic sanity check based on file size
+// SwitchModel resolves (and downloads if needed) a model by ID, returning its path
+func (m *ModelManager) SwitchModel(modelID string) (string, error) {
+	return m.resolveModel(modelID)
+}
+
+// ValidateModel checks if the model file at the given path is valid (basic size check)
 func (m *ModelManager) ValidateModel(modelPath string) error {
 	if !utils.IsValidFile(modelPath) {
 		return fmt.Errorf("model file not found: %s", modelPath)
@@ -78,7 +54,40 @@ func (m *ModelManager) ValidateModel(modelPath string) error {
 	return nil
 }
 
-// downloadModel downloads the model to the specified path
-func (m *ModelManager) downloadModel(destPath string) error {
-	return m.downloader.Download(destPath)
+// resolveModel finds or downloads a model by ID, returning its validated path
+func (m *ModelManager) resolveModel(modelID string) (string, error) {
+	def := constants.ModelByID(modelID)
+	if def == nil {
+		return "", fmt.Errorf("unknown model ID: %s", modelID)
+	}
+
+	resolver := providers.NewModelPathResolver(m.config, def.FileName)
+
+	// Check bundled / user data / dev paths
+	modelPath := resolver.GetBundledModelPath()
+	if utils.IsValidFile(modelPath) {
+		if err := m.ValidateModel(modelPath); err == nil {
+			return modelPath, nil
+		}
+	}
+
+	// Download to user data directory
+	downloadPath := resolver.GetUserDataModelPath()
+	dl := providers.NewModelDownloaderForURL(def.URL, def.MinSize)
+	if err := dl.Download(downloadPath); err != nil {
+		return "", fmt.Errorf("failed to download model %s: %w", modelID, err)
+	}
+
+	if err := m.ValidateModel(downloadPath); err != nil {
+		return "", fmt.Errorf("downloaded model %s failed validation: %w", modelID, err)
+	}
+	return downloadPath, nil
+}
+
+// configuredModelID returns the model ID from config, falling back to default
+func (m *ModelManager) configuredModelID() string {
+	if id := m.config.General.WhisperModel; id != "" {
+		return id
+	}
+	return constants.DefaultModelID
 }

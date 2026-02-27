@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	// ModelFileName is the standard name for the whisper model file
-	ModelFileName = "small-q5_1.bin"
 	// AppDataDirName is the application data directory name
 	AppDataDirName = "speak-to-ai"
 	// ModelsDirName is the subdirectory for model files
@@ -22,13 +20,15 @@ const (
 // Implements the logic for resolving the path to the bundled model
 // based on the execution environment (e.g., AppImage, system package, dev)
 type ModelPathResolver struct {
-	config *config.Config
+	config        *config.Config
+	modelFileName string
 }
 
-// Create a new resolver for locating the model file
-func NewModelPathResolver(config *config.Config) *ModelPathResolver {
+// NewModelPathResolver creates a resolver for locating the given model file
+func NewModelPathResolver(config *config.Config, fileName string) *ModelPathResolver {
 	return &ModelPathResolver{
-		config: config,
+		config:        config,
+		modelFileName: fileName,
 	}
 }
 
@@ -40,7 +40,7 @@ func NewModelPathResolver(config *config.Config) *ModelPathResolver {
 func (r *ModelPathResolver) GetBundledModelPath() string {
 	// 1. AppImage environment
 	if appDir := os.Getenv("APPDIR"); appDir != "" {
-		path := filepath.Join(appDir, "sources/language-models", ModelFileName)
+		path := filepath.Join(appDir, "sources/language-models", r.modelFileName)
 		if fileExists(path) {
 			return path
 		}
@@ -51,7 +51,7 @@ func (r *ModelPathResolver) GetBundledModelPath() string {
 		return userDataPath
 	}
 	// 3. Development path
-	devPath := filepath.Join("sources/language-models", ModelFileName)
+	devPath := filepath.Join("sources/language-models", r.modelFileName)
 	if fileExists(devPath) {
 		return devPath
 	}
@@ -60,7 +60,7 @@ func (r *ModelPathResolver) GetBundledModelPath() string {
 }
 
 // GetUserDataModelPath returns the path where model should be downloaded
-// This is XDG_DATA_HOME/speak-to-ai/models/small-q5_1.bin
+// This is XDG_DATA_HOME/speak-to-ai/models/<model-file-name>
 func (r *ModelPathResolver) GetUserDataModelPath() string {
 	return r.getUserDataModelPath()
 }
@@ -72,11 +72,11 @@ func (r *ModelPathResolver) getUserDataModelPath() string {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			// Fallback to current directory if home is unavailable
-			return filepath.Join(ModelsDirName, ModelFileName)
+			return filepath.Join(ModelsDirName, r.modelFileName)
 		}
 		dataHome = filepath.Join(home, ".local", "share")
 	}
-	return filepath.Join(dataHome, AppDataDirName, ModelsDirName, ModelFileName)
+	return filepath.Join(dataHome, AppDataDirName, ModelsDirName, r.modelFileName)
 }
 
 // fileExists checks if a file exists and is not a directory
