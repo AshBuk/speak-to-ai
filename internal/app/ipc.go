@@ -57,6 +57,7 @@ func (a *App) registerIPCHandlers(server *ipc.Server) {
 	server.Register("toggle-recording", a.ipcHandleToggleRecording)
 	server.Register("status", a.ipcHandleStatus)
 	server.Register("last-transcript", a.ipcHandleLastTranscript)
+	server.Register("set-model", a.ipcHandleSetModel)
 }
 
 // ipcHandleStartRecording Command handler - starts audio recording via handlers.go
@@ -150,6 +151,26 @@ func (a *App) ipcHandleStatus(ipc.Request) (ipc.Response, error) {
 func (a *App) ipcHandleLastTranscript(ipc.Request) (ipc.Response, error) {
 	return ipc.NewSuccessResponse("last transcript", map[string]any{
 		"transcript": a.getLastTranscript(),
+	}), nil
+}
+
+// ipcHandleSetModel Command handler - switches whisper model and persists config
+func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
+	if a.Services == nil || a.Services.Audio == nil || a.Services.Config == nil {
+		return ipc.Response{}, fmt.Errorf("services not available")
+	}
+	modelID := req.Params["model"]
+	if modelID == "" {
+		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
+	}
+	if err := a.Services.Audio.SwitchModel(modelID); err != nil {
+		return ipc.Response{}, fmt.Errorf("model switch failed: %w", err)
+	}
+	if err := a.Services.Config.UpdateWhisperModel(modelID); err != nil {
+		return ipc.Response{}, fmt.Errorf("failed to persist model setting: %w", err)
+	}
+	return ipc.NewSuccessResponse("model switched", map[string]any{
+		"model": modelID,
 	}), nil
 }
 
