@@ -81,6 +81,21 @@ func (cs *ConfigService) GetConfig() *config.Config {
 	return cs.config
 }
 
+// Change whisper model setting with rollback on save failure
+func (cs *ConfigService) UpdateWhisperModel(modelID string) error {
+	cs.logger.Info("Updating whisper model to: %s", modelID)
+	if cs.config.General.WhisperModel == modelID {
+		return nil
+	}
+	old := cs.config.General.WhisperModel
+	cs.config.General.WhisperModel = modelID
+	if err := cs.SaveConfig(); err != nil {
+		cs.config.General.WhisperModel = old
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+	return nil
+}
+
 // Change whisper language setting with rollback on save failure
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)

@@ -21,6 +21,9 @@ type AudioServiceInterface interface {
 	// Session management
 	ClearSession()
 
+	// Model management
+	SwitchModel(modelID string) error
+
 	// Transcript access
 	GetLastTranscript() string
 
@@ -80,6 +83,7 @@ type ConfigServiceInterface interface {
 
 	// Settings updates
 	UpdateLanguage(language string) error
+	UpdateWhisperModel(modelID string) error
 	ToggleWorkflowNotifications() error
 	UpdateRecordingMethod(method string) error
 	UpdateOutputMode(mode string) error

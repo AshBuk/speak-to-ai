@@ -14,6 +14,7 @@ import (
 	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
 	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
 	"github.com/AshBuk/speak-to-ai/websocket"
+	"github.com/AshBuk/speak-to-ai/whisper"
 )
 
 // Handles text output routing and transcription synchronization
@@ -230,6 +231,13 @@ func (ios *IOService) detectOutputEnvironment() outputFactory.EnvironmentType {
 		return outputFactory.EnvironmentX11
 	default:
 		return outputFactory.EnvironmentUnknown
+	}
+}
+
+// SetWhisperEngine updates the WebSocket server's whisper engine reference after hot-reload
+func (ios *IOService) SetWhisperEngine(engine *whisper.WhisperEngine) {
+	if ios.webSocketServer != nil {
+		ios.webSocketServer.SetWhisperEngine(engine)
 	}
 }
 
