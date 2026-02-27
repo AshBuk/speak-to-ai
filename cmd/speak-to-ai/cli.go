@@ -12,13 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/ipc"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
 // CLI configuration options
 type cliOptions struct {
-	command    string        // CLI command verb (start/stop/status/transcript)
+	command    string        // CLI command verb (start/stop/status/transcript/model)
+	args       []string      // Additional arguments after the command verb
 	socketPath string        // Path to IPC Unix socket
 	jsonOutput bool          // Output response as JSON
 	timeout    time.Duration // IPC request timeout
@@ -71,6 +73,7 @@ func parseCLIOptions(args []string) (*cliOptions, error) {
 
 	return &cliOptions{
 		command:    command,
+		args:       remaining[1:],
 		socketPath: socketPath,
 		jsonOutput: jsonOutput,
 		timeout:    timeout,
@@ -99,7 +102,13 @@ func maybeRunCLI(args []string) (bool, int) {
 		return true, 2
 	}
 
-	resp, err := executeCLICommand(opts.command, opts.socketPath, opts.timeout)
+	// Handle local-only commands (no IPC needed)
+	if opts.command == "model" && (len(opts.args) == 0 || opts.args[0] == "list") {
+		printModelList()
+		return true, 0
+	}
+
+	resp, err := executeCLICommand(opts.command, opts.args, opts.socketPath, opts.timeout)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return true, 1
@@ -165,14 +174,14 @@ func splitFlagNameAndValue(flagArg string) (name string, hasValue bool) {
 
 func isCLIVerb(command string) bool {
 	switch command {
-	case "start", "stop", "toggle", "status", "transcript":
+	case "start", "stop", "toggle", "status", "transcript", "model":
 		return true
 	default:
 		return false
 	}
 }
 
-func executeCLICommand(command, socketPath string, timeout time.Duration) (ipc.Response, error) {
+func executeCLICommand(command string, args []string, socketPath string, timeout time.Duration) (ipc.Response, error) {
 	var (
 		req  ipc.Request
 		resp ipc.Response
@@ -195,6 +204,12 @@ func executeCLICommand(command, socketPath string, timeout time.Duration) (ipc.R
 	case "transcript":
 		req = ipc.Request{Command: "last-transcript"}
 		resp, err = ipc.SendRequest(socketPath, req, timeout)
+	case "model":
+		req, err = buildModelRequest(args)
+		if err != nil {
+			return ipc.Response{}, err
+		}
+		resp, err = ipc.SendRequest(socketPath, req, timeout)
 	}
 
 	return resp, err
@@ -203,6 +218,7 @@ func executeCLICommand(command, socketPath string, timeout time.Duration) (ipc.R
 const (
 	defaultStatusTimeout = 5 * time.Second
 	defaultStopTimeout   = 60 * time.Second
+	defaultModelTimeout  = 5 * time.Minute
 )
 
 func deriveTimeout(command string, override int) time.Duration {
@@ -213,6 +229,8 @@ func deriveTimeout(command string, override int) time.Duration {
 	switch command {
 	case "stop", "toggle":
 		return defaultStopTimeout
+	case "model":
+		return defaultModelTimeout
 	default:
 		return defaultStatusTimeout
 	}
@@ -250,6 +268,10 @@ func printResponse(command string, resp ipc.Response) {
 			fmt.Println(transcript)
 		} else {
 			fmt.Println("No transcript available.")
+		}
+	case "model":
+		if model, ok := getString(data, "model"); ok && model != "" {
+			fmt.Printf("Model switched to: %s\n", model)
 		}
 	default:
 		if resp.Message != "" {
@@ -308,6 +330,28 @@ func getIntOr(data map[string]any, key string, fallback int) int {
 		}
 	}
 	return fallback
+}
+
+func printModelList() {
+	fmt.Println("Available whisper models:")
+	for _, m := range constants.WhisperModels {
+		fmt.Printf("  %-14s %s\n", m.ID, m.Name)
+	}
+	fmt.Println("\nUsage: speak-to-ai model set <model-id>")
+}
+
+func buildModelRequest(args []string) (ipc.Request, error) {
+	if len(args) < 2 || args[0] != "set" {
+		return ipc.Request{}, fmt.Errorf("usage: speak-to-ai model set <model-id>")
+	}
+	modelID := args[1]
+	if constants.ModelByID(modelID) == nil {
+		return ipc.Request{}, fmt.Errorf("unknown model: %s (use 'speak-to-ai model list' to see available models)", modelID)
+	}
+	return ipc.Request{
+		Command: "set-model",
+		Params:  map[string]string{"model": modelID},
+	}, nil
 }
 
 func printStatusResponse(data map[string]any) {
