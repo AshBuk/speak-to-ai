@@ -47,6 +47,7 @@ type WebSocketServer struct {
 	upgrader    websocket.Upgrader
 	recorder    interfaces.AudioRecorder
 	whisper     *whisper.WhisperEngine
+	whisperLock sync.RWMutex
 	server      *http.Server
 	started     bool
 	retryCount  map[*websocket.Conn]int // Track retry attempts
@@ -100,6 +101,20 @@ func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder
 		retryCount: make(map[*websocket.Conn]int),
 		logger:     logger,
 	}
+}
+
+// SetWhisperEngine replaces the whisper engine reference (used after model hot-reload)
+func (s *WebSocketServer) SetWhisperEngine(engine *whisper.WhisperEngine) {
+	s.whisperLock.Lock()
+	s.whisper = engine
+	s.whisperLock.Unlock()
+}
+
+// whisperEngine returns the current whisper engine (thread-safe)
+func (s *WebSocketServer) whisperEngine() *whisper.WhisperEngine {
+	s.whisperLock.RLock()
+	defer s.whisperLock.RUnlock()
+	return s.whisper
 }
 
 // Begin accepting client connections with health monitoring

@@ -87,7 +87,7 @@ func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID st
 	ctx, cancel := context.WithTimeout(context.Background(), transcriptionCtxTimeout)
 	defer cancel()
 	go func() {
-		text, err := s.whisper.TranscribeWithContext(ctx, audioFile)
+		text, err := s.whisperEngine().TranscribeWithContext(ctx, audioFile)
 		resultCh <- transcriptionResult{text: text, err: err}
 	}()
 
