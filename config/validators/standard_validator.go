@@ -10,14 +10,15 @@ import (
 	"strings"
 
 	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/speak-to-ai/internal/constants"
 )
 
 // validateGeneralConfig validates general configuration settings
 func validateGeneralConfig(config *models.Config, errors *[]string) {
-	// The whisper model is fixed to a specific version for consistency
-	if config.General.WhisperModel != "small-q5_1" {
-		*errors = append(*errors, fmt.Sprintf("invalid whisper model: %s, using 'small-q5_1'", config.General.WhisperModel))
-		config.General.WhisperModel = "small-q5_1"
+	// Validate whisper model against known model IDs
+	if constants.ModelByID(config.General.WhisperModel) == nil {
+		*errors = append(*errors, fmt.Sprintf("invalid whisper model: %s, using '%s'", config.General.WhisperModel, constants.DefaultModelID))
+		config.General.WhisperModel = constants.DefaultModelID
 	}
 
 	if config.General.TempAudioPath != "" {
