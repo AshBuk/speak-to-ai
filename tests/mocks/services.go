@@ -21,11 +21,12 @@ func (m *MockAudioService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockAudioService) HandleStartRecording() error { return nil }
-func (m *MockAudioService) HandleStopRecording() error  { return nil }
-func (m *MockAudioService) IsRecording() bool           { return false }
-func (m *MockAudioService) ClearSession()               {}
-func (m *MockAudioService) GetLastTranscript() string   { return "" }
+func (m *MockAudioService) HandleStartRecording() error      { return nil }
+func (m *MockAudioService) HandleStopRecording() error       { return nil }
+func (m *MockAudioService) IsRecording() bool                { return false }
+func (m *MockAudioService) ClearSession()                    {}
+func (m *MockAudioService) SwitchModel(modelID string) error { return nil }
+func (m *MockAudioService) GetLastTranscript() string        { return "" }
 
 // Test helper methods
 func (m *MockAudioService) WasShutdownCalled() bool { return m.shutdownCalled }
@@ -99,6 +100,7 @@ func (m *MockConfigService) ResetToDefaults() error             { return nil }
 func (m *MockConfigService) GetConfig() *config.Config          { return &config.Config{} }
 
 func (m *MockConfigService) UpdateLanguage(language string) error      { return nil }
+func (m *MockConfigService) UpdateWhisperModel(modelID string) error   { return nil }
 func (m *MockConfigService) ToggleWorkflowNotifications() error        { return nil }
 func (m *MockConfigService) UpdateRecordingMethod(method string) error { return nil }
 func (m *MockConfigService) UpdateOutputMode(mode string) error        { return nil }

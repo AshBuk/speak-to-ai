@@ -183,6 +183,41 @@ func (as *AudioService) GetLastTranscript() string {
 	return as.lastTranscript
 }
 
+// SwitchModel hot-reloads the whisper engine with a different model.
+// Rejects the request if recording is in progress.
+func (as *AudioService) SwitchModel(modelID string) error {
+	as.mu.Lock()
+	defer as.mu.Unlock()
+
+	if as.isRecording {
+		return fmt.Errorf("cannot switch model while recording")
+	}
+
+	newPath, err := as.modelManager.SwitchModel(modelID)
+	if err != nil {
+		return fmt.Errorf("model switch failed: %w", err)
+	}
+
+	if as.whisperEngine != nil {
+		_ = as.whisperEngine.Close()
+	}
+
+	newEngine, err := whisper.NewWhisperEngine(as.config, newPath, as.logger)
+	if err != nil {
+		return fmt.Errorf("failed to create engine for model %s: %w", modelID, err)
+	}
+	as.whisperEngine = newEngine
+
+	// Propagate engine reference to WebSocket server via IOService
+	type engineUpdater interface {
+		SetWhisperEngine(*whisper.WhisperEngine)
+	}
+	if updater, ok := as.io.(engineUpdater); ok {
+		updater.SetWhisperEngine(newEngine)
+	}
+	return nil
+}
+
 // ensureModelAvailable ensures whisper model is ready
 func (as *AudioService) ensureModelAvailable() error {
 	if as.modelManager == nil {
