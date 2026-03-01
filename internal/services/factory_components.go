@@ -45,7 +45,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	components := &Components{}
 	// Initialize model manager
 	components.ModelManager = whisper.NewModelManager(cf.config.Config)
-	if err := components.ModelManager.Initialize(); err != nil {
+	if err := components.ModelManager.Initialize(cf.config.Ctx); err != nil {
 		cf.config.Logger.Warning("Failed to initialize model manager: %v", err)
 	}
 	// Ensure model is available
@@ -53,7 +53,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 		return nil, fmt.Errorf("failed to ensure model availability: %w", err)
 	}
 	// Get model file path
-	modelFilePath, err := components.ModelManager.GetModelPath()
+	modelFilePath, err := components.ModelManager.GetModelPath(cf.config.Ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve model path: %w", err)
 	}
@@ -107,7 +107,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 // ensureModelAvailable ensures the whisper model is available
 func (cf *FactoryComponents) ensureModelAvailable(modelManager whisper.ModelManager) error {
 	// Try to get the model path, which will download if needed
-	_, err := modelManager.GetModelPath()
+	_, err := modelManager.GetModelPath(cf.config.Ctx)
 	if err != nil {
 		cf.config.Logger.Info("Model not found locally, checking download...")
 		return fmt.Errorf("failed to ensure model available: %w", err)

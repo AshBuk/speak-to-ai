@@ -12,13 +12,13 @@ import (
 // Defines the contract for managing the lifecycle of Whisper models
 type ModelManager interface {
 	// Initialize and validate the configured model
-	Initialize() error
+	Initialize(ctx context.Context) error
 	// Return the absolute path to the validated model file
-	GetModelPath() (string, error)
+	GetModelPath(ctx context.Context) (string, error)
 	// Check if the model file at the given path is valid
 	ValidateModel(modelPath string) error
 	// Switch to a different model by ID, downloading if needed. Returns new model path.
-	SwitchModel(modelID string) (string, error)
+	SwitchModel(ctx context.Context, modelID string) (string, error)
 }
 
 // Represents a whisper.Model type without a direct CGO dependency
