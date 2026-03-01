@@ -6,6 +6,7 @@
 package integration
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -166,7 +167,7 @@ func TestApplicationInitializationFlow(t *testing.T) {
 		// Test whisper system (if bundled model available)
 		t.Log("Testing whisper system...")
 		modelManager := whisper.NewModelManager(cfg)
-		if modelPath, err := modelManager.GetModelPath(); err == nil {
+		if modelPath, err := modelManager.GetModelPath(context.Background()); err == nil {
 			t.Logf("Bundled whisper model found at %s but skipping engine test (requires CGO)", modelPath)
 		} else {
 			t.Log("Bundled whisper model not available for testing")

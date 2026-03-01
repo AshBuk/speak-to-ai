@@ -4,6 +4,7 @@
 package mocks
 
 import (
+	"context"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -21,12 +22,12 @@ func (m *MockAudioService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockAudioService) HandleStartRecording() error      { return nil }
-func (m *MockAudioService) HandleStopRecording() error       { return nil }
-func (m *MockAudioService) IsRecording() bool                { return false }
-func (m *MockAudioService) ClearSession()                    {}
-func (m *MockAudioService) SwitchModel(modelID string) error { return nil }
-func (m *MockAudioService) GetLastTranscript() string        { return "" }
+func (m *MockAudioService) HandleStartRecording() error                   { return nil }
+func (m *MockAudioService) HandleStopRecording() error                    { return nil }
+func (m *MockAudioService) IsRecording() bool                             { return false }
+func (m *MockAudioService) ClearSession()                                 {}
+func (m *MockAudioService) SwitchModel(_ context.Context, _ string) error { return nil }
+func (m *MockAudioService) GetLastTranscript() string                     { return "" }
 
 // Test helper methods
 func (m *MockAudioService) WasShutdownCalled() bool { return m.shutdownCalled }
