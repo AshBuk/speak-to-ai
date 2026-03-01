@@ -6,6 +6,7 @@
 package integration
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -15,13 +16,22 @@ import (
 	"go.uber.org/goleak"
 )
 
+// Shared goleak ignore rules for known long-lived goroutines from dependencies.
+// D-Bus connection workers persist beyond individual test scope.
+// HTTP transport pool goroutines linger after model download attempts;
+// IgnoreAnyFunction is needed because the top of the stack is crypto/tls.(*Conn).Read,
+// not the HTTP function itself.
+var goLeakIgnores = []goleak.Option{
+	goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
+	goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).outWorker"),
+	goleak.IgnoreAnyFunction("net/http.(*persistConn).writeLoop"),
+	goleak.IgnoreAnyFunction("net/http.(*persistConn).readLoop"),
+	goleak.IgnoreAnyFunction("net/http.(*http2ClientConn).readLoop"),
+}
+
 // TestMain enables goroutine leak detection for integration tests
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m,
-		// Ignore known long-lived goroutines from dependencies
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).outWorker"),
-	)
+	goleak.VerifyTestMain(m, goLeakIgnores...)
 }
 
 // TestAppShutdownNoGoroutineLeaks verifies graceful shutdown without leaks
@@ -30,10 +40,7 @@ func TestAppShutdownNoGoroutineLeaks(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	defer goleak.VerifyNone(t,
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).outWorker"),
-	)
+	defer goleak.VerifyNone(t, goLeakIgnores...)
 
 	mockLogger := testutils.NewMockLogger()
 	app := app.NewApp(mockLogger)
@@ -44,11 +51,12 @@ func TestAppShutdownNoGoroutineLeaks(t *testing.T) {
 	}
 	// Shutdown should complete without goroutine leaks
 	err = app.Shutdown()
+	http.DefaultClient.CloseIdleConnections()
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
 	}
 	// Give goroutines time to exit
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 }
 
 // TestGracefulShutdownTimeout verifies shutdown completes within timeout
@@ -67,6 +75,7 @@ func TestGracefulShutdownTimeout(t *testing.T) {
 	// Measure shutdown time
 	start := time.Now()
 	err = app.Shutdown()
+	http.DefaultClient.CloseIdleConnections()
 	duration := time.Since(start)
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
@@ -85,7 +94,7 @@ func TestEvdevProviderLifecycle(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	defer goleak.VerifyNone(t)
+	defer goleak.VerifyNone(t, goLeakIgnores...)
 
 	mockLogger := testutils.NewMockLogger()
 	provider := providers.NewEvdevKeyboardProvider(mockLogger)
@@ -121,10 +130,7 @@ func TestDbusProviderLifecycle(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	defer goleak.VerifyNone(t,
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
-		goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).outWorker"),
-	)
+	defer goleak.VerifyNone(t, goLeakIgnores...)
 
 	mockLogger := testutils.NewMockLogger()
 	provider := providers.NewDbusKeyboardProvider(mockLogger)

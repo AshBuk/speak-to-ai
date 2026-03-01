@@ -6,6 +6,7 @@
 package integration
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,7 +157,7 @@ func TestModelManagement(t *testing.T) {
 		modelManager := whisper.NewModelManager(cfg)
 
 		// This should always return a path (even if file doesn't exist in dev)
-		modelPath, err := modelManager.GetModelPath()
+		modelPath, err := modelManager.GetModelPath(context.Background())
 
 		if err != nil {
 			t.Logf("Bundled model not found (expected in development): %v", err)
@@ -164,9 +165,11 @@ func TestModelManagement(t *testing.T) {
 		} else {
 			t.Logf("Bundled model path resolved to: %s", modelPath)
 
-			// Check for AppImage pattern (contains sources/language-models)
-			if !strings.Contains(modelPath, "sources/language-models/small-q5_1.bin") {
-				t.Errorf("Unexpected bundled model path: %s", modelPath)
+			// Model can be found in AppImage/dev (sources/language-models/) or XDG user data (speak-to-ai/models/)
+			isBundledPath := strings.Contains(modelPath, "sources/language-models/small-q5_1.bin")
+			isUserDataPath := strings.Contains(modelPath, "speak-to-ai/models/small-q5_1.bin")
+			if !isBundledPath && !isUserDataPath {
+				t.Errorf("Unexpected model path: %s", modelPath)
 			}
 		}
 	})

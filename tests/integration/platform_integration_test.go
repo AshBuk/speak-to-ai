@@ -6,6 +6,7 @@
 package integration
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -171,7 +172,7 @@ func TestModelAvailability(t *testing.T) {
 
 		// Test ModelManager's bundled model path resolution
 		modelManager := whisper.NewModelManager(cfg)
-		modelPath, err := modelManager.GetModelPath()
+		modelPath, err := modelManager.GetModelPath(context.Background())
 		if err != nil {
 			t.Logf("Bundled model not found (expected for development): %v", err)
 		} else {

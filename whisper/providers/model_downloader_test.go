@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -27,7 +28,7 @@ func TestModelDownloader_Download_Success(t *testing.T) {
 	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
 	// Download to temp directory
 	destPath := filepath.Join(t.TempDir(), "models", "test_model.bin")
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err != nil {
 		t.Fatalf("Download failed: %v", err)
 	}
@@ -49,7 +50,7 @@ func TestModelDownloader_Download_HTTPError(t *testing.T) {
 
 	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
 	destPath := filepath.Join(t.TempDir(), "test_model.bin")
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err == nil {
 		t.Fatal("Expected error for HTTP 404, got nil")
 	}
@@ -69,7 +70,7 @@ func TestModelDownloader_Download_TooSmall(t *testing.T) {
 
 	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
 	destPath := filepath.Join(t.TempDir(), "test_model.bin")
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err == nil {
 		t.Fatal("Expected error for too small file, got nil")
 	}
@@ -94,7 +95,7 @@ func TestModelDownloader_Download_CreatesDirectories(t *testing.T) {
 	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
 	// Use deeply nested path that doesn't exist
 	destPath := filepath.Join(t.TempDir(), "a", "b", "c", "model.bin")
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err != nil {
 		t.Fatalf("Download failed: %v", err)
 	}
@@ -114,7 +115,7 @@ func TestModelDownloader_Download_AtomicWrite(t *testing.T) {
 
 	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
 	destPath := filepath.Join(t.TempDir(), "model.bin")
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err != nil {
 		t.Fatalf("Download failed: %v", err)
 	}
@@ -139,8 +140,48 @@ func TestModelDownloader_Download_NetworkError(t *testing.T) {
 	downloader := NewModelDownloaderForURL("http://invalid.invalid.invalid:99999", testMinSize)
 	destPath := filepath.Join(t.TempDir(), "model.bin")
 
-	err := downloader.Download(destPath)
+	err := downloader.Download(context.Background(), destPath)
 	if err == nil {
 		t.Fatal("Expected error for network failure, got nil")
+	}
+}
+
+func TestModelDownloader_Download_ContextCancelled(t *testing.T) {
+	// Server that blocks until request context is done
+	requestReceived := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(requestReceived)
+		// Block until client cancels
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	// Clean up default client connection pool to avoid goroutine leaks
+	defer http.DefaultClient.CloseIdleConnections()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	downloader := NewModelDownloaderForURL(server.URL, testMinSize)
+	destPath := filepath.Join(t.TempDir(), "model.bin")
+
+	// Run download in goroutine and cancel context
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- downloader.Download(ctx, destPath)
+	}()
+
+	// Wait for server to receive request, then cancel
+	<-requestReceived
+	cancel()
+
+	err := <-errCh
+	if err == nil {
+		t.Fatal("Expected error from cancelled context, got nil")
+	}
+
+	// Verify .tmp file was cleaned up
+	tmpPath := destPath + ".tmp"
+	if _, err := os.Stat(tmpPath); !os.IsNotExist(err) {
+		t.Error("Temporary file should be cleaned up on cancellation")
 	}
 }
