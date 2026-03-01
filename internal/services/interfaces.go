@@ -4,6 +4,7 @@
 package services
 
 import (
+	"context"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/processing"
@@ -22,7 +23,7 @@ type AudioServiceInterface interface {
 	ClearSession()
 
 	// Model management
-	SwitchModel(modelID string) error
+	SwitchModel(ctx context.Context, modelID string) error
 
 	// Transcript access
 	GetLastTranscript() string

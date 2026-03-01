@@ -95,6 +95,7 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 
 	// Factory Constructor: NewServiceFactory(config) → *ServiceFactory (stores configuration)
 	factory := services.NewServiceFactory(services.ServiceFactoryConfig{
+		Ctx:         a.Runtime.Ctx,    // Application context for cancellation propagation
 		Logger:      a.Runtime.Logger, // Application-wide logger for all services
 		Config:      cfg,              // Loaded YAML configuration
 		ConfigFile:  cfgFilePath,      // Path to config file for reloading

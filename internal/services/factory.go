@@ -4,6 +4,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/audio/interfaces"
@@ -21,6 +22,7 @@ import (
 
 // ServiceFactoryConfig holds all dependencies needed to create services
 type ServiceFactoryConfig struct {
+	Ctx         context.Context          // Application context for cancellation propagation
 	Logger      logger.Logger            // Application-wide logger
 	Config      *config.Config           // Loaded YAML configuration
 	ConfigFile  string                   // Path to config file for reloading

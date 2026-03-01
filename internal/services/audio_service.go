@@ -184,8 +184,9 @@ func (as *AudioService) GetLastTranscript() string {
 }
 
 // SwitchModel hot-reloads the whisper engine with a different model.
+// The context allows cancellation of in-progress downloads (e.g. on app shutdown).
 // Rejects the request if recording is in progress.
-func (as *AudioService) SwitchModel(modelID string) error {
+func (as *AudioService) SwitchModel(ctx context.Context, modelID string) error {
 	as.mu.Lock()
 	defer as.mu.Unlock()
 
@@ -193,7 +194,7 @@ func (as *AudioService) SwitchModel(modelID string) error {
 		return fmt.Errorf("cannot switch model while recording")
 	}
 
-	newPath, err := as.modelManager.SwitchModel(modelID)
+	newPath, err := as.modelManager.SwitchModel(ctx, modelID)
 	if err != nil {
 		return fmt.Errorf("model switch failed: %w", err)
 	}
@@ -224,7 +225,7 @@ func (as *AudioService) ensureModelAvailable() error {
 		return fmt.Errorf("model manager not available")
 	}
 	// Try to get the model path, which will download if needed
-	_, err := as.modelManager.GetModelPath()
+	_, err := as.modelManager.GetModelPath(as.ctx)
 	if err != nil {
 		as.logger.Info("Model not found locally, checking download...")
 		return fmt.Errorf("failed to ensure model available: %w", err)

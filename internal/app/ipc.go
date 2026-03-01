@@ -163,7 +163,7 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 	if modelID == "" {
 		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
 	}
-	if err := a.Services.Audio.SwitchModel(modelID); err != nil {
+	if err := a.Services.Audio.SwitchModel(a.Runtime.Ctx, modelID); err != nil {
 		return ipc.Response{}, fmt.Errorf("model switch failed: %w", err)
 	}
 	if err := a.Services.Config.UpdateWhisperModel(modelID); err != nil {

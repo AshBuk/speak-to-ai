@@ -4,6 +4,7 @@
 package manager
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -23,19 +24,19 @@ func NewModelManager(config *config.Config) *ModelManager {
 }
 
 // Initialize validates the configured model is present, downloading if needed
-func (m *ModelManager) Initialize() error {
-	_, err := m.resolveModel(m.configuredModelID())
+func (m *ModelManager) Initialize(ctx context.Context) error {
+	_, err := m.resolveModel(ctx, m.configuredModelID())
 	return err
 }
 
 // GetModelPath returns the absolute path to the configured model file
-func (m *ModelManager) GetModelPath() (string, error) {
-	return m.resolveModel(m.configuredModelID())
+func (m *ModelManager) GetModelPath(ctx context.Context) (string, error) {
+	return m.resolveModel(ctx, m.configuredModelID())
 }
 
 // SwitchModel resolves (and downloads if needed) a model by ID, returning its path
-func (m *ModelManager) SwitchModel(modelID string) (string, error) {
-	return m.resolveModel(modelID)
+func (m *ModelManager) SwitchModel(ctx context.Context, modelID string) (string, error) {
+	return m.resolveModel(ctx, modelID)
 }
 
 // ValidateModel checks if the model file at the given path is valid (basic size check)
@@ -55,7 +56,7 @@ func (m *ModelManager) ValidateModel(modelPath string) error {
 }
 
 // resolveModel finds or downloads a model by ID, returning its validated path
-func (m *ModelManager) resolveModel(modelID string) (string, error) {
+func (m *ModelManager) resolveModel(ctx context.Context, modelID string) (string, error) {
 	def := constants.ModelByID(modelID)
 	if def == nil {
 		return "", fmt.Errorf("unknown model ID: %s", modelID)
@@ -74,7 +75,7 @@ func (m *ModelManager) resolveModel(modelID string) (string, error) {
 	// Download to user data directory
 	downloadPath := resolver.GetUserDataModelPath()
 	dl := providers.NewModelDownloaderForURL(def.URL, def.MinSize)
-	if err := dl.Download(downloadPath); err != nil {
+	if err := dl.Download(ctx, downloadPath); err != nil {
 		return "", fmt.Errorf("failed to download model %s: %w", modelID, err)
 	}
 

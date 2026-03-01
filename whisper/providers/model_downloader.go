@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,9 +23,10 @@ func NewModelDownloaderForURL(url string, minSize int64) *ModelDownloader {
 	return &ModelDownloader{url: url, minSize: minSize}
 }
 
-// Download downloads the model to the specified path
-// Creates parent directories if they don't exist
-func (d *ModelDownloader) Download(destPath string) error {
+// Download downloads the model to the specified path.
+// The context allows cancellation of in-progress downloads (e.g. on app shutdown).
+// Creates parent directories if they don't exist.
+func (d *ModelDownloader) Download(ctx context.Context, destPath string) error {
 	// Create parent directories
 	dir := filepath.Dir(destPath)
 	// #nosec G301 -- Model directory needs to be readable by the application
@@ -36,7 +38,7 @@ func (d *ModelDownloader) Download(destPath string) error {
 	tmpPath := destPath + ".tmp"
 
 	// Download to temporary file
-	if err := d.downloadToFile(tmpPath); err != nil {
+	if err := d.downloadToFile(ctx, tmpPath); err != nil {
 		_ = os.Remove(tmpPath) // Clean up on error
 		return err
 	}
@@ -61,9 +63,13 @@ func (d *ModelDownloader) Download(destPath string) error {
 }
 
 // downloadToFile downloads the model URL to the specified file
-func (d *ModelDownloader) downloadToFile(path string) error {
-	// Create HTTP request
-	resp, err := http.Get(d.url) // #nosec G107 -- URL comes from hardcoded model definitions, not user input
+func (d *ModelDownloader) downloadToFile(ctx context.Context, path string) error {
+	// Create HTTP request with context for cancellation support
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, d.url, nil) // #nosec G107 -- URL comes from hardcoded model definitions, not user input
+	if err != nil {
+		return fmt.Errorf("failed to create download request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to download model: %w", err)
 	}

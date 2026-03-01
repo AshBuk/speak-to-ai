@@ -4,6 +4,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -139,7 +140,7 @@ func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) 
 		if container.UI != nil {
 			container.UI.ShowNotification("Model Switch", fmt.Sprintf("Switching to %s...", modelID))
 		}
-		if err := container.Audio.SwitchModel(modelID); err != nil {
+		if err := container.Audio.SwitchModel(context.Background(), modelID); err != nil {
 			if container.UI != nil {
 				container.UI.ShowNotification("Model Switch Failed", err.Error())
 			}
