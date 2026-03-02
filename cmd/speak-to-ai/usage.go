@@ -41,6 +41,10 @@ func printCLIUsage(w io.Writer, fs *flag.FlagSet) {
 		reportUsageError(err)
 		return
 	}
+	if _, err := fmt.Fprintln(w, "  model        Manage whisper models (list/set/delete)"); err != nil {
+		reportUsageError(err)
+		return
+	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		reportUsageError(err)
 		return
@@ -61,7 +65,7 @@ func reportUsageError(err error) {
 
 func printCombinedUsage(w io.Writer, daemonFS *flag.FlagSet) {
 	name := filepath.Base(os.Args[0])
-	if _, err := fmt.Fprintf(w, "Usage:\n  %s [daemon flags]\n  %s [CLI flags] <start|stop|toggle|status|transcript>\n  %s --version\n\n", name, name, name); err != nil {
+	if _, err := fmt.Fprintf(w, "Usage:\n  %s [daemon flags]\n  %s [CLI flags] <start|stop|toggle|status|transcript|model>\n  %s --version\n\n", name, name, name); err != nil {
 		reportUsageError(err)
 		return
 	}
@@ -88,6 +92,7 @@ func printCombinedUsage(w io.Writer, daemonFS *flag.FlagSet) {
 		"  toggle       Toggle recording (start if stopped, stop if recording)",
 		"  status       Show current state and configuration",
 		"  transcript   Show the last transcript",
+		"  model        Manage whisper models (list/set/delete)",
 	}
 	for _, row := range commandRows {
 		if _, err := fmt.Fprintln(w, row); err != nil {

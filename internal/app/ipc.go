@@ -49,7 +49,7 @@ func (a *App) startIPCServer() error {
 	return nil
 }
 
-// registerIPCHandlers Registers 4 IPC command handlers with server
+// registerIPCHandlers registers IPC command handlers with server
 // Maps command names to handler functions for request routing
 func (a *App) registerIPCHandlers(server *ipc.Server) {
 	server.Register("start-recording", a.ipcHandleStartRecording)
@@ -58,6 +58,7 @@ func (a *App) registerIPCHandlers(server *ipc.Server) {
 	server.Register("status", a.ipcHandleStatus)
 	server.Register("last-transcript", a.ipcHandleLastTranscript)
 	server.Register("set-model", a.ipcHandleSetModel)
+	server.Register("delete-model", a.ipcHandleDeleteModel)
 }
 
 // ipcHandleStartRecording Command handler - starts audio recording via handlers.go
@@ -170,6 +171,23 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 		return ipc.Response{}, fmt.Errorf("failed to persist model setting: %w", err)
 	}
 	return ipc.NewSuccessResponse("model switched", map[string]any{
+		"model": modelID,
+	}), nil
+}
+
+// ipcHandleDeleteModel Command handler - deletes a downloaded whisper model
+func (a *App) ipcHandleDeleteModel(req ipc.Request) (ipc.Response, error) {
+	if a.Services == nil || a.Services.Audio == nil {
+		return ipc.Response{}, fmt.Errorf("services not available")
+	}
+	modelID := req.Params["model"]
+	if modelID == "" {
+		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
+	}
+	if err := a.Services.Audio.DeleteModel(modelID); err != nil {
+		return ipc.Response{}, fmt.Errorf("model delete failed: %w", err)
+	}
+	return ipc.NewSuccessResponse("model deleted", map[string]any{
 		"model": modelID,
 	}), nil
 }

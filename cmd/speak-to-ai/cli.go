@@ -174,6 +174,7 @@ func splitFlagNameAndValue(flagArg string) (name string, hasValue bool) {
 	return name, false
 }
 
+// SYNC: must match is_cli_command() in packaging/appimage/AppRun
 func isCLIVerb(command string) bool {
 	switch command {
 	case "start", "stop", "toggle", "status", "transcript", "model":
@@ -273,7 +274,11 @@ func printResponse(command string, resp ipc.Response) {
 		}
 	case "model":
 		if model, ok := getString(data, "model"); ok && model != "" {
-			fmt.Printf("Model switched to: %s\n", model)
+			if resp.Message == "model deleted" {
+				fmt.Printf("Model deleted: %s\n", model)
+			} else {
+				fmt.Printf("Model switched to: %s\n", model)
+			}
 		}
 	default:
 		if resp.Message != "" {
@@ -356,6 +361,7 @@ func printModelList() {
 		fmt.Printf("  %s%-18s %s%s\n", status, m.ID, m.Name, downloaded)
 	}
 	fmt.Println("\nUsage: speak-to-ai model set <model-id>")
+	fmt.Println("       speak-to-ai model delete <model-id>")
 }
 
 func isModelDownloaded(resolver *providers.ModelPathResolver) bool {
@@ -365,15 +371,26 @@ func isModelDownloaded(resolver *providers.ModelPathResolver) bool {
 }
 
 func buildModelRequest(args []string) (ipc.Request, error) {
-	if len(args) < 2 || args[0] != "set" {
-		return ipc.Request{}, fmt.Errorf("usage: speak-to-ai model set <model-id>")
+	if len(args) < 2 {
+		return ipc.Request{}, fmt.Errorf("usage: speak-to-ai model <set|delete> <model-id>")
 	}
+
+	var command string
+	switch args[0] {
+	case "set":
+		command = "set-model"
+	case "delete":
+		command = "delete-model"
+	default:
+		return ipc.Request{}, fmt.Errorf("unknown model subcommand: %s (expected set or delete)", args[0])
+	}
+
 	modelID := args[1]
 	if constants.ModelByID(modelID) == nil {
 		return ipc.Request{}, fmt.Errorf("unknown model: %s (use 'speak-to-ai model list' to see available models)", modelID)
 	}
 	return ipc.Request{
-		Command: "set-model",
+		Command: command,
 		Params:  map[string]string{"model": modelID},
 	}, nil
 }

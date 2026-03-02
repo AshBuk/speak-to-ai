@@ -6,6 +6,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
@@ -83,6 +84,27 @@ func (m *ModelManager) resolveModel(ctx context.Context, modelID string) (string
 		return "", fmt.Errorf("downloaded model %s failed validation: %w", modelID, err)
 	}
 	return downloadPath, nil
+}
+
+// DeleteModel removes a downloaded model file by ID.
+// Cannot delete the currently active model or bundled models.
+func (m *ModelManager) DeleteModel(modelID string) error {
+	def := constants.ModelByID(modelID)
+	if def == nil {
+		return fmt.Errorf("unknown model ID: %s", modelID)
+	}
+	if modelID == m.configuredModelID() {
+		return fmt.Errorf("cannot delete active model: %s", modelID)
+	}
+	resolver := providers.NewModelPathResolver(m.config, def.FileName)
+	path := resolver.GetUserDataModelPath()
+	if err := os.Remove(path); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("model %s is not downloaded", modelID)
+		}
+		return fmt.Errorf("failed to delete model %s: %w", modelID, err)
+	}
+	return nil
 }
 
 // configuredModelID returns the model ID from config, falling back to default

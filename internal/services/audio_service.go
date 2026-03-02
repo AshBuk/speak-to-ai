@@ -219,6 +219,18 @@ func (as *AudioService) SwitchModel(ctx context.Context, modelID string) error {
 	return nil
 }
 
+// DeleteModel removes a downloaded model file.
+// Rejects the request if recording is in progress.
+func (as *AudioService) DeleteModel(modelID string) error {
+	as.mu.Lock()
+	defer as.mu.Unlock()
+
+	if as.isRecording {
+		return fmt.Errorf("cannot delete model while recording")
+	}
+	return as.modelManager.DeleteModel(modelID)
+}
+
 // ensureModelAvailable ensures whisper model is ready
 func (as *AudioService) ensureModelAvailable() error {
 	if as.modelManager == nil {
