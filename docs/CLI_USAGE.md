@@ -16,6 +16,15 @@ speak-to-ai stop                     # Stop and show transcript
 speak-to-ai toggle                   # Toggle recording (start/stop with one command)
 speak-to-ai status                   # Show state and configuration
 speak-to-ai transcript               # Show last transcript
+
+# Whisper model selection
+speak-to-ai model list               # List available models (works without daemon)
+speak-to-ai model set <model-id>     # Switch whisper model (requires daemon)
+speak-to-ai model set base-q5_1      # ~57 MB, fast
+speak-to-ai model set small-q5_1     # ~181 MB, default
+speak-to-ai model set medium-q5_0    # ~539 MB
+speak-to-ai model set large-v3-q5_0  # ~1.1 GB, best quality
+speak-to-ai model delete <model-id>  # Delete a downloaded model (cannot delete active)
 ```
 
 **Notes:**
