@@ -3,7 +3,11 @@
 
 package tray
 
-import "github.com/AshBuk/speak-to-ai/config"
+import (
+	"context"
+
+	"github.com/AshBuk/speak-to-ai/config"
+)
 
 // Defines the interface for tray managers
 type TrayManagerInterface interface {
@@ -16,8 +20,9 @@ type TrayManagerInterface interface {
 	SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error)
 	// SetAudioActions sets callbacks for audio-related actions
 	SetAudioActions(onSelectRecorder func(method string) error)
-	// SetModelAction sets callback for whisper model selection
-	SetModelAction(onSelectModel func(modelID string) error)
+	// SetModelAction sets callback for whisper model selection.
+	// The callback receives a cancellable context and a progress reporter for download feedback.
+	SetModelAction(onSelectModel func(ctx context.Context, modelID string) error)
 	// SetHotkeyRebindAction sets callback to rebind hotkeys by action name
 	SetHotkeyRebindAction(onRebind func(action string) error)
 	// SetSettingsActions sets callbacks for general settings from tray (Language, Notifications)

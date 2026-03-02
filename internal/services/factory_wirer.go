@@ -132,15 +132,16 @@ func (cw *FactoryWirer) makeRecorderSelectionCallback(container *ServiceContaine
 		return nil
 	}
 }
-func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) func(string) error {
-	return func(modelID string) error {
+func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) func(context.Context, string) error {
+	return func(ctx context.Context, modelID string) error {
 		if container == nil || container.Audio == nil || container.Config == nil {
 			return fmt.Errorf("services not available")
 		}
-		if container.UI != nil {
-			container.UI.ShowNotification("Model Switch", fmt.Sprintf("Switching to %s...", modelID))
-		}
-		if err := container.Audio.SwitchModel(context.Background(), modelID); err != nil {
+		if err := container.Audio.SwitchModel(ctx, modelID); err != nil {
+			// Don't show error notification on user-initiated cancellation
+			if ctx.Err() != nil {
+				return err
+			}
 			if container.UI != nil {
 				container.UI.ShowNotification("Model Switch Failed", err.Error())
 			}

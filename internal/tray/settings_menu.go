@@ -6,6 +6,8 @@
 package tray
 
 import (
+	"context"
+
 	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 )
@@ -123,7 +125,9 @@ func (tm *TrayManager) setupLanguageMenu() {
 	}
 }
 
-// setupModelMenu creates and configures the whisper model selection submenu
+// setupModelMenu creates and configures the whisper model selection submenu.
+// Unlike other radio menus, model items use custom click handling that supports
+// cancel-on-reclick: clicking a downloading model cancels the download (✖ indicator).
 func (tm *TrayManager) setupModelMenu() {
 	currentModel := constants.ModelByID(tm.config.General.WhisperModel)
 	currentName := tm.config.General.WhisperModel
@@ -136,13 +140,6 @@ func (tm *TrayManager) setupModelMenu() {
 	)
 	tm.modelItems["current"].Disable()
 
-	modelCb := func(id string) error {
-		if tm.onSelectModel != nil {
-			return tm.onSelectModel(id)
-		}
-		return nil
-	}
-
 	for _, m := range constants.WhisperModels {
 		indicator := "○ "
 		if tm.config.General.WhisperModel == m.ID {
@@ -152,13 +149,91 @@ func (tm *TrayManager) setupModelMenu() {
 		tm.modelItems["model_"+m.ID] = itm
 
 		modelID := m.ID
-		tm.handleRadioItemClick(
-			itm,
-			modelID,
-			"Whisper model switched to %s (UI)",
-			tm.updateModelRadioUI,
-			modelCb,
-		)
+		tm.handleMenuItemClick(itm, func() {
+			tm.handleModelClick(modelID)
+		})
+	}
+}
+
+// handleModelClick handles model item click with download cancellation support.
+// Re-clicking a model that is currently downloading cancels the download.
+func (tm *TrayManager) handleModelClick(modelID string) {
+	tm.modelMu.Lock()
+
+	// Re-click on the same downloading model → cancel
+	if tm.downloadingModelID == modelID && tm.modelDownloadCancel != nil {
+		cancel := tm.modelDownloadCancel
+		tm.modelDownloadCancel = nil
+		tm.downloadingModelID = ""
+		tm.modelMu.Unlock()
+		cancel()
+		tm.logger.Info("Model download cancelled by user: %s", modelID)
+		if tm.config != nil {
+			tm.updateModelRadioUI(tm.config.General.WhisperModel)
+		}
+		return
+	}
+
+	// Cancel any in-progress download for a different model
+	prevModelID := tm.downloadingModelID
+	if tm.modelDownloadCancel != nil {
+		tm.modelDownloadCancel()
+	}
+
+	ctx, cancel := context.WithCancel(tm.ctx)
+	tm.modelDownloadCancel = cancel
+	tm.downloadingModelID = modelID
+	tm.modelMu.Unlock()
+
+	// Restore UI for the previously downloading model
+	if prevModelID != "" && prevModelID != modelID && tm.config != nil {
+		tm.updateModelRadioUI(tm.config.General.WhisperModel)
+	}
+
+	tm.setModelDownloadingUI(modelID)
+
+	tm.wg.Add(1)
+	go func() {
+		defer tm.wg.Done()
+		var err error
+		if tm.onSelectModel != nil {
+			err = tm.onSelectModel(ctx, modelID)
+		}
+
+		// Cancelled — caller (re-click or auto-cancel) already restored UI
+		if ctx.Err() != nil {
+			return
+		}
+
+		tm.modelMu.Lock()
+		if tm.downloadingModelID == modelID {
+			tm.modelDownloadCancel = nil
+			tm.downloadingModelID = ""
+		}
+		tm.modelMu.Unlock()
+
+		if err != nil {
+			tm.logger.Error("Model switch failed: %v", err)
+			if tm.config != nil {
+				tm.updateModelRadioUI(tm.config.General.WhisperModel)
+			}
+			return
+		}
+		tm.updateModelRadioUI(modelID)
+	}()
+}
+
+// setModelDownloadingUI shows download-in-progress state with ✖ cancel indicator
+func (tm *TrayManager) setModelDownloadingUI(modelID string) {
+	name := modelID
+	if model := constants.ModelByID(modelID); model != nil {
+		name = model.Name
+	}
+	if itm := tm.modelItems["model_"+modelID]; itm != nil {
+		itm.SetTitle("✖ " + name + " (downloading…)")
+	}
+	if currentDisplay := tm.modelItems["current"]; currentDisplay != nil {
+		currentDisplay.SetTitle("⏳ Switching to " + name + "…")
 	}
 }
 
