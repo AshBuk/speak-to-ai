@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.6.3
+%global app_version     1.7.0
 %global go_version      1.21
 %global whisper_version 1.8.3
 
