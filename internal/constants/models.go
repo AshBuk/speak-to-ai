@@ -39,10 +39,10 @@ var WhisperModels = []WhisperModelDef{
 		MinSize:  500 * 1024 * 1024, // ~539 MB
 	},
 	{
-		ID:       "large-q5_0",
-		Name:     "Large (Q5_0)",
-		FileName: "ggml-large-q5_0.bin",
-		URL:      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-q5_0.bin",
+		ID:       "large-v3-q5_0",
+		Name:     "Large v3 (Q5_0)",
+		FileName: "ggml-large-v3-q5_0.bin",
+		URL:      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin",
 		MinSize:  1000 * 1024 * 1024, // ~1.1 GB
 	},
 }
