@@ -24,6 +24,7 @@ type AudioServiceInterface interface {
 
 	// Model management
 	SwitchModel(ctx context.Context, modelID string) error
+	DeleteModel(modelID string) error
 
 	// Transcript access
 	GetLastTranscript() string

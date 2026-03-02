@@ -19,6 +19,8 @@ type ModelManager interface {
 	ValidateModel(modelPath string) error
 	// Switch to a different model by ID, downloading if needed. Returns new model path.
 	SwitchModel(ctx context.Context, modelID string) (string, error)
+	// Delete a downloaded model by ID. Cannot delete the active model.
+	DeleteModel(modelID string) error
 }
 
 // Represents a whisper.Model type without a direct CGO dependency

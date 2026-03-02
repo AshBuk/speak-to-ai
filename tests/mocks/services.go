@@ -27,6 +27,7 @@ func (m *MockAudioService) HandleStopRecording() error                    { retu
 func (m *MockAudioService) IsRecording() bool                             { return false }
 func (m *MockAudioService) ClearSession()                                 {}
 func (m *MockAudioService) SwitchModel(_ context.Context, _ string) error { return nil }
+func (m *MockAudioService) DeleteModel(_ string) error                    { return nil }
 func (m *MockAudioService) GetLastTranscript() string                     { return "" }
 
 // Test helper methods
