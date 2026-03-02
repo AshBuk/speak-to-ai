@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.7.0] - 2026-03-02
+## [1.7.1] - 2026-03-02
+
+### patch for 1.7.0
+- **Tray sync on CLI model switch:** Tray menu now reflects model changes made via `speak-to-ai model set`
 
 ### Features
 - **Whisper model management:** Choose between base, small, medium, and large-v3 quantized models — switch via system tray or CLI without restarting the daemon
@@ -10,6 +13,9 @@ All notable changes to this project will be documented in this file.
 - **CLI model commands:** `model list` (offline), `model set <id>`, `model delete <id>` — manage models from terminal or scripts
 - **Download cancellation:** Re-click a downloading model in tray to cancel; context-based cancellation propagates through the download pipeline
 - **Tray model submenu:** Visual indicators for active model (●), available (○), downloading (⏳), and cancel-on-reclick (✖)
+
+---
+## [1.7.0] - 2026-03-02
 
 ---
 ## [1.6.3] - 2026-02-23

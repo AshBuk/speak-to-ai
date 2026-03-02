@@ -170,6 +170,9 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 	if err := a.Services.Config.UpdateWhisperModel(modelID); err != nil {
 		return ipc.Response{}, fmt.Errorf("failed to persist model setting: %w", err)
 	}
+	if a.Services.UI != nil {
+		a.Services.UI.UpdateSettings(a.Services.Config.GetConfig())
+	}
 	return ipc.NewSuccessResponse("model switched", map[string]any{
 		"model": modelID,
 	}), nil

@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.7.0
+%global app_version     1.7.1
 %global go_version      1.21
 %global whisper_version 1.8.3
 
@@ -257,6 +257,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Mon Mar 02 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.7.1-1
+- Whisper model management: switch between base, small, medium, large-v3 via tray or CLI with hot-reload
+
 * Mon Feb 23 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.3-1
 - Fix potential crash on rapid hotkey restart, tray refactor, dead code cleanup
 
