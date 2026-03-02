@@ -43,21 +43,14 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.6.3" date="2026-02-23">
+    <release version="1.7.0" date="2026-03-02">
       <description>
-        <p>Fix potential crash on rapid hotkey restart. Tray refactor, dead code cleanup.</p>
+        <p>Whisper model management: choose between base, small, medium, and large-v3 models via tray menu or CLI. Hot-reload without restart, download cancellation support.</p>
       </description>
     </release>
-    <release version="1.6.2" date="2026-02-07">
-      <description>
-        <p>CLI toggle command for one-key voice input. XDG config compliance.</p>
-      </description>
-    </release>
-    <release version="1.6.1" date="2026-01-19">
-      <description>
-        <p>Enhanced status command shows full configuration. Pre-release validation workflow for reliable releases.</p>
-      </description>
-    </release>
+    <release version="1.6.3" date="2026-02-23"/>
+    <release version="1.6.2" date="2026-02-07"/>
+    <release version="1.6.1" date="2026-01-19"/>
     <release version="1.6.0" date="2026-01-14"/>
     <release version="1.5.2" date="2026-01-07"/>
     <release version="1.5.1" date="2026-01-06"/>
