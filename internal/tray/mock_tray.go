@@ -4,6 +4,8 @@
 package tray
 
 import (
+	"context"
+
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
@@ -99,7 +101,7 @@ func (tm *MockTrayManager) SetCaptureOnceSupport(callback func() bool) {
 }
 
 // SetModelAction sets callback for whisper model selection (mock)
-func (tm *MockTrayManager) SetModelAction(onSelectModel func(modelID string) error) {
+func (tm *MockTrayManager) SetModelAction(onSelectModel func(ctx context.Context, modelID string) error) {
 	tm.logger.Info("Mock tray: model action set")
 }
 

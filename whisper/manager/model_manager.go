@@ -34,7 +34,7 @@ func (m *ModelManager) GetModelPath(ctx context.Context) (string, error) {
 	return m.resolveModel(ctx, m.configuredModelID())
 }
 
-// SwitchModel resolves (and downloads if needed) a model by ID, returning its path
+// SwitchModel resolves (and downloads if needed) a model by ID, returning its path.
 func (m *ModelManager) SwitchModel(ctx context.Context, modelID string) (string, error) {
 	return m.resolveModel(ctx, modelID)
 }

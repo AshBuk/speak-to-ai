@@ -53,7 +53,12 @@ type TrayManager struct {
 
 	// Audio action callbacks
 	onSelectRecorder func(method string) error
-	onSelectModel    func(modelID string) error
+	onSelectModel    func(ctx context.Context, modelID string) error
+
+	// Model download cancellation (protected by modelMu)
+	modelDownloadCancel context.CancelFunc
+	downloadingModelID  string
+	modelMu             sync.Mutex
 	// Settings callbacks
 	onSelectLang           func(language string) error
 	onToggleWorkflowNotify func() error
@@ -246,7 +251,7 @@ func (tm *TrayManager) SetAudioActions(onSelectRecorder func(method string) erro
 }
 
 // SetModelAction sets callback for whisper model selection
-func (tm *TrayManager) SetModelAction(onSelectModel func(modelID string) error) {
+func (tm *TrayManager) SetModelAction(onSelectModel func(ctx context.Context, modelID string) error) {
 	tm.onSelectModel = onSelectModel
 }
 
