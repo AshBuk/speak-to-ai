@@ -12,9 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/ipc"
 	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/speak-to-ai/whisper/providers"
 )
 
 // CLI configuration options
@@ -333,11 +335,33 @@ func getIntOr(data map[string]any, key string, fallback int) int {
 }
 
 func printModelList() {
-	fmt.Println("Available whisper models:")
+	activeID := constants.DefaultModelID
+	if path, err := config.ConfigFilePath(); err == nil {
+		if cfg, err := config.LoadConfig(path); err == nil && cfg.General.WhisperModel != "" {
+			activeID = cfg.General.WhisperModel
+		}
+	}
+	fmt.Println("Whisper models:")
+	fmt.Println()
 	for _, m := range constants.WhisperModels {
-		fmt.Printf("  %-14s %s\n", m.ID, m.Name)
+		status := "  "
+		if m.ID == activeID {
+			status = "● "
+		}
+		downloaded := ""
+		resolver := providers.NewModelPathResolver(nil, m.FileName)
+		if isModelDownloaded(resolver) {
+			downloaded = " [downloaded]"
+		}
+		fmt.Printf("  %s%-18s %s%s\n", status, m.ID, m.Name, downloaded)
 	}
 	fmt.Println("\nUsage: speak-to-ai model set <model-id>")
+}
+
+func isModelDownloaded(resolver *providers.ModelPathResolver) bool {
+	path := resolver.GetBundledModelPath()
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir() && info.Size() > 0
 }
 
 func buildModelRequest(args []string) (ipc.Request, error) {
