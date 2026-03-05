@@ -16,6 +16,7 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
+	appversion "github.com/AshBuk/speak-to-ai/internal/version"
 )
 
 // Coordinates tray icon states and desktop notifications
@@ -99,7 +100,8 @@ func (us *UIService) ShowAboutPage() error {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 	// Note: temp file for browser access
-	if _, err := tmpFile.WriteString(assets.AboutHTML); err != nil {
+	html := strings.Replace(assets.AboutHTML, "{{VERSION}}", appversion.Version, 1)
+	if _, err := tmpFile.WriteString(html); err != nil {
 		return fmt.Errorf("failed to write HTML content: %w", err)
 	}
 	if err := tmpFile.Close(); err != nil {

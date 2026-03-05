@@ -40,7 +40,6 @@ func runDaemon(args []string) int {
 	if appDir := os.Getenv("APPDIR"); appDir != "" {
 		appLogger.Info("Running inside AppImage, base path: %s", appDir)
 	}
-	configPath := opts.configFile
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
@@ -66,8 +65,7 @@ func runDaemon(args []string) int {
 	// App orchestration: delegate to App module
 	// → see internal/app/app.go
 	application := app.NewApp(appLogger)
-
-	if err := application.Initialize(configPath, opts.debug); err != nil {
+	if err := application.Initialize(opts.configFile, opts.debug); err != nil {
 		appLogger.Error("Failed to initialize application: %v", err)
 		return 1
 	}
@@ -75,7 +73,6 @@ func runDaemon(args []string) int {
 		appLogger.Error("Application error: %v", err)
 		return 1
 	}
-
 	return 0
 }
 
@@ -123,6 +120,5 @@ func parseDaemonOptions(args []string) (*daemonOptions, error) {
 		fs.Usage()
 		return nil, fmt.Errorf("unexpected arguments")
 	}
-
 	return opts, nil
 }

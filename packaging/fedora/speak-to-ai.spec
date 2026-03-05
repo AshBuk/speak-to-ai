@@ -171,7 +171,7 @@ VENDOR_RPATH='$ORIGIN/../lib64/%{name}'
 go build -v \
     -mod=vendor \
     -tags systray \
-    -ldflags "-s -w -X main.version=%{version} -linkmode=external -extldflags '-Wl,-rpath,${VENDOR_RPATH}'" \
+    -ldflags "-s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=%{version} -linkmode=external -extldflags '-Wl,-rpath,${VENDOR_RPATH}'" \
     -o %{name} \
     ./cmd/speak-to-ai
 
