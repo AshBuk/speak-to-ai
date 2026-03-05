@@ -7,20 +7,15 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-)
 
-// Version information - injected at build time via ldflags:
-//
-//	go build -ldflags "-X main.version=x.y.z"
-//
-// Defaults to "dev" for development builds.
-var version = "dev"
+	appversion "github.com/AshBuk/speak-to-ai/internal/version"
+)
 
 // printVersion outputs version information and exits.
 // Format: speak-to-ai version X.Y.Z (go1.XX.X linux/amd64)
 func printVersion() {
 	fmt.Printf("speak-to-ai version %s (%s %s/%s)\n",
-		version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+		appversion.Version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 	os.Exit(0)
 }
 

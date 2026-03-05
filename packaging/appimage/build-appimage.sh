@@ -53,7 +53,7 @@ build_appdir() {
 
     # Build application
     echo "Building ${APP_NAME}..."
-    go build -tags systray -ldflags "-s -w -X main.version=${APP_VERSION}" -o "${APP_NAME}" ./cmd/speak-to-ai
+    go build -tags systray -ldflags "-s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=${APP_VERSION}" -o "${APP_NAME}" ./cmd/speak-to-ai
     cp "${APP_NAME}" "${APPDIR}/usr/bin/"
     cp config.yaml "${APPDIR}/"
 
