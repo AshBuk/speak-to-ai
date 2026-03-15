@@ -42,7 +42,7 @@ RUN curl -fsSL "https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/
     && rm -rf /tmp/vulkan-sdk.tar.xz /opt/vulkan-sdk
 
 # Install Go
-ENV GO_VERSION=1.24.1
+ENV GO_VERSION=1.25.3
 RUN curl -L "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf -
 ENV PATH="/usr/local/go/bin:${PATH}"
 

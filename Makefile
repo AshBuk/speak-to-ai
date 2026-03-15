@@ -18,7 +18,7 @@
 .PHONY: help
 
 # Variables
-GO_VERSION := 1.24.1
+GO_VERSION := 1.25.3
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS := -s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=$(VERSION)
 BINARY_NAME := speak-to-ai
@@ -110,7 +110,7 @@ $(LIB_DIR)/whisper.h:
 	cp $(BUILD_DIR)/whisper.cpp/build/src/libwhisper.a $(LIB_DIR)/ || true
 	cp $(BUILD_DIR)/whisper.cpp/include/whisper.h $(LIB_DIR)/
 	cp $(BUILD_DIR)/whisper.cpp/ggml/include/*.h $(LIB_DIR)/ || true
-	cp $(BUILD_DIR)/whisper.cpp/build/ggml/src/libggml*.* $(LIB_DIR)/ || true
+	find $(BUILD_DIR)/whisper.cpp/build/ggml/src -name 'libggml*' \( -name '*.so*' -o -name '*.a' \) -exec cp {} $(LIB_DIR)/ \; 2>/dev/null || true
 	@echo "Library files:"
 	@ls -la $(LIB_DIR)/
 
