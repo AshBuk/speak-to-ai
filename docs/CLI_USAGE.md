@@ -11,6 +11,7 @@ speak-to-ai                          # Launch daemon in background
 
 **Use CLI commands** (while daemon is running):
 ```bash
+speak-to-ai -v                       # Show version (--version)
 speak-to-ai start                    # Begin recording
 speak-to-ai stop                     # Stop and show transcript
 speak-to-ai toggle                   # Toggle recording (start/stop with one command)
