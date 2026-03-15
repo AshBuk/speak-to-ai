@@ -29,7 +29,7 @@
 Written in pure **[Go](https://github.com/golang/go)**, it leverages **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for fast, offline transcription.
 The architecture is built from the ground up without external frameworks, featuring a **custom dependency injection factory** and a **minimal set of dependencies**, ensuring **lean and maintainable**.
 
-https://github.com/AshBuk/speak-to-ai/releases/download/v1.7.1/speak-to-ai-screencast.mp4
+https://github.com/user-attachments/assets/62a29fb0-5efc-4524-91d0-9b3578ad16c3
 
 ## Features
 
