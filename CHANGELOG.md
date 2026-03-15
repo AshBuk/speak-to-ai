@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2026-03-15
+
+### Features
+- **Centralized version display:** Show app version on the About page via the unified `version` package
+
+### Dependencies
+- **Go 1.25.3:** Upgrade from Go 1.24.1
+- **fyne.io/systray:** v1.11.0 → v1.12.0
+- **godbus/dbus/v5:** v5.1.0 → v5.2.2
+- **golang.org/x/sys:** v0.37.0 → v0.42.0
+
+---
 ## [1.7.1] - 2026-03-02
 
 ### patch for 1.7.0

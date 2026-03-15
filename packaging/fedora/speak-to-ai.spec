@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.7.1
+%global app_version     1.7.2
 %global go_version      1.21
 %global whisper_version 1.8.3
 
@@ -257,6 +257,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Sun Mar 15 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.7.2-1
+- Centralized version display, Go 1.25.3, dependency updates (systray, dbus, sys)
+
 * Mon Mar 02 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.7.1-1
 - Whisper model management: switch between base, small, medium, large-v3 via tray or CLI with hot-reload
 
