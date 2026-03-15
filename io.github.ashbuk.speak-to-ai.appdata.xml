@@ -21,9 +21,11 @@
       <li><b>Portable</b>: AppImage package</li>
       <li><b>Cross-platform support</b> for X11 and Wayland</li>
       <li><b>Linux DEs</b>: native integration with GNOME, KDE, and others</li>
+      <li><b>GPU + CPU support</b>: Vulkan backend for faster transcription (auto-fallback to CPU)</li>
       <li><b>Voice typing or clipboard mode</b></li>
       <li><b>Flexible audio recording</b>: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see <a href="docs/AUDIO_PIPELINE_DIAGRAM.txt">audio pipeline</a></li>
       <li><b>Multi-language support, custom hotkey binding, visual notifications</b></li>
+      <li><b>Model management</b>: switch between base, small, medium, and large-v3 whisper models via tray or CLI</li>
     </ul>
   </description>
   <screenshots>
@@ -43,6 +45,7 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.7.2" date="2026-03-15"/>
     <release version="1.7.1" date="2026-03-02"/>
     <release version="1.7.0" date="2026-03-02">
       <description>
