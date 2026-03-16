@@ -4,30 +4,43 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime"
+
+	"github.com/spf13/cobra"
+
+	appversion "github.com/AshBuk/speak-to-ai/internal/version"
 )
 
 // Application entry point
-// Strategy Pattern (Command Router)- routes execution between two modes:
+// Command Router — two execution modes:
 //
-//	→ CLI Mode (client):  start/stop/toggle/status/transcript → IPC
-//	→ Daemon Mode (server): app.NewApp() → Initialize() → RunAndWait()
-//
-// Early Return - try CLI first, fall to daemon orchestrator
+//	→ Root (no subcommand): daemon — app.NewApp() → Initialize() → RunAndWait()
+//	→ Subcommands (client): start/stop/toggle/status/transcript/model → IPC
+var rootCmd = &cobra.Command{
+	Use:   "speak-to-ai",
+	Short: "Linux STT",
+	Long:  "Speak to AI — offline speech recognition with hotkey support, system tray integration, and CLI control.",
+	// Root command with no subcommand → run as daemon
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDaemonCobra(cmd)
+	},
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Version: fmt.Sprintf("%s (%s %s/%s)",
+		appversion.Version, runtime.Version(), runtime.GOOS, runtime.GOARCH),
+}
+
+func init() {
+	addDaemonFlags(rootCmd)
+	addCLICommands(rootCmd)
+	addModelCommand(rootCmd)
+}
+
 func main() {
-	args := os.Args[1:]
-
-	// Handle --version / -v before anything else
-	for _, arg := range args {
-		if isVersionFlag(arg) {
-			printVersion()
-		}
-	}
-
-	if handled, exitCode := maybeRunCLI(args); handled {
-		os.Exit(exitCode)
-	}
-	if exitCode := runDaemon(args); exitCode != 0 {
-		os.Exit(exitCode)
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
