@@ -12,7 +12,7 @@
   <img src="https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai" alt="Go Report Card">
 </a>
 <a href="https://go.dev/">
-  <img src="https://img.shields.io/badge/go-1.24-00ADD8?logo=go" alt="Go Version">
+  <img src="https://img.shields.io/badge/go-1.25-00ADD8?logo=go" alt="Go Version">
 </a>
 </p>
   
