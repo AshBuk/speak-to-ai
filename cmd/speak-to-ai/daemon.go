@@ -4,11 +4,10 @@
 package main
 
 import (
-	"errors"
-	"flag"
 	"fmt"
 	"os"
-	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/app"
@@ -16,30 +15,39 @@ import (
 	"github.com/AshBuk/speak-to-ai/internal/utils"
 )
 
+// addDaemonFlags registers daemon-specific flags on the root command.
+// These flags are only relevant when running as daemon (no subcommand).
+func addDaemonFlags(cmd *cobra.Command) {
+	defaultConfigPath, err := config.ConfigFilePath()
+	if err != nil {
+		defaultConfigPath = "config.yaml" // fallback to current directory
+	}
+	cmd.Flags().String("config", defaultConfigPath, "Path to configuration file")
+	cmd.Flags().Bool("debug", false, "Enable debug mode")
+}
+
 // Daemon orchestrator - initializes and runs the main application
 // Execution flow:
-//  1. Parse flags (--config, --debug)
+//  1. Read flags (--config, --debug) from cobra.Command
 //  2. Bootstrap logger (Info/Debug level)
 //  3. Single-instance lock (prevent multiple daemon processes)
 //  4. App lifecycle: NewApp() → Initialize() → RunAndWait()
-func runDaemon(args []string) int {
-	opts, err := parseDaemonOptions(args)
-	if err != nil {
-		if errors.Is(err, flag.ErrHelp) {
-			return 0
-		}
-		return 2
-	}
+func runDaemonCobra(cmd *cobra.Command) error {
+	configFile, _ := cmd.Flags().GetString("config")
+	debug, _ := cmd.Flags().GetBool("debug")
+
 	// Bootstrap
 	logLevel := logger.InfoLevel
-	if opts.debug {
+	if debug {
 		logLevel = logger.DebugLevel
 	}
 	appLogger := logger.NewDefaultLogger(logLevel)
+
 	// Log AppImage environment if detected
 	if appDir := os.Getenv("APPDIR"); appDir != "" {
 		appLogger.Info("Running inside AppImage, base path: %s", appDir)
 	}
+
 	// Single-instance protection
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
@@ -47,11 +55,11 @@ func runDaemon(args []string) int {
 	} else if isRunning {
 		fmt.Fprintf(os.Stderr, "Another instance of speak-to-ai is already running (PID: %d)\n", pid)
 		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
-		return 1
+		return fmt.Errorf("daemon already running")
 	}
 	if err := lockFile.TryLock(); err != nil {
 		appLogger.Error("Failed to acquire application lock: %v", err)
-		return 1
+		return err
 	}
 
 	// Resource cleanup:
@@ -65,60 +73,13 @@ func runDaemon(args []string) int {
 	// App orchestration: delegate to App module
 	// → see internal/app/app.go
 	application := app.NewApp(appLogger)
-	if err := application.Initialize(opts.configFile, opts.debug); err != nil {
+	if err := application.Initialize(configFile, debug); err != nil {
 		appLogger.Error("Failed to initialize application: %v", err)
-		return 1
+		return err
 	}
 	if err := application.RunAndWait(); err != nil {
 		appLogger.Error("Application error: %v", err)
-		return 1
+		return err
 	}
-	return 0
-}
-
-// Daemon configuration options
-type daemonOptions struct {
-	configFile string // Path to YAML config file (default: config.yaml)
-	debug      bool   // Enable debug logging level
-}
-
-// Parse daemon command-line flags (--config, --debug)
-// Returns parsed options or flag.ErrHelp if --help was requested
-func parseDaemonOptions(args []string) (*daemonOptions, error) {
-	defaultConfigPath, err := config.ConfigFilePath()
-	if err != nil {
-		defaultConfigPath = "config.yaml" // fallback to current directory
-	}
-	opts := &daemonOptions{
-		configFile: defaultConfigPath,
-	}
-
-	fs := flag.NewFlagSet("speak-to-ai", flag.ContinueOnError) // pls don't panic on parse error
-	var parseOutput strings.Builder
-	fs.SetOutput(&parseOutput)
-
-	fs.StringVar(&opts.configFile, "config", opts.configFile, "Path to configuration file")
-	fs.BoolVar(&opts.debug, "debug", false, "Enable debug mode")
-
-	fs.Usage = func() {
-		printCombinedUsage(os.Stderr, fs)
-	}
-
-	if err := fs.Parse(args); err != nil {
-		if errors.Is(err, flag.ErrHelp) {
-			return nil, flag.ErrHelp
-		}
-		if parseOutput.Len() > 0 {
-			fmt.Fprint(os.Stderr, parseOutput.String())
-		}
-		fs.Usage()
-		return nil, err
-	}
-
-	if remaining := fs.Args(); len(remaining) > 0 {
-		fmt.Fprintf(os.Stderr, "Unknown arguments: %v\n", remaining)
-		fs.Usage()
-		return nil, fmt.Errorf("unexpected arguments")
-	}
-	return opts, nil
+	return nil
 }
