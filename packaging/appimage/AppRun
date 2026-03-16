@@ -14,7 +14,7 @@ CONFIG_DIR="${HOME}/.config/speak-to-ai"
 mkdir -p "${CONFIG_DIR}"
 
 # Check if running in CLI mode
-# SYNC: must match isCLIVerb() in cmd/speak-to-ai/cli.go
+# SYNC: must match subcommands registered in cmd/speak-to-ai/main.go
 is_cli_command() {
     for arg in "$@"; do
         case "$arg" in
