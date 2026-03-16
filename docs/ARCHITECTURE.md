@@ -73,15 +73,16 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 ### 📁 **Core Application**
 
 #### `cmd/speak-to-ai/`
-- **Purpose**: Application entry point with dual-mode support (daemon + CLI)
+- **Purpose**: Application entry point with dual-mode support (daemon + CLI), powered by [cobra](https://github.com/spf13/cobra)
 - **Structure**:
-  - `main.go`: Entry point and mode routing (daemon vs CLI)
-  - `daemon.go`: Daemon mode initialization and flag parsing
-  - `cli.go`: CLI mode commands (start/stop/status/transcript) via IPC
-  - `usage.go`: Unified help system for both modes
+  - `main.go`: Entry point, root cobra.Command definition, version output
+  - `daemon.go`: Daemon mode initialization and flag parsing (`--config`, `--debug`)
+  - `commands.go`: IPC-based CLI subcommands (start/stop/toggle/status/transcript) via factory pattern
+  - `model.go`: Model management command tree (model list/set/delete)
   - `environment.go`: AppImage environment detection
 - **Responsibilities**:
-  - Dual-mode routing (daemon for background service, CLI for commands)
+  - Dual-mode routing via cobra: root command → daemon, subcommands → IPC client
+  - Built-in `--help`, `--version` via cobra (no custom usage/version code)
   - Command-line flag processing (`--config`, `--debug` for daemon; `--socket`, `--json`, `--timeout` for CLI)
   - Environment detection and path adjustment for portable packages
   - IPC client for CLI commands communicating with daemon
@@ -246,4 +247,4 @@ Distribution-specific packaging scripts and configurations:
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2026-01-04*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2026-03-16*

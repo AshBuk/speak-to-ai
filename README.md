@@ -27,7 +27,7 @@
 **Speak to AI** is a **minimalist**, **privacy-focused** desktop application for **offline voice recognition** directly into any active window (editors, browsers, IDEs, AI assistants).  
 
 Written in pure **[Go](https://github.com/golang/go)**, it leverages **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for fast, offline transcription.
-The architecture is built from the ground up without external frameworks, featuring a **custom dependency injection factory** and a **minimal set of dependencies**, ensuring **lean and maintainable**.
+The architecture is built from the ground up with a **minimal set of dependencies*, featuring a **custom dependency injection factory**, ensuring **lean and maintainable**.
 
 [https://github.com/user-attachments/assets/62a29fb0-5efc-4524-91d0-9b3578ad16c3](https://github.com/user-attachments/assets/721c87fe-fd42-41d7-bccc-92816b3fde28)
 
@@ -64,7 +64,7 @@ Intuitive minimalist UX, **robust STT infrastructure**. A foundation for voice-c
 
 ```bash
 # Voice command → smart home action
-transcript=$(speak-to-ai stop-recording | jq -r '.data.transcript')
+transcript=$(speak-to-ai --json stop | jq -r '.data.transcript')
 [[ "$transcript" == *"lights off"* ]] && curl -X POST http://hub/lights/off
 ```
 
