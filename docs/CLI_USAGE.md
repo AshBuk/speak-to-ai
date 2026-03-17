@@ -94,3 +94,11 @@ speak-to-ai --debug                             # Debug mode
 ```
 
 ---
+
+## AppImage CLI Usage
+
+AppImage requires the full path to run CLI commands (e.g. `./speak-to-ai-x.x.x-x86_64.AppImage status`).
+For a shorter command, create a symlink:
+```bash
+ln -sf /path/to/speak-to-ai-x.x.x-x86_64.AppImage ~/.local/bin/speak-to-ai
+```
