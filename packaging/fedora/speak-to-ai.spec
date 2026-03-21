@@ -226,7 +226,7 @@ install -D -m 0644 docs/Desktop_Environment_Support.md \
 %check
 # Sanity check - verify binary runs and shows help
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}/%{name}
-%{buildroot}%{_bindir}/%{name} -help 2>&1 | grep -q "speak-to-ai"
+%{buildroot}%{_bindir}/%{name} --help 2>&1 | grep -q "speak-to-ai"
 
 %post
 # Update icon cache
@@ -272,19 +272,19 @@ fi
 * Sat Feb 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.2-1
 - CLI toggle command, XDG config compliance
 
-* Sun Jan 19 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.1-1
+* Mon Jan 19 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.1-1
 - Enhanced status command, CI/CD improvements
 
-* Tue Jan 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.0-1
+* Wed Jan 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.6.0-1
 - GPU acceleration: Vulkan backend support (auto-fallback to CPU)
 
-* Tue Jan 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.2-1
+* Wed Jan 07 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.2-1
 - Hotkey and config improvements
 
-* Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
+* Tue Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
 - Auto-download whisper model to ~/.local/share/speak-to-ai/models/ on first run
 
-* Mon Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.0-1
+* Tue Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.0-1
 - Add --version flag
 
 * Sun Jan 04 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.4.2-1
