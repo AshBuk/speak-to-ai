@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-03-21
+
+### Features
+- **Cobra CLI framework:** Migrated from custom CLI to spf13/cobra — structured subcommands, better help output, and extensibility
+- **Whisper Large v3 Turbo (Q5_0) model:** Distilled speed-optimized variant of Large v3 with near-equivalent accuracy at significantly faster inference, well-suited for modern laptops with capable GPUs
+
+### Maintenance
+- Rename `models.go` → `stt_models.go` for clarity
+- Sync AppImage CLI command list with cobra subcommands
+
+---
 ## [1.7.2] - 2026-03-15
 
 ### Features

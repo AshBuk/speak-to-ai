@@ -45,13 +45,14 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
-    <release version="1.7.2" date="2026-03-15"/>
-    <release version="1.7.1" date="2026-03-02"/>
-    <release version="1.7.0" date="2026-03-02">
+    <release version="1.8.0" date="2026-03-21">
       <description>
-        <p>Whisper model management: choose between base, small, medium, and large-v3 models via tray menu or CLI. Hot-reload without restart, download cancellation support.</p>
+        <p>Cobra CLI framework migration. Add Whisper Large v3 Turbo (Q5_0) model — fast, GPU-optimized variant for modern laptops.</p>
       </description>
     </release>
+    <release version="1.7.2" date="2026-03-15"/>
+    <release version="1.7.1" date="2026-03-02"/>
+    <release version="1.7.0" date="2026-03-02"/>
     <release version="1.6.3" date="2026-02-23"/>
     <release version="1.6.2" date="2026-02-07"/>
     <release version="1.6.1" date="2026-01-19"/>

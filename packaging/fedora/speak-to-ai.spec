@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.7.2
+%global app_version     1.8.0
 %global go_version      1.21
 %global whisper_version 1.8.3
 
@@ -257,6 +257,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Sat Mar 21 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.8.0-1
+- Cobra CLI framework migration, add Whisper Large v3 Turbo (Q5_0) model
+
 * Sun Mar 15 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.7.2-1
 - Centralized version display, Go 1.25.3, dependency updates (systray, dbus, sys)
 
