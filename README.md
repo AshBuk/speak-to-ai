@@ -126,7 +126,7 @@ See changes: [CHANGELOG.md](CHANGELOG.md)
 | **OS** | Linux with glibc 2.35+ |
 | **Desktop** | X11 or Wayland |
 | **Audio** | Microphone capability |
-| **Storage** | ~290MB |
+| **Storage** | ~54MB + model (57MB–1.1GB) |
 | **Memory** | ~300MB RAM |
 | **CPU** | AVX-capable (Intel/AMD 2011+) |
 
