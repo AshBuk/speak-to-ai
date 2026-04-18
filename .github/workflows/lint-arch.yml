@@ -12,6 +12,9 @@ on:
     paths:
       - 'packaging/arch/**'
 
+permissions:
+  contents: read
+
 jobs:
   namcap:
     runs-on: ubuntu-latest

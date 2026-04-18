@@ -12,6 +12,9 @@ on:
     paths:
       - 'packaging/fedora/**'
 
+permissions:
+  contents: read
+
 jobs:
   rpmlint:
     runs-on: ubuntu-latest
