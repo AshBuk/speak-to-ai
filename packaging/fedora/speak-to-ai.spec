@@ -7,7 +7,7 @@
 # =============================================================================
 %global app_version     1.8.0
 %global go_version      1.21
-%global whisper_version 1.8.3
+%global whisper_version 1.8.4
 
 # Exclude auto-requires for vendored whisper libraries
 %global __requires_exclude libwhisper\\.so|libggml.*\\.so
