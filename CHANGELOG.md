@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.1] - 2026-04-19
+
+### Dependencies
+- **whisper.cpp:** v1.8.3 → v1.8.4 (ggml sync, perf gains, UTF-8 fix in segment wrapping, Go bindings EOF fix)
+- **golang.org/x/sys:** v0.42.0 → v0.43.0
+- **stretchr/testify:** v1.9.0 → v1.11.1
+
+### Security
+- Add `SECURITY.md` with private advisory reporting process
+
+---
 ## [1.8.0] - 2026-03-21
 
 ### Features

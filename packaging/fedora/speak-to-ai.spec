@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     1.8.0
+%global app_version     1.8.1
 %global go_version      1.21
 %global whisper_version 1.8.4
 
@@ -86,17 +86,17 @@ Recommends:     vulkan-loader
 Provides:       bundled(whisper-cpp) = %{whisper_version}
 
 # Vendored Go dependencies (generated from vendor/modules.txt)
-Provides:       bundled(golang(fyne.io/systray)) = 1.11.0
-Provides:       bundled(golang(github.com/ggerganov/whisper.cpp/bindings/go)) = 0.0.0.20251028185044.c62adfbd1ecd
+Provides:       bundled(golang(fyne.io/systray)) = 1.12.0
+Provides:       bundled(golang(github.com/ggerganov/whisper.cpp/bindings/go)) = 0.0.0.20260319084013.9386f2394010
 Provides:       bundled(golang(github.com/go-audio/audio)) = 1.0.0
 Provides:       bundled(golang(github.com/go-audio/riff)) = 1.0.0
 Provides:       bundled(golang(github.com/go-audio/wav)) = 1.1.0
-Provides:       bundled(golang(github.com/godbus/dbus/v5)) = 5.1.0
+Provides:       bundled(golang(github.com/godbus/dbus/v5)) = 5.2.2
 Provides:       bundled(golang(github.com/gorilla/websocket)) = 1.5.3
 Provides:       bundled(golang(github.com/holoplot/go-evdev)) = 0.0.0.20250804134636.ab1d56a1fe83
 Provides:       bundled(golang(github.com/kr/text)) = 0.2.0
 Provides:       bundled(golang(go.uber.org/goleak)) = 1.3.0
-Provides:       bundled(golang(golang.org/x/sys)) = 0.37.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.43.0
 Provides:       bundled(golang(gopkg.in/yaml.v2)) = 2.4.0
 
 %description
@@ -257,6 +257,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
 
 %changelog
+* Sun Apr 19 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.8.1-1
+- Bump whisper.cpp to v1.8.4, update Go dependencies
+
 * Sat Mar 21 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.8.0-1
 - Cobra CLI framework migration, add Whisper Large v3 Turbo (Q5_0) model
 
