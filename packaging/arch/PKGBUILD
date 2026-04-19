@@ -107,7 +107,7 @@ check() {
     cd "${pkgname}-${pkgver}"
 
     export LD_LIBRARY_PATH="${PWD}/lib"
-    ./"${pkgname}" -help 2>&1 | grep -q "speak-to-ai"
+    ./"${pkgname}" --help 2>&1 | grep -q "speak-to-ai"
 }
 
 package() {
