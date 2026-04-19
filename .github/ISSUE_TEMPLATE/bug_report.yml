@@ -15,7 +15,7 @@ body:
       options:
         - label: I searched existing issues and didn't find a duplicate
           required: true
-        - label: I'm using the latest version from [Releases](https://github.com/AshBuk/speak-to-ai/releases)
+        - label: I'm using the latest version (AppImage, AUR, COPR, or built from source)
           required: true
 
   - type: textarea
@@ -56,6 +56,8 @@ body:
       description: How did you install Speak-to-AI?
       options:
         - AppImage
+        - AUR (Arch Linux)
+        - COPR (Fedora)
         - Built from source
     validations:
       required: true
