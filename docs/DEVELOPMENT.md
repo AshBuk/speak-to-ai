@@ -24,6 +24,7 @@ make all                   # Build everything (deps + whisper + binary)
 make build                 # Build binary with whisper.cpp integration
 make build-systray         # Build with system tray support (production)
 make test                  # Run unit tests (CGO + whisper.cpp)
+make test-race             # Run unit tests with the Go race detector
 make test-integration      # Run integration tests (fast mode, no CGO)
 make test-integration-full # Run full integration tests (with audio/CGO)
 make deps                  # Download Go dependencies
@@ -73,9 +74,10 @@ make docker-clean-all  # Clean everything including images
 GitHub Actions handle complex builds, releases, and distribution:
 ```
 .github/workflows/
-├── ci.yml                  # Main CI (lint, test, build)
+├── ci.yml                  # Main CI (format, lint, gosec, test)
 ├── lint-arch.yml           # PKGBUILD validation (namcap)
 ├── lint-rpm.yml            # Spec validation (rpmlint)
+├── pre-release.yml         # Pre-release validation
 ├── release-appimage.yml    # AppImage build & GitHub Release
 ├── release-arch.yml        # AUR publish (on tag)
 └── release-fedora.yml      # COPR submit (on tag)
@@ -86,6 +88,7 @@ GitHub Actions handle complex builds, releases, and distribution:
 | Test Type | Command | Duration | Dependencies | Use Case |
 |-----------|---------|----------|--------------|----------|
 | **Unit Tests** | `make test` | ~3-8s | Docker dev image | Core functionality |
+| **Race Tests** | `make test-race` | slower | Docker dev image | Concurrency checks |
 | **Integration Fast** | `make test-integration` | ~2-5s | Docker dev image | Development, CI |
 | **Integration Full** | `make test-integration-full` | ~8-20s | Docker dev image + audio | QA, Production |
 
@@ -96,7 +99,7 @@ GitHub Actions handle complex builds, releases, and distribution:
 | **output** | Comprehensive | `factory/`, `outputters/` | Clipboard, typing tools |
 | **hotkeys** | Comprehensive | `manager/`, `providers/`, `adapters/` | D-Bus, evdev fallback providers |
 | **config** | Comprehensive | `loaders/`, `validators/`, `security/` | File loading, validation |
-| **internal/** | Comprehensive | `services/`, `platform/`, `utils/` | Platform detection, services |
+| **internal/** | Broad | `services/`, `platform/`, `utils` | Platform detection, service contracts |
 
 ## Hotkeys Architecture
 

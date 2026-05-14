@@ -36,7 +36,7 @@ Thank you for your interest to Speak-to-AI! This document provides guidelines fo
 **Note:** Our CI automatically validates:
 - Lint rules (`golangci-lint`)
 - Code formatting (`gofmt`) 
-- Build process
+- Security scanning (`gosec`)
 - Unit tests
 - License headers in all Go files
 

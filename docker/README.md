@@ -164,18 +164,18 @@ PKG_CONFIG_PATH=/app/lib
 
 #### Whisper.cpp Version Pinning
 ```bash
-# Pin whisper.cpp to specific version (default: v1.8.3)
-make whisper-libs WHISPER_CPP_REF=v1.8.3
+# Pin whisper.cpp to specific version (Makefile default: v1.8.4)
+make whisper-libs WHISPER_CPP_REF=v1.8.4
 
 # Or set in environment
-export WHISPER_CPP_REF=v1.8.3
+export WHISPER_CPP_REF=v1.8.4
 make whisper-libs
 ```
 
 #### AppImage Version
 ```bash
 # Set version for AppImage build
-make docker-appimage APP_VERSION=v1.2.3
+make appimage VERSION=v1.2.3
 ```
 
 ## Dockerfiles
@@ -192,7 +192,7 @@ make docker-appimage APP_VERSION=v1.2.3
 - **Multi-stage**:
   - Stage 1 (`builder`): Builds AppImage with all dependencies
   - Stage 2 (`artifacts`): Exports only the `.AppImage` file
-- **Usage**: `docker build -f docker/Dockerfile.appimage --target artifacts --output dist .`
+- **Usage**: `make appimage`
 - **Output**: `dist/speak-to-ai-<version>.AppImage`
 
 ## Benefits

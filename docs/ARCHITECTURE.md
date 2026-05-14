@@ -79,7 +79,6 @@ The application follows a **dual-mode daemon architecture** with clear separatio
   - `daemon.go`: Daemon mode initialization and flag parsing (`--config`, `--debug`)
   - `commands.go`: IPC-based CLI subcommands (start/stop/toggle/status/transcript) via factory pattern
   - `model.go`: Model management command tree (model list/set/delete)
-  - `environment.go`: AppImage environment detection
 - **Responsibilities**:
   - Dual-mode routing via cobra: root command → daemon, subcommands → IPC client
   - Built-in `--help`, `--version` via cobra (no custom usage/version code)
@@ -94,10 +93,10 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 
 ### **Service Layer** (`internal/services/`)
 - **`interfaces.go`**: Service contracts and ServiceContainer definition
-- **`component_factory.go`**: Components initialization (recorder, whisper, output, hotkeys, tray, notify, websocket)
-- **`service_assembler.go`**: Services assembly and cross-dependencies
-- **`callback_wirer.go`**: Tray menu callbacks wiring
-- **`factory.go`**: Facade delegating to ComponentFactory, ServiceAssembler, CallbackWirer
+- **`factory_components.go`**: Components initialization (recorder, whisper, output, hotkeys, tray, notify, websocket)
+- **`factory_assembler.go`**: Services assembly and cross-dependencies
+- **`factory_wirer.go`**: Tray menu callbacks wiring
+- **`factory.go`**: Facade delegating to FactoryComponents, FactoryAssembler, FactoryWirer
 - **`audio_service.go`**: Audio recording, Whisper transcription
 - **`ui_service.go`**: System tray, notifications, UI state
 - **`io_service.go`**: Text output, WebSocket server
@@ -218,7 +217,6 @@ Distribution-specific packaging scripts and configurations:
 - `fedora/` - RPM spec and SRPM creation for Fedora/RHEL
 
 #### Bash Scripts (`bash-scripts/`)
-- **`build-appimage.sh`**: AppImage creation with dependencies
 - **`check-license-headers.sh`**: License compliance validation
 - **`dev-env.sh`**: Development environment setup
 
@@ -242,9 +240,10 @@ Distribution-specific packaging scripts and configurations:
 - **`notification_integration_test.go`**: Desktop notification system integration
 
 #### Test Utilities
-- **`tests/mocks/logger.go`**: Mock logger implementation
+- **`internal/testutils/mock_logger.go`**: Shared mock logger implementation
+- **`tests/mocks/`**: Shared service mocks for integration-style tests
 - **Build tags**: Tests use `-tags=integration` for selective execution
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2026-03-16*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2026-05-14*
