@@ -30,7 +30,7 @@ func (nm *NotificationManager) NotifyStartRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip if workflow notifications are disabled
 	}
-	return nm.sendNotification(constants.NotifyTitleRecordingStart, constants.NotifyRecordingStartMsg, "notification-microphone-sensitivity-high")
+	return nm.sendNotification(constants.NotifyTitleRecordingStart, constants.NotifyRecordingStartMsg, "microphone-sensitivity-high-symbolic")
 }
 
 // Show a notification when recording stops
@@ -38,7 +38,7 @@ func (nm *NotificationManager) NotifyStopRecording() error {
 	if !nm.config.Notifications.EnableWorkflowNotifications {
 		return nil // Skip if workflow notifications are disabled
 	}
-	return nm.sendNotification(constants.NotifyTitleRecordingStop, constants.NotifyRecordingStopMsg, "notification-microphone-sensitivity-muted")
+	return nm.sendNotification(constants.NotifyTitleRecordingStop, constants.NotifyRecordingStopMsg, "microphone-sensitivity-muted-symbolic")
 }
 
 // Show a notification when transcription is complete
@@ -51,22 +51,22 @@ func (nm *NotificationManager) NotifyTranscriptionComplete() error {
 	if nm.config.Output.DefaultMode == config.OutputModeActiveWindow {
 		body = constants.NotifyTranscriptionTypedMsg
 	}
-	return nm.sendNotification(constants.NotifyTitleTranscription, body, "edit-copy")
+	return nm.sendNotification(constants.NotifyTitleTranscription, body, "edit-copy-symbolic")
 }
 
 // Show an error notification
 func (nm *NotificationManager) NotifyError(errMsg string) error {
-	return nm.sendNotification(constants.NotifyTitleError, errMsg, "dialog-error")
+	return nm.sendNotification(constants.NotifyTitleError, errMsg, "dialog-error-symbolic")
 }
 
 // Show a notification when the configuration is reset to defaults
 func (nm *NotificationManager) NotifyConfigurationReset() error {
-	return nm.sendNotification(constants.NotifyTitleConfigReset, constants.NotifyConfigResetSuccess, "preferences-system")
+	return nm.sendNotification(constants.NotifyTitleConfigReset, constants.NotifyConfigResetSuccess, "preferences-system-symbolic")
 }
 
 // Show a generic notification
 func (nm *NotificationManager) ShowNotification(summary, body string) error {
-	return nm.sendNotification(summary, body, "dialog-information")
+	return nm.sendNotification(summary, body, "dialog-information-symbolic")
 }
 
 // Send a notification using the notify-send command

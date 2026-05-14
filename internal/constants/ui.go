@@ -3,16 +3,6 @@
 
 package constants
 
-// UI Icons used throughout the application
-const (
-	IconReady     = "✅"
-	IconError     = "❌"
-	IconRecording = "🔴"
-	IconStop      = "🟥"
-	IconConfig    = "↺"
-	TraySettings  = "⚙️"
-)
-
 // Common UI Messages
 const (
 	MsgReady                  = "Ready"
@@ -54,11 +44,12 @@ const (
 	NotifyAppName                = "Speak-to-AI"
 )
 
-// Notification Full Titles (with icons)
+// Notification Full Titles
+// Visual indication is delegated to freedesktop symbolic icons passed via notify-send --icon.
 const (
-	NotifyTitleRecordingStart = IconRecording + " " + NotifyAppName
-	NotifyTitleRecordingStop  = IconStop + " " + NotifyRecordingStopped
-	NotifyTitleTranscription  = IconReady + " " + NotifyTranscriptionDone
-	NotifyTitleError          = IconError + " " + NotifyError
-	NotifyTitleConfigReset    = IconConfig + " " + NotifyConfigReset
+	NotifyTitleRecordingStart = NotifyAppName
+	NotifyTitleRecordingStop  = NotifyRecordingStopped
+	NotifyTitleTranscription  = NotifyTranscriptionDone
+	NotifyTitleError          = NotifyError
+	NotifyTitleConfigReset    = NotifyConfigReset
 )
