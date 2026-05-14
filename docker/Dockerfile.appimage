@@ -42,8 +42,13 @@ RUN curl -fsSL "https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/
     && rm -rf /tmp/vulkan-sdk.tar.xz /opt/vulkan-sdk
 
 # Install Go
-ENV GO_VERSION=1.25.3
-RUN curl -L "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf -
+ARG GO_VERSION=1.25.3
+ARG GO_SHA256=0335f314b6e7bfe08c3d0cfaa7c19db961b7b99fb20be62b0a826c992ad14e0f
+ENV GO_VERSION=${GO_VERSION}
+RUN curl -fsSL "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz \
+    && echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c - \
+    && tar -C /usr/local -xzf /tmp/go.tar.gz \
+    && rm -f /tmp/go.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Set working directory
@@ -76,7 +81,7 @@ ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 
 # Whisper.cpp version pin for reproducible builds
-ARG WHISPER_CPP_REF=v1.8.3
+ARG WHISPER_CPP_REF=v1.8.4
 ENV WHISPER_CPP_REF=${WHISPER_CPP_REF}
 
 # Build AppImage at image build time so docker build can produce artifacts
