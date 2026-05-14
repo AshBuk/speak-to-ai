@@ -127,33 +127,25 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	return result, nil
 }
 
-// TranscribeWithContext performs speech-to-text conversion with timeout support.
-//
-// IMPORTANT: This method provides early return on context cancellation, but the
-// underlying whisper.cpp transcription cannot be interrupted. The internal goroutine
-// will continue running until completion. This is acceptable because:
-// 1. Transcription is bounded by audio file size (max 50MB, typically < 30s processing)
-// 2. The caller (AudioService) owns the lifecycle via WaitGroup and waits on shutdown
-// 3. Only one transcription runs at a time (enforced by AudioService.isRecording mutex)
-//
-// For true cancellation support, whisper.cpp would need upstream changes.
+// TranscribeWithContext performs speech-to-text conversion.
+// whisper.cpp processing cannot be interrupted safely, so context cancellation is
+// checked before and after the synchronous call instead of spawning hidden work.
 func (w *WhisperEngine) TranscribeWithContext(ctx context.Context, audioFile string) (string, error) {
-	type result struct {
-		text string
-		err  error
-	}
-	ch := make(chan result, 1)
-
-	go func() {
-		txt, err := w.Transcribe(audioFile)
-		ch <- result{text: txt, err: err}
-	}()
-
 	select {
-	case r := <-ch:
-		return r.text, r.err
 	case <-ctx.Done():
 		return "", fmt.Errorf("transcription cancelled: %w", ctx.Err())
+	default:
+	}
+
+	txt, err := w.Transcribe(audioFile)
+	if err != nil {
+		return "", err
+	}
+	select {
+	case <-ctx.Done():
+		return "", fmt.Errorf("transcription cancelled: %w", ctx.Err())
+	default:
+		return txt, nil
 	}
 }
 
