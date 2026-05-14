@@ -137,6 +137,11 @@ func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) 
 		if container == nil || container.Audio == nil || container.Config == nil {
 			return fmt.Errorf("services not available")
 		}
+		// Remember previous model so we can rollback on persist failure
+		previousModel := ""
+		if cfg := container.Config.GetConfig(); cfg != nil {
+			previousModel = cfg.General.WhisperModel
+		}
 		if err := container.Audio.SwitchModel(ctx, modelID); err != nil {
 			// Don't show error notification on user-initiated cancellation
 			if ctx.Err() != nil {
@@ -148,6 +153,12 @@ func (cw *FactoryWirer) makeModelSelectionCallback(container *ServiceContainer) 
 			return err
 		}
 		if err := container.Config.UpdateWhisperModel(modelID); err != nil {
+			// Rollback engine to previous model so runtime state matches config
+			if previousModel != "" {
+				if rbErr := container.Audio.SwitchModel(ctx, previousModel); rbErr != nil {
+					cw.logger.Error("Failed to rollback model after config save error: %v", rbErr)
+				}
+			}
 			return err
 		}
 		cw.updateUISettings(container)

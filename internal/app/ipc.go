@@ -164,10 +164,21 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 	if modelID == "" {
 		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
 	}
+	// Remember previous model so we can rollback on persist failure
+	previousModel := ""
+	if cfg := a.Services.Config.GetConfig(); cfg != nil {
+		previousModel = cfg.General.WhisperModel
+	}
 	if err := a.Services.Audio.SwitchModel(a.Runtime.Ctx, modelID); err != nil {
 		return ipc.Response{}, fmt.Errorf("model switch failed: %w", err)
 	}
 	if err := a.Services.Config.UpdateWhisperModel(modelID); err != nil {
+		// Rollback engine to previous model so runtime state matches config
+		if previousModel != "" {
+			if rbErr := a.Services.Audio.SwitchModel(a.Runtime.Ctx, previousModel); rbErr != nil {
+				a.Runtime.Logger.Error("Failed to rollback model after config save error: %v", rbErr)
+			}
+		}
 		return ipc.Response{}, fmt.Errorf("failed to persist model setting: %w", err)
 	}
 	if a.Services.UI != nil {
