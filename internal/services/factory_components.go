@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/factory"
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
@@ -89,8 +88,9 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	}
 	// Initialize hotkey manager
 	components.HotkeyManager = cf.createHotkeyManager()
-	// Initialize WebSocket server (always initialized but may not be started)
-	components.WebSocketServer = cf.createWebSocketServer(components.Recorder, components.WhisperEngine)
+	// Initialize WebSocket server (always initialized but may not be started).
+	// AudioController is wired in Stage 2 by FactoryAssembler once AudioService exists.
+	components.WebSocketServer = cf.createWebSocketServer()
 	// Initialize tray manager
 	components.TrayManager = cf.createTrayManager()
 	// Start tray manager (no-op in mock). Ensures systray is initialized early.
@@ -178,8 +178,8 @@ func (cf *FactoryComponents) createHotkeyManager() *manager.HotkeyManager {
 }
 
 // createWebSocketServer creates WebSocket server
-func (cf *FactoryComponents) createWebSocketServer(recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine) *websocket.WebSocketServer {
-	return websocket.NewWebSocketServer(cf.config.Config, recorder, whisperEngine, cf.config.Logger)
+func (cf *FactoryComponents) createWebSocketServer() *websocket.WebSocketServer {
+	return websocket.NewWebSocketServer(cf.config.Config, cf.config.Logger)
 }
 
 // createTrayManager creates system tray manager.

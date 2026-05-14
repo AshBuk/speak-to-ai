@@ -48,6 +48,9 @@ func (sa *FactoryAssembler) Assemble(components *Components) *ServiceContainer {
 	configSvc.SetUIService(uiSvc)     // Config → UI (for reload notifications)
 	ioSvc.SetUIService(uiSvc)         // IO → UI (for output notifications)
 	ioSvc.SetConfigService(configSvc) // IO → Config (for output settings)
+	if components.WebSocketServer != nil {
+		components.WebSocketServer.SetAudioController(audioSvc)
+	}
 
 	// Step 3: Pack services into container
 	container.Config = configSvc

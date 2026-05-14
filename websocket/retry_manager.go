@@ -24,9 +24,7 @@ func (s *WebSocketServer) executeWithRetry(fn func() error, conn *websocket.Conn
 
 	// If successful or reached max retries, reset counter and return
 	if err == nil || currentRetries >= maxRetries {
-		s.clientsLock.Lock()
-		s.retryCount[conn] = 0
-		s.clientsLock.Unlock()
+		s.resetRetryCount(conn)
 		return err
 	}
 
@@ -44,7 +42,7 @@ func (s *WebSocketServer) executeWithRetry(fn func() error, conn *websocket.Conn
 }
 
 // Clear retry state after successful operation or cleanup
-func (s *WebSocketServer) resetRetryCount(conn *websocket.Conn) { // nolint:unused // used in defer cleanup
+func (s *WebSocketServer) resetRetryCount(conn *websocket.Conn) {
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
 	s.retryCount[conn] = 0
