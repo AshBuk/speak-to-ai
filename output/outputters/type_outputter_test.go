@@ -4,7 +4,10 @@
 package outputters
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -125,19 +128,28 @@ func TestTypeOutputter_TypeToActiveWindow_SupportedTools(t *testing.T) {
 		{
 			name: "xdotool",
 			tool: "xdotool",
+			expectedArgs: []string{
+				"type",
+				"--clearmodifiers",
+				"--",
+				"test text",
+			},
 		},
 		{
-			name: "wtype",
-			tool: "wtype",
+			name:         "wtype",
+			tool:         "wtype",
+			expectedArgs: []string{"--", "test text"},
 		},
 		{
-			name: "ydotool",
-			tool: "ydotool",
+			name:         "ydotool",
+			tool:         "ydotool",
+			expectedArgs: []string{"type", "test text"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			captureFile := installFakeTool(t, tt.tool)
 			cfg := &config.Config{}
 			cfg.Security.AllowedCommands = []string{tt.tool}
 
@@ -146,19 +158,42 @@ func TestTypeOutputter_TypeToActiveWindow_SupportedTools(t *testing.T) {
 				config:   cfg,
 			}
 
-			// This will fail since the tools don't exist, but we're testing the command building logic
 			err := outputter.TypeToActiveWindow("test text")
-
-			// We expect an error since the tools don't exist, but it should be a "failed to type" error
-			// not an "unsupported tool" error
 			if err == nil {
-				t.Error("expected error since tool doesn't exist")
+				args := readCapturedArgs(t, captureFile)
+				if strings.Join(args, "\n") != strings.Join(tt.expectedArgs, "\n") {
+					t.Fatalf("expected args %q, got %q", tt.expectedArgs, args)
+				}
+				return
 			}
-			if err != nil && err.Error() == "unsupported typing tool: "+tt.tool {
-				t.Errorf("tool %s should be supported", tt.tool)
-			}
+			t.Fatalf("expected fake %s to run successfully, got %v", tt.tool, err)
 		})
 	}
+}
+
+func installFakeTool(t *testing.T, tool string) string {
+	t.Helper()
+
+	dir := t.TempDir()
+	captureFile := filepath.Join(dir, "args.txt")
+	script := filepath.Join(dir, tool)
+	content := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$CAPTURE_FILE\"\n"
+	if err := os.WriteFile(script, []byte(content), 0700); err != nil {
+		t.Fatalf("write fake tool: %v", err)
+	}
+	t.Setenv("PATH", dir)
+	t.Setenv("CAPTURE_FILE", captureFile)
+	return captureFile
+}
+
+func readCapturedArgs(t *testing.T, path string) []string {
+	t.Helper()
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read captured args: %v", err)
+	}
+	return strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
 }
 
 func TestTypeOutputter_CopyToClipboard(t *testing.T) {
@@ -179,12 +214,6 @@ func TestTypeOutputter_CopyToClipboard(t *testing.T) {
 }
 
 func TestTypeOutputter_Interface(t *testing.T) {
-	cfg := &config.Config{}
-	outputter := &TypeOutputter{
-		typeTool: "xdotool",
-		config:   cfg,
-	}
-
 	// Verify it implements the interfaces.Outputter interface
-	var _ interfaces.Outputter = outputter
+	var _ interfaces.Outputter = (*TypeOutputter)(nil)
 }

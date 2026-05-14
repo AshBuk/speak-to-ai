@@ -43,30 +43,30 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	var cmd *exec.Cmd
 	var args []string
 
+	// Use "--" to terminate option parsing where supported, so a transcript
+	// that happens to start with "-"/"--" is not interpreted as a flag.
 	switch o.typeTool {
 	case "xdotool":
-		args = []string{"type", "--clearmodifiers", text}
+		args = []string{"type", "--clearmodifiers", "--", text}
 	case "wtype":
-		args = []string{text}
+		args = []string{"--", text}
 	case "ydotool":
+		// ydotool's option parser does not document "--", pass text directly.
 		args = []string{"type", text}
 	default:
 		return fmt.Errorf("unsupported typing tool: %s", o.typeTool)
 	}
 
-	// Security: sanitize arguments
-	safeArgs := config.SanitizeCommandArgs(args)
-	// #nosec G204 -- Safe: tool is from an allowlist and arguments are sanitized
-	cmd = exec.Command(o.typeTool, safeArgs...)
+	// #nosec G204 -- Tool is allowlisted; text is passed as argv, not shell input.
+	cmd = exec.Command(o.typeTool, args...)
 	// Run the command
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		// Runtime fallback: if wtype fails, try ydotool if it is allowed and available
 		if o.typeTool == "wtype" && config.IsCommandAllowed(o.config, "ydotool") {
 			if _, lookErr := exec.LookPath("ydotool"); lookErr == nil {
-				fallbackArgs := config.SanitizeCommandArgs([]string{"type", text})
-				// #nosec G204 -- Safe: tool is from an allowlist and arguments are sanitized
-				fallbackCmd := exec.Command("ydotool", fallbackArgs...)
+				// #nosec G204 -- Tool is allowlisted; text is passed as argv, not shell input.
+				fallbackCmd := exec.Command("ydotool", "type", text)
 				if fbOut, fbErr := fallbackCmd.CombinedOutput(); fbErr == nil {
 					return nil
 				} else {
