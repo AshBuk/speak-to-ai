@@ -25,10 +25,10 @@ const (
 //   - Default fallback: logger.NewDefaultLogger(logger.WarningLevel)
 //   - Production: injected logger with appropriate level for context
 type Logger interface {
-	Debug(format string, args ...interface{})   // Detailed debugging information
-	Info(format string, args ...interface{})    // General informational messages
-	Warning(format string, args ...interface{}) // Warning messages about potential issues
-	Error(format string, args ...interface{})   // Error messages about failures
+	Debug(format string, args ...any)   // Detailed debugging information
+	Info(format string, args ...any)    // General informational messages
+	Warning(format string, args ...any) // Warning messages about potential issues
+	Error(format string, args ...any)   // Error messages about failures
 }
 
 // Config holds logger initialization settings
@@ -60,28 +60,28 @@ func Configure(config Config) (*DefaultLogger, error) {
 }
 
 // Debug logs detailed diagnostic information
-func (l *DefaultLogger) Debug(format string, args ...interface{}) {
+func (l *DefaultLogger) Debug(format string, args ...any) {
 	if l.level <= DebugLevel {
 		log.Printf("[DEBUG] "+format, args...)
 	}
 }
 
 // Info logs general operational messages
-func (l *DefaultLogger) Info(format string, args ...interface{}) {
+func (l *DefaultLogger) Info(format string, args ...any) {
 	if l.level <= InfoLevel {
 		log.Printf("[INFO] "+format, args...)
 	}
 }
 
 // Warning logs potential issues or degraded functionality
-func (l *DefaultLogger) Warning(format string, args ...interface{}) {
+func (l *DefaultLogger) Warning(format string, args ...any) {
 	if l.level <= WarningLevel {
 		log.Printf("[WARNING] "+format, args...)
 	}
 }
 
 // Error logs critical failures requiring attention
-func (l *DefaultLogger) Error(format string, args ...interface{}) {
+func (l *DefaultLogger) Error(format string, args ...any) {
 	if l.level <= ErrorLevel {
 		log.Printf("[ERROR] "+format, args...)
 	}

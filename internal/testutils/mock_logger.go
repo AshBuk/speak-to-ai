@@ -22,35 +22,35 @@ func NewMockLogger() *MockLogger {
 }
 
 // Debug logs a debug message
-func (m *MockLogger) Debug(format string, args ...interface{}) {
+func (m *MockLogger) Debug(format string, args ...any) {
 	m.mu.Lock()
 	m.messages = append(m.messages, fmt.Sprintf("[DEBUG] "+format, args...))
 	m.mu.Unlock()
 }
 
 // Info logs an info message
-func (m *MockLogger) Info(format string, args ...interface{}) {
+func (m *MockLogger) Info(format string, args ...any) {
 	m.mu.Lock()
 	m.messages = append(m.messages, fmt.Sprintf("[INFO] "+format, args...))
 	m.mu.Unlock()
 }
 
 // Warning logs a warning message
-func (m *MockLogger) Warning(format string, args ...interface{}) {
+func (m *MockLogger) Warning(format string, args ...any) {
 	m.mu.Lock()
 	m.messages = append(m.messages, fmt.Sprintf("[WARNING] "+format, args...))
 	m.mu.Unlock()
 }
 
 // Error logs an error message
-func (m *MockLogger) Error(format string, args ...interface{}) {
+func (m *MockLogger) Error(format string, args ...any) {
 	m.mu.Lock()
 	m.messages = append(m.messages, fmt.Sprintf("[ERROR] "+format, args...))
 	m.mu.Unlock()
 }
 
 // Fatal logs a fatal message
-func (m *MockLogger) Fatal(format string, args ...interface{}) {
+func (m *MockLogger) Fatal(format string, args ...any) {
 	m.mu.Lock()
 	m.messages = append(m.messages, fmt.Sprintf("[FATAL] "+format, args...))
 	m.mu.Unlock()
