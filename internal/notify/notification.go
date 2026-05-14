@@ -76,16 +76,21 @@ func (nm *NotificationManager) sendNotification(summary, body, icon string) erro
 		return fmt.Errorf("notify-send command not allowed")
 	}
 
+	// "--" terminates option parsing so summary/body starting with "-"
+	// (e.g. an err.Error() that begins with a flag-like token) are not
+	// interpreted as notify-send options.
 	args := []string{
 		"--app-name", nm.appName,
 		"--icon", icon,
+		"--",
 		summary, body,
 	}
 
-	// Security: sanitize arguments
-	safeArgs := config.SanitizeCommandArgs(args)
-	// #nosec G204 -- Safe: notify-send is from an allowlist and arguments are sanitized
-	cmd := exec.Command("notify-send", safeArgs...)
+	// Security boundary is IsCommandAllowed above. exec.Command does not invoke a
+	// shell, so argv values are passed literally via execve and metacharacters in
+	// summary/body (e.g. error messages) are not an injection vector.
+	// #nosec G204 -- Safe: notify-send is from an allowlist; argv values are literal.
+	cmd := exec.Command("notify-send", args...)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to send notification: %w", err)
 	}
