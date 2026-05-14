@@ -13,6 +13,14 @@ ARCH="x86_64"
 OUTPUT_DIR="dist"
 APPDIR="${OUTPUT_DIR}/${APP_NAME}.AppDir"
 TOOLS_DIR="$(pwd)/tools"
+MODEL_URL="${MODEL_URL:-https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin}"
+MODEL_SHA256="${MODEL_SHA256:-ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb}"
+LINUXDEPLOY_TAG="${LINUXDEPLOY_TAG:-1-alpha-20251107-1}"
+LINUXDEPLOY_SHA256="${LINUXDEPLOY_SHA256:-c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d}"
+APPIMAGETOOL_TAG="${APPIMAGETOOL_TAG:-continuous}"
+APPIMAGETOOL_SHA256="${APPIMAGETOOL_SHA256:-b90f4a8b18967545fda78a445b27680a1642f1ef9488ced28b65398f2be7add2}"
+GTK_PLUGIN_COMMIT="${GTK_PLUGIN_COMMIT:-3b67a1d1c1b0c8268f57f2bce40fe2d33d409cea}"
+GTK_PLUGIN_SHA256="${GTK_PLUGIN_SHA256:-b0f4cbc684a0103a9651f0955b635eaea0096b3a66c0f5a2c2aa337960375171}"
 # Determine script directory (works both locally and in Docker)
 if [ -f "packaging/appimage/AppRun" ]; then
     SCRIPT_DIR="$(pwd)/packaging/appimage"
@@ -21,6 +29,34 @@ else
 fi
 
 echo "=== Starting AppImage build for ${APP_NAME} v${APP_VERSION} ==="
+
+verify_sha256() {
+    local file="$1"
+    local expected="$2"
+
+    if [ -z "${expected}" ]; then
+        echo "Missing SHA256 for ${file}"
+        exit 1
+    fi
+    echo "${expected}  ${file}" | sha256sum -c -
+}
+
+download_verified() {
+    local url="$1"
+    local output="$2"
+    local sha256="$3"
+
+    if [ -f "${output}" ]; then
+        verify_sha256 "${output}" "${sha256}"
+        return
+    fi
+
+    local tmp="${output}.tmp"
+    rm -f "${tmp}"
+    curl -fsSL --retry 3 --connect-timeout 30 "${url}" -o "${tmp}"
+    verify_sha256 "${tmp}" "${sha256}"
+    mv "${tmp}" "${output}"
+}
 
 # Prepare build environment
 prepare_environment() {
@@ -40,10 +76,7 @@ download_model() {
     fi
     echo "Downloading Whisper small-q5_1 model..."
     mkdir -p sources/language-models
-    curl -fsSL "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/models/download-ggml-model.sh" | bash -s small-q5_1 || {
-        echo "Failed to download model"; exit 1
-    }
-    mv ggml-small-q5_1.bin "sources/language-models/small-q5_1.bin"
+    download_verified "${MODEL_URL}" "sources/language-models/small-q5_1.bin" "${MODEL_SHA256}"
 }
 
 # Create AppDir structure and build application
@@ -93,20 +126,23 @@ download_tools() {
     mkdir -p "${TOOLS_DIR}"
     local base_url="https://github.com"
 
-    [ ! -f "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" ] && \
-        wget -q "${base_url}/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage" \
-            -O "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" && \
-        chmod +x "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
+    download_verified \
+        "${base_url}/linuxdeploy/linuxdeploy/releases/download/${LINUXDEPLOY_TAG}/linuxdeploy-${ARCH}.AppImage" \
+        "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage" \
+        "${LINUXDEPLOY_SHA256}"
+    chmod +x "${TOOLS_DIR}/linuxdeploy-${ARCH}.AppImage"
 
-    [ ! -f "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" ] && \
-        wget -q "${base_url}/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" \
-            -O "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" && \
-        chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
+    download_verified \
+        "${base_url}/AppImage/AppImageKit/releases/download/${APPIMAGETOOL_TAG}/appimagetool-${ARCH}.AppImage" \
+        "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" \
+        "${APPIMAGETOOL_SHA256}"
+    chmod +x "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage"
 
-    [ ! -f "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" ] && \
-        wget -q "${base_url}/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-${ARCH}.AppImage" \
-            -O "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" || true
-    chmod +x "${TOOLS_DIR}/linuxdeploy-plugin-gtk-${ARCH}.AppImage" 2>/dev/null || true
+    download_verified \
+        "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/${GTK_PLUGIN_COMMIT}/linuxdeploy-plugin-gtk.sh" \
+        "${TOOLS_DIR}/linuxdeploy-plugin-gtk.sh" \
+        "${GTK_PLUGIN_SHA256}"
+    chmod +x "${TOOLS_DIR}/linuxdeploy-plugin-gtk.sh"
 }
 
 # Find and bundle system library
