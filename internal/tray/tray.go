@@ -7,12 +7,10 @@ package tray
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"fyne.io/systray"
 	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
 )
 
@@ -121,8 +119,8 @@ func (tm *TrayManager) onReady() {
 	systray.SetIcon(tm.iconMicOff)
 	systray.SetTitle("Speak-to-AI")
 	// Create main menu items
-	tm.toggleItem = systray.AddMenuItem(fmt.Sprintf("%s Start Recording", constants.IconRecording), "Start/Stop recording")
-	// Workflow notifications toggle
+	tm.toggleItem = systray.AddMenuItem("Start Recording", "Start/Stop recording")
+	// Workflow notifications toggle (radio indicator is set by updateWorkflowNotificationUI)
 	tm.audioItems["workflow_notifications"] = systray.AddMenuItem(
 		"○ Workflow Notifications",
 		"Toggle workflow notifications (recording, transcription)",
@@ -130,17 +128,17 @@ func (tm *TrayManager) onReady() {
 
 	systray.AddSeparator()
 	// Settings submenu
-	tm.settingsItem = systray.AddMenuItem(fmt.Sprintf("%s  Settings", constants.TraySettings), "Application settings")
+	tm.settingsItem = systray.AddMenuItem("Settings", "Application settings")
 	tm.createSettingsSubmenus()
 
 	systray.AddSeparator()
 	// Config actions
-	tm.showConfigItem = systray.AddMenuItem("📄 Show Config File", "Open configuration file")
-	tm.reloadConfigItem = systray.AddMenuItem(fmt.Sprintf("%s Reset to Defaults", constants.IconConfig), "Reset all settings to default values")
-	tm.aboutItem = systray.AddMenuItem("ℹ️ About", "About Speak-to-AI")
+	tm.showConfigItem = systray.AddMenuItem("Show Config File", "Open configuration file")
+	tm.reloadConfigItem = systray.AddMenuItem("Reset to Defaults", "Reset all settings to default values")
+	tm.aboutItem = systray.AddMenuItem("About", "About Speak-to-AI")
 
 	systray.AddSeparator()
-	tm.exitItem = systray.AddMenuItem(fmt.Sprintf("%s Quit", constants.IconError), "Quit Speak-to-AI")
+	tm.exitItem = systray.AddMenuItem("Quit", "Quit Speak-to-AI")
 	// Handle menu item clicks
 	tm.wg.Add(1)
 	go func() {
@@ -229,10 +227,10 @@ func (tm *TrayManager) SetRecordingState(isRecording bool) {
 
 	if isRecording {
 		systray.SetIcon(tm.iconMicOn)
-		tm.toggleItem.SetTitle(fmt.Sprintf("%s Stop Recording", constants.IconStop))
+		tm.toggleItem.SetTitle("Stop Recording")
 	} else {
 		systray.SetIcon(tm.iconMicOff)
-		tm.toggleItem.SetTitle(fmt.Sprintf("%s Start Recording", constants.IconRecording))
+		tm.toggleItem.SetTitle("Start Recording")
 	}
 }
 
