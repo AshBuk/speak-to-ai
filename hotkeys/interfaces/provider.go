@@ -3,9 +3,13 @@
 
 package interfaces
 
-import "time"
+import (
+	"time"
 
-// Defines the contract for a keyboard event source
+	"github.com/AshBuk/speak-to-ai/internal/platform"
+)
+
+// KeyboardEventProvider defines the contract for a keyboard event source
 type KeyboardEventProvider interface {
 	// Start listening for keyboard events
 	Start() error
@@ -21,17 +25,18 @@ type KeyboardEventProvider interface {
 	SupportsCaptureOnce() bool
 }
 
-// Represents a hotkey combination
+// KeyCombination represents a hotkey combination
 type KeyCombination struct {
 	Modifiers []string // Modifier keys like "ctrl", "alt", "shift"
 	Key       string   // The primary, non-modifier key
 }
 
-// Defines the type of desktop environment
-type EnvironmentType int
+// EnvironmentType is an alias for platform.EnvironmentType to avoid converter boilerplate
+type EnvironmentType = platform.EnvironmentType
 
+// Re-exported environment constants for package-local convenience
 const (
-	EnvironmentUnknown EnvironmentType = iota
-	EnvironmentWayland
-	EnvironmentX11
+	EnvironmentUnknown = platform.EnvironmentUnknown
+	EnvironmentWayland = platform.EnvironmentWayland
+	EnvironmentX11     = platform.EnvironmentX11
 )

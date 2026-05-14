@@ -22,7 +22,7 @@ import (
 // Coordinates tray icon states and desktop notifications
 type UIService struct {
 	logger        logger.Logger
-	trayManager   tray.TrayManagerInterface
+	trayManager   tray.Manager
 	notifyManager *notify.NotificationManager
 	config        *config.Config
 }
@@ -30,7 +30,7 @@ type UIService struct {
 // Create a new service instance
 func NewUIService(
 	logger logger.Logger,
-	trayManager tray.TrayManagerInterface,
+	trayManager tray.Manager,
 	notifyManager *notify.NotificationManager,
 	config *config.Config,
 ) *UIService {

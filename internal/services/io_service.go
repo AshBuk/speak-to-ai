@@ -221,16 +221,10 @@ func (ios *IOService) Shutdown() error {
 	return lastErr
 }
 
-// detectOutputEnvironment maps platform environment to output factory environment type
+// detectOutputEnvironment returns the current platform display server type.
+// platform.EnvironmentType is aliased across output/hotkeys packages — no conversion needed.
 func (ios *IOService) detectOutputEnvironment() outputFactory.EnvironmentType {
-	switch platform.DetectEnvironment() {
-	case platform.EnvironmentWayland:
-		return outputFactory.EnvironmentWayland
-	case platform.EnvironmentX11:
-		return outputFactory.EnvironmentX11
-	default:
-		return outputFactory.EnvironmentUnknown
-	}
+	return platform.DetectEnvironment()
 }
 
 // Wire UI service for settings refresh notifications

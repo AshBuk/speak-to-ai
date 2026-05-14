@@ -38,7 +38,7 @@ type Components struct {
 	OutputManager   outputInterfaces.Outputter  // Text output (clipboard/typing)
 	HotkeyManager   *manager.HotkeyManager      // Global hotkey registration
 	WebSocketServer *websocket.WebSocketServer  // WebSocket server for remote control
-	TrayManager     tray.TrayManagerInterface   // System tray icon and menu
+	TrayManager     tray.Manager                // System tray icon and menu
 	NotifyManager   *notify.NotificationManager // Desktop notifications
 	TempFileManager *processing.TempFileManager // Temporary audio file management
 }

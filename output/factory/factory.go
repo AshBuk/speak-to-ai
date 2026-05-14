@@ -13,13 +13,14 @@ import (
 	"github.com/AshBuk/speak-to-ai/output/outputters"
 )
 
-// EnvironmentType identifies Linux display server protocol for tool selection
-type EnvironmentType string
+// EnvironmentType is an alias for platform.EnvironmentType to avoid converter boilerplate
+type EnvironmentType = platform.EnvironmentType
 
+// Re-exported environment constants for package-local convenience
 const (
-	EnvironmentX11     EnvironmentType = "X11"     // X11 display server
-	EnvironmentWayland EnvironmentType = "Wayland" // Wayland display server
-	EnvironmentUnknown EnvironmentType = "Unknown" // fallback/unknown environment
+	EnvironmentX11     = platform.EnvironmentX11
+	EnvironmentWayland = platform.EnvironmentWayland
+	EnvironmentUnknown = platform.EnvironmentUnknown
 )
 
 // Factory creates output managers (clipboard/typing) based on environment and configuration

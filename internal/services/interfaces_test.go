@@ -96,8 +96,8 @@ func TestServiceContainer_Shutdown(t *testing.T) {
 		if err == nil {
 			t.Error("Shutdown should return error when service fails")
 		}
-		if err != expectedError {
-			t.Errorf("Expected error %v, got %v", expectedError, err)
+		if !errors.Is(err, expectedError) {
+			t.Errorf("Expected error to contain %v, got %v", expectedError, err)
 		}
 		// Both services should still be called even if one fails
 		if !audioMock.WasShutdownCalled() {

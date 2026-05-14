@@ -10,8 +10,8 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 )
 
-// HotkeyManagerInterface defines the interface that MockHotkeyManager implements
-type HotkeyManagerInterface interface {
+// HotkeyManager defines the interface that MockHotkeyManager implements
+type HotkeyManager interface {
 	Start() error
 	Stop()
 	RegisterCallbacks(startRecording, stopRecording func() error)
@@ -21,7 +21,7 @@ type HotkeyManagerInterface interface {
 	SupportsCaptureOnce() bool
 }
 
-// MockHotkeyManager implements HotkeyManagerInterface for testing
+// MockHotkeyManager implements HotkeyManager for testing
 type MockHotkeyManager struct {
 	startCalled                bool
 	stopCalled                 bool

@@ -28,7 +28,7 @@ type MockTrayManager struct {
 
 // CreateMockTrayManager creates a mock tray manager that doesn't use systray.
 // Callbacks are wired later via setter methods.
-func CreateMockTrayManager(logger logger.Logger) TrayManagerInterface {
+func CreateMockTrayManager(logger logger.Logger) Manager {
 	return &MockTrayManager{
 		logger: logger,
 	}
