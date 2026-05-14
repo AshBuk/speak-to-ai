@@ -117,7 +117,7 @@ sudo usermod -a -G input $USER
 
 For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
 
-See changes: [CHANGELOG.md](CHANGELOG.md)
+See changes: [Releases](https://github.com/AshBuk/speak-to-ai/releases)
 
 ### System Requirements
 

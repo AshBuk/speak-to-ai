@@ -57,7 +57,7 @@ jobs:
               cmd/ config/ hotkeys/ audio/ whisper/ output/ websocket/ internal/ \
               vendor/ \
               go.mod go.sum \
-              Makefile LICENSE README.md CHANGELOG.md \
+              Makefile LICENSE README.md \
               config.yaml \
               io.github.ashbuk.speak-to-ai.desktop \
               io.github.ashbuk.speak-to-ai.appdata.xml \

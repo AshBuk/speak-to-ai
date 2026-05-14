@@ -219,7 +219,6 @@ install -D -m 0644 icons/io.github.ashbuk.speak-to-ai.svg \
 
 # Documentation
 install -D -m 0644 README.md %{buildroot}%{_docdir}/%{name}/README.md
-install -D -m 0644 CHANGELOG.md %{buildroot}%{_docdir}/%{name}/CHANGELOG.md
 install -D -m 0644 docs/Desktop_Environment_Support.md \
     %{buildroot}%{_docdir}/%{name}/Desktop_Environment_Support.md
 
