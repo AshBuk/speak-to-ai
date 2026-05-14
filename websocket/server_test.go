@@ -89,7 +89,7 @@ func TestWebSocketServer_Start_Disabled(t *testing.T) {
 		t.Errorf("Expected no error when server is disabled, got %v", err)
 	}
 
-	if server.started {
+	if server.started.Load() {
 		t.Error("Server should not be started when disabled")
 	}
 }
@@ -125,7 +125,7 @@ func TestWebSocketServer_Stop(t *testing.T) {
 	// Stop server
 	server.Stop()
 
-	if server.started {
+	if server.started.Load() {
 		t.Error("Server should not be started after Stop()")
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/config"
@@ -51,7 +52,7 @@ type WebSocketServer struct {
 	audio       AudioController
 	audioMu     sync.RWMutex
 	server      *http.Server
-	started     bool
+	started     atomic.Bool
 	retryCount  map[*websocket.Conn]int // Track retry attempts
 	logger      logger.Logger
 	wg          sync.WaitGroup
@@ -153,7 +154,7 @@ func (s *WebSocketServer) Start() error {
 	go func() {
 		defer s.wg.Done()
 		s.logger.Info("Starting WebSocket server on %s", addr)
-		s.started = true
+		s.started.Store(true)
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.logger.Error("WebSocket server error: %v", err)
 		}
@@ -164,7 +165,7 @@ func (s *WebSocketServer) Start() error {
 
 // Ensure clean client disconnection before termination
 func (s *WebSocketServer) Stop() {
-	if s.server != nil && s.started {
+	if s.server != nil && s.started.Load() {
 		s.logger.Info("Stopping WebSocket server...")
 		// Create a context with timeout for shutdown
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -184,7 +185,7 @@ func (s *WebSocketServer) Stop() {
 		}
 		// Wait for server goroutine to finish
 		s.wg.Wait()
-		s.started = false
+		s.started.Store(false)
 	}
 }
 
