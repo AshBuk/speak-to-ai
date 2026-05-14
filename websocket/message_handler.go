@@ -50,13 +50,14 @@ func (s *WebSocketServer) processMessages(conn *websocket.Conn) {
 	}
 }
 
-// Initiate recording session with retry logic for reliability
+// Start recording through AudioService.
 func (s *WebSocketServer) handleStartRecording(conn *websocket.Conn, requestID string) {
-	// Start recording
-	err := s.executeWithRetry(func() error {
-		return s.recorder.StartRecording()
-	}, conn)
-
+	audio := s.audioController()
+	if audio == nil {
+		s.sendError(conn, "recording_error", "audio controller not wired", requestID)
+		return
+	}
+	err := s.executeWithRetry(audio.HandleStartRecording, conn)
 	if err != nil {
 		s.logger.Error("Error starting recording: %v", err)
 		s.sendError(conn, "recording_error", fmt.Sprintf("Error starting recording: %v", err), requestID)
@@ -65,52 +66,32 @@ func (s *WebSocketServer) handleStartRecording(conn *websocket.Conn, requestID s
 	s.sendMessage(conn, "recording-started", nil, requestID)
 }
 
-// Complete recording workflow and deliver transcription result
+// Stop recording through AudioService and return the transcript.
 func (s *WebSocketServer) handleStopRecording(conn *websocket.Conn, requestID string) {
-	// Stop recording
-	audioFile, err := s.recorder.StopRecording()
-	if err != nil {
-		s.logger.Error("Error stopping recording: %v", err)
-		s.sendError(conn, "recording_error", fmt.Sprintf("Error stopping recording: %v", err), requestID)
+	audio := s.audioController()
+	if audio == nil {
+		s.sendError(conn, "recording_error", "audio controller not wired", requestID)
 		return
 	}
-	// Notify client that recording has stopped
-	s.sendMessage(conn, "recording-stopped", nil, requestID)
-	// Send the audio file to Whisper for transcription
-	type transcriptionResult struct {
-		text string
-		err  error
-	}
-	// Create channel for receiving transcription result
-	resultCh := make(chan transcriptionResult, 1)
-	// Start transcription in a goroutine with timeout context
+
 	ctx, cancel := context.WithTimeout(context.Background(), transcriptionCtxTimeout)
 	defer cancel()
-	go func() {
-		text, err := s.whisperEngine().TranscribeWithContext(ctx, audioFile)
-		resultCh <- transcriptionResult{text: text, err: err}
-	}()
-
-	// Wait for result with timeout
-	select {
-	case result := <-resultCh:
-		if result.err != nil {
-			s.logger.Error("Error transcribing audio: %v", result.err)
-			s.sendError(conn, "transcription_error", fmt.Sprintf("Error transcribing audio: %v", result.err), requestID)
-		} else {
-			// Success - send transcribed text
-			s.sendMessage(conn, "transcription", map[string]string{
-				"text": result.text,
-			}, requestID)
+	text, err := audio.HandleStopRecordingSync(ctx)
+	if err != nil {
+		if ctx.Err() != nil {
+			s.logger.Error("Timeout transcribing audio")
+			s.sendError(conn, "transcription_timeout", "Timeout transcribing audio", requestID)
+			return
 		}
-	case <-time.After(transcriptionTimeout):
-		s.logger.Error("Timeout transcribing audio")
-		s.sendError(conn, "transcription_timeout", "Timeout transcribing audio", requestID)
+		s.logger.Error("Error stopping/transcribing: %v", err)
+		s.sendError(conn, "transcription_error", fmt.Sprintf("Error transcribing audio: %v", err), requestID)
+		return
 	}
-	// Clean up audio file
-	if err := s.recorder.CleanupFile(); err != nil {
-		s.logger.Error("Error cleaning up audio file: %v", err)
-	}
+	// Confirm stop after the operation actually succeeded, then deliver
+	s.sendMessage(conn, "recording-stopped", nil, requestID)
+	s.sendMessage(conn, "transcription", map[string]string{
+		"text": text,
+	}, requestID)
 }
 
 // Deliver structured error response for client debugging

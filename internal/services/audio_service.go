@@ -35,6 +35,9 @@ type AudioService struct {
 	lastTranscript           string
 	audioRecorderNeedsReinit bool
 
+	// Guards whisperEngine while transcription is using it.
+	engineMu sync.RWMutex
+
 	// Goroutine ownership: tracks background transcription tasks
 	wg sync.WaitGroup
 
@@ -105,13 +108,71 @@ func (as *AudioService) HandleStartRecording() error {
 	return as.startStandardRecording()
 }
 
-// HandleStopRecording stops recording and starts transcription
+// HandleStopRecording stops recording and starts async transcription.
 func (as *AudioService) HandleStopRecording() error {
+	audioFile, err := as.stopAndPrepareTranscription(true)
+	if err != nil || audioFile == "" {
+		return err
+	}
+	select {
+	case <-as.ctx.Done():
+		as.logger.Warning("Shutdown in progress, skipping transcription")
+		return nil
+	default:
+	}
+	if as.io != nil {
+		as.io.BeginTranscription()
+	}
+	as.wg.Add(1)
+	go func() {
+		defer as.wg.Done()
+		as.transcribeAsync(audioFile)
+	}()
+	return nil
+}
+
+// HandleStopRecordingSync stops recording and returns the transcript.
+func (as *AudioService) HandleStopRecordingSync(ctx context.Context) (string, error) {
+	audioFile, err := as.stopAndPrepareTranscription(false)
+	if err != nil || audioFile == "" {
+		return "", err
+	}
+	// Always release the recorded WAV; TempFileManager would eventually do
+	// it, but eager cleanup keeps disk usage bounded under heavy API use.
+	defer as.cleanupRecording(audioFile)
+
+	select {
+	case <-as.ctx.Done():
+		return "", fmt.Errorf("shutdown in progress")
+	default:
+	}
+
+	transcript, err := as.transcribeWithCurrentEngine(ctx, audioFile)
+	if err != nil {
+		return "", err
+	}
+	sanitized := utils.SanitizeTranscript(transcript)
+	as.mu.Lock()
+	as.lastTranscript = sanitized
+	as.mu.Unlock()
+	return sanitized, nil
+}
+
+// cleanupRecording removes the captured WAV. Errors are ignored: temp
+// files are also swept by TempFileManager on a schedule.
+func (as *AudioService) cleanupRecording(audioFile string) {
+	if audioFile != "" && as.tempManager != nil {
+		as.tempManager.RemoveFile(audioFile, true)
+	}
+}
+
+// stopAndPrepareTranscription stops recording and returns the captured file.
+func (as *AudioService) stopAndPrepareTranscription(swallowStopError bool) (string, error) {
 	as.mu.Lock()
 	defer as.mu.Unlock()
 
 	if !as.isRecording {
-		return ErrNoRecordingInProgress
+		return "", ErrNoRecordingInProgress
 	}
 	as.logger.Info("Stopping recording and transcribing...")
 
@@ -122,7 +183,6 @@ func (as *AudioService) HandleStopRecording() error {
 
 		// Auto-fallback to arecord if using ffmpeg
 		if as.config.Audio.RecordingMethod == "ffmpeg" {
-			// Persist change via ConfigService if available
 			if as.cfg != nil {
 				_ = as.cfg.UpdateRecordingMethod("arecord")
 			}
@@ -130,7 +190,6 @@ func (as *AudioService) HandleStopRecording() error {
 			as.ClearSession()
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
-				// Refresh tray to reflect new method
 				as.ui.UpdateSettings(as.config)
 			}
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
@@ -140,33 +199,21 @@ func (as *AudioService) HandleStopRecording() error {
 		if as.ui != nil {
 			as.ui.SetRecordingState(false)
 		}
-		// Swallow error to make stop idempotent and avoid being stuck
-		return nil
+		if swallowStopError {
+			// Keep hotkey/tray stop idempotent so users can recover with the next start.
+			return "", nil
+		}
+		return "", err
 	}
 	as.isRecording = false
-	// Update UI
 	if as.ui != nil {
 		as.ui.SetRecordingState(false)
 		as.ui.ShowNotification(constants.NotifyRecordingStopped, constants.NotifyRecordingStopMsg)
 	}
-	// Check if shutdown is in progress before starting transcription
-	select {
-	case <-as.ctx.Done():
-		as.logger.Warning("Shutdown in progress, skipping transcription")
-		return nil
-	default:
+	if audioFile == "" {
+		return "", fmt.Errorf("recording produced no audio file")
 	}
-	// Signal IO that transcription is starting to protect clipboard reads
-	if as.io != nil {
-		as.io.BeginTranscription()
-	}
-	// Start async transcription with ownership tracking
-	as.wg.Add(1)
-	go func() {
-		defer as.wg.Done()
-		as.transcribeAsync(audioFile)
-	}()
-	return nil
+	return audioFile, nil
 }
 
 // IsRecording returns current recording state
@@ -183,38 +230,39 @@ func (as *AudioService) GetLastTranscript() string {
 	return as.lastTranscript
 }
 
-// SwitchModel hot-reloads the whisper engine with a different model.
-// The context allows cancellation of in-progress downloads (e.g. on app shutdown).
-// Rejects the request if recording is in progress.
+// SwitchModel hot-reloads the whisper engine.
 func (as *AudioService) SwitchModel(ctx context.Context, modelID string) error {
 	as.mu.Lock()
-	defer as.mu.Unlock()
-
 	if as.isRecording {
+		as.mu.Unlock()
 		return fmt.Errorf("cannot switch model while recording")
 	}
+	as.mu.Unlock()
 
 	newPath, err := as.modelManager.SwitchModel(ctx, modelID)
 	if err != nil {
 		return fmt.Errorf("model switch failed: %w", err)
 	}
 
-	if as.whisperEngine != nil {
-		_ = as.whisperEngine.Close()
-	}
-
 	newEngine, err := whisper.NewWhisperEngine(as.config, newPath, as.logger)
 	if err != nil {
 		return fmt.Errorf("failed to create engine for model %s: %w", modelID, err)
 	}
-	as.whisperEngine = newEngine
 
-	// Propagate engine reference to WebSocket server via IOService
-	type engineUpdater interface {
-		SetWhisperEngine(*whisper.WhisperEngine)
+	as.mu.Lock()
+	if as.isRecording {
+		as.mu.Unlock()
+		_ = newEngine.Close()
+		return fmt.Errorf("cannot switch model while recording")
 	}
-	if updater, ok := as.io.(engineUpdater); ok {
-		updater.SetWhisperEngine(newEngine)
+	as.engineMu.Lock()
+	oldEngine := as.whisperEngine
+	as.whisperEngine = newEngine
+	as.engineMu.Unlock()
+	as.mu.Unlock()
+
+	if oldEngine != nil {
+		_ = oldEngine.Close()
 	}
 	return nil
 }
@@ -333,7 +381,7 @@ func (as *AudioService) transcribeAsync(audioFile string) {
 
 	resultChan := make(chan result, 1)
 	go func() {
-		transcript, err := as.whisperEngine.TranscribeWithContext(ctx, audioFile)
+		transcript, err := as.transcribeWithCurrentEngine(ctx, audioFile)
 		select {
 		case resultChan <- result{transcript: transcript, err: err}:
 		case <-ctx.Done():
@@ -341,10 +389,23 @@ func (as *AudioService) transcribeAsync(audioFile string) {
 	}()
 	select {
 	case res := <-resultChan:
+		// Inner goroutine finished; safe to release the WAV.
+		as.cleanupRecording(audioFile)
 		as.handleTranscriptionResult(res.transcript, res.err)
 	case <-ctx.Done():
+		// Inner CGO call may still be reading the file — leave it for
+		// TempFileManager rather than risk a use-after-delete.
 		as.handleTranscriptionCancellation(ctx.Err())
 	}
+}
+
+func (as *AudioService) transcribeWithCurrentEngine(ctx context.Context, audioFile string) (string, error) {
+	as.engineMu.RLock()
+	defer as.engineMu.RUnlock()
+	if as.whisperEngine == nil {
+		return "", fmt.Errorf("whisper engine not available")
+	}
+	return as.whisperEngine.TranscribeWithContext(ctx, audioFile)
 }
 
 // handleTranscriptionResult processes transcription results

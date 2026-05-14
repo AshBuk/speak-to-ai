@@ -11,12 +11,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/whisper"
 	"github.com/gorilla/websocket"
 )
+
+// AudioController exposes recording actions to WebSocket handlers.
+type AudioController interface {
+	HandleStartRecording() error
+	HandleStopRecordingSync(ctx context.Context) (string, error)
+}
 
 // WebSocket server configuration constants
 const (
@@ -35,7 +39,6 @@ const (
 	serverWriteTimeout      = 15 * time.Second // HTTP server write timeout
 	serverIdleTimeout       = 60 * time.Second // HTTP server idle timeout
 	shutdownTimeout         = 5 * time.Second  // Graceful shutdown timeout
-	transcriptionTimeout    = 30 * time.Second // Whisper transcription timeout
 	transcriptionCtxTimeout = 30 * time.Second // Context timeout for transcription
 )
 
@@ -45,9 +48,8 @@ type WebSocketServer struct {
 	clients     map[*websocket.Conn]bool
 	clientsLock sync.Mutex
 	upgrader    websocket.Upgrader
-	recorder    interfaces.AudioRecorder
-	whisper     *whisper.WhisperEngine
-	whisperLock sync.RWMutex
+	audio       AudioController
+	audioMu     sync.RWMutex
 	server      *http.Server
 	started     bool
 	retryCount  map[*websocket.Conn]int // Track retry attempts
@@ -86,8 +88,8 @@ func checkOriginFunc(cfg *config.Config) func(*http.Request) bool {
 	}
 }
 
-// Initialize server with security and resource constraints
-func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder, whisperEngine *whisper.WhisperEngine, logger logger.Logger) *WebSocketServer {
+// Initialize server with security and resource constraints.
+func NewWebSocketServer(config *config.Config, logger logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
 		clients: make(map[*websocket.Conn]bool),
@@ -96,25 +98,23 @@ func NewWebSocketServer(config *config.Config, recorder interfaces.AudioRecorder
 			WriteBufferSize: writeBufferSize,
 			CheckOrigin:     checkOriginFunc(config),
 		},
-		recorder:   recorder,
-		whisper:    whisperEngine,
 		retryCount: make(map[*websocket.Conn]int),
 		logger:     logger,
 	}
 }
 
-// SetWhisperEngine replaces the whisper engine reference (used after model hot-reload)
-func (s *WebSocketServer) SetWhisperEngine(engine *whisper.WhisperEngine) {
-	s.whisperLock.Lock()
-	s.whisper = engine
-	s.whisperLock.Unlock()
+// SetAudioController wires recording actions.
+func (s *WebSocketServer) SetAudioController(audio AudioController) {
+	s.audioMu.Lock()
+	s.audio = audio
+	s.audioMu.Unlock()
 }
 
-// whisperEngine returns the current whisper engine (thread-safe)
-func (s *WebSocketServer) whisperEngine() *whisper.WhisperEngine {
-	s.whisperLock.RLock()
-	defer s.whisperLock.RUnlock()
-	return s.whisper
+// audioController returns the current AudioController (thread-safe).
+func (s *WebSocketServer) audioController() AudioController {
+	s.audioMu.RLock()
+	defer s.audioMu.RUnlock()
+	return s.audio
 }
 
 // Begin accepting client connections with health monitoring
