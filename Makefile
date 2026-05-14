@@ -60,6 +60,10 @@ test:
 	@echo "=== Running tests via Docker ==="
 	$(DOCKER_RUN) go test -v -cover ./...
 
+test-race:
+	@echo "=== Running tests with race detector via Docker ==="
+	$(DOCKER_RUN) go test -race -count=1 ./...
+
 test-integration:
 	@echo "=== Running integration tests (fast mode) via Docker ==="
 	docker compose run --rm -e CGO_ENABLED=0 dev go test -tags=integration ./tests/integration/... -short -v
