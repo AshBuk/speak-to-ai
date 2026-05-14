@@ -12,7 +12,7 @@ import (
 
 // CreateDefaultTrayManager creates the default tray manager
 // based on available dependencies.
-func CreateDefaultTrayManager(logger logger.Logger) TrayManagerInterface {
+func CreateDefaultTrayManager(logger logger.Logger) Manager {
 	// Use the real systray implementation
 	iconMicOff := GetIconMicOff(logger)
 	iconMicOn := GetIconMicOn(logger)
@@ -21,7 +21,7 @@ func CreateDefaultTrayManager(logger logger.Logger) TrayManagerInterface {
 }
 
 // CreateTrayManagerWithConfig creates tray manager with initial configuration.
-func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger) TrayManagerInterface {
+func CreateTrayManagerWithConfig(config *config.Config, logger logger.Logger) Manager {
 	trayManager := CreateDefaultTrayManager(logger)
 	trayManager.UpdateSettings(config)
 	return trayManager

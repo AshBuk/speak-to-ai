@@ -5,6 +5,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/AshBuk/speak-to-ai/audio/processing"
@@ -12,92 +13,112 @@ import (
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
 )
 
-// Defines the contract for audio-related operations
+// AudioServiceInterface defines the contract for audio-related operations
 type AudioServiceInterface interface {
-	// Recording lifecycle
+	// HandleStartRecording begins audio capture
 	HandleStartRecording() error
+	// HandleStopRecording stops audio capture and triggers transcription
 	HandleStopRecording() error
+	// IsRecording returns whether audio capture is active
 	IsRecording() bool
 
-	// Session management
+	// ClearSession resets the current recording session
 	ClearSession()
 
-	// Model management
+	// SwitchModel loads a different whisper model
 	SwitchModel(ctx context.Context, modelID string) error
+	// DeleteModel removes a downloaded whisper model
 	DeleteModel(modelID string) error
 
-	// Transcript access
+	// GetLastTranscript returns the most recent transcription result
 	GetLastTranscript() string
 
-	// Cleanup
+	// Shutdown releases audio resources
 	Shutdown() error
 }
 
-// Defines the contract for user interface operations
+// UIServiceInterface defines the contract for user interface operations
 type UIServiceInterface interface {
-	// Tray management
+	// SetRecordingState updates the tray icon to reflect recording status
 	SetRecordingState(isRecording bool)
+	// ShowNotification displays a desktop notification
 	ShowNotification(title, message string)
+	// UpdateSettings refreshes tray menu to reflect config changes
 	UpdateSettings(config *config.Config)
 
-	// State updates
+	// UpdateRecordingUI updates visual feedback during recording
 	UpdateRecordingUI(isRecording bool, level float64)
+	// SetError displays an error notification
 	SetError(message string)
+	// SetSuccess displays a success notification
 	SetSuccess(message string)
 
-	// Menu actions
+	// ShowConfigFile opens the config file in the system editor
 	ShowConfigFile() error
+	// ShowAboutPage opens the about page in the browser
 	ShowAboutPage() error
 
-	// Cleanup
+	// Shutdown releases UI resources
 	Shutdown() error
 }
 
-// Defines the contract for input/output operations
+// IOServiceInterface defines the contract for input/output operations
 type IOServiceInterface interface {
-	// Text output
+	// OutputText sends transcribed text to the configured output target
 	OutputText(text string) error
+	// SetOutputMethod switches the output method (clipboard/typing)
 	SetOutputMethod(method string) error
 
-	// Transcription synchronization
+	// BeginTranscription signals that a transcription is in progress
 	BeginTranscription()
+	// CompleteTranscription delivers the transcription result
 	CompleteTranscription(result string)
+	// WaitForTranscription blocks until a transcription completes or times out
 	WaitForTranscription(timeout time.Duration) (string, error)
 
-	// Debug info
+	// GetOutputToolNames returns the names of the clipboard and typing tools
 	GetOutputToolNames() (clipboardTool, typeTool string)
 
-	// WebSocket operations
+	// StartWebSocketServer starts the WebSocket server for remote control
 	StartWebSocketServer() error
+	// StopWebSocketServer stops the WebSocket server
 	StopWebSocketServer() error
 
-	// Cleanup
+	// Shutdown releases IO resources
 	Shutdown() error
 }
 
-// Defines the contract for configuration operations
+// ConfigServiceInterface defines the contract for configuration operations
 type ConfigServiceInterface interface {
-	// Configuration management
+	// LoadConfig reads configuration from the given file
 	LoadConfig(configFile string) error
+	// SaveConfig persists the current configuration to disk
 	SaveConfig() error
+	// ResetToDefaults restores all settings to their default values
 	ResetToDefaults() error
+	// GetConfig returns the current configuration
 	GetConfig() *config.Config
 
-	// Settings updates
+	// UpdateLanguage changes the transcription language
 	UpdateLanguage(language string) error
+	// UpdateWhisperModel changes the active whisper model
 	UpdateWhisperModel(modelID string) error
+	// ToggleWorkflowNotifications toggles workflow notification setting
 	ToggleWorkflowNotifications() error
+	// UpdateRecordingMethod changes the audio recording method
 	UpdateRecordingMethod(method string) error
+	// UpdateOutputMode changes the text output mode
 	UpdateOutputMode(mode string) error
+	// UpdateHotkey changes the key binding for the given action
 	UpdateHotkey(action, combo string) error
 
-	// Cleanup
+	// Shutdown releases config resources
 	Shutdown() error
 }
 
-// Defines the contract for hotkey operations
+// HotkeyServiceInterface defines the contract for hotkey operations
 type HotkeyServiceInterface interface {
-	// Hotkey callback setup
+	// SetupHotkeyCallbacks connects application handlers to hotkey events
 	SetupHotkeyCallbacks(
 		startRecording func() error,
 		stopRecording func() error,
@@ -105,20 +126,21 @@ type HotkeyServiceInterface interface {
 		reloadConfig func() error,
 	) error
 
-	// Hotkey lifecycle
+	// RegisterHotkeys activates hotkey capture for the current session
 	RegisterHotkeys() error
+	// UnregisterHotkeys releases hotkey capture
 	UnregisterHotkeys() error
 
-	// Hotkey reloading
+	// ReloadFromConfig applies new hotkey bindings without restarting
 	ReloadFromConfig(startRecording, stopRecording func() error, configProvider func() adapters.HotkeyConfig) error
 
-	// One-shot capture for rebind flow
+	// CaptureOnce captures a single keypress for hotkey rebinding
 	CaptureOnce(timeoutMs int) (string, error)
 
-	// Capability flags
+	// SupportsCaptureOnce reports whether interactive hotkey binding is available
 	SupportsCaptureOnce() bool
 
-	// Cleanup
+	// Shutdown releases hotkey resources
 	Shutdown() error
 }
 
@@ -139,30 +161,30 @@ func NewServiceContainer() *ServiceContainer {
 
 // Gracefully shut down all services
 func (sc *ServiceContainer) Shutdown() error {
-	var lastErr error
+	var errs []error
 	if sc.Audio != nil {
 		if err := sc.Audio.Shutdown(); err != nil {
-			lastErr = err
+			errs = append(errs, err)
 		}
 	}
 	if sc.UI != nil {
 		if err := sc.UI.Shutdown(); err != nil {
-			lastErr = err
+			errs = append(errs, err)
 		}
 	}
 	if sc.IO != nil {
 		if err := sc.IO.Shutdown(); err != nil {
-			lastErr = err
+			errs = append(errs, err)
 		}
 	}
 	if sc.Config != nil {
 		if err := sc.Config.Shutdown(); err != nil {
-			lastErr = err
+			errs = append(errs, err)
 		}
 	}
 	if sc.Hotkeys != nil {
 		if err := sc.Hotkeys.Shutdown(); err != nil {
-			lastErr = err
+			errs = append(errs, err)
 		}
 	}
 	if sc.TempFileManager != nil {
@@ -170,5 +192,5 @@ func (sc *ServiceContainer) Shutdown() error {
 		sc.TempFileManager.CleanupAll()
 	}
 
-	return lastErr
+	return errors.Join(errs...)
 }

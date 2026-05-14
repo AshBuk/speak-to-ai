@@ -79,7 +79,7 @@ func (sa *FactoryAssembler) createConfigService() *ConfigService {
 }
 
 // createHotkeyService creates the HotkeyService
-func (sa *FactoryAssembler) createHotkeyService(hotkeyManager HotkeyManagerInterface) *HotkeyService {
+func (sa *FactoryAssembler) createHotkeyService(hotkeyManager HotkeyManager) *HotkeyService {
 	return NewHotkeyService(
 		sa.factoryConfig.Logger,
 		hotkeyManager,
@@ -99,7 +99,7 @@ func (sa *FactoryAssembler) createAudioService(components *Components) *AudioSer
 }
 
 // createUIService creates the UIService
-func (sa *FactoryAssembler) createUIService(trayManager tray.TrayManagerInterface, notifyManager *notify.NotificationManager) *UIService {
+func (sa *FactoryAssembler) createUIService(trayManager tray.Manager, notifyManager *notify.NotificationManager) *UIService {
 	return NewUIService(
 		sa.factoryConfig.Logger,
 		trayManager,

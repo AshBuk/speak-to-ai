@@ -10,7 +10,7 @@ import (
 )
 
 // Defines the interface for tray managers
-type TrayManagerInterface interface {
+type Manager interface {
 	Start()
 	SetRecordingState(isRecording bool)
 	UpdateSettings(config *config.Config)

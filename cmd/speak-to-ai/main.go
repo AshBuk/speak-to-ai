@@ -13,7 +13,6 @@ import (
 	appversion "github.com/AshBuk/speak-to-ai/internal/version"
 )
 
-// Application entry point
 // Command Router — two execution modes:
 //
 //	→ Root (no subcommand): daemon — app.NewApp() → Initialize() → RunAndWait()

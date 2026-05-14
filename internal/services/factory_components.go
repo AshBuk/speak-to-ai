@@ -12,10 +12,8 @@ import (
 	"github.com/AshBuk/speak-to-ai/audio/processing"
 	"github.com/AshBuk/speak-to-ai/config"
 	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	hotkeyInterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
 	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
 	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
 	"github.com/AshBuk/speak-to-ai/internal/tray"
 	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
 	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
@@ -76,7 +74,8 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 	}
 	// Initialize output manager with graceful degradation
 	// If typing fails fallback to clipboard only
-	outputEnv := cf.convertEnvironmentType()
+	// platform.EnvironmentType is aliased across output/hotkeys packages — no conversion needed
+	outputEnv := cf.config.Environment
 	components.OutputManager, err = outputFactory.GetOutputterFromConfig(cf.config.Config, outputEnv)
 	if err != nil {
 		cf.config.Logger.Warning("Failed to initialize text outputter: %v", err)
@@ -115,20 +114,6 @@ func (cf *FactoryComponents) ensureModelAvailable(modelManager whisper.ModelMana
 	return nil
 }
 
-// convertEnvironmentType converts platform environment to output factory type
-// Adapter - adapts platform.EnvironmentType → outputFactory.EnvironmentType
-// (different packages define their own environment types)
-func (cf *FactoryComponents) convertEnvironmentType() outputFactory.EnvironmentType {
-	switch cf.config.Environment {
-	case platform.EnvironmentWayland:
-		return outputFactory.EnvironmentWayland
-	case platform.EnvironmentX11:
-		return outputFactory.EnvironmentX11
-	default:
-		return outputFactory.EnvironmentX11
-	}
-}
-
 // createFallbackOutputManager creates fallback clipboard-only output manager
 func (cf *FactoryComponents) createFallbackOutputManager(outputEnv outputFactory.EnvironmentType) outputInterfaces.Outputter {
 	clipboardTool := ""
@@ -159,22 +144,12 @@ func (cf *FactoryComponents) createFallbackOutputManager(outputEnv outputFactory
 
 // createHotkeyManager creates and configures hotkey manager
 func (cf *FactoryComponents) createHotkeyManager() *manager.HotkeyManager {
-	// Convert platform environment to hotkey interfaces environment
-	var hotkeyEnv hotkeyInterfaces.EnvironmentType
-	switch cf.config.Environment {
-	case platform.EnvironmentWayland:
-		hotkeyEnv = hotkeyInterfaces.EnvironmentWayland
-	case platform.EnvironmentX11:
-		hotkeyEnv = hotkeyInterfaces.EnvironmentX11
-	default:
-		hotkeyEnv = hotkeyInterfaces.EnvironmentX11
-	}
 	configAdapter := adapters.NewConfigAdapter(cf.config.Config.Hotkeys.StartRecording, cf.config.Config.Hotkeys.Provider).
 		WithAdditionalHotkeys(
 			cf.config.Config.Hotkeys.ShowConfig,
 			cf.config.Config.Hotkeys.ResetToDefaults,
 		)
-	return manager.NewHotkeyManager(configAdapter, hotkeyEnv, cf.config.Logger)
+	return manager.NewHotkeyManager(configAdapter, cf.config.Environment, cf.config.Logger)
 }
 
 // createWebSocketServer creates WebSocket server
@@ -184,6 +159,6 @@ func (cf *FactoryComponents) createWebSocketServer() *websocket.WebSocketServer 
 
 // createTrayManager creates system tray manager.
 // Callbacks are wired later in Stage 3 (FactoryWirer).
-func (cf *FactoryComponents) createTrayManager() tray.TrayManagerInterface {
+func (cf *FactoryComponents) createTrayManager() tray.Manager {
 	return tray.CreateTrayManagerWithConfig(cf.config.Config, cf.config.Logger)
 }
