@@ -51,14 +51,14 @@ The architecture is built from the ground up with a *minimal set of dependencies
 - **Voice typing or clipboard mode**
 - **Flexible audio recording**: arecord (ALSA) or ffmpeg (PulseAudio/PipeWire), see [audio pipeline](docs/AUDIO_PIPELINE_DIAGRAM.txt)
 - **Multi-language support, custom hotkey binding, visual notifications**
-- **Model management**: switch between base, small, medium, and large-v3 whisper models via tray or CLI
+- **Model management**: switch between base, small, medium, large-v3-turbo, and large-v3 whisper models via tray or CLI
 
 ## Beyond Minimalism
 
 Intuitive minimalist UX, **robust STT infrastructure**. A foundation for voice-controlled automation:
 
 - **Dual API**: Unix socket IPC + WebSocket — script locally or integrate remotely
-- **Interface-driven**: 50+ contracts — swap STT engines, add I/O methods, extend hotkey providers
+- **Interface-driven**: focused contracts — swap STT engines, add I/O methods, extend hotkey providers
 - **Daemon + CLI**: background hub + stateless commands — perfect for IoT pipelines
 - **Graceful degradation**: provider fallbacks, optional components, no crashes
 

@@ -24,7 +24,8 @@ speak-to-ai model set <model-id>     # Switch whisper model (requires daemon)
 speak-to-ai model set base-q5_1      # ~57 MB, fast
 speak-to-ai model set small-q5_1     # ~181 MB, default
 speak-to-ai model set medium-q5_0    # ~539 MB
-speak-to-ai model set large-v3-q5_0  # ~1.1 GB, best quality
+speak-to-ai model set large-v3-turbo-q5_0 # ~820 MB, faster large-v3 variant
+speak-to-ai model set large-v3-q5_0       # ~1.1 GB, best quality
 speak-to-ai model delete <model-id>  # Delete a downloaded model (cannot delete active)
 ```
 
