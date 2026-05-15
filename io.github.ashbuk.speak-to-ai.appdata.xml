@@ -45,6 +45,9 @@
     <binary>speak-to-ai</binary>
   </provides>
   <releases>
+    <release version="1.8.2" date="2026-05-15">
+      <description><p>Bug fixes and improvements</p></description>
+    </release>
     <release version="1.8.1" date="2026-04-19">
       <description>
         <p>Bump whisper.cpp to v1.8.4 (ggml sync, perf gains, UTF-8 fix). Update Go dependencies. Add SECURITY.md</p>
