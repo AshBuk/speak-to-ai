@@ -1,13 +1,8 @@
 # Contributing to Speak-to-AI
 
-Thank you for your interest to Speak-to-AI! This document provides guidelines for contributing to the project.
+Thank you for your interest to Speak-to-AI!
 
-## Code of Conduct
-
-- Respect the chosen stack -> Go and Whisper.cpp as AI model
-- Be respectful, focus on constructive
-- Help others learn and grow
-- Maintain a welcoming environment
+AI-assisted contributions accepted **if author understands and can defend the code**.
 
 ## Getting Started
 
@@ -35,9 +30,9 @@ Thank you for your interest to Speak-to-AI! This document provides guidelines fo
 
 **Note:** Our CI automatically validates:
 - Lint rules (`golangci-lint`)
-- Code formatting (`gofmt`) 
+- Code formatting (`gofmt`)
 - Security scanning (`gosec`)
-- Unit tests
+- Unit tests (including race detector)
 - License headers in all Go files
 
 PRs must pass all checks before merge.
