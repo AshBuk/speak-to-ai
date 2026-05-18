@@ -14,8 +14,8 @@ import (
 // based on available dependencies.
 func CreateDefaultTrayManager(logger logger.Logger) Manager {
 	// Use the real systray implementation
-	iconMicOff := GetIconMicOff(logger)
-	iconMicOn := GetIconMicOn(logger)
+	iconMicOff := IconDefault()
+	iconMicOn := IconRecording()
 
 	return NewTrayManager(iconMicOff, iconMicOn, logger)
 }
