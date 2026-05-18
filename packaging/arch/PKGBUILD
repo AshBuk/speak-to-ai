@@ -148,10 +148,10 @@ package() {
         "${pkgdir}/usr/share/metainfo/io.github.ashbuk.speak-to-ai.appdata.xml"
 
     # Icons
-    install -Dm644 icons/io.github.ashbuk.speak-to-ai.png \
-        "${pkgdir}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png"
-    install -Dm644 icons/io.github.ashbuk.speak-to-ai.svg \
-        "${pkgdir}/usr/share/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg"
+    install -Dm644 icons/io.github.ashbuk.dabri.png \
+        "${pkgdir}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png"
+    install -Dm644 icons/io.github.ashbuk.dabri.svg \
+        "${pkgdir}/usr/share/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg"
 
     # License and documentation
     install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"

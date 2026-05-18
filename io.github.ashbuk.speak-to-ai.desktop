@@ -2,7 +2,7 @@
 Name=Speak to AI
 Comment=Offline STT
 Exec=speak-to-ai
-Icon=io.github.ashbuk.speak-to-ai
+Icon=io.github.ashbuk.dabri
 Type=Application
 Categories=AudioVideo;Audio;Utility;Accessibility;
 Keywords=speech;voice;transcription;ai;whisper;offline;privacy;

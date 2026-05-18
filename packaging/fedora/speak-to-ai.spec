@@ -212,10 +212,10 @@ install -D -m 0644 io.github.ashbuk.speak-to-ai.appdata.xml \
     %{buildroot}%{_metainfodir}/io.github.ashbuk.speak-to-ai.appdata.xml
 
 # Icons (multiple sizes for HiDPI support)
-install -D -m 0644 icons/io.github.ashbuk.speak-to-ai.png \
-    %{buildroot}%{_datadir}/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png
-install -D -m 0644 icons/io.github.ashbuk.speak-to-ai.svg \
-    %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
+install -D -m 0644 icons/io.github.ashbuk.dabri.png \
+    %{buildroot}%{_datadir}/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png
+install -D -m 0644 icons/io.github.ashbuk.dabri.svg \
+    %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg
 
 # Documentation
 install -D -m 0644 README.md %{buildroot}%{_docdir}/%{name}/README.md
@@ -252,8 +252,8 @@ fi
 # Desktop integration
 %{_datadir}/applications/io.github.ashbuk.speak-to-ai.desktop
 %{_metainfodir}/io.github.ashbuk.speak-to-ai.appdata.xml
-%{_datadir}/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png
-%{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.speak-to-ai.svg
+%{_datadir}/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png
+%{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg
 
 %changelog
 * Thu May 15 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.8.2-1

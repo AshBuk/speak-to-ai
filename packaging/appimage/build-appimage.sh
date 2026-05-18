@@ -112,13 +112,13 @@ build_appdir() {
     cp "io.github.ashbuk.speak-to-ai.appdata.xml" "${APPDIR}/usr/share/metainfo/${APP_NAME}.appdata.xml"
     # Copy icon with name matching Icon= field in .desktop file
     mkdir -p "${APPDIR}/usr/share/icons/hicolor/128x128/apps"
-    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png"
-    cp "icons/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"
+    cp "icons/io.github.ashbuk.dabri.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png"
+    cp "icons/io.github.ashbuk.dabri.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"
 
     # Create symlinks for AppImage standard
     ln -sf "usr/share/applications/${APP_NAME}.desktop" "${APPDIR}/${APP_NAME}.desktop"
     ln -sf "usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" "${APPDIR}/${APP_NAME}.png"
-    ln -sf "usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.speak-to-ai.png" "${APPDIR}/io.github.ashbuk.speak-to-ai.png"
+    ln -sf "usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png" "${APPDIR}/io.github.ashbuk.dabri.png"
 }
 
 # Download AppImage tools
@@ -179,7 +179,7 @@ build_appimage() {
         $exec_args \
         $lib_args \
         --desktop-file "${APP_NAME}.AppDir/${APP_NAME}.desktop" \
-        --icon-file "${APP_NAME}.AppDir/io.github.ashbuk.speak-to-ai.png" \
+        --icon-file "${APP_NAME}.AppDir/io.github.ashbuk.dabri.png" \
         --plugin gtk || echo "Warning: linuxdeploy had issues, continuing..."
 
     # Remove unnecessary docs (licenses available in source repos)
