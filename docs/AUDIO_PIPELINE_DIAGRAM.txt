@@ -1,9 +1,9 @@
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                    SPEAK-TO-AI AUDIO WORKFLOW                            ║
+║                           DABRI AUDIO WORKFLOW                           ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  CONFIG: ~/.config/dabri/config.yaml                              │
+│  CONFIG: ~/.config/dabri/config.yaml                                    │
 │  audio:                                                                 │
 │    recording_method: "arecord"  ← DEFAULT (can switch to "ffmpeg")      │
 │    device: "default"                                                    │

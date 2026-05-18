@@ -1,6 +1,5 @@
 <div align="center">
 <img src="https://github.com/AshBuk/dabri/raw/master/icons/io.github.ashbuk.dabri-logo.svg" width="420" alt="Dabri"/>
-<h1>Dabri</h1>
   
 > 🗣️ **Linux speech-to-text, the Unix way**
 
@@ -36,9 +35,9 @@ The architecture is built from the ground up with a *minimal set of dependencies
 [![Security](https://snyk.io/test/github/AshBuk/dabri/badge.svg)](https://snyk.io/test/github/AshBuk/dabri)
 [![gosec](https://img.shields.io/badge/gosec-passing-brightgreen)](https://github.com/AshBuk/dabri/security/code-scanning)
 
-▸ Daemon: Dabri runs quietly in the background and integrates into the system tray for convenient management. 
+▸ **Daemon:** <img src="icons/io.github.ashbuk.dabri.png" width="18" height="18" align="absmiddle"> Dabri runs quietly in the background and integrates into the system tray for convenient management.
 
-▸ Terminal: it can also be invoked as a CLI tool (see **[CLI Usage Guide](docs/CLI_USAGE.md)**) for scripting purposes. 
+▸ **Terminal:** it can also be invoked as a CLI tool (see **[CLI Usage Guide](docs/CLI_USAGE.md)**) for scripting purposes. 
 
 ▸ For integration enthusiasts, a WebSocket server is available at `localhost:8080`. Enable it in your config with web_server enabled: true (disabled by default).
 
