@@ -10,9 +10,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // FactoryWirer wires tray menu callbacks to service business logic

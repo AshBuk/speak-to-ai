@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/utils"
 )
 
 func TestNewWhisperEngine(t *testing.T) {

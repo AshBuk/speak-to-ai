@@ -6,7 +6,7 @@ package factory
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 func TestWaylandTextInput(t *testing.T) {

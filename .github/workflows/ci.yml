@@ -31,7 +31,7 @@ jobs:
           context: .
           file: docker/Dockerfile.dev
           load: true
-          tags: speak-to-ai-dev:latest
+          tags: dabri-dev:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

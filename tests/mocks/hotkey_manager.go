@@ -6,8 +6,8 @@ package mocks
 import (
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/manager"
 )
 
 // HotkeyManager defines the interface that MockHotkeyManager implements

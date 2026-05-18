@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 // Helper function to create test config

@@ -30,7 +30,7 @@ jobs:
 
           # Download and checksum main source
           curl -sL -o source.tar.gz \
-            "https://github.com/AshBuk/speak-to-ai/archive/refs/tags/v${VERSION}.tar.gz"
+            "https://github.com/AshBuk/dabri/archive/refs/tags/v${VERSION}.tar.gz"
           MAIN_SHA256=$(sha256sum source.tar.gz | cut -d' ' -f1)
 
           # Download and checksum whisper.cpp
@@ -85,7 +85,7 @@ jobs:
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.3
         with:
-          pkgname: speak-to-ai
+          pkgname: dabri
           pkgbuild: packaging/arch/PKGBUILD
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}

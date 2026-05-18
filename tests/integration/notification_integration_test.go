@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/notify"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/notify"
 )
 
 // Helper function to create test config

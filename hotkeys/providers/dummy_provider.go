@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Implements a KeyboardEventProvider with no actual functionality

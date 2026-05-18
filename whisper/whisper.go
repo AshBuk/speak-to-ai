@@ -12,9 +12,9 @@
 package whisper
 
 import (
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
-	"github.com/AshBuk/speak-to-ai/whisper/manager"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/whisper/interfaces"
+	"github.com/AshBuk/dabri/whisper/manager"
 )
 
 // Re-export key interfaces for convenience

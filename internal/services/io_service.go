@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
-	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/websocket"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/platform"
+	outputFactory "github.com/AshBuk/dabri/output/factory"
+	outputInterfaces "github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/websocket"
 )
 
 // Handles text output routing and transcription synchronization

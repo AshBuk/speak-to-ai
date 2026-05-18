@@ -2,11 +2,11 @@
 
 ## Supported Versions
 
-Only the latest released version of Speak-to-AI receives security fixes.
+Only the latest released version of Dabri receives security fixes.
 
 ## Reporting a Vulnerability
 
-Please report security issues privately via GitHub's [**Report a vulnerability**](https://github.com/AshBuk/speak-to-ai/security/advisories/new) form (Security tab → Advisories) rather than opening a public issue. If GitHub is not an option for you, you can email **asherbuk@gmail.com** instead.
+Please report security issues privately via GitHub's [**Report a vulnerability**](https://github.com/AshBuk/dabri/security/advisories/new) form (Security tab → Advisories) rather than opening a public issue. If GitHub is not an option for you, you can email **asherbuk@gmail.com** instead.
 
 Include, if possible:
 
@@ -18,9 +18,9 @@ You can expect an initial response within **7 days**. Once the issue is confirme
 
 ## Scope
 
-Speak-to-AI is an offline Linux desktop application: speech recognition runs locally via whisper.cpp, and no audio or transcripts are sent over the network. Reports most relevant to this project include:
+Dabri is an offline Linux desktop application: speech recognition runs locally via whisper.cpp, and no audio or transcripts are sent over the network. Reports most relevant to this project include:
 
-- Path traversal or arbitrary file read/write via model paths or configuration (`~/.config/speak-to-ai/config.yaml`)
+- Path traversal or arbitrary file read/write via model paths or configuration (`~/.config/dabri/config.yaml`)
 - Privilege or input-device issues in the hotkey layer (evdev, D-Bus)
 - Unsafe handling of recorded audio buffers or temporary files
 - Issues in the local WebSocket server exposed by the daemon

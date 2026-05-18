@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
-	"github.com/AshBuk/speak-to-ai/internal/app"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/hotkeys/providers"
+	"github.com/AshBuk/dabri/internal/app"
+	"github.com/AshBuk/dabri/internal/testutils"
 	"go.uber.org/goleak"
 )
 

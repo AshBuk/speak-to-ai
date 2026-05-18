@@ -15,8 +15,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/hotkeys/utils"
+	"github.com/AshBuk/dabri/internal/logger"
 	evdev "github.com/holoplot/go-evdev"
 )
 

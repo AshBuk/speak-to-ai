@@ -10,11 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/ipc"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/internal/services"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/ipc"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/platform"
+	"github.com/AshBuk/dabri/internal/services"
 )
 
 // Manages application lifecycle and context

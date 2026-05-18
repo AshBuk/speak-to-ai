@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/hotkeys/utils"
+	"github.com/AshBuk/dabri/internal/logger"
 	dbus "github.com/godbus/dbus/v5"
 )
 
@@ -195,8 +195,8 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 	obj := p.conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
 
 	// Generate unique token for this request
-	handleToken := fmt.Sprintf("speak_to_ai_%d", time.Now().UnixNano())
-	sessionHandleToken := fmt.Sprintf("speak_to_ai_session_%d", time.Now().UnixNano())
+	handleToken := fmt.Sprintf("dabri_%d", time.Now().UnixNano())
+	sessionHandleToken := fmt.Sprintf("dabri_session_%d", time.Now().UnixNano())
 
 	// Build expected request path from sender name and token
 	senderName := strings.ReplaceAll(p.conn.Names()[0], ".", "_")
@@ -241,7 +241,7 @@ func (p *DbusKeyboardProvider) registerHotkeys() error {
 		p.logger.Info("DBus: Converting hotkey '%s' to accelerator '%s'", hotkey, accel)
 
 		shortcutData := map[string]dbus.Variant{
-			"description":       dbus.MakeVariant(fmt.Sprintf("Speak-to-AI hotkey: %s", hotkey)),
+			"description":       dbus.MakeVariant(fmt.Sprintf("Dabri hotkey: %s", hotkey)),
 			"preferred_trigger": dbus.MakeVariant(accel),
 		}
 		shortcuts = append(shortcuts, struct {

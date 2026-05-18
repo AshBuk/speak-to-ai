@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Manages the lifecycle of temporary audio files

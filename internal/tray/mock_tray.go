@@ -6,8 +6,8 @@ package tray
 import (
 	"context"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies
@@ -56,28 +56,21 @@ func (tm *MockTrayManager) Stop() {
 	tm.logger.Info("Mock tray stopped")
 }
 
-// SetExitAction sets the callback invoked when Quit is clicked (mock implementation)
 func (tm *MockTrayManager) SetExitAction(onExit func()) {
 	tm.onExit = onExit
-	tm.logger.Info("Mock tray: exit action set")
 }
 
-// SetCoreActions sets core callbacks (mock implementation)
 func (tm *MockTrayManager) SetCoreActions(onToggle func() error, onShowConfig func() error, onShowAbout func() error, onResetToDefaults func() error) {
 	tm.onToggle = onToggle
 	tm.onShowConfig = onShowConfig
 	tm.onShowAbout = onShowAbout
 	tm.onResetToDefaults = onResetToDefaults
-	tm.logger.Info("Mock tray: core actions set")
 }
 
-// SetAudioActions sets callbacks for audio-related actions (mock implementation)
 func (tm *MockTrayManager) SetAudioActions(onSelectRecorder func(method string) error) {
 	tm.onSelectRecorder = onSelectRecorder
-	tm.logger.Info("Mock tray: audio actions set")
 }
 
-// SetSettingsActions sets callbacks for settings (mock implementation)
 func (tm *MockTrayManager) SetSettingsActions(
 	onSelectLanguage func(language string) error,
 	onToggleWorkflowNotifications func() error,
@@ -86,26 +79,14 @@ func (tm *MockTrayManager) SetSettingsActions(
 	tm.onSelectLang = onSelectLanguage
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode
-	tm.logger.Info("Mock tray: settings actions set")
 }
 
-// OutputToolsCallback sets the callback for getting actual output tool names (mock implementation)
 func (tm *MockTrayManager) OutputToolsCallback(callback func() (clipboardTool, typeTool string)) {
 	tm.onGetOutputTools = callback
-	tm.logger.Info("Mock tray: get output tools callback set")
 }
 
-// SetCaptureOnceSupport sets a mock capability callback
-func (tm *MockTrayManager) SetCaptureOnceSupport(callback func() bool) {
-	tm.logger.Info("Mock tray: capture once support callback set")
-}
+func (tm *MockTrayManager) SetCaptureOnceSupport(_ func() bool) {}
 
-// SetModelAction sets callback for whisper model selection (mock)
-func (tm *MockTrayManager) SetModelAction(onSelectModel func(ctx context.Context, modelID string) error) {
-	tm.logger.Info("Mock tray: model action set")
-}
+func (tm *MockTrayManager) SetModelAction(_ func(ctx context.Context, modelID string) error) {}
 
-// SetHotkeyRebindAction sets callback for hotkey rebind (mock)
-func (tm *MockTrayManager) SetHotkeyRebindAction(onRebind func(action string) error) {
-	tm.logger.Info("Mock tray: hotkey rebind action set")
-}
+func (tm *MockTrayManager) SetHotkeyRebindAction(_ func(action string) error) {}

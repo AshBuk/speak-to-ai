@@ -1,9 +1,9 @@
 // Copyright (c) 2025 Asher Buk
 // SPDX-License-Identifier: MIT
 
-// Package speaktoai provides a high-level overview of the Speak-to-AI project.
+// Package dabri provides a high-level overview of the Dabri project.
 //
-// Speak-to-AI is a minimalist, privacy-focused desktop application written in Go
+// Dabri is a minimalist, privacy-focused desktop application written in Go
 // that converts speech to text offline using local Whisper models.
 //
 // Dual-mode architecture:
@@ -32,4 +32,4 @@
 //   - Integration tests in tests/integration (run with -tags=integration)
 //
 // For more details, see docs/
-package speaktoai
+package dabri

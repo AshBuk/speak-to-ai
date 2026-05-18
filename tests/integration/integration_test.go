@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // Integration tests for complete user scenarios
@@ -165,9 +165,9 @@ func TestModelManagement(t *testing.T) {
 		} else {
 			t.Logf("Bundled model path resolved to: %s", modelPath)
 
-			// Model can be found in AppImage/dev (sources/language-models/) or XDG user data (speak-to-ai/models/)
+			// Model can be found in AppImage/dev (sources/language-models/) or XDG user data (dabri/models/)
 			isBundledPath := strings.Contains(modelPath, "sources/language-models/small-q5_1.bin")
-			isUserDataPath := strings.Contains(modelPath, "speak-to-ai/models/small-q5_1.bin")
+			isUserDataPath := strings.Contains(modelPath, "dabri/models/small-q5_1.bin")
 			if !isBundledPath && !isUserDataPath {
 				t.Errorf("Unexpected model path: %s", modelPath)
 			}

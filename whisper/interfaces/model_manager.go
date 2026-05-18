@@ -6,7 +6,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 // Defines the contract for managing the lifecycle of Whisper models

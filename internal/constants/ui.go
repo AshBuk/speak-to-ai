@@ -41,7 +41,7 @@ const (
 	NotifyRecordingStopMsg       = "Transcribing audio..."
 	NotifyTranscriptionMsg       = "Text copied to clipboard"
 	NotifyTranscriptionTypedMsg  = "Text typed to active window"
-	NotifyAppName                = "Speak-to-AI"
+	NotifyAppName                = "Dabri"
 )
 
 // Notification Full Titles

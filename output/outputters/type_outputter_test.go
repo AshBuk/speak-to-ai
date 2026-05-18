@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/output/interfaces"
 )
 
 func TestNewTypeOutputter(t *testing.T) {

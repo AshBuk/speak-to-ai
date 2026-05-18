@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#185FA5"/>
+  <text x="20" y="420" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="460" font-weight="700" fill="#FFFFFF">D</text>
+  <path d="M370 60 Q500 256 370 452" fill="none" stroke="#FFFFFF" stroke-width="38" stroke-linecap="round"/>
+</svg>

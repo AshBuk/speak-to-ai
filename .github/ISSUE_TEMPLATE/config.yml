@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Documentation
-    url: https://github.com/AshBuk/speak-to-ai/blob/master/README.md
+    url: https://github.com/AshBuk/dabri/blob/master/README.md
     about: Read the documentation and setup guides
   - name: 🚀 Development Guide
-    url: https://github.com/AshBuk/speak-to-ai/blob/master/DEVELOPMENT.md
+    url: https://github.com/AshBuk/dabri/blob/master/DEVELOPMENT.md
     about: Learn how to build and contribute to the project

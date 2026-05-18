@@ -8,10 +8,10 @@ package manager
 import (
 	"os"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/providers"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Check if running inside AppImage

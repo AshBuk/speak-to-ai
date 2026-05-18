@@ -6,7 +6,7 @@ package interfaces
 import (
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/platform"
+	"github.com/AshBuk/dabri/internal/platform"
 )
 
 // KeyboardEventProvider defines the contract for a keyboard event source

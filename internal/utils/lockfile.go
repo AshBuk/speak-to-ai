@@ -11,12 +11,12 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 const (
 	// DefaultLockFileName is the default name for the lock file
-	DefaultLockFileName = "speak-to-ai.lock"
+	DefaultLockFileName = "dabri.lock"
 )
 
 // LockFile represents a file-based application lock
@@ -64,7 +64,7 @@ func (lf *LockFile) TryLock() error {
 	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = file.Close()
 		if err == syscall.EWOULDBLOCK {
-			return fmt.Errorf("another instance of speak-to-ai is already running")
+			return fmt.Errorf("another instance of dabri is already running")
 		}
 		return fmt.Errorf("failed to acquire lock: %w", err)
 	}
@@ -124,19 +124,19 @@ func (lf *LockFile) CheckExistingInstance() (bool, int, error) {
 	}
 	// Check if process with this PID is still running and is our application
 	if isOurProcess(pid) {
-		return true, pid, nil // Process is running and is speak-to-ai
+		return true, pid, nil // Process is running and is dabri
 	}
 
 	return false, pid, nil // Process is not running
 }
 
-// isOurProcess checks if the given PID belongs to a speak-to-ai process
+// isOurProcess checks if the given PID belongs to a dabri process
 func isOurProcess(pid int) bool {
 	// First check if process exists using syscall.Kill with signal 0
 	if err := syscall.Kill(pid, 0); err != nil {
 		return false // Process doesn't exist or no permission
 	}
-	// Check if the process is actually speak-to-ai by reading cmdline
+	// Check if the process is actually dabri by reading cmdline
 	// Validate PID to prevent path traversal
 	if pid <= 0 || pid > 4194304 { // Reasonable PID range
 		return false
@@ -150,9 +150,9 @@ func isOurProcess(pid int) bool {
 	cmdline := string(cmdlineData)
 	cmdline = strings.ReplaceAll(cmdline, "\x00", " ")
 	cmdline = strings.TrimSpace(cmdline)
-	// Check if this is our speak-to-ai process
+	// Check if this is our dabri process
 	// Handle direct execution and AppImage cases
-	return strings.Contains(cmdline, "speak-to-ai") ||
+	return strings.Contains(cmdline, "dabri") ||
 		strings.Contains(cmdline, "AppRun")
 }
 

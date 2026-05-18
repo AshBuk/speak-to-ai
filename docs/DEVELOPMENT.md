@@ -48,7 +48,7 @@ packaging/
 ├── arch/
 │   └── PKGBUILD                  # Arch Linux AUR package
 └── fedora/
-    ├── speak-to-ai.spec          # RPM spec for Fedora/RHEL
+    ├── dabri.spec          # RPM spec for Fedora/RHEL
     ├── create-srpm.sh            # SRPM creation script
     └── .rpmlintrc                # rpmlint configuration
 

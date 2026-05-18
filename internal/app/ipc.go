@@ -8,16 +8,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/ipc"
-	"github.com/AshBuk/speak-to-ai/internal/services"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/dabri/internal/ipc"
+	"github.com/AshBuk/dabri/internal/services"
+	"github.com/AshBuk/dabri/internal/utils"
 )
 
 // IPC Handlers - Protocol adapter between Unix socket IPC and Business Services
 // Request-response IPC commands (sync, wait-for-result with timeout)
 //
 // Architecture Flow:
-//   CLI client (speak-to-ai start-recording)
+//   CLI client (dabri start-recording)
 //       ↓
 //   Unix Socket (utils.GetDefaultSocketPath())
 //       ↓

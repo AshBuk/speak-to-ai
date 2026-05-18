@@ -16,7 +16,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 const (

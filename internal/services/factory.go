@@ -7,17 +7,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/internal/tray"
-	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/websocket"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/manager"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/notify"
+	"github.com/AshBuk/dabri/internal/platform"
+	"github.com/AshBuk/dabri/internal/tray"
+	outputInterfaces "github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/websocket"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // ServiceFactoryConfig holds all dependencies needed to create services

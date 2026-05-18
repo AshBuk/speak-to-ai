@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240">
+  <rect width="960" height="240" rx="48" fill="#185FA5"/>
+  <text x="420" y="172" text-anchor="middle" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="144" font-weight="700" fill="#FFFFFF">Dabri</text>
+  <path d="M740 55 Q800 120 740 185" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" opacity="1"/>
+  <path d="M775 35 Q845 120 775 205" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" opacity="0.55"/>
+</svg>

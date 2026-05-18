@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
-	"github.com/AshBuk/speak-to-ai/whisper/providers"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/constants"
+	"github.com/AshBuk/dabri/internal/utils"
+	"github.com/AshBuk/dabri/whisper/providers"
 )
 
 // Manages Whisper model lifecycle: resolution, download, and validation

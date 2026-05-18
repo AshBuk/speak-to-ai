@@ -3,124 +3,43 @@ description: Report a bug or unexpected behavior
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thank you for taking the time to report a bug! Please fill out the information below to help us understand and fix the issue.
-
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Pre-submission checklist
-      options:
-        - label: I searched existing issues and didn't find a duplicate
-          required: true
-        - label: I'm using the latest version (AppImage, AUR, COPR, or built from source)
-          required: true
-
   - type: textarea
     id: description
     attributes:
-      label: Bug Description
-      description: A clear and concise description of what the bug is
-      placeholder: Describe what happened vs what you expected to happen
+      label: What happened?
+      placeholder: What did you expect vs what actually happened?
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Tell us how to reproduce this behavior
+      label: Steps to reproduce
       placeholder: |
-        1. Open the application
-        2. Press hotkey (AltGr + ,)
-        3. Speak into microphone
-        4. Observe the error
+        1. ...
+        2. ...
     validations:
       required: true
 
   - type: input
     id: version
     attributes:
-      label: Speak-to-AI Version
-      description: What version are you using? (Check About dialog or filename)
-      placeholder: e.g., v1.2.3
-    validations:
-      required: true
-
-  - type: dropdown
-    id: installation
-    attributes:
-      label: Installation Method
-      description: How did you install Speak-to-AI?
-      options:
-        - AppImage
-        - AUR (Arch Linux)
-        - COPR (Fedora)
-        - Built from source
+      label: Version & install method
+      placeholder: e.g., v2.0.0, AppImage / AUR / COPR / source
     validations:
       required: true
 
   - type: input
-    id: os
+    id: environment
     attributes:
-      label: Operating System
-      description: What OS and version are you running?
-      placeholder: e.g., Ubuntu 22.04, Fedora 39, Arch Linux
-    validations:
-      required: true
-
-  - type: dropdown
-    id: desktop
-    attributes:
-      label: Desktop Environment
-      description: What desktop environment are you using?
-      options:
-        - GNOME
-        - KDE Plasma
-        - XFCE
-        - MATE
-        - i3/sway
-        - Cinnamon
-        - Other (specify in additional context)
-    validations:
-      required: true
-
-  - type: dropdown
-    id: display
-    attributes:
-      label: Display Server
-      description: Are you using X11 or Wayland?
-      options:
-        - X11
-        - Wayland
-        - Not sure
+      label: Environment
+      placeholder: e.g., Fedora 41, GNOME 47, Wayland
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Relevant Logs
-      description: |
-        If applicable, add logs to help explain your problem.
-        You can run the application from terminal to see debug output:
-        - AppImage: `./speak-to-ai-*.AppImage --debug`
-        - From source: `./speak-to-ai --debug`
+      label: Logs (optional)
+      description: Run `dabri --debug` and paste relevant output
       render: shell
-
-  - type: textarea
-    id: config
-    attributes:
-      label: Configuration
-      description: |
-        Share your config.yaml file (remove any sensitive information):
-        Location: `~/.config/speak-to-ai/config.yaml`
-      render: yaml
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional Context
-      description: Add any other context, screenshots, or information about the problem here

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/dabri/internal/testutils"
+	"github.com/AshBuk/dabri/tests/mocks"
 )
 
 func TestHotkeyService_NewHotkeyService(t *testing.T) {

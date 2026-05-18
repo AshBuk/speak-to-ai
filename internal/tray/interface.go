@@ -6,7 +6,7 @@ package tray
 import (
 	"context"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 // Defines the interface for tray managers

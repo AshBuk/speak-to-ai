@@ -9,7 +9,7 @@ import (
 	"context"
 
 	"fyne.io/systray"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
+	"github.com/AshBuk/dabri/internal/constants"
 )
 
 // Create settings submenus

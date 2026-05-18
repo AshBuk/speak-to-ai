@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/interfaces"
 )
 
 // MockAudioRecorder implements AudioRecorder interface for testing

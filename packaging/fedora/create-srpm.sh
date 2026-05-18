@@ -1,11 +1,11 @@
 #!/bin/bash
-# Script to create SRPM for speak-to-ai with vendored Go dependencies
+# Script to create SRPM for dabri with vendored Go dependencies
 # Usage: ./create-srpm.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SPEC_FILE="$SCRIPT_DIR/speak-to-ai.spec"
+SPEC_FILE="$SCRIPT_DIR/dabri.spec"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Get version from git tag (single source of truth)
@@ -17,7 +17,7 @@ sed -i "s/^%global app_version.*/%global app_version     ${APP_VERSION}/" "$SPEC
 
 WHISPER_VERSION=$(grep -E '^%global whisper_version' "$SPEC_FILE" | awk '{print $3}')
 
-echo "=== Creating SRPM for speak-to-ai v${APP_VERSION} ==="
+echo "=== Creating SRPM for dabri v${APP_VERSION} ==="
 echo "whisper.cpp version: ${WHISPER_VERSION}"
 
 # Create rpmbuild directory structure
@@ -32,7 +32,7 @@ cd "$RPMBUILD_DIR/SOURCES"
 # =============================================================================
 # Source0: Create vendored tarball
 # =============================================================================
-VENDORED_TARBALL="speak-to-ai-${APP_VERSION}-vendored.tar.gz"
+VENDORED_TARBALL="dabri-${APP_VERSION}-vendored.tar.gz"
 echo "Creating vendored tarball: $VENDORED_TARBALL"
 
 # Check if vendor directory exists
@@ -44,7 +44,7 @@ fi
 
 # Create tarball with vendor/ included
 cd "$PROJECT_ROOT"
-tar --transform "s,^,speak-to-ai-${APP_VERSION}/," \
+tar --transform "s,^,dabri-${APP_VERSION}/," \
     --exclude='.git' \
     --exclude='build' \
     --exclude='dist' \
@@ -57,8 +57,8 @@ tar --transform "s,^,speak-to-ai-${APP_VERSION}/," \
     go.mod go.sum \
     Makefile LICENSE README.md CHANGELOG.md \
     config.yaml \
-    io.github.ashbuk.speak-to-ai.desktop \
-    io.github.ashbuk.speak-to-ai.appdata.xml \
+    io.github.ashbuk.dabri.desktop \
+    io.github.ashbuk.dabri.appdata.xml \
     icons/ docs/
 
 echo "Created: $RPMBUILD_DIR/SOURCES/$VENDORED_TARBALL"
@@ -79,9 +79,9 @@ fi
 # Build SRPM
 # =============================================================================
 echo "=== Building SRPM ==="
-rpmbuild -bs "$RPMBUILD_DIR/SPECS/speak-to-ai.spec"
+rpmbuild -bs "$RPMBUILD_DIR/SPECS/dabri.spec"
 
-SRPM_PATH=$(ls -t "$RPMBUILD_DIR/SRPMS/speak-to-ai-"*.src.rpm 2>/dev/null | head -1)
+SRPM_PATH=$(ls -t "$RPMBUILD_DIR/SRPMS/dabri-"*.src.rpm 2>/dev/null | head -1)
 if [[ -n "$SRPM_PATH" ]]; then
     echo ""
     echo "=== SRPM created successfully ==="
@@ -93,7 +93,7 @@ if [[ -n "$SRPM_PATH" ]]; then
     echo "     mock -r fedora-rawhide-x86_64 $SRPM_PATH"
     echo ""
     echo "  2. Submit to COPR:"
-    echo "     copr-cli build speak-to-ai $SRPM_PATH"
+    echo "     copr-cli build dabri $SRPM_PATH"
     echo ""
     echo "  3. For Fedora Review Request:"
     echo "     - Upload SRPM to fedorapeople.org or koji scratch build"

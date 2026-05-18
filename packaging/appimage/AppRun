@@ -1,5 +1,5 @@
 #!/bin/bash
-# AppRun - Entry point for Speak-to-AI AppImage
+# AppRun - Entry point for Dabri AppImage
 
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
@@ -10,11 +10,11 @@ export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 export PULSE_SERVER="${PULSE_SERVER:-unix:${XDG_RUNTIME_DIR}/pulse/native}"
 export PULSE_RUNTIME_PATH="${PULSE_RUNTIME_PATH:-${XDG_RUNTIME_DIR}/pulse}"
 
-CONFIG_DIR="${HOME}/.config/speak-to-ai"
+CONFIG_DIR="${HOME}/.config/dabri"
 mkdir -p "${CONFIG_DIR}"
 
 # Check if running in CLI mode
-# SYNC: must match subcommands registered in cmd/speak-to-ai/main.go
+# SYNC: must match subcommands registered in cmd/dabri/main.go
 is_cli_command() {
     for arg in "$@"; do
         case "$arg" in
@@ -47,7 +47,7 @@ setup_first_launch() {
 
 # Desktop integration
 integrate_desktop() {
-    local desktop_file="${HOME}/.local/share/applications/speak-to-ai.desktop"
+    local desktop_file="${HOME}/.local/share/applications/dabri.desktop"
     local icon_dir="${HOME}/.local/share/icons/hicolor/128x128/apps"
 
     if [ -f "$desktop_file" ]; then
@@ -64,17 +64,17 @@ integrate_desktop() {
 
     cat > "$desktop_file" << EOF
 [Desktop Entry]
-Name=Speak-to-AI
+Name=Dabri
 Comment=Offline speech-to-text for AI assistants
 Exec="${SELF}" %U
-Icon=speak-to-ai
+Icon=io.github.ashbuk.dabri
 Type=Application
 Categories=Utility;Audio;Accessibility;
 Terminal=false
 StartupNotify=true
 EOF
     chmod +x "$desktop_file"
-    cp "${HERE}/io.github.ashbuk.speak-to-ai.png" "$icon_dir/speak-to-ai.png" 2>/dev/null || true
+    cp "${HERE}/io.github.ashbuk.dabri.png" "$icon_dir/io.github.ashbuk.dabri.png" 2>/dev/null || true
     command -v update-desktop-database >/dev/null 2>&1 && \
         update-desktop-database "${HOME}/.local/share/applications" 2>/dev/null || true
 }
@@ -84,9 +84,9 @@ cd "${HERE}"
 
 if is_cli_command "$@"; then
     [ ! -f "${CONFIG_DIR}/config.yaml" ] && cp "${HERE}/config.yaml" "${CONFIG_DIR}/config.yaml" 2>/dev/null || true
-    exec "${HERE}/usr/bin/speak-to-ai" "$@"
+    exec "${HERE}/usr/bin/dabri" "$@"
 else
     setup_first_launch
     integrate_desktop
-    exec "${HERE}/usr/bin/speak-to-ai" --config "${CONFIG_DIR}/config.yaml" "$@"
+    exec "${HERE}/usr/bin/dabri" --config "${CONFIG_DIR}/config.yaml" "$@"
 fi

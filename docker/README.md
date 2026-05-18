@@ -1,6 +1,6 @@
 # Docker Development Environment
 
-This directory contains Docker infrastructure for the speak-to-ai project, providing isolated development and build environments.
+This directory contains Docker infrastructure for the dabri project, providing isolated development and build environments.
 
 ## Architecture
 
@@ -62,9 +62,9 @@ make lint                   # Run golangci-lint with project configuration
 ### 5. Building Application
 ```bash
 make build                  # Build Go binary without systray (CGO_ENABLED=1)
-                           # Output: ./speak-to-ai
+                           # Output: ./dabri
 make build-systray          # Build with system tray support (production build)
-                           # Output: ./speak-to-ai (with -tags systray)
+                           # Output: ./dabri (with -tags systray)
 make all                    # Full build: deps + whisper-libs + build-systray
 ```
 
@@ -81,7 +81,7 @@ make test-integration-full  # Full integration tests (CGO_ENABLED=1)
 ### 7. Packaging
 ```bash
 make appimage              # Build AppImage using Docker (Ubuntu 22.04, recommended)
-                           # Output: dist/speak-to-ai-<version>.AppImage
+                           # Output: dist/dabri-<version>.AppImage
                            # Includes: binary, libraries, models, dependencies
 
 make appimage-host        # Build AppImage locally without Docker (requires tools on host)
@@ -99,7 +99,7 @@ make docker-ci              # Run full CI pipeline (simulates GitHub Actions):
 ### 9. Cleanup
 ```bash
 make clean                  # Clean local build artifacts (binary, build/, lib/, dist/)
-                           # Runs: rm -rf speak-to-ai build/ lib/ dist/ + go clean -cache
+                           # Runs: rm -rf dabri build/ lib/ dist/ + go clean -cache
 make docker-clean           # Remove containers and volumes
                            # Runs: docker-compose down -v + docker system prune -f
 make docker-clean-all       # Remove everything including Docker images
@@ -118,7 +118,7 @@ make docker-shell
 
 # Inside container:
 make build-systray
-./speak-to-ai --help
+./dabri --help
 make test
 ```
 
@@ -134,7 +134,7 @@ make test
 # Docker-based (recommended, Ubuntu 22.04)
 make appimage
 
-# Output: dist/speak-to-ai-<version>.AppImage
+# Output: dist/dabri-<version>.AppImage
 
 # Or locally without Docker (requires tools installed)
 make appimage-host
@@ -193,7 +193,7 @@ make appimage VERSION=v1.2.3
   - Stage 1 (`builder`): Builds AppImage with all dependencies
   - Stage 2 (`artifacts`): Exports only the `.AppImage` file
 - **Usage**: `make appimage`
-- **Output**: `dist/speak-to-ai-<version>.AppImage`
+- **Output**: `dist/dabri-<version>.AppImage`
 
 ## Benefits
 

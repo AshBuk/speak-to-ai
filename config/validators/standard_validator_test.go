@@ -6,7 +6,7 @@ package validators
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/dabri/config/models"
 )
 
 // setDefaultConfigForTest sets default values for testing

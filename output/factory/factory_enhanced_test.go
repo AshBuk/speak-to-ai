@@ -6,9 +6,9 @@ package factory
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/output/outputters"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/output/outputters"
 )
 
 func TestOutputFactory_ErrorHandling(t *testing.T) {

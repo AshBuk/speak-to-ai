@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 // TestTranscribeWithContextCancellation verifies context cancellation works

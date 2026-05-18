@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/ipc"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
-	"github.com/AshBuk/speak-to-ai/whisper/providers"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/constants"
+	"github.com/AshBuk/dabri/internal/ipc"
+	"github.com/AshBuk/dabri/internal/utils"
+	"github.com/AshBuk/dabri/whisper/providers"
 )
 
 // addModelCommand registers the "model" command tree:
@@ -73,7 +73,7 @@ func addModelCommand(root *cobra.Command) {
 // and formats the response.
 func runModelMutation(cmd *cobra.Command, ipcCommand, modelID string) error {
 	if constants.ModelByID(modelID) == nil {
-		return fmt.Errorf("unknown model: %s (use 'speak-to-ai model list' to see available models)", modelID)
+		return fmt.Errorf("unknown model: %s (use 'dabri model list' to see available models)", modelID)
 	}
 
 	socketPath, _ := cmd.Flags().GetString("socket")
@@ -136,8 +136,8 @@ func printModelList() {
 		}
 		fmt.Printf("  %s%-18s %s%s\n", status, m.ID, m.Name, downloaded)
 	}
-	fmt.Println("\nUsage: speak-to-ai model set <model-id>")
-	fmt.Println("       speak-to-ai model delete <model-id>")
+	fmt.Println("\nUsage: dabri model set <model-id>")
+	fmt.Println("       dabri model delete <model-id>")
 }
 
 func isModelDownloaded(resolver *providers.ModelPathResolver) bool {

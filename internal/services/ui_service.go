@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/assets"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/tray"
-	appversion "github.com/AshBuk/speak-to-ai/internal/version"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/assets"
+	"github.com/AshBuk/dabri/internal/constants"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/notify"
+	"github.com/AshBuk/dabri/internal/tray"
+	appversion "github.com/AshBuk/dabri/internal/version"
 )
 
 // Coordinates tray icon states and desktop notifications
@@ -95,7 +95,7 @@ func (us *UIService) SetSuccess(message string) {
 // Create temporary HTML file and open with system browser
 func (us *UIService) ShowAboutPage() error {
 	us.logger.Info("Showing about page...")
-	tmpFile, err := os.CreateTemp("", "speak-to-ai-about-*.html")
+	tmpFile, err := os.CreateTemp("", "dabri-about-*.html")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}

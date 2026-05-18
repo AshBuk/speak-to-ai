@@ -1,39 +1,39 @@
 # CLI Usage Guide
 
-Speak-to-AI provides a dual-mode binary that works as both a background daemon and a command-line interface. This is useful for custom scripts and tiling WMs users.
+Dabri provides a dual-mode binary that works as both a background daemon and a command-line interface. This is useful for custom scripts and tiling WMs users.
 
 ## Quick Start
 
 **Launch the daemon** (run once, keeps running in background):
 ```bash
-speak-to-ai                          # Launch daemon in background
+dabri                          # Launch daemon in background
 ```
 
 **Use CLI commands** (while daemon is running):
 ```bash
-speak-to-ai --version                # Show version
-speak-to-ai start                    # Begin recording
-speak-to-ai stop                     # Stop and show transcript
-speak-to-ai toggle                   # Toggle recording (start/stop with one command)
-speak-to-ai status                   # Show state and configuration
-speak-to-ai transcript               # Show last transcript
+dabri --version                # Show version
+dabri start                    # Begin recording
+dabri stop                     # Stop and show transcript
+dabri toggle                   # Toggle recording (start/stop with one command)
+dabri status                   # Show state and configuration
+dabri transcript               # Show last transcript
 
 # Whisper model selection
-speak-to-ai model list               # List available models (works without daemon)
-speak-to-ai model set <model-id>     # Switch whisper model (requires daemon)
-speak-to-ai model set base-q5_1      # ~57 MB, fast
-speak-to-ai model set small-q5_1     # ~181 MB, default
-speak-to-ai model set medium-q5_0    # ~539 MB
-speak-to-ai model set large-v3-turbo-q5_0 # ~820 MB, faster large-v3 variant
-speak-to-ai model set large-v3-q5_0       # ~1.1 GB, best quality
-speak-to-ai model delete <model-id>  # Delete a downloaded model (cannot delete active)
+dabri model list               # List available models (works without daemon)
+dabri model set <model-id>     # Switch whisper model (requires daemon)
+dabri model set base-q5_1      # ~57 MB, fast
+dabri model set small-q5_1     # ~181 MB, default
+dabri model set medium-q5_0    # ~539 MB
+dabri model set large-v3-turbo-q5_0 # ~820 MB, faster large-v3 variant
+dabri model set large-v3-q5_0       # ~1.1 GB, best quality
+dabri model delete <model-id>  # Delete a downloaded model (cannot delete active)
 ```
 
 **Notes:**
 - `toggle` is ideal for binding to a single DE shortcut — one key to start and stop recording
 - Transcript is printed to stdout
 - If using `active_window` output mode, text is also typed into the active window
-- To suppress duplicate output: `speak-to-ai stop >/dev/null`
+- To suppress duplicate output: `dabri stop >/dev/null`
 
 ---
 
@@ -43,10 +43,10 @@ speak-to-ai model delete <model-id>  # Delete a downloaded model (cannot delete 
 Specify custom IPC socket path.
 
 ```bash
-speak-to-ai --socket /tmp/custom.sock start     # Custom socket path
+dabri --socket /tmp/custom.sock start     # Custom socket path
 ```
 
-**Default:** `$XDG_RUNTIME_DIR/speak-to-ai.sock`
+**Default:** `$XDG_RUNTIME_DIR/dabri.sock`
 
 ---
 
@@ -54,7 +54,7 @@ speak-to-ai --socket /tmp/custom.sock start     # Custom socket path
 Output responses in JSON format for scripting.
 
 ```bash
-speak-to-ai --json status                       # JSON output
+dabri --json status                       # JSON output
 ```
 
 ---
@@ -63,7 +63,7 @@ speak-to-ai --json status                       # JSON output
 Override default timeout for the command.
 
 ```bash
-speak-to-ai --timeout 120 stop                  # 120 second timeout
+dabri --timeout 120 stop                  # 120 second timeout
 ```
 
 **Default timeouts:**
@@ -80,10 +80,10 @@ When running as daemon (without CLI command):
 Specify custom configuration file path.
 
 ```bash
-speak-to-ai --config ~/.config/speak-to-ai/custom.yaml    # Custom config
+dabri --config ~/.config/dabri/custom.yaml    # Custom config
 ```
 
-**Default path:** `~/.config/speak-to-ai/config.yaml`
+**Default path:** `~/.config/dabri/config.yaml`
 
 ---
 
@@ -91,15 +91,15 @@ speak-to-ai --config ~/.config/speak-to-ai/custom.yaml    # Custom config
 Enable debug logging.
 
 ```bash
-speak-to-ai --debug                             # Debug mode
+dabri --debug                             # Debug mode
 ```
 
 ---
 
 ## AppImage CLI Usage
 
-AppImage requires the full path to run CLI commands (e.g. `./speak-to-ai-x.x.x-x86_64.AppImage status`).
+AppImage requires the full path to run CLI commands (e.g. `./dabri-x.x.x-x86_64.AppImage status`).
 For a shorter command, create a symlink:
 ```bash
-ln -sf /path/to/speak-to-ai-x.x.x-x86_64.AppImage ~/.local/bin/speak-to-ai
+ln -sf /path/to/dabri-x.x.x-x86_64.AppImage ~/.local/bin/dabri
 ```

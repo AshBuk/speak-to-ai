@@ -1,13 +1,13 @@
-# Contributing to Speak-to-AI
+# Contributing to Dabri
 
-Thank you for your interest to Speak-to-AI!
+Thank you for your interest to Dabri!
 
 AI-assisted contributions accepted **if author understands and can defend the code**.
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/speak-to-ai.git`
+2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/dabri.git`
 3. Follow the development setup in [DEVELOPMENT.md](DEVELOPMENT.md)
 
 4. **Dev Workflow**

@@ -9,9 +9,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/whisper/interfaces"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/whisper/interfaces"
 )
 
 // WhisperEngine is a no-cgo stub that fails gracefully when CGO is disabled

@@ -6,9 +6,9 @@ package services
 import (
 	"fmt"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/constants"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Manages persistent configuration state and validation

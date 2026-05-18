@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	appversion "github.com/AshBuk/speak-to-ai/internal/version"
+	appversion "github.com/AshBuk/dabri/internal/version"
 )
 
 // Command Router — two execution modes:
@@ -18,9 +18,9 @@ import (
 //	→ Root (no subcommand): daemon — app.NewApp() → Initialize() → RunAndWait()
 //	→ Subcommands (client): start/stop/toggle/status/transcript/model → IPC
 var rootCmd = &cobra.Command{
-	Use:   "speak-to-ai",
+	Use:   "dabri",
 	Short: "Linux STT",
-	Long:  "Speak to AI — offline speech recognition with hotkey support, system tray integration, and CLI control.",
+	Long:  "Dabri — offline speech recognition with hotkey support, system tray integration, and CLI control.",
 	// Root command with no subcommand → run as daemon
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDaemonCobra(cmd)

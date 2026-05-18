@@ -1,4 +1,4 @@
-module github.com/AshBuk/speak-to-ai
+module github.com/AshBuk/dabri
 
 go 1.25.0
 

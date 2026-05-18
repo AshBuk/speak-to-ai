@@ -5,8 +5,8 @@
 coverage.out
 
 # Project executables
-/speak-to-ai
-/speak-to-ai-cli
+/dabri
+/dabri-cli
 /daemon
 /cli
 /dist

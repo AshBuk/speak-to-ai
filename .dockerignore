@@ -6,7 +6,7 @@ lib/
 sources/
 coverage.out
 *.test
-speak-to-ai
+dabri
 
 # Go artifacts
 *.mod.sum

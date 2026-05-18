@@ -1,10 +1,10 @@
 services:
   dev:
-    image: speak-to-ai-dev:latest
+    image: dabri-dev:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
-    container_name: speak-to-ai-dev
+    container_name: dabri-dev
     volumes:
       - .:/app
       - go-cache:/go/pkg/mod

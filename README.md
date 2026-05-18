@@ -1,45 +1,44 @@
 <div align="center">
-<img src="https://github.com/AshBuk/speak-to-ai/raw/master/icons/io.github.ashbuk.speak-to-ai.svg" width="180" height="180" alt="Speak to AI"/>
-<h1>Speak to AI</h1>
+<img src="https://github.com/AshBuk/dabri/raw/master/icons/io.github.ashbuk.dabri-logo.svg" width="420" alt="Dabri"/>
+<h1>Dabri</h1>
   
-> 🗣️ **Native Linux Voice-To-Text App**
+> 🗣️ **Linux speech-to-text, the Unix way**
 
 <p style="margin-bottom: 12px;">
-<a href="https://pkg.go.dev/github.com/AshBuk/speak-to-ai">
-  <img src="https://pkg.go.dev/badge/github.com/AshBuk/speak-to-ai.svg" alt="Go Reference">
+<a href="https://pkg.go.dev/github.com/AshBuk/dabri">
+  <img src="https://pkg.go.dev/badge/github.com/AshBuk/dabri.svg" alt="Go Reference">
 </a>
-<a href="https://goreportcard.com/report/github.com/AshBuk/speak-to-ai">
-  <img src="https://goreportcard.com/badge/github.com/AshBuk/speak-to-ai" alt="Go Report Card">
+<a href="https://goreportcard.com/report/github.com/AshBuk/dabri">
+  <img src="https://goreportcard.com/badge/github.com/AshBuk/dabri" alt="Go Report Card">
 </a>
 <a href="https://go.dev/">
   <img src="https://img.shields.io/badge/go-1.25-00ADD8?logo=go" alt="Go Version">
 </a>
 </p>
   
-[![CI](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/speak-to-ai/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/AshBuk/speak-to-ai?sort=semver)](https://github.com/AshBuk/speak-to-ai/releases)
-[![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/speak-to-ai/releases)
-[![AUR](https://img.shields.io/aur/version/speak-to-ai?logo=archlinux)](https://aur.archlinux.org/packages/speak-to-ai)
-[![COPR](https://img.shields.io/badge/COPR-Fedora-51a2da?logo=fedora)](https://copr.fedorainfracloud.org/coprs/ashbuk/speak-to-ai/)
+[![CI](https://github.com/AshBuk/dabri/actions/workflows/ci.yml/badge.svg)](https://github.com/AshBuk/dabri/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/AshBuk/dabri?sort=semver)](https://github.com/AshBuk/dabri/releases)
+[![AppImage](https://img.shields.io/badge/AppImage-available-0a7cff?logo=appimage)](https://github.com/AshBuk/dabri/releases)
+[![AUR](https://img.shields.io/aur/version/dabri?logo=archlinux)](https://aur.archlinux.org/packages/dabri)
+[![COPR](https://img.shields.io/badge/COPR-Fedora-51a2da?logo=fedora)](https://copr.fedorainfracloud.org/coprs/ashbuk/dabri/)
 
 </div>
 
-**Speak to AI** is a **minimalist**, **privacy-focused** desktop application for **offline voice recognition** directly into any active window (editors, browsers, IDEs, AI assistants).  
+**Dabri** is a **minimalist**, **privacy-first** application for **offline voice recognition** directly into any active window (editors, browsers, IDEs, AI assistants).  
 
 Written in pure **[Go](https://github.com/golang/go)**, it leverages **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for fast, offline transcription.
 The architecture is built from the ground up with a *minimal set of dependencies*, featuring a **custom dependency injection factory**, ensuring **lean and maintainable** design.
 
-[https://github.com/user-attachments/assets/62a29fb0-5efc-4524-91d0-9b3578ad16c3](https://github.com/user-attachments/assets/721c87fe-fd42-41d7-bccc-92816b3fde28)
 
 ## Features
 
 [![Privacy](https://img.shields.io/badge/Privacy-Offline-blueviolet)](#-features)
-[![Security](https://snyk.io/test/github/AshBuk/speak-to-ai/badge.svg)](https://snyk.io/test/github/AshBuk/speak-to-ai)
-[![gosec](https://img.shields.io/badge/gosec-passing-brightgreen)](https://github.com/AshBuk/speak-to-ai/security/code-scanning)
+[![Security](https://snyk.io/test/github/AshBuk/dabri/badge.svg)](https://snyk.io/test/github/AshBuk/dabri)
+[![gosec](https://img.shields.io/badge/gosec-passing-brightgreen)](https://github.com/AshBuk/dabri/security/code-scanning)
 
-▸ Speak to AI runs quietly in the background and integrates into the system tray for convenient management. 
+▸ Daemon: Dabri runs quietly in the background and integrates into the system tray for convenient management. 
 
-▸ It can also be invoked as a CLI tool (see **[CLI Usage Guide](docs/CLI_USAGE.md)**) for scripting purposes. 
+▸ Terminal: it can also be invoked as a CLI tool (see **[CLI Usage Guide](docs/CLI_USAGE.md)**) for scripting purposes. 
 
 ▸ For integration enthusiasts, a WebSocket server is available at `localhost:8080`. Enable it in your config with web_server enabled: true (disabled by default).
 
@@ -64,7 +63,7 @@ Intuitive minimalist UX, **robust STT infrastructure**. A foundation for voice-c
 
 ```bash
 # Voice command → smart home action
-transcript=$(speak-to-ai --json stop | jq -r '.data.transcript')
+transcript=$(dabri --json stop | jq -r '.data.transcript')
 [[ "$transcript" == *"lights off"* ]] && curl -X POST http://hub/lights/off
 ```
 
@@ -72,29 +71,29 @@ transcript=$(speak-to-ai --json stop | jq -r '.data.transcript')
 
 ### AppImage
 
-Download the latest AppImage from [Releases](https://github.com/AshBuk/speak-to-ai/releases):
+Download the latest AppImage from [Releases](https://github.com/AshBuk/dabri/releases):
 
 ```bash
 # Download the file, then:
-chmod +x speak-to-ai-*.AppImage
+chmod +x dabri-*.AppImage
 # Ensure user is in input group for hotkeys to work:
 sudo usermod -a -G input $USER
 # then logout/login or reboot
 # Open via GUI or with terminal command:
-./speak-to-ai-*.AppImage
+./dabri-*.AppImage
 ```
 
-### Arch Linux [AUR](https://aur.archlinux.org/packages/speak-to-ai):
+### Arch Linux [AUR](https://aur.archlinux.org/packages/dabri):
 ```bash
-yay -S speak-to-ai
+yay -S dabri
 # Ensure user is in input group:
 sudo usermod -a -G input $USER
 ```
 
-### Fedora [COPR](https://copr.fedorainfracloud.org/coprs/ashbuk/speak-to-ai/):
+### Fedora [COPR](https://copr.fedorainfracloud.org/coprs/ashbuk/dabri/):
 ```bash
-sudo dnf copr enable ashbuk/speak-to-ai
-sudo dnf install speak-to-ai
+sudo dnf copr enable ashbuk/dabri
+sudo dnf install dabri
 # Ensure user is in input group:
 sudo usermod -a -G input $USER
 ```
@@ -115,9 +114,9 @@ sudo usermod -a -G input $USER
 
 > If automatic typing doesn't appear automatically, the app falls back to clipboard (Ctrl + V) mode
 
-For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/speak-to-ai/issues)
+For issues and bug reports: [GitHub Issues](https://github.com/AshBuk/dabri/issues)
 
-See changes: [Releases](https://github.com/AshBuk/speak-to-ai/releases)
+See changes: [Releases](https://github.com/AshBuk/dabri/releases)
 
 ### System Requirements
 
@@ -152,7 +151,7 @@ Start onboarding with:
 - [CONTRIBUTING.md](docs/CONTRIBUTING.md) — contribution guidelines and how to help improve the project
 - [docker/README.md](docker/README.md) — Docker-based development
 
-Technical dive into architecture and engineering challenges: [Building Speak-to-AI on Hashnode](https://ashbuk.hashnode.dev/an-offline-voice-to-text-solution-for-linux-users-using-whispercpp-and-go)
+Technical dive into architecture and engineering challenges: [Building Dabri on Hashnode](https://ashbuk.hashnode.dev/an-offline-voice-to-text-solution-for-linux-users-using-whispercpp-and-go)
 
 ## ✦ Acknowledgments
 
