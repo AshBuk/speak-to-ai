@@ -34,42 +34,42 @@ jobs:
       - name: Update spec version
         run: |
           sed -i "s/^%global app_version.*/%global app_version     ${{ steps.version.outputs.VERSION }}/" \
-            packaging/fedora/speak-to-ai.spec
+            packaging/fedora/dabri.spec
 
       - name: Lint spec file
-        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
+        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/dabri.spec
 
       - name: Create SRPM
         run: |
           mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
           
           # Copy spec
-          cp packaging/fedora/speak-to-ai.spec ~/rpmbuild/SPECS/
+          cp packaging/fedora/dabri.spec ~/rpmbuild/SPECS/
           
           # Create vendored tarball
           VERSION="${{ steps.version.outputs.VERSION }}"
-          tar --transform "s,^,speak-to-ai-${VERSION}/," \
+          tar --transform "s,^,dabri-${VERSION}/," \
               --exclude='.git' \
               --exclude='build' \
               --exclude='dist' \
               --exclude='lib' \
-              -czf ~/rpmbuild/SOURCES/speak-to-ai-${VERSION}-vendored.tar.gz \
+              -czf ~/rpmbuild/SOURCES/dabri-${VERSION}-vendored.tar.gz \
               cmd/ config/ hotkeys/ audio/ whisper/ output/ websocket/ internal/ \
               vendor/ \
               go.mod go.sum \
               Makefile LICENSE README.md \
               config.yaml \
-              io.github.ashbuk.speak-to-ai.desktop \
-              io.github.ashbuk.speak-to-ai.appdata.xml \
+              io.github.ashbuk.dabri.desktop \
+              io.github.ashbuk.dabri.appdata.xml \
               icons/ docs/ packaging/
           
           # Download whisper.cpp
-          WHISPER_VERSION=$(grep -E '^%global whisper_version' packaging/fedora/speak-to-ai.spec | awk '{print $3}')
+          WHISPER_VERSION=$(grep -E '^%global whisper_version' packaging/fedora/dabri.spec | awk '{print $3}')
           curl -L -o ~/rpmbuild/SOURCES/whisper-cpp-${WHISPER_VERSION}.tar.gz \
             "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v${WHISPER_VERSION}.tar.gz"
           
           # Build SRPM
-          rpmbuild -bs ~/rpmbuild/SPECS/speak-to-ai.spec
+          rpmbuild -bs ~/rpmbuild/SPECS/dabri.spec
 
       - name: Upload SRPM artifact
         uses: actions/upload-artifact@v4
@@ -93,5 +93,5 @@ jobs:
           chmod 600 ~/.config/copr
           
           # Submit build
-          SRPM=~/rpmbuild/SRPMS/speak-to-ai-${{ steps.version.outputs.VERSION }}-1.fc43.src.rpm
-          copr-cli build speak-to-ai "$SRPM"
+          SRPM=~/rpmbuild/SRPMS/dabri-${{ steps.version.outputs.VERSION }}-1.fc43.src.rpm
+          copr-cli build dabri "$SRPM"

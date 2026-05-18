@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/dabri/config/models"
 )
 
 func TestLoadConfig(t *testing.T) {

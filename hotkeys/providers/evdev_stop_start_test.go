@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 // TestEvdevStopStartRace verifies no race between Stop() and Start()

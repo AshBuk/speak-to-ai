@@ -6,7 +6,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
 )
 
 // Hotkey Handlers - Adapter layer between HotkeyService and Business Services

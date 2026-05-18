@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/output/outputters"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/platform"
+	"github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/output/outputters"
 )
 
 // EnvironmentType is an alias for platform.EnvironmentType to avoid converter boilerplate

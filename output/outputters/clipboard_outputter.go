@@ -8,8 +8,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/output/interfaces"
 )
 
 // Implements the Outputter interface for clipboard operations

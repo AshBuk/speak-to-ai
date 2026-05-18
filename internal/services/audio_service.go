@@ -10,14 +10,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/factory"
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/audio/factory"
+	"github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/constants"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/utils"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // Orchestrates recording, transcription, and output workflows

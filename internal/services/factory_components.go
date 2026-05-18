@@ -8,18 +8,18 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/factory"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
-	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/tray"
-	outputFactory "github.com/AshBuk/speak-to-ai/output/factory"
-	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/output/outputters"
-	"github.com/AshBuk/speak-to-ai/websocket"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/audio/factory"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/manager"
+	"github.com/AshBuk/dabri/internal/notify"
+	"github.com/AshBuk/dabri/internal/tray"
+	outputFactory "github.com/AshBuk/dabri/output/factory"
+	outputInterfaces "github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/output/outputters"
+	"github.com/AshBuk/dabri/websocket"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // FactoryComponents is responsible for creating low-level components
@@ -98,7 +98,7 @@ func (cf *FactoryComponents) InitializeComponents() (*Components, error) {
 		components.TrayManager.UpdateSettings(cf.config.Config)
 	}
 	// Initialize notification manager
-	components.NotifyManager = notify.NewNotificationManager("Speak-to-AI", cf.config.Config)
+	components.NotifyManager = notify.NewNotificationManager("Dabri", cf.config.Config)
 
 	return components, nil
 }

@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
 )
 
 // MockAudioService implements AudioServiceInterface for testing

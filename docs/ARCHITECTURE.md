@@ -1,4 +1,4 @@
-# Speak-to-AI Architecture Documentation
+# Dabri Architecture Documentation
 
 The application follows a **dual-mode daemon architecture** with clear separation of concerns:
 - **Daemon mode**: Background service with system tray, hotkeys, IPC server
@@ -8,7 +8,7 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Application Layer                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  cmd/speak-to-ai/    │  Entry point, CLI parsing, environment   │
+│  cmd/dabri/    │  Entry point, CLI parsing, environment   │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Business Logic                           │
@@ -72,7 +72,7 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 
 ### 📁 **Core Application**
 
-#### `cmd/speak-to-ai/`
+#### `cmd/dabri/`
 - **Purpose**: Application entry point with dual-mode support (daemon + CLI), powered by [cobra](https://github.com/spf13/cobra)
 - **Structure**:
   - `main.go`: Entry point, root cobra.Command definition, version output
@@ -226,8 +226,8 @@ Distribution-specific packaging scripts and configurations:
 - **`docker-compose.yml`**: Multi-service development setup
 
 #### Package Metadata
-- **`io.github.ashbuk.speak-to-ai.desktop`**: Desktop entry
-- **`io.github.ashbuk.speak-to-ai.appdata.xml`**: AppStream metadata
+- **`io.github.ashbuk.dabri.desktop`**: Desktop entry
+- **`io.github.ashbuk.dabri.appdata.xml`**: AppStream metadata
 
 ###  **Testing Infrastructure** (`tests/`)
 

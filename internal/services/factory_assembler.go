@@ -4,10 +4,10 @@
 package services
 
 import (
-	"github.com/AshBuk/speak-to-ai/internal/notify"
-	"github.com/AshBuk/speak-to-ai/internal/tray"
-	outputInterfaces "github.com/AshBuk/speak-to-ai/output/interfaces"
-	"github.com/AshBuk/speak-to-ai/websocket"
+	"github.com/AshBuk/dabri/internal/notify"
+	"github.com/AshBuk/dabri/internal/tray"
+	outputInterfaces "github.com/AshBuk/dabri/output/interfaces"
+	"github.com/AshBuk/dabri/websocket"
 )
 
 // FactoryAssembler assembles low-level components into high-level services

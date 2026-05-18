@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/constants"
 )
 
 // Manages the sending of desktop notifications

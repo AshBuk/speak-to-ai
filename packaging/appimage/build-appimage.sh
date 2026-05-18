@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Speak-to-AI AppImage builder script
+# Dabri AppImage builder script
 
 set -e  # Exit on error
 set -x  # Show commands being executed
 
 # Configuration
-APP_NAME="speak-to-ai"
+APP_NAME="dabri"
 APP_VERSION_RAW="${APP_VERSION:-${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0 2>/dev/null || date +%Y%m%d)}}"
 APP_VERSION=$(echo "${APP_VERSION_RAW}" | sed 's/^v//')
 ARCH="x86_64"
@@ -86,7 +86,7 @@ build_appdir() {
 
     # Build application
     echo "Building ${APP_NAME}..."
-    go build -tags systray -ldflags "-s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=${APP_VERSION}" -o "${APP_NAME}" ./cmd/speak-to-ai
+    go build -tags systray -ldflags "-s -w -X github.com/AshBuk/dabri/internal/version.Version=${APP_VERSION}" -o "${APP_NAME}" ./cmd/dabri
     cp "${APP_NAME}" "${APPDIR}/usr/bin/"
     cp config.yaml "${APPDIR}/"
 
@@ -108,8 +108,8 @@ build_appdir() {
     chmod +x "${APPDIR}/AppRun"
 
     # Copy desktop file and icon (use existing files from repo)
-    cp "io.github.ashbuk.speak-to-ai.desktop" "${APPDIR}/usr/share/applications/${APP_NAME}.desktop"
-    cp "io.github.ashbuk.speak-to-ai.appdata.xml" "${APPDIR}/usr/share/metainfo/${APP_NAME}.appdata.xml"
+    cp "io.github.ashbuk.dabri.desktop" "${APPDIR}/usr/share/applications/${APP_NAME}.desktop"
+    cp "io.github.ashbuk.dabri.appdata.xml" "${APPDIR}/usr/share/metainfo/${APP_NAME}.appdata.xml"
     # Copy icon with name matching Icon= field in .desktop file
     mkdir -p "${APPDIR}/usr/share/icons/hicolor/128x128/apps"
     cp "icons/io.github.ashbuk.dabri.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png"

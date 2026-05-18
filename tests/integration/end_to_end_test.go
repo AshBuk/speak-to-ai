@@ -12,17 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/factory"
-	audiointerfaces "github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	hotkeyinterfaces "github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
-	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/audio/factory"
+	audiointerfaces "github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	hotkeyinterfaces "github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/manager"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/testutils"
+	outputfactory "github.com/AshBuk/dabri/output/factory"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // setupRecorderWithCleanup creates a recorder and ensures cleanup on test completion

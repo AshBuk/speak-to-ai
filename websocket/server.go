@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 	"github.com/gorilla/websocket"
 )
 
@@ -239,7 +239,7 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 
 	// Send welcome message with version info
 	s.sendMessage(conn, "connected", map[string]string{
-		"server":      "Speak-to-AI",
+		"server":      "Dabri",
 		"api_version": s.config.WebServer.APIVersion,
 	})
 	// Start ping/pong goroutine.

@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/app"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/app"
+	"github.com/AshBuk/dabri/internal/logger"
+	"github.com/AshBuk/dabri/internal/utils"
 )
 
 // addDaemonFlags registers daemon-specific flags on the root command.
@@ -53,7 +53,7 @@ func runDaemonCobra(cmd *cobra.Command) error {
 	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
 		appLogger.Warning("Failed to check existing instance: %v", err)
 	} else if isRunning {
-		fmt.Fprintf(os.Stderr, "Another instance of speak-to-ai is already running (PID: %d)\n", pid)
+		fmt.Fprintf(os.Stderr, "Another instance of dabri is already running (PID: %d)\n", pid)
 		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
 		return fmt.Errorf("daemon already running")
 	}

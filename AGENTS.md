@@ -1,4 +1,4 @@
-# Speak-to-AI Agents Context
+# Dabri Agents Context
 
 ## Core Principles
 - **Follow idiomatic Go and its best practices**
@@ -112,7 +112,7 @@ make help
 ```
 
 ## Project Structure
-- `cmd/speak-to-ai/` - Main entry point (main.go, daemon.go, commands.go, model.go, environment.go) — cobra-based CLI
+- `cmd/dabri/` - Main entry point (main.go, daemon.go, commands.go, model.go, environment.go) — cobra-based CLI
 - `hotkeys/` - Hotkey handling
 - `audio/` - Audio recording
 - `whisper/` - Speech recognition
@@ -122,7 +122,7 @@ make help
 - `build/` - Build artifacts
 
 ## Configuration
-Config location: `~/.config/speak-to-ai/config.yaml`
+Config location: `~/.config/dabri/config.yaml`
 
 ## Dependencies
 - Go 1.25.3

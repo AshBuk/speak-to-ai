@@ -1,12 +1,12 @@
 # Maintainer: Asher Buk <AshBuk@users.noreply.github.com>
-# https://github.com/AshBuk/speak-to-ai
+# https://github.com/AshBuk/dabri
 
-pkgname=speak-to-ai
+pkgname=dabri
 pkgver=1.8.2
 pkgrel=1
 pkgdesc="Offline speech-to-text desktop application using Whisper"
 arch=('x86_64')
-url="https://github.com/AshBuk/speak-to-ai"
+url="https://github.com/AshBuk/dabri"
 license=('MIT')
 depends=(
     'gtk3'
@@ -40,7 +40,7 @@ options=('!lto')
 _whisper_version=1.8.4
 
 source=(
-    "${pkgname}-${pkgver}.tar.gz::https://github.com/AshBuk/speak-to-ai/archive/refs/tags/v${pkgver}.tar.gz"
+    "${pkgname}-${pkgver}.tar.gz::https://github.com/AshBuk/dabri/archive/refs/tags/v${pkgver}.tar.gz"
     "whisper-cpp-${_whisper_version}.tar.gz::https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v${_whisper_version}.tar.gz"
 )
 sha256sums=(
@@ -98,16 +98,16 @@ build() {
 
     go build -v \
         -tags systray \
-        -ldflags "-s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=${pkgver} -linkmode=external -extldflags '-Wl,-rpath,/usr/lib/${pkgname}'" \
+        -ldflags "-s -w -X github.com/AshBuk/dabri/internal/version.Version=${pkgver} -linkmode=external -extldflags '-Wl,-rpath,/usr/lib/${pkgname}'" \
         -o "${pkgname}" \
-        ./cmd/speak-to-ai
+        ./cmd/dabri
 }
 
 check() {
     cd "${pkgname}-${pkgver}"
 
     export LD_LIBRARY_PATH="${PWD}/lib"
-    ./"${pkgname}" --help 2>&1 | grep -q "speak-to-ai"
+    ./"${pkgname}" --help 2>&1 | grep -q "dabri"
 }
 
 package() {
@@ -140,12 +140,12 @@ package() {
     done
 
     # Desktop entry
-    install -Dm644 io.github.ashbuk.speak-to-ai.desktop \
-        "${pkgdir}/usr/share/applications/io.github.ashbuk.speak-to-ai.desktop"
+    install -Dm644 io.github.ashbuk.dabri.desktop \
+        "${pkgdir}/usr/share/applications/io.github.ashbuk.dabri.desktop"
 
     # AppStream metainfo
-    install -Dm644 io.github.ashbuk.speak-to-ai.appdata.xml \
-        "${pkgdir}/usr/share/metainfo/io.github.ashbuk.speak-to-ai.appdata.xml"
+    install -Dm644 io.github.ashbuk.dabri.appdata.xml \
+        "${pkgdir}/usr/share/metainfo/io.github.ashbuk.dabri.appdata.xml"
 
     # Icons
     install -Dm644 icons/io.github.ashbuk.dabri.png \

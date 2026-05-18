@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config/models"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Check if a command is in the security whitelist.

@@ -6,8 +6,8 @@ package providers
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestNewDummyKeyboardProvider(t *testing.T) {

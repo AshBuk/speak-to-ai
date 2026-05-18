@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.ashbuk.speak-to-ai</id>
+  <id>io.github.ashbuk.dabri</id>
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
-  <name>Speak-to-AI</name>
+  <name>Dabri</name>
   <summary>Offline speech-to-text desktop app</summary>
   <description>
     <p>
@@ -13,7 +13,7 @@
     </p>
     <p>
       For system tray integration on GNOME (install AppIndicator extension) and automatic typing on Wayland (setup ydotool),
-      see <a href="https://github.com/AshBuk/speak-to-ai/blob/master/docs/Desktop_Environment_Support.md">Desktop Environment Support Guide</a>.
+      see <a href="https://github.com/AshBuk/dabri/blob/master/docs/Desktop_Environment_Support.md">Desktop Environment Support Guide</a>.
     </p>
     <p>Features:</p>
     <ul>
@@ -34,15 +34,15 @@
       <video>https://github.com/user-attachments/assets/e8448f73-57f2-46dc-98f9-e36f685a6587</video>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://github.com/AshBuk/speak-to-ai</url>
-  <url type="bugtracker">https://github.com/AshBuk/speak-to-ai/issues</url>
-  <url type="vcs-browser">https://github.com/AshBuk/speak-to-ai</url>
-  <url type="help">https://github.com/AshBuk/speak-to-ai/blob/master/README.md</url>
+  <url type="homepage">https://github.com/AshBuk/dabri</url>
+  <url type="bugtracker">https://github.com/AshBuk/dabri/issues</url>
+  <url type="vcs-browser">https://github.com/AshBuk/dabri</url>
+  <url type="help">https://github.com/AshBuk/dabri/blob/master/README.md</url>
   <url type="donation">https://github.com/sponsors/AshBuk</url>
   <developer_name>Asher Buk</developer_name>
-  <launchable type="desktop-id">io.github.ashbuk.speak-to-ai.desktop</launchable>
+  <launchable type="desktop-id">io.github.ashbuk.dabri.desktop</launchable>
   <provides>
-    <binary>speak-to-ai</binary>
+    <binary>dabri</binary>
   </provides>
   <releases>
     <release version="1.8.2" date="2026-05-15">

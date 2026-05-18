@@ -7,10 +7,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/mocks"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestNewHotkeyManager(t *testing.T) {

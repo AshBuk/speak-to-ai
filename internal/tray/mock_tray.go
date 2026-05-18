@@ -6,8 +6,8 @@ package tray
 import (
 	"context"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // MockTrayManager implements a mock version of TrayManager without external dependencies

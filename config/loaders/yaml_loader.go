@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/config/validators"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config/models"
+	"github.com/AshBuk/dabri/config/validators"
+	"github.com/AshBuk/dabri/internal/logger"
 	yaml "gopkg.in/yaml.v2"
 )
 

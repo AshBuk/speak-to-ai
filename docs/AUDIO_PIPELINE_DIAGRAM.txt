@@ -3,7 +3,7 @@
 ╚══════════════════════════════════════════════════════════════════════════╝
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  CONFIG: ~/.config/speak-to-ai/config.yaml                              │
+│  CONFIG: ~/.config/dabri/config.yaml                              │
 │  audio:                                                                 │
 │    recording_method: "arecord"  ← DEFAULT (can switch to "ffmpeg")      │
 │    device: "default"                                                    │

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
 )
 
 // Parse a hotkey string into a KeyCombination struct

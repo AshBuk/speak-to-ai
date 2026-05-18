@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
-	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/mocks"
+	"github.com/AshBuk/dabri/hotkeys/utils"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestParseHotkey(t *testing.T) {

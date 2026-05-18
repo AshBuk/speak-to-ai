@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestNewAudioRecorderFactory(t *testing.T) {

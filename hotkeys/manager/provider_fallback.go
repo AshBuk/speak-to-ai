@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/providers"
 )
 
 // Register all configured hotkeys on the given provider

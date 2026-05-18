@@ -14,10 +14,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Implements common functionality for audio recorders

@@ -9,11 +9,11 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/audio/recorders"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/audio/recorders"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // AudioRecorderFactory creates audio recorder instances based on configuration

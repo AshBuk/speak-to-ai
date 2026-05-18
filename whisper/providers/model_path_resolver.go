@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 const (
 	// AppDataDirName is the application data directory name
-	AppDataDirName = "speak-to-ai"
+	AppDataDirName = "dabri"
 	// ModelsDirName is the subdirectory for model files
 	ModelsDirName = "models"
 )
@@ -35,7 +35,7 @@ func NewModelPathResolver(config *config.Config, fileName string) *ModelPathReso
 // GetBundledModelPath returns the path to the model file.
 // Search order:
 //  1. AppImage bundled path ($APPDIR/sources/language-models/)
-//  2. User data directory (~/.local/share/speak-to-ai/models/)
+//  2. User data directory (~/.local/share/dabri/models/)
 //  3. Development path (sources/language-models/)
 func (r *ModelPathResolver) GetBundledModelPath() string {
 	// 1. AppImage environment
@@ -60,7 +60,7 @@ func (r *ModelPathResolver) GetBundledModelPath() string {
 }
 
 // GetUserDataModelPath returns the path where model should be downloaded
-// This is XDG_DATA_HOME/speak-to-ai/models/<model-file-name>
+// This is XDG_DATA_HOME/dabri/models/<model-file-name>
 func (r *ModelPathResolver) GetUserDataModelPath() string {
 	return r.getUserDataModelPath()
 }

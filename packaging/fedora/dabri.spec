@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Asher Buk
 # SPDX-License-Identifier: MIT
-# https://github.com/AshBuk/speak-to-ai
+# https://github.com/AshBuk/dabri
 
 # =============================================================================
 # Version definitions (single source of truth)
@@ -12,12 +12,12 @@
 # Exclude auto-requires for vendored whisper libraries
 %global __requires_exclude libwhisper\\.so|libggml.*\\.so
 
-Name:           speak-to-ai
+Name:           dabri
 Version:        %{app_version}
 Release:        1%{?dist}
 Summary:        Offline speech-to-text desktop application
 License:        MIT
-URL:            https://github.com/AshBuk/speak-to-ai
+URL:            https://github.com/AshBuk/dabri
 
 # Main source with vendored Go dependencies
 Source0:        %{name}-%{version}-vendored.tar.gz
@@ -100,7 +100,7 @@ Provides:       bundled(golang(golang.org/x/sys)) = 0.43.0
 Provides:       bundled(golang(gopkg.in/yaml.v2)) = 2.4.0
 
 %description
-Speak-to-AI is a minimalist, privacy-focused desktop application for offline
+Dabri is a minimalist, privacy-focused desktop application for offline
 speech-to-text. It converts voice input directly into any active window
 (editors, browsers, IDEs, AI assistants) using the Whisper model locally.
 
@@ -171,9 +171,9 @@ VENDOR_RPATH='$ORIGIN/../lib64/%{name}'
 go build -v \
     -mod=vendor \
     -tags systray \
-    -ldflags "-s -w -X github.com/AshBuk/speak-to-ai/internal/version.Version=%{version} -linkmode=external -extldflags '-Wl,-rpath,${VENDOR_RPATH}'" \
+    -ldflags "-s -w -X github.com/AshBuk/dabri/internal/version.Version=%{version} -linkmode=external -extldflags '-Wl,-rpath,${VENDOR_RPATH}'" \
     -o %{name} \
-    ./cmd/speak-to-ai
+    ./cmd/dabri
 
 %install
 # Binary
@@ -204,12 +204,12 @@ for lib in lib/libwhisper.so lib/libggml.so lib/libggml-base.so lib/libggml-cpu.
 done
 
 # Desktop entry
-install -D -m 0644 io.github.ashbuk.speak-to-ai.desktop \
-    %{buildroot}%{_datadir}/applications/io.github.ashbuk.speak-to-ai.desktop
+install -D -m 0644 io.github.ashbuk.dabri.desktop \
+    %{buildroot}%{_datadir}/applications/io.github.ashbuk.dabri.desktop
 
 # AppStream metainfo
-install -D -m 0644 io.github.ashbuk.speak-to-ai.appdata.xml \
-    %{buildroot}%{_metainfodir}/io.github.ashbuk.speak-to-ai.appdata.xml
+install -D -m 0644 io.github.ashbuk.dabri.appdata.xml \
+    %{buildroot}%{_metainfodir}/io.github.ashbuk.dabri.appdata.xml
 
 # Icons (multiple sizes for HiDPI support)
 install -D -m 0644 icons/io.github.ashbuk.dabri.png \
@@ -225,7 +225,7 @@ install -D -m 0644 docs/Desktop_Environment_Support.md \
 %check
 # Sanity check - verify binary runs and shows help
 export LD_LIBRARY_PATH=%{buildroot}%{_libdir}/%{name}
-%{buildroot}%{_bindir}/%{name} --help 2>&1 | grep -q "speak-to-ai"
+%{buildroot}%{_bindir}/%{name} --help 2>&1 | grep -q "dabri"
 
 %post
 # Update icon cache
@@ -250,8 +250,8 @@ fi
 %{_libdir}/%{name}/libwhisper.so*
 %{_libdir}/%{name}/libggml*.so*
 # Desktop integration
-%{_datadir}/applications/io.github.ashbuk.speak-to-ai.desktop
-%{_metainfodir}/io.github.ashbuk.speak-to-ai.appdata.xml
+%{_datadir}/applications/io.github.ashbuk.dabri.desktop
+%{_metainfodir}/io.github.ashbuk.dabri.appdata.xml
 %{_datadir}/icons/hicolor/128x128/apps/io.github.ashbuk.dabri.png
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg
 
@@ -287,7 +287,7 @@ fi
 - Hotkey and config improvements
 
 * Tue Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.1-1
-- Auto-download whisper model to ~/.local/share/speak-to-ai/models/ on first run
+- Auto-download whisper model to ~/.local/share/dabri/models/ on first run
 
 * Tue Jan 06 2026 Asher Buk <AshBuk@users.noreply.github.com> - 1.5.0-1
 - Add --version flag

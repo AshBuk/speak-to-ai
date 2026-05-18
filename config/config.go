@@ -15,11 +15,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AshBuk/speak-to-ai/config/loaders"
-	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/config/security"
-	"github.com/AshBuk/speak-to-ai/config/validators"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config/loaders"
+	"github.com/AshBuk/dabri/config/models"
+	"github.com/AshBuk/dabri/config/security"
+	"github.com/AshBuk/dabri/config/validators"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // Config is a type alias for the main configuration structure defined in the models package.
@@ -32,13 +32,13 @@ const (
 	OutputModeActiveWindow = models.OutputModeActiveWindow
 
 	// AppName is the application identifier used in paths.
-	AppName = "speak-to-ai"
+	AppName = "dabri"
 	// ConfigFileName is the default configuration file name.
 	ConfigFileName = "config.yaml"
 )
 
 // ConfigDir returns the XDG config directory for the application.
-// Returns $XDG_CONFIG_HOME/speak-to-ai or ~/.config/speak-to-ai
+// Returns $XDG_CONFIG_HOME/dabri or ~/.config/dabri
 func ConfigDir() (string, error) {
 	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
 		return filepath.Join(configHome, AppName), nil
@@ -51,7 +51,7 @@ func ConfigDir() (string, error) {
 }
 
 // ConfigFilePath returns the default configuration file path.
-// Returns $XDG_CONFIG_HOME/speak-to-ai/config.yaml or ~/.config/speak-to-ai/config.yaml
+// Returns $XDG_CONFIG_HOME/dabri/config.yaml or ~/.config/dabri/config.yaml
 func ConfigFilePath() (string, error) {
 	dir, err := ConfigDir()
 	if err != nil {

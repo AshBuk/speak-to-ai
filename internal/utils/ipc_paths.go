@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AshBuk/speak-to-ai/config"
+	"github.com/AshBuk/dabri/config"
 )
 
 const (
 	// DefaultSocketFileName is the default IPC socket filename.
-	DefaultSocketFileName = "speak-to-ai.sock"
+	DefaultSocketFileName = "dabri.sock"
 )
 
 // GetDefaultSocketPath returns the default IPC socket path.

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/tests/mocks"
+	"github.com/AshBuk/dabri/tests/mocks"
 )
 
 // TestServiceContainer tests the ServiceContainer basic functionality

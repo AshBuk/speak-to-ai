@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Speak to AI
+Name=Dabri
 Comment=Offline STT
-Exec=speak-to-ai
+Exec=dabri
 Icon=io.github.ashbuk.dabri
 Type=Application
 Categories=AudioVideo;Audio;Utility;Accessibility;

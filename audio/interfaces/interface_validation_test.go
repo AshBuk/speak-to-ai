@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/interfaces"
-	"github.com/AshBuk/speak-to-ai/audio/mocks"
+	"github.com/AshBuk/dabri/audio/interfaces"
+	"github.com/AshBuk/dabri/audio/mocks"
 )
 
 func TestAudioRecorderInterface_MockCompliance(t *testing.T) {

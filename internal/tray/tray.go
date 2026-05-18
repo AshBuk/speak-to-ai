@@ -10,8 +10,8 @@ import (
 	"sync"
 
 	"fyne.io/systray"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // TrayManager manages the system tray icon and menu
@@ -117,7 +117,7 @@ func (tm *TrayManager) Start() {
 // onReady sets up the system tray when it's ready
 func (tm *TrayManager) onReady() {
 	systray.SetIcon(tm.iconMicOff)
-	systray.SetTitle("Speak-to-AI")
+	systray.SetTitle("Dabri")
 	// Create main menu items
 	tm.toggleItem = systray.AddMenuItem("Start Recording", "Start/Stop recording")
 	// Workflow notifications toggle (radio indicator is set by updateWorkflowNotificationUI)
@@ -135,10 +135,10 @@ func (tm *TrayManager) onReady() {
 	// Config actions
 	tm.showConfigItem = systray.AddMenuItem("Show Config File", "Open configuration file")
 	tm.reloadConfigItem = systray.AddMenuItem("Reset to Defaults", "Reset all settings to default values")
-	tm.aboutItem = systray.AddMenuItem("About", "About Speak-to-AI")
+	tm.aboutItem = systray.AddMenuItem("About", "About Dabri")
 
 	systray.AddSeparator()
-	tm.exitItem = systray.AddMenuItem("Quit", "Quit Speak-to-AI")
+	tm.exitItem = systray.AddMenuItem("Quit", "Quit Dabri")
 	// Handle menu item clicks
 	tm.wg.Add(1)
 	go func() {

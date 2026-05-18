@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/output/interfaces"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/internal/platform"
+	"github.com/AshBuk/dabri/output/interfaces"
 )
 
 // Implements the Outputter interface for typing text into the active window

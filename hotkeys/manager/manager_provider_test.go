@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/interfaces"
-	"github.com/AshBuk/speak-to-ai/hotkeys/mocks"
+	"github.com/AshBuk/dabri/hotkeys/interfaces"
+	"github.com/AshBuk/dabri/hotkeys/mocks"
 )
 
 // MockFactory for testing dependency injection

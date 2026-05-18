@@ -8,9 +8,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/audio/processing"
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
+	"github.com/AshBuk/dabri/audio/processing"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
 )
 
 // AudioServiceInterface defines the contract for audio-related operations

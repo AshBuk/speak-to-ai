@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/internal/services"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/internal/services"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestRuntimeContext_NewRuntimeContext(t *testing.T) {

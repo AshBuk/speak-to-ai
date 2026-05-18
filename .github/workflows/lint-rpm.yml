@@ -28,4 +28,4 @@ jobs:
         run: dnf install -y rpmlint glibc-langpack-en
 
       - name: Lint spec file
-        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/speak-to-ai.spec
+        run: rpmlint -r packaging/fedora/.rpmlintrc packaging/fedora/dabri.spec

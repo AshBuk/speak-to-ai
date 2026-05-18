@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/adapters"
-	"github.com/AshBuk/speak-to-ai/hotkeys/manager"
-	"github.com/AshBuk/speak-to-ai/internal/logger"
+	"github.com/AshBuk/dabri/hotkeys/adapters"
+	"github.com/AshBuk/dabri/hotkeys/manager"
+	"github.com/AshBuk/dabri/internal/logger"
 )
 
 // HotkeyManager defines the interface for hotkey managers

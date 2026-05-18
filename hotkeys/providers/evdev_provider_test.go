@@ -6,8 +6,8 @@ package providers
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/hotkeys/utils"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/hotkeys/utils"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestNewEvdevKeyboardProvider(t *testing.T) {

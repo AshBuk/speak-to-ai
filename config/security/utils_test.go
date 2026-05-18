@@ -6,7 +6,7 @@ package security
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/dabri/config/models"
 )
 
 func TestIsCommandAllowed(t *testing.T) {

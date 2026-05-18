@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AshBuk/speak-to-ai/internal/ipc"
-	"github.com/AshBuk/speak-to-ai/internal/utils"
+	"github.com/AshBuk/dabri/internal/ipc"
+	"github.com/AshBuk/dabri/internal/utils"
 )
 
 // addCLICommands registers all IPC-based subcommands on the root command.

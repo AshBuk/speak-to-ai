@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/internal/constants"
+	"github.com/AshBuk/dabri/config/models"
+	"github.com/AshBuk/dabri/internal/constants"
 )
 
 // validateGeneralConfig validates general configuration settings

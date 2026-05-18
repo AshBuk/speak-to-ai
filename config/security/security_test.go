@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config/models"
+	"github.com/AshBuk/dabri/config/models"
 )
 
 // TestVerifyConfigIntegrity tests config integrity verification

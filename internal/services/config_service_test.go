@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/config/models"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/config/models"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func createTestConfig() *models.Config {

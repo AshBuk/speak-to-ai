@@ -2,7 +2,7 @@
 
 > Tested on major Linux distributions (Fedora, Ubuntu, Arch Linux) and tiling window managers (Hyprland, Sway)
 
-> If you encounter issues with your desktop environment, feel free to [open an issue](https://github.com/AshBuk/speak-to-ai/issues). 
+> If you encounter issues with your desktop environment, feel free to [open an issue](https://github.com/AshBuk/dabri/issues). 
 
 ### **For system tray on GNOME - to have full-featured UX with menu**:
 ```bash
@@ -93,14 +93,14 @@ sudo usermod -a -G input $USER
 ```
 
 ### **Direct Hotkey Binding via DE/WM**
-Bind `speak-to-ai toggle` to any key via your DE settings or WM config to start/stop recording:
-- **GNOME:** Settings → Keyboard → Custom Shortcuts → `speak-to-ai toggle`
-- **KDE:** System Settings → Shortcuts → Custom Shortcuts → `speak-to-ai toggle`
+Bind `dabri toggle` to any key via your DE settings or WM config to start/stop recording:
+- **GNOME:** Settings → Keyboard → Custom Shortcuts → `dabri toggle`
+- **KDE:** System Settings → Shortcuts → Custom Shortcuts → `dabri toggle`
 - **Tiling WMs** (i3, sway, Hyprland, bspwm, etc.):
   ```
-  bindsym $mod+r exec speak-to-ai toggle
+  bindsym $mod+r exec dabri toggle
   ```
-- **Separate start/stop** also available: `speak-to-ai start` / `speak-to-ai stop`
+- **Separate start/stop** also available: `dabri start` / `dabri stop`
 - See [CLI Usage Guide](CLI_USAGE.md) for command reference
 
 *Last updated: 2026-02-11*

@@ -8,7 +8,7 @@ package providers
 import (
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
+	"github.com/AshBuk/dabri/internal/testutils"
 )
 
 func TestConvertHotkeyToAccelerator(t *testing.T) {

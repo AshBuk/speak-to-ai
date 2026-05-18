@@ -10,12 +10,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AshBuk/speak-to-ai/config"
-	"github.com/AshBuk/speak-to-ai/hotkeys/providers"
-	"github.com/AshBuk/speak-to-ai/internal/platform"
-	"github.com/AshBuk/speak-to-ai/internal/testutils"
-	outputfactory "github.com/AshBuk/speak-to-ai/output/factory"
-	"github.com/AshBuk/speak-to-ai/whisper"
+	"github.com/AshBuk/dabri/config"
+	"github.com/AshBuk/dabri/hotkeys/providers"
+	"github.com/AshBuk/dabri/internal/platform"
+	"github.com/AshBuk/dabri/internal/testutils"
+	outputfactory "github.com/AshBuk/dabri/output/factory"
+	"github.com/AshBuk/dabri/whisper"
 )
 
 // Platform-specific integration tests
