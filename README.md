@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/AshBuk/dabri/raw/master/icons/io.github.ashbuk.dabri.svg" width="180" height="180" alt="Dabri"/>
+<img src="https://github.com/AshBuk/dabri/raw/master/icons/io.github.ashbuk.dabri-logo.svg" width="420" alt="Dabri"/>
 <h1>Dabri</h1>
   
 > 🗣️ **Linux speech-to-text, the Unix way**
