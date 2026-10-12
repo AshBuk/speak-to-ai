@@ -23,10 +23,10 @@
   type: archive
   url: https://proxy.golang.org/github.com/!ash!buk/go-wlportal/@v/v1.3.1.zip
 - dest: vendor/github.com/ggerganov/whisper.cpp/bindings/go
-  sha256: 0921a93a894fd4f208f710e054b13e78a7aac90f791efbb37ca078e1e40dbdfa
+  sha256: 13b6a78a4f2650384efe47d060b5375d154f08b89fa5ee28da61c6995b7c11ef
   strip-components: 5
   type: archive
-  url: https://proxy.golang.org/github.com/ggerganov/whisper.cpp/bindings/go/@v/v0.0.0-20260910180034-927cfce34f31.zip
+  url: https://proxy.golang.org/github.com/ggerganov/whisper.cpp/bindings/go/@v/v0.0.0-20261006141035-d1be6fde11ac.zip
 - dest: vendor/github.com/go-audio/wav
   sha256: 884d351372627717f4779da1fa58751481db5bfe9a623bdfd9a9e887c13e2e62
   strip-components: 3

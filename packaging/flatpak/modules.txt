@@ -8,7 +8,7 @@ fyne.io/systray/internal/generated/notifier
 github.com/AshBuk/go-wlportal/internal/portal
 github.com/AshBuk/go-wlportal/shortcuts
 github.com/AshBuk/go-wlportal/typing
-# github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20260910180034-927cfce34f31
+# github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20261006141035-d1be6fde11ac
 ## explicit; go 1.23
 github.com/ggerganov/whisper.cpp/bindings/go
 github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper

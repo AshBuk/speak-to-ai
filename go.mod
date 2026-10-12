@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/AshBuk/go-wlportal v1.3.1
-	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20260910180034-927cfce34f31
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20261006141035-d1be6fde11ac
 	github.com/go-audio/wav v1.1.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gotk3/gotk3 v0.6.5-0.20251124190141-e7a9e823ca35
