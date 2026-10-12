@@ -33,10 +33,10 @@
   type: archive
   url: https://proxy.golang.org/github.com/go-audio/wav/@v/v1.1.0.zip
 - dest: vendor/github.com/godbus/dbus/v5
-  sha256: 5c6f37c725a481fb0f1e7866ae273429525d8cc6a6cace87da28e53370f5596a
+  sha256: 1e2c24a8c92ee965560ae0474ea94031f1496e706351f965ddb887ea5a0719c1
   strip-components: 4
   type: archive
-  url: https://proxy.golang.org/github.com/godbus/dbus/v5/@v/v5.2.2.zip
+  url: https://proxy.golang.org/github.com/godbus/dbus/v5/@v/v5.2.3.zip
 - dest: vendor/github.com/gotk3/gotk3
   sha256: 48cbe44b9033026750a6c3ab6fca88f7598c92fb44d011056e47d62729416906
   strip-components: 3
@@ -88,7 +88,7 @@
   type: archive
   url: https://proxy.golang.org/github.com/stretchr/testify/@v/v1.12.1.zip
 - dest: vendor/golang.org/x/sys
-  sha256: 3a47e06431ba1e24d5b2aca3a7ce31fd13faff34df3e5d8e63f105ff9d0c1786
+  sha256: e73a06591ca0d7016ce3ccb45c36a8ed7128468aecc1a357f94d815c760c6b31
   strip-components: 3
   type: archive
-  url: https://proxy.golang.org/golang.org/x/sys/@v/v0.48.0.zip
+  url: https://proxy.golang.org/golang.org/x/sys/@v/v0.49.0.zip
