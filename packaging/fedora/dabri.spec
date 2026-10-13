@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     2.2.4
+%global app_version     2.2.5
 %global go_version      1.26
 %global whisper_version 1.9.5
 
@@ -262,6 +262,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg
 
 %changelog
+* Wed Oct 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 2.2.5-1
+- Portal typing recovers after the portal closes its session; whisper.cpp updated to v1.9.5
+
 * Sat Sep 26 2026 Asher Buk <AshBuk@users.noreply.github.com> - 2.2.4-1
 - Flatpak now bundles xdotool for X11 typing; runtime updated to Freedesktop 26.08
 
