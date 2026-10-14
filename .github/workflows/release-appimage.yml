@@ -94,6 +94,7 @@ jobs:
         name: dabri-appimage-${{ matrix.arch }}
         path: |
           dist/*.AppImage
+          dist/*.zsync
           !dist/tools/
 
   create-release:
@@ -147,6 +148,7 @@ jobs:
       with:
         files: |
           ./artifacts/*.AppImage
+          ./artifacts/*.zsync
         body: ${{ steps.release_body.outputs.body }}
         draft: false
         prerelease: false

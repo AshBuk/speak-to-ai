@@ -200,19 +200,13 @@ build_appimage() {
 
     # Create final AppImage
     echo "Creating AppImage..."
-    "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run "${APP_NAME}.AppDir"
-
-    # Rename output
-    local output=$(find . -maxdepth 1 -name "*.AppImage" ! -name "appimagetool*" -type f | head -n1)
-    if [ -n "$output" ]; then
-        mv "$output" "${APP_NAME}-${APP_VERSION}-${ARCH}.AppImage"
-        chmod +x "${APP_NAME}-${APP_VERSION}-${ARCH}.AppImage"
-        ls -lh "${APP_NAME}-${APP_VERSION}-${ARCH}.AppImage"
-        echo "=== Build completed successfully! ==="
-    else
-        echo "Error: AppImage not found"
-        exit 1
-    fi
+    local output="${APP_NAME}-${APP_VERSION}-${ARCH}.AppImage"
+    "${TOOLS_DIR}/appimagetool-${ARCH}.AppImage" --appimage-extract-and-run \
+        -u "gh-releases-zsync|AshBuk|dabri|latest|${APP_NAME}-*-${ARCH}.AppImage.zsync" \
+        "${APP_NAME}.AppDir" "${output}"
+    chmod +x "${output}"
+    ls -lh "${output}" "${output}.zsync"
+    echo "=== Build completed successfully! ==="
 }
 
 # Main
