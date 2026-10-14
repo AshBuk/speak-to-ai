@@ -31,12 +31,6 @@ func NewModelManager(config *config.Config, loggers ...logger.Logger) *ModelMana
 	return m
 }
 
-// Initialize validates the configured model is present, downloading if needed
-func (m *ModelManager) Initialize(ctx context.Context) error {
-	_, err := m.resolveModel(ctx, m.configuredModelID())
-	return err
-}
-
 // GetModelPath returns the absolute path to the configured model file
 func (m *ModelManager) GetModelPath(ctx context.Context) (string, error) {
 	return m.resolveModel(ctx, m.configuredModelID())

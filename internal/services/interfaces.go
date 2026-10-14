@@ -84,8 +84,6 @@ type IOServiceInterface interface {
 
 	// StartWebSocketServer starts the WebSocket server for remote control
 	StartWebSocketServer() error
-	// StopWebSocketServer stops the WebSocket server
-	StopWebSocketServer() error
 
 	// Shutdown releases IO resources
 	Shutdown() error
@@ -93,10 +91,6 @@ type IOServiceInterface interface {
 
 // ConfigServiceInterface defines the contract for configuration operations
 type ConfigServiceInterface interface {
-	// LoadConfig reads configuration from the given file
-	LoadConfig(configFile string) error
-	// SaveConfig persists the current configuration to disk
-	SaveConfig() error
 	// ResetToDefaults restores all settings to their default values
 	ResetToDefaults() error
 	// GetConfig returns the current configuration
@@ -130,8 +124,6 @@ type HotkeyServiceInterface interface {
 
 	// RegisterHotkeys activates hotkey capture for the current session
 	RegisterHotkeys() error
-	// UnregisterHotkeys releases hotkey capture
-	UnregisterHotkeys() error
 
 	// ReloadFromConfig applies new hotkey bindings without restarting
 	ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error

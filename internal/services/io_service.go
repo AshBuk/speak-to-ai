@@ -126,30 +126,6 @@ func (ios *IOService) OutputText(text string) error {
 	return nil
 }
 
-// Force clipboard output bypassing default routing
-func (ios *IOService) OutputToClipboard(text string) error {
-	if ios.outputManager == nil {
-		return fmt.Errorf("output manager not available")
-	}
-	if err := ios.outputManager.CopyToClipboard(text); err != nil {
-		ios.logger.Error("Failed to copy to clipboard: %v", err)
-		return fmt.Errorf("failed to copy to clipboard: %w", err)
-	}
-	return nil
-}
-
-// Force typing output bypassing default routing
-func (ios *IOService) OutputByTyping(text string) error {
-	if ios.outputManager == nil {
-		return fmt.Errorf("output manager not available")
-	}
-	if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
-		ios.logger.Error("Failed to type to active window: %v", err)
-		return fmt.Errorf("failed to type to active window: %w", err)
-	}
-	return nil
-}
-
 // Switch output mode and persist setting with UI refresh
 func (ios *IOService) SetOutputMethod(method string) error {
 	ios.logger.Info("Setting output method to: %s", method)

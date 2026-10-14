@@ -99,7 +99,6 @@ func (m *MockIOService) CompleteTranscription(result string)                    
 func (m *MockIOService) WaitForTranscription(timeout time.Duration) (string, error) { return "", nil }
 func (m *MockIOService) GetOutputToolNames() (string, string)                       { return "mock-clipboard", "mock-typing" }
 func (m *MockIOService) StartWebSocketServer() error                                { return nil }
-func (m *MockIOService) StopWebSocketServer() error                                 { return nil }
 
 // Test helper methods
 func (m *MockIOService) WasShutdownCalled() bool { return m.shutdownCalled }
@@ -121,9 +120,7 @@ func (m *MockConfigService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockConfigService) LoadConfig(configFile string) error { return nil }
-func (m *MockConfigService) SaveConfig() error                  { return nil }
-func (m *MockConfigService) ResetToDefaults() error             { m.Log.add("Config.Reset"); return m.ResetErr }
+func (m *MockConfigService) ResetToDefaults() error { m.Log.add("Config.Reset"); return m.ResetErr }
 func (m *MockConfigService) GetConfig() *config.Config {
 	if m.Cfg == nil {
 		m.Cfg = &config.Config{}
@@ -181,8 +178,7 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 ) error {
 	return nil
 }
-func (m *MockHotkeyService) RegisterHotkeys() error   { return nil }
-func (m *MockHotkeyService) UnregisterHotkeys() error { return nil }
+func (m *MockHotkeyService) RegisterHotkeys() error { return nil }
 func (m *MockHotkeyService) ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error {
 	m.Log.add("Hotkeys.Reload:" + cfg.GetStartRecordingHotkey())
 	return nil
