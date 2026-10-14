@@ -30,20 +30,6 @@ func TestNewEvdevKeyboardProvider(t *testing.T) {
 	}
 }
 
-func TestEvdevKeyboardProvider_IsSupported(t *testing.T) {
-	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-	// Test IsSupported - this will likely return false in test environment due to permissions
-	supported := provider.IsSupported()
-
-	// We don't assert true/false here since it depends on the test environment and permissions
-	// Just verify the method doesn't panic and returns a boolean
-	if supported {
-		t.Log("Evdev is supported in test environment")
-	} else {
-		t.Log("Evdev is not supported in test environment (expected, likely due to permissions)")
-	}
-}
-
 func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
@@ -206,48 +192,4 @@ func TestGetKeyName(t *testing.T) {
 	}
 }
 
-func TestHasKeyEvents(t *testing.T) {
-	// This test is difficult to implement without creating actual evdev devices
-	// We'll test the function exists and doesn't panic with nil input
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("hasKeyEvents panicked: %v", r)
-		}
-	}()
-
-	// Test with nil device - this should not panic but may return false
-	// We can't easily test true cases without real devices
-	// hasKeyEvents(nil) // This would panic, so we skip it
-
-	// Just verify the function exists by calling it indirectly through other tests
-	t.Log("hasKeyEvents function exists and is callable")
-}
-
 // Test helper functions that are used by the evdev provider
-
-func TestModifierStateTracking(t *testing.T) {
-	// Test that modifier state tracking logic works
-	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
-
-	// Simulate modifier key press
-	provider.modifierState["leftctrl"] = true
-	provider.modifierState["shift"] = true
-
-	// Check state
-	if !provider.modifierState["leftctrl"] {
-		t.Error("expected leftctrl to be pressed")
-	}
-	if !provider.modifierState["shift"] {
-		t.Error("expected shift to be pressed")
-	}
-
-	// Simulate modifier key release
-	provider.modifierState["leftctrl"] = false
-
-	if provider.modifierState["leftctrl"] {
-		t.Error("expected leftctrl to be released")
-	}
-	if !provider.modifierState["shift"] {
-		t.Error("expected shift to still be pressed")
-	}
-}

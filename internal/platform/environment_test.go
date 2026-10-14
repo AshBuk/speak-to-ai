@@ -166,44 +166,6 @@ func TestUtilityExists(t *testing.T) {
 	}
 }
 
-// TestUtilityExists_CommonTools tests common development tools
-func TestUtilityExists_CommonTools(t *testing.T) {
-	// These tests are informational - they check what's available on the system
-	commonTools := []string{
-		"go",
-		"git",
-		"make",
-		"grep",
-		"find",
-	}
-
-	for _, tool := range commonTools {
-		t.Run("check_"+tool, func(t *testing.T) {
-			exists := UtilityExists(tool)
-			t.Logf("Tool %s exists: %v", tool, exists)
-			// We don't assert here since these tools may or may not be available
-		})
-	}
-}
-
-// TestCheckPrivileges tests privilege checking
-func TestCheckPrivileges(t *testing.T) {
-	// This test checks the current privilege level
-	hasPrivileges := CheckPrivileges()
-
-	// We can't reliably test this in all environments, but we can test that it returns a boolean
-	if hasPrivileges {
-		t.Log("Running with elevated privileges (root)")
-	} else {
-		t.Log("Running with normal user privileges")
-	}
-
-	// The function should always return a boolean value
-	if hasPrivileges != true && hasPrivileges != false {
-		t.Error("CheckPrivileges should return a boolean value")
-	}
-}
-
 // TestEnsureDirectoryExists tests directory creation
 func TestEnsureDirectoryExists(t *testing.T) {
 	// Create a temporary directory for testing
@@ -256,60 +218,6 @@ func TestEnsureDirectoryExists(t *testing.T) {
 				} else if !info.IsDir() {
 					t.Error("Created path is not a directory")
 				}
-			}
-		})
-	}
-}
-
-// TestEnsureDirectoryExists_InvalidPath tests directory creation with invalid paths
-func TestEnsureDirectoryExists_InvalidPath(t *testing.T) {
-	tests := []struct {
-		name        string
-		path        string
-		description string
-	}{
-		{
-			name:        "empty path",
-			path:        "",
-			description: "Empty path should create current directory (should succeed)",
-		},
-		{
-			name:        "path with null character",
-			path:        "/tmp/test\x00dir",
-			description: "Path with null character should fail",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := EnsureDirectoryExists(tt.path)
-			t.Logf("Path: %q, Error: %v, Description: %s", tt.path, err, tt.description)
-
-			// Note: We don't assert success/failure here because behavior may vary
-			// across different operating systems and file systems
-		})
-	}
-}
-
-// TestEnsureDirectoryExists_Permissions tests directory creation with permission restrictions
-func TestEnsureDirectoryExists_Permissions(t *testing.T) {
-	// This test is platform-specific and may not work in all environments
-	// We'll test creating a directory in a location that typically requires permissions
-
-	restrictedPaths := []string{
-		"/root/test_restricted_dir", // Requires root access
-		"/sys/test_restricted_dir",  // System directory
-	}
-
-	for _, path := range restrictedPaths {
-		t.Run("restricted_path_"+path, func(t *testing.T) {
-			err := EnsureDirectoryExists(path)
-			if err != nil {
-				t.Logf("Cannot create directory %s (expected): %v", path, err)
-			} else {
-				t.Logf("Successfully created directory %s (cleanup may be needed)", path)
-				// Try to clean up if we somehow succeeded
-				os.RemoveAll(path)
 			}
 		})
 	}

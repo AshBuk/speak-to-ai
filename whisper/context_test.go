@@ -76,30 +76,3 @@ func TestTranscribeWithContextTimeout(t *testing.T) {
 
 	t.Logf("Timeout completed in %v", duration)
 }
-
-// TestTranscribeWithContextNoLeak verifies no goroutine leak on cancellation
-func TestTranscribeWithContextNoLeak(t *testing.T) {
-	// Note: This test would ideally use goleak, but whisper.cpp C code
-	// may create threads that goleak cannot track. Manual verification needed.
-
-	cfg := &config.Config{}
-	config.SetDefaultConfig(cfg)
-
-	engine := &WhisperEngine{
-		config:    cfg,
-		modelPath: "/nonexistent/model.bin",
-	}
-	// Run multiple cancellations
-	for i := 0; i < 10; i++ {
-		ctx, cancel := context.WithCancel(context.Background())
-		go func() {
-			time.Sleep(5 * time.Millisecond)
-			cancel()
-		}()
-
-		_, _ = engine.TranscribeWithContext(ctx, "test.wav")
-	}
-	// If goroutines leaked, this test would eventually hang or OOM
-	// (Best verified manually with `go test -race` or profiling)
-	time.Sleep(100 * time.Millisecond)
-}

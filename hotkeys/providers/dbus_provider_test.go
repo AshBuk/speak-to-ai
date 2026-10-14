@@ -23,20 +23,6 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 	}
 }
 
-func TestDbusKeyboardProvider_IsSupported_NewTest(t *testing.T) {
-	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-	// Test IsSupported - this will likely return false in test environment
-	supported := provider.IsSupported()
-
-	// We don't assert true/false here since it depends on the test environment
-	// Just verify the method doesn't panic and returns a boolean
-	if supported {
-		t.Log("D-Bus portal GlobalShortcuts is supported in test environment")
-	} else {
-		t.Log("D-Bus portal GlobalShortcuts is not supported in test environment (expected)")
-	}
-}
-
 func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
