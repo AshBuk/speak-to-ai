@@ -39,18 +39,6 @@ func expectCalls(t *testing.T, log *mocks.CallLog, want ...string) {
 	}
 }
 
-func TestHotkeyHandlers(t *testing.T) {
-	a, log, audio, _ := newMockedApp()
-	_ = a.handleToggleRecording()
-	audio.Recording = true
-	_ = a.handleToggleRecording()
-	_ = a.handleShowConfig()
-	if err := a.handleResetToDefaults(); err != nil {
-		t.Fatal(err)
-	}
-	expectCalls(t, log, "Audio.Start", "Audio.Stop", "UI.ShowConfig", "Config.Reset", "Hotkeys.Reload:alt+r")
-}
-
 func TestIPCToggle(t *testing.T) {
 	a, log, audio, _ := newMockedApp()
 	if _, err := a.ipcHandleToggleRecording(ipc.Request{}); err != nil {
@@ -83,7 +71,7 @@ func TestIPCSetModel_Errors(t *testing.T) {
 	}
 	audio.SwitchModelErr = map[string]error{"small": errors.New("boom")}
 	_, err := a.ipcHandleSetModel(ipc.Request{Params: map[string]string{"model": "small"}})
-	if err == nil || err.Error() != "model switch failed: boom" {
+	if err == nil || err.Error() != "boom" {
 		t.Errorf("got %v", err)
 	}
 	expectCalls(t, log, "Audio.SwitchModel:small")

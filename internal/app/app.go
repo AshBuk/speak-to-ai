@@ -130,11 +130,11 @@ func (a *App) setupHotkeyCallbacks() error {
 		return fmt.Errorf("services not initialized")
 	}
 
-	// Register callback functions defined in handlers.go
+	// Register the shared user actions (services/actions.go)
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
-		a.handleToggleRecording, // handlers.go: Start/stop recording (shared toggle)
-		a.handleShowConfig,      // handlers.go: Display configuration
-		a.handleResetToDefaults, // handlers.go: Reset settings to defaults
+		a.Services.ToggleRecording,   // Start/stop recording (shared toggle)
+		a.Services.UI.ShowConfigFile, // Display configuration
+		a.Services.ResetToDefaults,   // Reset settings and reload hotkeys
 	); err != nil {
 		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
 	}

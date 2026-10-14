@@ -20,7 +20,6 @@ type actionFixture struct {
 	cfg     *mocks.MockConfigService
 	hotkeys *mocks.MockHotkeyService
 	c       *ServiceContainer
-	w       *FactoryWirer
 }
 
 func newActionFixture() *actionFixture {
@@ -34,13 +33,13 @@ func newActionFixture() *actionFixture {
 	f.cfg.Cfg.General.WhisperModel = "base"
 	f.cfg.Cfg.Hotkeys.StartRecording = "alt+r"
 	f.c = &ServiceContainer{
+		Logger:  testutils.NewMockLogger(),
 		Audio:   f.audio,
 		UI:      &mocks.MockUIService{Log: log},
 		IO:      &mocks.MockIOService{Log: log},
 		Config:  f.cfg,
 		Hotkeys: f.hotkeys,
 	}
-	f.w = NewFactoryWirer(testutils.NewMockLogger())
 	return f
 }
 
@@ -53,22 +52,22 @@ func (f *actionFixture) expect(t *testing.T, want ...string) {
 
 func TestToggleRecording(t *testing.T) {
 	f := newActionFixture()
-	_ = f.w.makeToggleCallback(f.c)()
+	_ = f.c.ToggleRecording()
 	f.audio.Recording = true
-	_ = f.w.makeToggleCallback(f.c)()
+	_ = f.c.ToggleRecording()
 	f.expect(t, "Audio.Start", "Audio.Stop")
 }
 
 func TestResetToDefaults(t *testing.T) {
 	f := newActionFixture()
-	if err := f.w.makeResetToDefaultsCallback(f.c)(); err != nil {
+	if err := f.c.ResetToDefaults(); err != nil {
 		t.Fatal(err)
 	}
 	f.expect(t, "Config.Reset", "Hotkeys.Reload:alt+r")
 
 	f = newActionFixture()
 	f.cfg.ResetErr = errors.New("boom")
-	if err := f.w.makeResetToDefaultsCallback(f.c)(); err == nil {
+	if err := f.c.ResetToDefaults(); err == nil {
 		t.Fatal("expected error")
 	}
 	f.expect(t, "Config.Reset")
@@ -76,7 +75,7 @@ func TestResetToDefaults(t *testing.T) {
 
 func TestSwitchModel(t *testing.T) {
 	f := newActionFixture()
-	if err := f.w.makeModelSelectionCallback(f.c)(context.Background(), "small"); err != nil {
+	if err := f.c.selectModel(context.Background(), "small"); err != nil {
 		t.Fatal(err)
 	}
 	f.expect(t, "Audio.SwitchModel:small", "Config.Model:small", "UI.UpdateSettings", "UI.Notify:Model Switch")
@@ -85,7 +84,7 @@ func TestSwitchModel(t *testing.T) {
 func TestSwitchModel_SwitchFails(t *testing.T) {
 	f := newActionFixture()
 	f.audio.SwitchModelErr = map[string]error{"small": errors.New("boom")}
-	if err := f.w.makeModelSelectionCallback(f.c)(context.Background(), "small"); err == nil {
+	if err := f.c.selectModel(context.Background(), "small"); err == nil {
 		t.Fatal("expected error")
 	}
 	f.expect(t, "Audio.SwitchModel:small", "UI.Notify:Model Switch Failed")
@@ -96,7 +95,7 @@ func TestSwitchModel_CancelledIsSilent(t *testing.T) {
 	f.audio.SwitchModelErr = map[string]error{"small": context.Canceled}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if err := f.w.makeModelSelectionCallback(f.c)(ctx, "small"); err == nil {
+	if err := f.c.selectModel(ctx, "small"); err == nil {
 		t.Fatal("expected error")
 	}
 	f.expect(t, "Audio.SwitchModel:small")
@@ -105,18 +104,19 @@ func TestSwitchModel_CancelledIsSilent(t *testing.T) {
 func TestSwitchModel_PersistFailsRollsBack(t *testing.T) {
 	f := newActionFixture()
 	f.cfg.UpdateModelErr = errors.New("disk full")
-	if err := f.w.makeModelSelectionCallback(f.c)(context.Background(), "small"); err == nil {
+	if err := f.c.selectModel(context.Background(), "small"); err == nil {
 		t.Fatal("expected error")
 	}
-	f.expect(t, "Audio.SwitchModel:small", "Config.Model:small", "Audio.SwitchModel:base")
+	f.expect(t, "Audio.SwitchModel:small", "Config.Model:small", "Audio.SwitchModel:base",
+		"UI.Notify:Model Switch Failed")
 }
 
 func TestSettingsActions(t *testing.T) {
 	f := newActionFixture()
-	_ = f.w.makeLanguageCallback(f.c)("ru")
-	_ = f.w.makeOutputModeCallback(f.c)("clipboard")
-	_ = f.w.makeRecorderSelectionCallback(f.c)("ffmpeg")
-	_ = f.w.makeToggleNotificationsCallback(f.c)()
+	_ = f.c.setLanguage("ru")
+	_ = f.c.setOutputMode("clipboard")
+	_ = f.c.setRecordingMethod("ffmpeg")
+	_ = f.c.toggleNotifications()
 	f.expect(t,
 		"Config.Language:ru", "UI.UpdateSettings",
 		"Config.OutputMode:clipboard", "IO.SetOutputMethod:clipboard", "UI.UpdateSettings",
@@ -127,14 +127,14 @@ func TestSettingsActions(t *testing.T) {
 
 func TestRebindHotkey(t *testing.T) {
 	f := newActionFixture()
-	if err := f.w.makeHotkeyRebindCallback(f.c)("start_recording"); err != nil {
+	if err := f.c.rebindHotkey("start_recording"); err != nil {
 		t.Fatal(err)
 	}
 	f.expect(t, "UI.Notify:Rebind Hotkey", "Hotkeys.Capture", "UI.Notify:Rebind Hotkey")
 
 	f = newActionFixture()
 	f.hotkeys.Captured = "ctrl+space"
-	if err := f.w.makeHotkeyRebindCallback(f.c)("start_recording"); err != nil {
+	if err := f.c.rebindHotkey("start_recording"); err != nil {
 		t.Fatal(err)
 	}
 	f.expect(t, "UI.Notify:Rebind Hotkey", "Hotkeys.Capture",

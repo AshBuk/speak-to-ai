@@ -65,7 +65,7 @@ func NewServiceFactory(config ServiceFactoryConfig) *ServiceFactory {
 // Multi-Stage Factory Pattern (3 stages):
 //  1. FactoryComponents → creates low-level components (Whisper, Audio, Hotkeys, etc)
 //  2. FactoryAssembler  → assembles components into high-level services
-//  3. FactoryWirer      → wires tray menu callbacks to services
+//  3. wireUI           → wires tray menu callbacks to services
 //
 // Returns fully configured ServiceContainer ready for use
 func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
@@ -80,8 +80,7 @@ func (sf *ServiceFactory) CreateServices() (*ServiceContainer, error) {
 	container := assembler.Assemble(components)
 
 	// Stage 3: Wire tray menu callbacks
-	wirer := NewFactoryWirer(sf.config.Logger)
-	wirer.Wire(container, components)
+	wireUI(container, components.TrayManager, components.WindowManager)
 
 	return container, nil
 }

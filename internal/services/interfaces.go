@@ -11,6 +11,7 @@ import (
 	"github.com/AshBuk/dabri/v2/audio/processing"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/hotkeys/adapters"
+	"github.com/AshBuk/dabri/v2/internal/logger"
 	"github.com/AshBuk/dabri/v2/internal/ui/window"
 	"github.com/AshBuk/dabri/v2/output/outputters"
 )
@@ -147,6 +148,7 @@ type HotkeyServiceInterface interface {
 
 // ServiceContainer holds all service interfaces
 type ServiceContainer struct {
+	Logger          logger.Logger
 	Audio           AudioServiceInterface
 	UI              UIServiceInterface
 	IO              IOServiceInterface

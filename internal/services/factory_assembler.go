@@ -54,6 +54,7 @@ func (sa *FactoryAssembler) Assemble(components *Components) *ServiceContainer {
 	}
 
 	// Step 3: Pack services into container
+	container.Logger = sa.factoryConfig.Logger
 	container.Config = configSvc
 	container.Hotkeys = hotkeysSvc
 	container.Audio = audioSvc

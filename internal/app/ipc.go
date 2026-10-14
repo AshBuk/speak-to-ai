@@ -25,7 +25,7 @@ import (
 //       ↓
 //   IPC Handlers (this file) ← protocol adapter layer
 //       ↓
-//   Handler methods (handlers.go) ← business logic adapter
+//   Shared actions (services/actions.go) ← one implementation per scenario
 //       ↓
 //   Business Services (AudioService/IOService)
 
@@ -61,10 +61,10 @@ func (a *App) registerIPCHandlers(server *ipc.Server) {
 	server.Register("delete-model", a.ipcHandleDeleteModel)
 }
 
-// ipcHandleStartRecording Command handler - starts audio recording via handlers.go
+// ipcHandleStartRecording Command handler - starts audio recording
 // Returns JSON response with recording state
 func (a *App) ipcHandleStartRecording(ipc.Request) (ipc.Response, error) {
-	if err := a.handleStartRecording(); err != nil {
+	if err := a.Services.Audio.HandleStartRecording(); err != nil {
 		return ipc.Response{}, err
 	}
 	return ipc.NewSuccessResponse("recording started", map[string]any{
@@ -76,7 +76,7 @@ func (a *App) ipcHandleStartRecording(ipc.Request) (ipc.Response, error) {
 // Synchronous: blocks CLI until transcription ready (45s timeout) or returns last transcript
 // Graceful errors: ErrNoRecordingInProgress returns success (not error) for idempotency
 func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
-	if err := a.handleStopRecordingAndTranscribe(); err != nil {
+	if err := a.Services.Audio.HandleStopRecording(); err != nil {
 		if errors.Is(err, services.ErrNoRecordingInProgress) {
 			return ipc.NewSuccessResponse("recording already stopped", map[string]any{
 				"recording":  false,
@@ -100,7 +100,7 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 }
 
 // ipcHandleToggleRecording Command handler - toggles recording state
-// Same logic as tray toggle (see factory_wirer.go makeToggleCallback)
+// Same decision as ServiceContainer.ToggleRecording, but stop waits for the transcript
 func (a *App) ipcHandleToggleRecording(ipc.Request) (ipc.Response, error) {
 	if a.Services == nil || a.Services.Audio == nil {
 		return ipc.Response{}, fmt.Errorf("audio service not available")
@@ -164,25 +164,8 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 	if modelID == "" {
 		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
 	}
-	// Remember previous model so we can rollback on persist failure
-	previousModel := ""
-	if cfg := a.Services.Config.GetConfig(); cfg != nil {
-		previousModel = cfg.General.WhisperModel
-	}
-	if err := a.Services.Audio.SwitchModel(a.Runtime.Ctx, modelID); err != nil {
-		return ipc.Response{}, fmt.Errorf("model switch failed: %w", err)
-	}
-	if err := a.Services.Config.UpdateWhisperModel(modelID); err != nil {
-		// Rollback engine to previous model so runtime state matches config
-		if previousModel != "" {
-			if rbErr := a.Services.Audio.SwitchModel(a.Runtime.Ctx, previousModel); rbErr != nil {
-				a.Runtime.Logger.Error("Failed to rollback model after config save error: %v", rbErr)
-			}
-		}
-		return ipc.Response{}, fmt.Errorf("failed to persist model setting: %w", err)
-	}
-	if a.Services.UI != nil {
-		a.Services.UI.UpdateSettings(a.Services.Config.GetConfig())
+	if err := a.Services.SwitchModel(a.Runtime.Ctx, modelID); err != nil {
+		return ipc.Response{}, err
 	}
 	return ipc.NewSuccessResponse("model switched", map[string]any{
 		"model": modelID,
