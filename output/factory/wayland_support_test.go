@@ -41,11 +41,18 @@ func TestSecurityAllowedCommands(t *testing.T) {
 	}
 
 	// Test that traditional tools are still allowed
-	traditionalTools := []string{"xdotool", "xsel", "wl-copy"}
+	traditionalTools := []string{"xdotool", "xsel", "wl-copy", "arecord"}
 
 	for _, tool := range traditionalTools {
 		if !config.IsCommandAllowed(cfg, tool) {
 			t.Errorf("Traditional tool %s should be in allowed commands list", tool)
+		}
+	}
+
+	// Shells and network tools must never be allowed by default
+	for _, tool := range []string{"rm", "curl", "wget", "sh", "bash"} {
+		if config.IsCommandAllowed(cfg, tool) {
+			t.Errorf("Command %s should not be in allowed commands list", tool)
 		}
 	}
 }
