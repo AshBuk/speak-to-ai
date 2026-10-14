@@ -17,20 +17,15 @@ import (
 )
 
 // AudioRecorderFactory creates audio recorder instances based on configuration
-// Specialized subfactory used by ServiceFactory hierarchy
+// Specialized subfactory used by services.NewContainer
 //
 // Factory Hierarchy:
 //
-//	ServiceFactory (internal/services/factory.go)
+//	services.NewContainer (internal/services/factory.go)
 //	    │
-//	    ├── Stage 1: FactoryComponents
-//	    │       │
-//	    │       └── uses → AudioRecorderFactory (this file)
-//	    │                     │
-//	    │                     └── creates → ArecordRecorder or FFmpegRecorder
-//	    │
-//	    ├── Stage 2: FactoryAssembler
-//	    └── Stage 3: FactoryWirer
+//	    └── uses → AudioRecorderFactory (this file)
+//	                  │
+//	                  └── creates → ArecordRecorder or FFmpegRecorder
 //
 // Design:
 //   - Factory Method: creates different recorder implementations (arecord, ffmpeg)

@@ -28,20 +28,15 @@ const (
 var portalAvailable = outputters.PortalRemoteDesktopAvailable
 
 // Factory creates output managers (clipboard/typing) based on environment and configuration
-// Specialized subfactory used by ServiceFactory hierarchy
+// Specialized subfactory used by services.NewContainer
 //
 // Factory Hierarchy:
 //
-//	ServiceFactory (internal/services/factory.go)
+//	services.NewContainer (internal/services/factory.go)
 //	    │
-//	    ├── Stage 1: FactoryComponents
-//	    │       │
-//	    │       └── uses → outputFactory.GetOutputterFromConfig() (this file)
-//	    │                     │
-//	    │                     └── creates → ClipboardOutputter or TypeOutputter
-//	    │
-//	    ├── Stage 2: FactoryAssembler
-//	    └── Stage 3: FactoryWirer
+//	    └── uses → outputFactory.GetOutputterFromConfig() (this file)
+//	                  │
+//	                  └── creates → ClipboardOutputter or TypeOutputter
 //
 // Tool Selection Strategy:
 //   - Auto-detection: checks environment (X11/Wayland/GNOME) and tool availability

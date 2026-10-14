@@ -87,22 +87,13 @@ func (a *App) initializeConfig(configFile string, debug bool) (*config.Config, e
 	return cfg, nil
 }
 
-// Factory Pattern - creates and configures all services via factory with DI
+// Build all services and wire them together (services.NewContainer)
 func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	a.Runtime.Logger.Info("Initializing services with dependency injection...")
 	environment := platform.DetectEnvironment()
 	a.Runtime.Logger.Info("Detected environment: %s", environment)
 
-	// Factory Constructor: NewServiceFactory(config) → *ServiceFactory (stores configuration)
-	factory := services.NewServiceFactory(services.ServiceFactoryConfig{
-		Ctx:         a.Runtime.Ctx,    // Application context for cancellation propagation
-		Logger:      a.Runtime.Logger, // Application-wide logger for all services
-		Config:      cfg,              // Loaded YAML configuration
-		ConfigFile:  cfgFilePath,      // Path to config file for reloading
-		Environment: environment,      // Detected runtime environment (Native/AppImage/etc)
-	})
-	// Factory Method: factory.CreateServices() → *ServiceContainer (all services ready)
-	serviceContainer, err := factory.CreateServices()
+	serviceContainer, err := services.NewContainer(a.Runtime.Ctx, a.Runtime.Logger, cfg, cfgFilePath, environment)
 	if err != nil {
 		return fmt.Errorf("failed to create services: %w", err)
 	}
@@ -118,9 +109,9 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 }
 
 // setupServiceDependencies is a no-op placeholder for future cross-service wiring
-// Note: All dependency injection is handled in FactoryAssembler.Assemble()
+// Note: All dependency injection is handled in services.NewContainer()
 func (a *App) setupServiceDependencies() {
-	// Wiring done in factory_assembler.go (Step 4: Late wiring)
+	// Wiring done in services.NewContainer()
 }
 
 // Connect hotkey manager events to their corresponding handler methods
