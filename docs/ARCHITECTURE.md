@@ -121,8 +121,6 @@ Related constants:
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
 #### Testing & Mocking
-- **`mocks/mock_recorder.go`**: Mock implementation for testing
-- **`interfaces/interface_validation_test.go`**: Interface compliance tests
 - **`*_test.go`**: Comprehensive unit tests for all components
 
 ### **Hotkey Management** (`hotkeys/`)
@@ -169,7 +167,6 @@ Related constants:
     - **Wayland (GNOME)**: Uses `ydotool` → falls back to `wtype` if available
     - Automatic runtime fallback: if primary tool fails, tries alternative typing tool
   - `input_daemon.go`: Owns a `ydotoold` process inside Flatpak on wlroots/Hyprland, where the host daemon's socket is invisible to the sandbox; returns nil (→ clipboard fallback) when uinput is inaccessible
-  - `mock_outputter.go`: Mock implementation for testing
 
 ### **WebSocket API** (`websocket/`)
 

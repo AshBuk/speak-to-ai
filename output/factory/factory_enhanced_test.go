@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/AshBuk/dabri/v2/config"
-	"github.com/AshBuk/dabri/v2/output/interfaces"
-	"github.com/AshBuk/dabri/v2/output/outputters"
 )
 
 func TestOutputFactory_ErrorHandling(t *testing.T) {
@@ -453,32 +451,5 @@ func TestEnvironmentType_Validation(t *testing.T) {
 				t.Logf("Outputter created successfully: %T", outputter)
 			}
 		})
-	}
-}
-
-func TestOutputFactory_MockIntegration(t *testing.T) {
-	// Test integration with mock outputters
-	mockOutputter := outputters.NewMockOutputter()
-
-	// Test that mock implements the interface
-	var _ interfaces.Outputter = mockOutputter
-
-	// Test basic functionality
-	err := mockOutputter.CopyToClipboard("test text")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-
-	if mockOutputter.GetClipboardContent() != "test text" {
-		t.Errorf("expected clipboard content to be 'test text', got %s", mockOutputter.GetClipboardContent())
-	}
-
-	// Test error simulation
-	mockWithErrors := outputters.NewMockOutputterWithErrors()
-	mockWithErrors.SimulateClipboardUnavailable()
-
-	err = mockWithErrors.CopyToClipboard("test")
-	if err == nil {
-		t.Error("expected error when clipboard is unavailable")
 	}
 }
