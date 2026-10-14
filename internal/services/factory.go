@@ -77,7 +77,7 @@ func NewContainer(ctx context.Context, log logger.Logger, cfg *config.Config, cf
 	// Start the tray early so systray is initialized (no-op in mock)
 	trayManager.Start()
 	trayManager.UpdateSettings(cfg)
-	win := newWindow(cfg, log)
+	win := newWindow(ctx, cfg, log)
 	notifier := notify.NewNotificationManager("Dabri", cfg)
 
 	configSvc := NewConfigService(log, cfg, cfgFile)
@@ -155,7 +155,7 @@ func startInputDaemonIfNeeded(out outputInterfaces.Outputter, log logger.Logger)
 
 // newWindow creates the main window backend (no-op without a GUI backend).
 // Actions are wired later by wireUI.
-func newWindow(cfg *config.Config, log logger.Logger) window.Manager {
+func newWindow(ctx context.Context, cfg *config.Config, log logger.Logger) window.Manager {
 	hasTray := platform.HasStatusNotifierWatcher()
 	opts := window.Options{
 		HasTray:        hasTray,
@@ -177,7 +177,11 @@ func newWindow(cfg *config.Config, log logger.Logger) window.Manager {
 		// session bus; pick up a tray that registers shortly after startup.
 		go func() {
 			for range 30 {
-				time.Sleep(time.Second)
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(time.Second):
+				}
 				if platform.HasStatusNotifierWatcher() {
 					win.EnableTray()
 					return
