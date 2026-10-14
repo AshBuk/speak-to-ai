@@ -4,10 +4,15 @@
 package notify
 
 import (
-	"os/exec"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AshBuk/dabri/v2/config"
+	"github.com/AshBuk/dabri/v2/internal/constants"
 )
 
 // Helper function to create test config
@@ -15,6 +20,33 @@ func createTestConfig() *config.Config {
 	cfg := &config.Config{}
 	config.SetDefaultConfig(cfg)
 	return cfg
+}
+
+// installFakeNotifySend puts a notify-send stub alone on PATH, so tests never
+// reach the real desktop. Each run appends its argv, one per line.
+func installFakeNotifySend(t *testing.T, exitCode int) (argsFile string) {
+	t.Helper()
+	dir := t.TempDir()
+	argsFile = filepath.Join(dir, "args")
+	script := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' \"$@\" >> %q\nexit %d\n", argsFile, exitCode)
+	if err := os.WriteFile(filepath.Join(dir, "notify-send"), []byte(script), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	return argsFile
+}
+
+// recordedArgs returns every argv line recorded by the stub, nil if it never ran.
+func recordedArgs(t *testing.T, argsFile string) []string {
+	t.Helper()
+	data, err := os.ReadFile(argsFile)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
 }
 
 func TestNewNotificationManager(t *testing.T) {
@@ -30,294 +62,99 @@ func TestNewNotificationManager(t *testing.T) {
 	}
 }
 
-func TestNotificationManager_NotifyStartRecording(t *testing.T) {
+func TestShowNotification_PassesTextAfterOptionTerminator(t *testing.T) {
+	args := installFakeNotifySend(t, 0)
 	nm := NewNotificationManager("TestApp", createTestConfig())
-	// Mock notify-send command to avoid actual notifications during testing
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
 
-	err := nm.NotifyStartRecording()
-	// We expect this to either succeed or fail gracefully
-	// The actual notification may fail in CI environment
-	if err != nil {
-		t.Logf("NotifyStartRecording failed (expected in CI): %v", err)
+	// A summary that looks like a flag must not be parsed as one
+	if err := nm.ShowNotification("--urgency=critical", "body"); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"--app-name", "TestApp", "--icon", "dialog-information-symbolic", "--", "--urgency=critical", "body"}
+	if got := recordedArgs(t, args); !slices.Equal(got, want) {
+		t.Errorf("args:\n got  %q\n want %q", got, want)
 	}
 }
 
-func TestNotificationManager_NotifyStopRecording(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
+func TestWorkflowNotifications_FollowSetting(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		t.Run(fmt.Sprint("enabled=", enabled), func(t *testing.T) {
+			args := installFakeNotifySend(t, 0)
+			cfg := createTestConfig()
+			cfg.Notifications.EnableWorkflowNotifications = enabled
+			nm := NewNotificationManager("TestApp", cfg)
 
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	err := nm.NotifyStopRecording()
-
-	if err != nil {
-		t.Logf("NotifyStopRecording failed (expected in CI): %v", err)
-	}
-}
-
-func TestNotificationManager_NotifyTranscriptionComplete(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	err := nm.NotifyTranscriptionComplete()
-
-	if err != nil {
-		t.Logf("NotifyTranscriptionComplete failed (expected in CI): %v", err)
+			for _, notify := range []func() error{nm.NotifyStartRecording, nm.NotifyStopRecording, nm.NotifyTranscriptionComplete} {
+				if err := notify(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			titles := 0
+			for _, a := range recordedArgs(t, args) {
+				if a == "--" {
+					titles++
+				}
+			}
+			if want := map[bool]int{false: 0, true: 3}[enabled]; titles != want {
+				t.Errorf("sent %d notifications, want %d", titles, want)
+			}
+		})
 	}
 }
 
-func TestNotificationManager_NotifyError(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
+func TestNotifyTranscriptionComplete_BodyFollowsOutputMode(t *testing.T) {
+	for mode, body := range map[string]string{
+		config.OutputModeActiveWindow: constants.NotifyTranscriptionTypedMsg,
+		config.OutputModeClipboard:    constants.NotifyTranscriptionMsg,
+	} {
+		t.Run(mode, func(t *testing.T) {
+			args := installFakeNotifySend(t, 0)
+			cfg := createTestConfig()
+			cfg.Notifications.EnableWorkflowNotifications = true
+			cfg.Output.DefaultMode = mode
 
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	testError := "Test error message"
-	err := nm.NotifyError(testError)
-	if err != nil {
-		t.Logf("NotifyError failed (expected in CI): %v", err)
+			if err := NewNotificationManager("TestApp", cfg).NotifyTranscriptionComplete(); err != nil {
+				t.Fatal(err)
+			}
+			if got := recordedArgs(t, args); len(got) == 0 || got[len(got)-1] != body {
+				t.Errorf("body: got %q, want %q", got, body)
+			}
+		})
 	}
 }
 
-func TestNotificationManager_ShowNotification(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
+func TestSendNotification_Errors(t *testing.T) {
+	t.Run("command not allowed", func(t *testing.T) {
+		args := installFakeNotifySend(t, 0)
+		cfg := createTestConfig()
+		cfg.Security.AllowedCommands = []string{"xsel"}
 
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	summary := "Test Summary"
-	body := "Test Body"
-	err := nm.ShowNotification(summary, body)
-	if err != nil {
-		t.Logf("ShowNotification failed (expected in CI): %v", err)
-	}
+		err := NewNotificationManager("TestApp", cfg).NotifyError("boom")
+		if err == nil || err.Error() != "notify-send command not allowed" {
+			t.Errorf("got %v", err)
+		}
+		if got := recordedArgs(t, args); got != nil {
+			t.Errorf("disallowed command ran with %q", got)
+		}
+	})
+	t.Run("notify-send fails", func(t *testing.T) {
+		installFakeNotifySend(t, 1)
+		err := NewNotificationManager("TestApp", createTestConfig()).NotifyError("boom")
+		if err == nil || !strings.HasPrefix(err.Error(), "failed to send notification:") {
+			t.Errorf("got %v", err)
+		}
+	})
 }
 
 func TestNotificationManager_IsAvailable(t *testing.T) {
 	nm := NewNotificationManager("TestApp", createTestConfig())
 
-	result := nm.IsAvailable()
-	// Check if notify-send is available in PATH
-	expected := commandExists("notify-send")
-
-	if result != expected {
-		t.Errorf("Expected IsAvailable to return %v, got %v", expected, result)
+	installFakeNotifySend(t, 0)
+	if !nm.IsAvailable() {
+		t.Error("notify-send on PATH must be reported available")
 	}
-}
-
-func TestNotificationManager_SendNotification_ValidCommand(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-	// Test with valid parameters
-	err := nm.sendNotification("Test Summary", "Test Body", "dialog-information")
-	// In CI environment, this may fail due to no display
-	if err != nil {
-		t.Logf("sendNotification failed (expected in CI): %v", err)
-	}
-}
-
-func TestNotificationManager_SendNotification_EmptyParameters(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-	// Test with empty parameters
-	err := nm.sendNotification("", "", "")
-
-	// Should still work with empty parameters
-	if err != nil {
-		t.Logf("sendNotification with empty params failed (expected in CI): %v", err)
-	}
-}
-
-func TestNotificationManager_AppName(t *testing.T) {
-	tests := []struct {
-		name    string
-		appName string
-	}{
-		{
-			name:    "normal app name",
-			appName: "MyApp",
-		},
-		{
-			name:    "app name with spaces",
-			appName: "My App Name",
-		},
-		{
-			name:    "app name with special chars",
-			appName: "My-App_v1.0",
-		},
-		{
-			name:    "empty app name",
-			appName: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			nm := NewNotificationManager(tt.appName, createTestConfig())
-
-			if nm.appName != tt.appName {
-				t.Errorf("Expected appName %q, got %q", tt.appName, nm.appName)
-			}
-		})
-	}
-}
-
-func TestNotificationManager_NotificationTypes(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	// Test different notification types
-	tests := []struct {
-		name   string
-		method func() error
-	}{
-		{
-			name:   "start recording",
-			method: nm.NotifyStartRecording,
-		},
-		{
-			name:   "stop recording",
-			method: nm.NotifyStopRecording,
-		},
-		{
-			name:   "transcription complete",
-			method: nm.NotifyTranscriptionComplete,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.method()
-
-			// Log error but don't fail test in CI environment
-			if err != nil {
-				t.Logf("Notification method %s failed (expected in CI): %v", tt.name, err)
-			}
-		})
-	}
-}
-
-func TestNotificationManager_ErrorNotification(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	tests := []struct {
-		name     string
-		errorMsg string
-	}{
-		{
-			name:     "simple error",
-			errorMsg: "Simple error message",
-		},
-		{
-			name:     "error with special chars",
-			errorMsg: "Error: Failed to connect to server (timeout)",
-		},
-		{
-			name:     "empty error",
-			errorMsg: "",
-		},
-		{
-			name:     "long error message",
-			errorMsg: "This is a very long error message that might exceed normal notification limits and should still be handled properly by the notification system",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := nm.NotifyError(tt.errorMsg)
-
-			if err != nil {
-				t.Logf("NotifyError failed (expected in CI): %v", err)
-			}
-		})
-	}
-}
-
-func TestNotificationManager_ShowNotification_Variations(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
-
-	if !commandExists("notify-send") {
-		t.Skip("notify-send not available, skipping test")
-	}
-
-	tests := []struct {
-		name    string
-		summary string
-		body    string
-	}{
-		{
-			name:    "normal notification",
-			summary: "Test Summary",
-			body:    "Test Body",
-		},
-		{
-			name:    "empty summary",
-			summary: "",
-			body:    "Test Body",
-		},
-		{
-			name:    "empty body",
-			summary: "Test Summary",
-			body:    "",
-		},
-		{
-			name:    "both empty",
-			summary: "",
-			body:    "",
-		},
-		{
-			name:    "unicode characters",
-			summary: "🎤 Recording",
-			body:    "Voice recording started ✅",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := nm.ShowNotification(tt.summary, tt.body)
-
-			if err != nil {
-				t.Logf("ShowNotification failed (expected in CI): %v", err)
-			}
-		})
-	}
-}
-
-// Helper function to check if a command exists
-func commandExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
-}
-
-// Test helper function
-func TestCommandExists(t *testing.T) {
-	// Test with a command that should exist
-	if !commandExists("echo") {
-		t.Error("Expected 'echo' command to exist")
-	}
-
-	// Test with a command that should not exist
-	if commandExists("non-existent-command-12345") {
-		t.Error("Expected 'non-existent-command-12345' to not exist")
+	t.Setenv("PATH", t.TempDir())
+	if nm.IsAvailable() {
+		t.Error("notify-send missing from PATH must be reported unavailable")
 	}
 }
