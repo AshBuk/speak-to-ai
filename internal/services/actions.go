@@ -133,9 +133,7 @@ func (c *ServiceContainer) rebindHotkey(action string) error {
 }
 
 func (c *ServiceContainer) reloadHotkeys() error {
-	return c.Hotkeys.ReloadFromConfig(c.ToggleRecording, func() adapters.HotkeyConfig {
-		return hotkeyConfig(c.Config.GetConfig())
-	})
+	return c.Hotkeys.ReloadFromConfig(c.ToggleRecording, hotkeyConfig(c.Config.GetConfig()))
 }
 
 func (c *ServiceContainer) updateUISettings() {

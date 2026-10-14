@@ -41,22 +41,19 @@ func NewRuntimeContext(logger logger.Logger) *RuntimeContext {
 
 // Represents the main application and its services
 type App struct {
-	Services  *services.ServiceContainer // DI Pattern. Container for: Audio, UI, IO, Config, Hotkeys, TempFileManager
+	Services  *services.ServiceContainer // DI Pattern. Container for: Audio, UI, IO, Config, Hotkeys, TempFileManager; nil until Initialize
 	Runtime   *RuntimeContext            // Application lifecycle management (context, cancel, shutdown channel, logger)
 	ipcServer *ipc.Server                // Inter-process communication server for CLI commands
 }
 
 // NewApp Constructor - creates a new application instance
-// Initializes empty service container and runtime context
+// Initializes the runtime context; services are built by Initialize
 func NewApp(logger logger.Logger) *App {
-	return &App{
-		Services: services.NewServiceContainer(),
-		Runtime:  NewRuntimeContext(logger),
-	}
+	return &App{Runtime: NewRuntimeContext(logger)}
 }
 
 // Initialize all application services and dependencies
-// Multi-step initialization: Config → Services → Dependencies
+// Multi-step initialization: Config → Services
 func (a *App) Initialize(configFile string, debug bool) error {
 	a.Runtime.Logger.Info("Initializing application...")
 	config, err := a.initializeConfig(configFile, debug)
@@ -66,7 +63,6 @@ func (a *App) Initialize(configFile string, debug bool) error {
 	if err := a.initializeServices(config, configFile); err != nil {
 		return fmt.Errorf("failed to initialize services: %w", err)
 	}
-	a.setupServiceDependencies()
 	a.Runtime.Logger.Info("Application initialization complete")
 	return nil
 }
@@ -97,38 +93,18 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create services: %w", err)
 	}
-
-	// Replace empty container with fully initialized services
 	a.Services = serviceContainer
-	if err := a.setupHotkeyCallbacks(); err != nil {
-		a.Runtime.Logger.Warning("Failed to set up hotkey callbacks: %v", err)
-	}
 
-	a.Runtime.Logger.Info("Services initialized successfully")
-	return nil
-}
-
-// setupServiceDependencies is a no-op placeholder for future cross-service wiring
-// Note: All dependency injection is handled in services.NewContainer()
-func (a *App) setupServiceDependencies() {
-	// Wiring done in services.NewContainer()
-}
-
-// Connect hotkey manager events to their corresponding handler methods
-// Callback Pattern - registers event handlers (SRP: handlers.go implements the logic)
-func (a *App) setupHotkeyCallbacks() error {
-	if a.Services == nil || a.Services.Hotkeys == nil {
-		return fmt.Errorf("services not initialized")
-	}
-
-	// Register the shared user actions (services/actions.go)
+	// Hotkeys trigger the shared user actions (services/actions.go)
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
 		a.Services.ToggleRecording,   // Start/stop recording (shared toggle)
 		a.Services.UI.ShowConfigFile, // Display configuration
 		a.Services.ResetToDefaults,   // Reset settings and reload hotkeys
 	); err != nil {
-		return fmt.Errorf("failed to set up hotkey callbacks: %w", err)
+		a.Runtime.Logger.Warning("Failed to set up hotkey callbacks: %v", err)
 	}
+
+	a.Runtime.Logger.Info("Services initialized successfully")
 	return nil
 }
 
@@ -142,17 +118,11 @@ func (a *App) startServices() error {
 	}
 
 	a.Runtime.Logger.Info("Starting application services...")
-
-	if a.Services.IO != nil {
-		if err := a.Services.IO.StartWebSocketServer(); err != nil {
-			a.Runtime.Logger.Warning("WebSocket server not started: %v", err)
-		}
+	if err := a.Services.IO.StartWebSocketServer(); err != nil {
+		a.Runtime.Logger.Warning("WebSocket server not started: %v", err)
 	}
-
-	if a.Services.Hotkeys != nil {
-		if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
-			a.Runtime.Logger.Warning("Hotkeys not registered: %v", err)
-		}
+	if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
+		a.Runtime.Logger.Warning("Hotkeys not registered: %v", err)
 	}
 
 	a.Runtime.Logger.Info("Application services started successfully")
@@ -173,19 +143,13 @@ func (a *App) RunAndWait() error {
 	// The window manager owns the main loop: the GTK backend runs gtk.Main on
 	// this (main) thread, the no-op backend blocks until Quit. A watcher
 	// goroutine stops the loop on an OS signal or context cancellation.
-	if a.Services != nil && a.Services.Window != nil {
-		go func() {
-			a.waitForShutdown()
-			a.Services.Window.Quit()
-		}()
-		if err := a.Services.Window.Run(); err != nil {
-			a.Runtime.Logger.Error("UI loop error: %v", err)
-		}
-		return a.Shutdown()
+	go func() {
+		a.waitForShutdown()
+		a.Services.Window.Quit()
+	}()
+	if err := a.Services.Window.Run(); err != nil {
+		a.Runtime.Logger.Error("UI loop error: %v", err)
 	}
-
-	// Fallback when no window manager is wired (e.g. a partially built App).
-	a.waitForShutdown()
 	return a.Shutdown()
 }
 
@@ -215,38 +179,5 @@ func (a *App) Shutdown() error {
 		}
 	}
 	a.Runtime.Logger.Info("Application shutdown complete")
-	return nil
-}
-
-// Getter methods - provide clean accessors for services
-// Return interfaces - Dependency Inversion Principle (DIP)
-func (a *App) Audio() services.AudioServiceInterface {
-	if a.Services != nil {
-		return a.Services.Audio
-	}
-	return nil
-}
-func (a *App) UI() services.UIServiceInterface {
-	if a.Services != nil {
-		return a.Services.UI
-	}
-	return nil
-}
-func (a *App) IO() services.IOServiceInterface {
-	if a.Services != nil {
-		return a.Services.IO
-	}
-	return nil
-}
-func (a *App) Config() services.ConfigServiceInterface {
-	if a.Services != nil {
-		return a.Services.Config
-	}
-	return nil
-}
-func (a *App) Hotkeys() services.HotkeyServiceInterface {
-	if a.Services != nil {
-		return a.Services.Hotkeys
-	}
 	return nil
 }

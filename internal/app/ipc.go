@@ -85,11 +85,11 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 		}
 		return ipc.Response{}, err
 	}
-	transcript, err := a.waitForTranscription(ipcTranscriptionTimeout)
+	transcript, err := a.Services.IO.WaitForTranscription(ipcTranscriptionTimeout)
 	if err != nil {
 		return ipc.NewSuccessResponse("recording stopped", map[string]any{
 			"recording":  false,
-			"transcript": a.getLastTranscript(),
+			"transcript": a.Services.Audio.GetLastTranscript(),
 			"warning":    err.Error(),
 		}), nil
 	}
@@ -102,9 +102,6 @@ func (a *App) ipcHandleStopRecording(ipc.Request) (ipc.Response, error) {
 // ipcHandleToggleRecording Command handler - toggles recording state
 // Same decision as ServiceContainer.ToggleRecording, but stop waits for the transcript
 func (a *App) ipcHandleToggleRecording(ipc.Request) (ipc.Response, error) {
-	if a.Services == nil || a.Services.Audio == nil {
-		return ipc.Response{}, fmt.Errorf("audio service not available")
-	}
 	if a.Services.Audio.IsRecording() {
 		return a.ipcHandleStopRecording(ipc.Request{})
 	}
@@ -114,35 +111,24 @@ func (a *App) ipcHandleToggleRecording(ipc.Request) (ipc.Response, error) {
 // ipcHandleStatus Command handler - returns current state and configuration
 // Non-blocking: returns immediately without waiting for transcription
 func (a *App) ipcHandleStatus(ipc.Request) (ipc.Response, error) {
-	recording := false
-	if a.Services != nil && a.Services.Audio != nil {
-		recording = a.Services.Audio.IsRecording()
-	}
-
+	cfg := a.Services.Config.GetConfig()
 	status := map[string]any{
-		"recording": recording,
-	}
-
-	// Add config if available
-	if a.Services != nil && a.Services.Config != nil {
-		cfg := a.Services.Config.GetConfig()
-		if cfg != nil {
-			status["config"] = map[string]any{
-				"model":        cfg.General.WhisperModel,
-				"language":     cfg.General.Language,
-				"output_mode":  cfg.Output.DefaultMode,
-				"audio_method": cfg.Audio.RecordingMethod,
-			}
-			status["hotkeys"] = map[string]any{
-				"start_stop":  cfg.Hotkeys.StartRecording,
-				"show_config": cfg.Hotkeys.ShowConfig,
-			}
-			status["websocket"] = map[string]any{
-				"enabled": cfg.WebServer.Enabled,
-				"host":    cfg.WebServer.Host,
-				"port":    cfg.WebServer.Port,
-			}
-		}
+		"recording": a.Services.Audio.IsRecording(),
+		"config": map[string]any{
+			"model":        cfg.General.WhisperModel,
+			"language":     cfg.General.Language,
+			"output_mode":  cfg.Output.DefaultMode,
+			"audio_method": cfg.Audio.RecordingMethod,
+		},
+		"hotkeys": map[string]any{
+			"start_stop":  cfg.Hotkeys.StartRecording,
+			"show_config": cfg.Hotkeys.ShowConfig,
+		},
+		"websocket": map[string]any{
+			"enabled": cfg.WebServer.Enabled,
+			"host":    cfg.WebServer.Host,
+			"port":    cfg.WebServer.Port,
+		},
 	}
 	return ipc.NewSuccessResponse("status", status), nil
 }
@@ -151,15 +137,12 @@ func (a *App) ipcHandleStatus(ipc.Request) (ipc.Response, error) {
 // Non-blocking: returns cached transcript without waiting
 func (a *App) ipcHandleLastTranscript(ipc.Request) (ipc.Response, error) {
 	return ipc.NewSuccessResponse("last transcript", map[string]any{
-		"transcript": a.getLastTranscript(),
+		"transcript": a.Services.Audio.GetLastTranscript(),
 	}), nil
 }
 
 // ipcHandleSetModel Command handler - switches whisper model and persists config
 func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
-	if a.Services == nil || a.Services.Audio == nil || a.Services.Config == nil {
-		return ipc.Response{}, fmt.Errorf("services not available")
-	}
 	modelID := req.Params["model"]
 	if modelID == "" {
 		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
@@ -174,9 +157,6 @@ func (a *App) ipcHandleSetModel(req ipc.Request) (ipc.Response, error) {
 
 // ipcHandleDeleteModel Command handler - deletes a downloaded whisper model
 func (a *App) ipcHandleDeleteModel(req ipc.Request) (ipc.Response, error) {
-	if a.Services == nil || a.Services.Audio == nil {
-		return ipc.Response{}, fmt.Errorf("services not available")
-	}
 	modelID := req.Params["model"]
 	if modelID == "" {
 		return ipc.Response{}, fmt.Errorf("missing required parameter: model")
@@ -187,22 +167,4 @@ func (a *App) ipcHandleDeleteModel(req ipc.Request) (ipc.Response, error) {
 	return ipc.NewSuccessResponse("model deleted", map[string]any{
 		"model": modelID,
 	}), nil
-}
-
-// waitForTranscription Blocks until transcription ready or timeout expires
-// Used by ipcHandleStopRecording to provide synchronous CLI response
-func (a *App) waitForTranscription(timeout time.Duration) (string, error) {
-	if a.Services == nil || a.Services.IO == nil {
-		return "", fmt.Errorf("io service not available")
-	}
-	return a.Services.IO.WaitForTranscription(timeout)
-}
-
-// getLastTranscript Returns cached transcript without waiting
-// Used by status/last-transcript commands for immediate response
-func (a *App) getLastTranscript() string {
-	if a.Services == nil || a.Services.Audio == nil {
-		return ""
-	}
-	return a.Services.Audio.GetLastTranscript()
 }

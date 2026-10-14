@@ -12,31 +12,8 @@ import (
 
 // TestServiceContainer tests the ServiceContainer basic functionality
 func TestServiceContainer(t *testing.T) {
-	t.Run("NewServiceContainer", func(t *testing.T) {
-		container := NewServiceContainer()
-		if container == nil {
-			t.Fatal("NewServiceContainer returned nil")
-		}
-
-		if container.Audio != nil {
-			t.Error("Audio service should be nil initially")
-		}
-		if container.UI != nil {
-			t.Error("UI service should be nil initially")
-		}
-		if container.IO != nil {
-			t.Error("IO service should be nil initially")
-		}
-		if container.Config != nil {
-			t.Error("Config service should be nil initially")
-		}
-		if container.Hotkeys != nil {
-			t.Error("Hotkeys service should be nil initially")
-		}
-	})
-
 	t.Run("Shutdown_EmptyContainer", func(t *testing.T) {
-		container := NewServiceContainer()
+		container := &ServiceContainer{}
 		err := container.Shutdown()
 		if err != nil {
 			t.Errorf("Shutdown of empty container should not error, got: %v", err)
@@ -46,7 +23,7 @@ func TestServiceContainer(t *testing.T) {
 
 func TestServiceContainer_Shutdown(t *testing.T) {
 	t.Run("Shutdown_AllServicesSuccess", func(t *testing.T) {
-		container := NewServiceContainer()
+		container := &ServiceContainer{}
 		// Create mock services
 		audioMock := &mocks.MockAudioService{}
 		uiMock := &mocks.MockUIService{}
@@ -83,7 +60,7 @@ func TestServiceContainer_Shutdown(t *testing.T) {
 	})
 
 	t.Run("Shutdown_ServiceError", func(t *testing.T) {
-		container := NewServiceContainer()
+		container := &ServiceContainer{}
 		expectedError := errors.New("shutdown failed")
 		audioMock := &mocks.MockAudioService{}
 		audioMock.SetShutdownError(expectedError)

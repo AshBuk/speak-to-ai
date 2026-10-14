@@ -99,11 +99,10 @@ func (hs *HotkeyService) Shutdown() error {
 }
 
 // Apply new hotkey bindings without restarting the service
-func (hs *HotkeyService) ReloadFromConfig(toggleRecording func() error, configProvider func() adapters.HotkeyConfig) error {
+func (hs *HotkeyService) ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
 	}
-	cfg := configProvider()
 	// ensure the toggle is set (in case of provider swap)
 	hs.hotkeyManager.RegisterToggle(toggleRecording)
 	return hs.hotkeyManager.ReloadConfig(cfg)

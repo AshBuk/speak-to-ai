@@ -134,7 +134,7 @@ type HotkeyServiceInterface interface {
 	UnregisterHotkeys() error
 
 	// ReloadFromConfig applies new hotkey bindings without restarting
-	ReloadFromConfig(toggleRecording func() error, configProvider func() adapters.HotkeyConfig) error
+	ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error
 
 	// CaptureOnce captures a single keypress for hotkey rebinding
 	CaptureOnce(timeoutMs int) (string, error)
@@ -157,11 +157,6 @@ type ServiceContainer struct {
 	Window          window.Manager
 	TempFileManager *processing.TempFileManager
 	InputDaemon     *outputters.YdotoolDaemon
-}
-
-// Create a new service container with all services
-func NewServiceContainer() *ServiceContainer {
-	return &ServiceContainer{}
 }
 
 // Gracefully shut down all services

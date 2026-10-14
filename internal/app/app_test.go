@@ -62,52 +62,14 @@ func TestApp_NewApp(t *testing.T) {
 	if app == nil {
 		t.Fatal("NewApp returned nil")
 	}
-	if app.Services == nil {
-		t.Error("Services container not initialized")
+	if app.Services != nil {
+		t.Error("Services must stay nil until Initialize")
 	}
 	if app.Runtime == nil {
 		t.Error("Runtime context not initialized")
 	}
 	if app.Runtime.Logger != mockLogger {
 		t.Error("Runtime logger not set correctly")
-	}
-}
-
-func TestApp_ServiceAccessors(t *testing.T) {
-	mockLogger := testutils.NewMockLogger()
-	app := NewApp(mockLogger)
-	// Test accessor methods with nil services
-	if app.Audio() != nil {
-		t.Error("Audio() should return nil when service is not set")
-	}
-	if app.UI() != nil {
-		t.Error("UI() should return nil when service is not set")
-	}
-	if app.IO() != nil {
-		t.Error("IO() should return nil when service is not set")
-	}
-	if app.Config() != nil {
-		t.Error("Config() should return nil when service is not set")
-	}
-	if app.Hotkeys() != nil {
-		t.Error("Hotkeys() should return nil when service is not set")
-	}
-	// Test accessor methods with nil Services container
-	app.Services = nil
-	if app.Audio() != nil {
-		t.Error("Audio() should return nil when Services container is nil")
-	}
-	if app.UI() != nil {
-		t.Error("UI() should return nil when Services container is nil")
-	}
-	if app.IO() != nil {
-		t.Error("IO() should return nil when Services container is nil")
-	}
-	if app.Config() != nil {
-		t.Error("Config() should return nil when Services container is nil")
-	}
-	if app.Hotkeys() != nil {
-		t.Error("Hotkeys() should return nil when Services container is nil")
 	}
 }
 
@@ -126,17 +88,6 @@ func TestApp_Shutdown_NilServices(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Error("Context should be cancelled after Shutdown()")
 	}
-}
-
-// Mock services for testing
-type mockServiceWithShutdown struct {
-	shutdownCalled bool
-	shutdownError  error
-}
-
-func (m *mockServiceWithShutdown) Shutdown() error {
-	m.shutdownCalled = true
-	return m.shutdownError
 }
 
 func TestApp_Integration_Shutdown_WithServices(t *testing.T) {

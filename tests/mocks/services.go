@@ -183,8 +183,8 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 }
 func (m *MockHotkeyService) RegisterHotkeys() error   { return nil }
 func (m *MockHotkeyService) UnregisterHotkeys() error { return nil }
-func (m *MockHotkeyService) ReloadFromConfig(toggleRecording func() error, provider func() adapters.HotkeyConfig) error {
-	m.Log.add("Hotkeys.Reload:" + provider().GetStartRecordingHotkey())
+func (m *MockHotkeyService) ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error {
+	m.Log.add("Hotkeys.Reload:" + cfg.GetStartRecordingHotkey())
 	return nil
 }
 
