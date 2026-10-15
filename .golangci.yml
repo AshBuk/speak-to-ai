@@ -1,16 +1,8 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
   tests: false
-  skip-dirs:
-    - build
-    - build/whisper.cpp
-
-issues:
-  exclude:
-    - "error obtaining VCS status"
-    - "Use -buildvcs=false to disable VCS stamping"
 
 linters:
   enable:
@@ -23,7 +15,9 @@ linters:
     - unused
     - unparam
     - gocyclo
-
-linters-settings:
-  gocyclo:
-    min-complexity: 15
+  settings:
+    gocyclo:
+      min-complexity: 15
+  exclusions:
+    paths:
+      - build
