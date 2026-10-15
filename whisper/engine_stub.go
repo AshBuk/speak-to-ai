@@ -18,7 +18,7 @@ import (
 type WhisperEngine struct{}
 
 // NewWhisperEngine returns an error indicating that CGO is required
-func NewWhisperEngine(config *config.Config, modelPath string, _ ...logger.Logger) (*WhisperEngine, error) {
+func NewWhisperEngine(config func() *config.Config, modelPath string, _ ...logger.Logger) (*WhisperEngine, error) {
 	return nil, errors.New("whisper engine is unavailable: built without cgo")
 }
 

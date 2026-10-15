@@ -5,16 +5,21 @@ package services
 
 import (
 	"fmt"
+	"sync"
+	"sync/atomic"
 
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/constants"
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Manages persistent configuration state and validation
+// Manages persistent configuration state and validation.
+// Every change publishes a new copy, so a *config.Config returned by
+// GetConfig is never mutated and is safe to read from any goroutine.
 type ConfigService struct {
 	logger     logger.Logger
-	config     *config.Config
+	current    atomic.Pointer[config.Config]
+	mu         sync.Mutex // Serializes updates: copy, save, publish
 	configFile string
 	uiService  UIServiceInterface
 }
@@ -25,12 +30,13 @@ func NewConfigService(
 	config *config.Config,
 	configFile string,
 ) *ConfigService {
-	return &ConfigService{
+	cs := &ConfigService{
 		logger:     logger,
-		config:     config,
 		configFile: configFile,
 		uiService:  nil, // Will be set later via dependency injection
 	}
+	cs.current.Store(config)
+	return cs
 }
 
 // Wire UI service to enable user feedback after config changes
@@ -40,22 +46,31 @@ func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
 
 // Persist current configuration state to disk
 func (cs *ConfigService) SaveConfig() error {
+	return cs.update(func(*config.Config) {})
+}
+
+// update applies fn to a copy of the current config, saves the copy and
+// publishes it only when the save succeeds.
+func (cs *ConfigService) update(fn func(*config.Config)) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	next := *cs.current.Load()
+	fn(&next)
 	cs.logger.Info("Saving configuration to: %s", cs.configFile)
 	if cs.configFile == "" {
 		return fmt.Errorf("no config file path set")
 	}
-	return config.SaveConfig(cs.configFile, cs.config)
+	if err := config.SaveConfig(cs.configFile, &next); err != nil {
+		return err
+	}
+	cs.current.Store(&next)
+	return nil
 }
 
 // Restore factory defaults and notify user of successful reset
 func (cs *ConfigService) ResetToDefaults() error {
 	cs.logger.Info("Resetting configuration to defaults...")
-
-	// Reset existing config in-place to keep pointer stable across app
-	config.SetDefaultConfig(cs.config)
-
-	// Save to file immediately
-	if err := cs.SaveConfig(); err != nil {
+	if err := cs.update(config.SetDefaultConfig); err != nil {
 		return fmt.Errorf("failed to save default config: %w", err)
 	}
 	cs.logger.Info("Configuration reset to defaults successfully")
@@ -63,58 +78,47 @@ func (cs *ConfigService) ResetToDefaults() error {
 	// Show success notification via UI service and refresh UI
 	if cs.uiService != nil {
 		cs.uiService.ShowNotification(constants.NotifyConfigReset, constants.NotifyConfigResetSuccess)
-		cs.uiService.UpdateSettings(cs.config)
+		cs.uiService.UpdateSettings(cs.GetConfig())
 	}
 	return nil
 }
 
 // Provide read-only access to current configuration
 func (cs *ConfigService) GetConfig() *config.Config {
-	return cs.config
+	return cs.current.Load()
 }
 
-// Change whisper model setting with rollback on save failure
+// Change whisper model setting; a failed save keeps the old value
 func (cs *ConfigService) UpdateWhisperModel(modelID string) error {
 	cs.logger.Info("Updating whisper model to: %s", modelID)
-	if cs.config.General.WhisperModel == modelID {
+	if cs.GetConfig().General.WhisperModel == modelID {
 		return nil
 	}
-	old := cs.config.General.WhisperModel
-	cs.config.General.WhisperModel = modelID
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.General.WhisperModel = old
+	if err := cs.update(func(c *config.Config) { c.General.WhisperModel = modelID }); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 	return nil
 }
 
-// Change whisper language setting with rollback on save failure
+// Change whisper language setting; a failed save keeps the old value
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)
-	if cs.config.General.Language == language {
+	if cs.GetConfig().General.Language == language {
 		return nil
 	}
-	old := cs.config.General.Language
-	cs.config.General.Language = language
-
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.General.Language = old
+	if err := cs.update(func(c *config.Config) { c.General.Language = language }); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 	return nil
 }
 
-// Switch between clipboard and typing output with rollback protection
+// Switch between clipboard and typing output; a failed save keeps the old value
 func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	cs.logger.Info("Updating output mode to: %s", mode)
-	if cs.config.Output.DefaultMode == mode {
+	if cs.GetConfig().Output.DefaultMode == mode {
 		return nil
 	}
-	old := cs.config.Output.DefaultMode
-	cs.config.Output.DefaultMode = mode
-
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.Output.DefaultMode = old
+	if err := cs.update(func(c *config.Config) { c.Output.DefaultMode = mode }); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 	return nil
@@ -123,8 +127,9 @@ func (cs *ConfigService) UpdateOutputMode(mode string) error {
 // Enable/disable desktop notifications for workflow events
 func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.logger.Info("Toggling workflow notifications")
-	cs.config.Notifications.EnableWorkflowNotifications = !cs.config.Notifications.EnableWorkflowNotifications
-	return cs.SaveConfig()
+	return cs.update(func(c *config.Config) {
+		c.Notifications.EnableWorkflowNotifications = !c.Notifications.EnableWorkflowNotifications
+	})
 }
 
 // Switch audio backend (arecord/ffmpeg) with validation and persistence
@@ -133,53 +138,35 @@ func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	if method != "arecord" && method != "ffmpeg" {
 		return fmt.Errorf("invalid recording method: %s", method)
 	}
-	if cs.config.Audio.RecordingMethod == method {
+	if cs.GetConfig().Audio.RecordingMethod == method {
 		return nil
 	}
-	old := cs.config.Audio.RecordingMethod
-	cs.config.Audio.RecordingMethod = method
-
-	if err := cs.SaveConfig(); err != nil {
-		cs.config.Audio.RecordingMethod = old
+	if err := cs.update(func(c *config.Config) { c.Audio.RecordingMethod = method }); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 	return nil
 }
 
-// Rebind hotkey combinations with validation and rollback protection
+// Rebind hotkey combinations; a failed save keeps the old bindings
 func (cs *ConfigService) UpdateHotkey(action, combo string) error {
-	if cs == nil || cs.config == nil {
-		return fmt.Errorf("config service not available")
-	}
-	oldStart := cs.config.Hotkeys.StartRecording
-	oldStop := cs.config.Hotkeys.StopRecording
-	oldShow := cs.config.Hotkeys.ShowConfig
-	oldReset := cs.config.Hotkeys.ResetToDefaults
-
+	var set func(c *config.Config)
 	switch action {
 	case "start_recording", "stop_recording":
-		cs.config.Hotkeys.StartRecording = combo
-		cs.config.Hotkeys.StopRecording = combo
+		set = func(c *config.Config) { c.Hotkeys.StartRecording, c.Hotkeys.StopRecording = combo, combo }
 	case "show_config":
-		cs.config.Hotkeys.ShowConfig = combo
+		set = func(c *config.Config) { c.Hotkeys.ShowConfig = combo }
 	case "reset_to_defaults":
-		cs.config.Hotkeys.ResetToDefaults = combo
+		set = func(c *config.Config) { c.Hotkeys.ResetToDefaults = combo }
 	default:
 		return fmt.Errorf("unknown hotkey action: %s", action)
 	}
-
-	if err := cs.SaveConfig(); err != nil {
-		// rollback
-		cs.config.Hotkeys.StartRecording = oldStart
-		cs.config.Hotkeys.StopRecording = oldStop
-		cs.config.Hotkeys.ShowConfig = oldShow
-		cs.config.Hotkeys.ResetToDefaults = oldReset
+	if err := cs.update(set); err != nil {
 		return fmt.Errorf("failed to save hotkey: %w", err)
 	}
 
 	// Refresh UI display
 	if cs.uiService != nil {
-		cs.uiService.UpdateSettings(cs.config)
+		cs.uiService.UpdateSettings(cs.GetConfig())
 	}
 	return nil
 }

@@ -23,7 +23,7 @@ import (
 // Provides an interface for interacting with the whisper.cpp model.
 // It encapsulates model loading, context management, and the transcription process
 type WhisperEngine struct {
-	config    *config.Config
+	config    func() *config.Config // Current config; language changes apply live
 	model     whisper.Model
 	modelPath string
 	logger    logger.Logger
@@ -36,12 +36,12 @@ func (w *WhisperEngine) GetModel() interfaces.WhisperModel {
 
 // Return the engine's configuration
 func (w *WhisperEngine) GetConfig() *config.Config {
-	return w.config
+	return w.config()
 }
 
 // Initialize and load a new Whisper model from the given path.
 // Return an error if the model file is not found or fails to load
-func NewWhisperEngine(config *config.Config, modelPath string, loggers ...logger.Logger) (*WhisperEngine, error) {
+func NewWhisperEngine(config func() *config.Config, modelPath string, loggers ...logger.Logger) (*WhisperEngine, error) {
 	if !utils.IsValidFile(modelPath) {
 		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
@@ -108,7 +108,7 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 		return "", fmt.Errorf("failed to create whisper context: %w", err)
 	}
 	// Set the target language for transcription if specified in the config
-	if lang := w.config.General.Language; lang != "" {
+	if lang := w.config().General.Language; lang != "" {
 		if err := context.SetLanguage(lang); err != nil {
 			return "", fmt.Errorf("failed to set language: %w", err)
 		}

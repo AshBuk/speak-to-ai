@@ -23,7 +23,7 @@ func (r *fakeRecorder) GetAudioLevel() float64                              { re
 
 func TestAudioService_ClearSessionKeepsActiveRecording(t *testing.T) {
 	rec := &fakeRecorder{}
-	as := NewAudioService(testutils.NewMockLogger(), &config.Config{}, rec, nil, nil, nil)
+	as := NewAudioService(testutils.NewMockLogger(), testutils.StaticConfig(&config.Config{}), rec, nil, nil, nil)
 	as.isRecording = true
 
 	as.ClearSession()
@@ -42,7 +42,7 @@ func TestAudioService_ClearSessionKeepsActiveRecording(t *testing.T) {
 }
 
 func TestAudioService_ClearSessionConcurrentWithReads(t *testing.T) {
-	as := NewAudioService(testutils.NewMockLogger(), &config.Config{}, &fakeRecorder{}, nil, nil, nil)
+	as := NewAudioService(testutils.NewMockLogger(), testutils.StaticConfig(&config.Config{}), &fakeRecorder{}, nil, nil, nil)
 	var wg sync.WaitGroup
 	for range 10 {
 		wg.Go(as.ClearSession)

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/dabri/v2/config"
+	"github.com/AshBuk/dabri/v2/internal/testutils"
 	"github.com/AshBuk/dabri/v2/whisper"
 )
 
@@ -83,7 +84,7 @@ func TestModelManagement(t *testing.T) {
 		config.SetDefaultConfig(cfg)
 
 		// Test ModelManager's bundled model resolution
-		modelManager := whisper.NewModelManager(cfg)
+		modelManager := whisper.NewModelManager(testutils.StaticConfig(cfg))
 
 		// This should always return a path (even if file doesn't exist in dev)
 		// A short deadline keeps a missing model from starting a full download

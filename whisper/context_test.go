@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AshBuk/dabri/v2/config"
+	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
 
 // TestTranscribeWithContextCancellation verifies context cancellation works
@@ -21,7 +22,7 @@ func TestTranscribeWithContextCancellation(t *testing.T) {
 
 	// Use non-existent model to avoid long transcription
 	engine := &WhisperEngine{
-		config:    cfg,
+		config:    testutils.StaticConfig(cfg),
 		modelPath: "/nonexistent/model.bin",
 	}
 	// Create context with immediate cancellation
@@ -55,7 +56,7 @@ func TestTranscribeWithContextTimeout(t *testing.T) {
 	config.SetDefaultConfig(cfg)
 
 	engine := &WhisperEngine{
-		config:    cfg,
+		config:    testutils.StaticConfig(cfg),
 		modelPath: "/nonexistent/model.bin",
 	}
 
