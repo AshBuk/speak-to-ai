@@ -20,7 +20,7 @@ import (
 type IOService struct {
 	logger          logger.Logger
 	config          func() *config.Config
-	outputManager   outputInterfaces.Outputter
+	outputManager   outputInterfaces.Outputter // Guarded by mu: mode switches swap it
 	webSocketServer *websocket.WebSocketServer
 	// Dependencies
 	ui  UIServiceInterface
@@ -102,25 +102,26 @@ func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error
 
 // Route text to configured output method with fallback strategy
 func (ios *IOService) OutputText(text string) error {
-	if ios.outputManager == nil {
+	out := ios.outputter()
+	if out == nil {
 		return fmt.Errorf("output manager not available")
 	}
 	ios.logger.Info("Outputting text: %s", text)
 	mode := ios.config().Output.DefaultMode
 	switch mode {
 	case "clipboard":
-		if err := ios.outputManager.CopyToClipboard(text); err != nil {
+		if err := out.CopyToClipboard(text); err != nil {
 			return ios.fallbackToTyping(text, err)
 		}
 		ios.logger.Debug("Successfully copied text to clipboard")
 	case "active_window":
-		if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
+		if err := out.TypeToActiveWindow(text); err != nil {
 			return ios.fallbackToClipboard(text, err)
 		}
 		ios.logger.Debug("Successfully typed text to active window")
 	default:
 		ios.logger.Warning("Unknown output mode '%s', using typing with clipboard fallback", mode)
-		if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
+		if err := out.TypeToActiveWindow(text); err != nil {
 			return ios.fallbackToClipboard(text, err)
 		}
 	}
@@ -147,7 +148,7 @@ func (ios *IOService) SetOutputMethod(method string) error {
 	if err != nil {
 		return fmt.Errorf("failed to reinitialize output manager: %w", err)
 	}
-	ios.outputManager = out
+	ios.setOutputter(out)
 	// Notify UI to refresh settings display
 	if ios.ui != nil {
 		ios.ui.UpdateSettings(ios.config())
@@ -179,10 +180,25 @@ func (ios *IOService) StopWebSocketServer() error {
 
 // Report active clipboard/typing tool implementations for debugging
 func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
-	if ios.outputManager == nil {
+	out := ios.outputter()
+	if out == nil {
 		return "unknown", "unknown"
 	}
-	return ios.outputManager.GetToolNames()
+	return out.GetToolNames()
+}
+
+// outputter returns the current outputter
+func (ios *IOService) outputter() outputInterfaces.Outputter {
+	ios.mu.Lock()
+	defer ios.mu.Unlock()
+	return ios.outputManager
+}
+
+// setOutputter swaps the outputter while transcriptions may be using it
+func (ios *IOService) setOutputter(out outputInterfaces.Outputter) {
+	ios.mu.Lock()
+	ios.outputManager = out
+	ios.mu.Unlock()
 }
 
 // Ensure all connections are closed before termination
@@ -215,7 +231,7 @@ func (ios *IOService) fallbackToTyping(text string, originalErr error) error {
 	if err := ios.switchOutputMode(config.OutputModeActiveWindow, "clipboard failed"); err != nil {
 		return fmt.Errorf("failed to switch output mode: %w", err)
 	}
-	if err := ios.outputManager.TypeToActiveWindow(text); err != nil {
+	if err := ios.outputter().TypeToActiveWindow(text); err != nil {
 		return fmt.Errorf("both clipboard and typing failed - clipboard: %w, typing: %v", originalErr, err)
 	}
 	return nil
@@ -227,7 +243,7 @@ func (ios *IOService) fallbackToClipboard(text string, originalErr error) error 
 	if err := ios.switchOutputMode(config.OutputModeClipboard, "typing failed"); err != nil {
 		return fmt.Errorf("failed to switch output mode: %w", err)
 	}
-	if err := ios.outputManager.CopyToClipboard(text); err != nil {
+	if err := ios.outputter().CopyToClipboard(text); err != nil {
 		return fmt.Errorf("both typing and clipboard failed - typing: %w, clipboard: %v", originalErr, err)
 	}
 	ios.logger.Debug("Successfully copied text to clipboard (after switch)")
@@ -252,7 +268,7 @@ func (ios *IOService) switchOutputMode(mode string, reason string) error {
 		ios.logger.Error("Failed to reinitialize output manager after mode switch: %v", err)
 		return fmt.Errorf("failed to reinitialize output manager after mode switch: %w", err)
 	}
-	ios.outputManager = out
+	ios.setOutputter(out)
 	// Notify user
 	if ios.ui != nil {
 		msg := fmt.Sprintf("Switched to %s due to %s", mode, reason)
