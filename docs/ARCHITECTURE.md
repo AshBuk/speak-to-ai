@@ -120,7 +120,7 @@ Related constants:
 #### Processing (`processing/`)
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
-#### Testing & Mocking
+#### Testing
 - **`*_test.go`**: Comprehensive unit tests for all components
 
 ### **Hotkey Management** (`hotkeys/`)
@@ -238,17 +238,15 @@ Distribution-specific packaging scripts and configurations:
 
 #### Integration Tests (`tests/integration/`)
 - **`integration_test.go`**: Main integration test suite
-- **`end_to_end_test.go`**: Full workflow testing
 - **`audio_integration_test.go`**: Audio system integration
-- **`platform_integration_test.go`**: Platform-specific testing
-- **`goroutine_lifecycle_test.go`**: Goroutine leak detection and graceful shutdown
+- **`goroutine_lifecycle_test.go`**: App lifecycle from a temp config, goroutine leak detection and graceful shutdown
 - **`notification_integration_test.go`**: Desktop notification system integration
 
 #### Test Utilities
 - **`internal/testutils/mock_logger.go`**: Shared mock logger implementation
-- **`tests/mocks/`**: Shared service mocks for integration-style tests
+- **`tests/mocks/`**: Shared service mocks; they record calls in one ordered log so tests can check cross-service sequencing
 - **Build tags**: Tests use `-tags=integration` for selective execution
 
 ---
 
-*This architecture documentation is maintained alongside the codebase. Last updated: 2026-07-02*
+*This architecture documentation is maintained alongside the codebase. Last updated: 2026-10-15*
