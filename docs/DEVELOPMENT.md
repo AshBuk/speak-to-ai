@@ -95,7 +95,7 @@ GitHub Actions handle complex builds, releases, and distribution:
 
 | Module | Test Coverage | Test Files | Integration Tests |
 |--------|---------------|------------|-------------------|
-| **audio** | Comprehensive | `factory/`, `recorders/`, `interfaces/` | Audio devices, recording |
+| **audio** | Comprehensive | `factory/`, `recorders/`, `processing/` | Audio devices, recording |
 | **output** | Comprehensive | `factory/`, `outputters/` | Clipboard, typing tools |
 | **hotkeys** | Comprehensive | `manager/`, `providers/`, `adapters/` | D-Bus, evdev fallback providers |
 | **config** | Comprehensive | `loaders/`, `validators/`, `security/` | File loading, validation |
