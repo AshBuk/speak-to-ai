@@ -192,33 +192,13 @@ func (tm *TrayManager) handleMenuClicks() {
 				tm.onShowWindow()
 			}
 		case <-tm.toggleItem.ClickedCh:
-			tm.logger.Info("Toggle recording clicked")
-			if tm.onToggle != nil {
-				if err := tm.onToggle(); err != nil {
-					tm.logger.Error("Error toggling recording: %v", err)
-				}
-			}
+			tm.runClick("Toggle recording", "Error toggling recording", tm.onToggle)
 		case <-tm.showConfigItem.ClickedCh:
-			tm.logger.Info("Show config clicked")
-			if tm.onShowConfig != nil {
-				if err := tm.onShowConfig(); err != nil {
-					tm.logger.Error("Error showing config: %v", err)
-				}
-			}
+			tm.runClick("Show config", "Error showing config", tm.onShowConfig)
 		case <-tm.aboutItem.ClickedCh:
-			tm.logger.Info("About clicked")
-			if tm.onShowAbout != nil {
-				if err := tm.onShowAbout(); err != nil {
-					tm.logger.Error("Error showing about: %v", err)
-				}
-			}
+			tm.runClick("About", "Error showing about", tm.onShowAbout)
 		case <-tm.reloadConfigItem.ClickedCh:
-			tm.logger.Info("Reset to defaults clicked")
-			if tm.onResetToDefaults != nil {
-				if err := tm.onResetToDefaults(); err != nil {
-					tm.logger.Error("Error resetting to defaults: %v", err)
-				}
-			}
+			tm.runClick("Reset to defaults", "Error resetting to defaults", tm.onResetToDefaults)
 		case <-tm.exitItem.ClickedCh:
 			tm.logger.Info("Exit clicked")
 			if tm.cancel != nil {
@@ -232,6 +212,17 @@ func (tm *TrayManager) handleMenuClicks() {
 			}
 			return
 		}
+	}
+}
+
+// runClick logs a menu click and runs its action, logging any error
+func (tm *TrayManager) runClick(item, errPrefix string, action func() error) {
+	tm.logger.Info("%s clicked", item)
+	if action == nil {
+		return
+	}
+	if err := action(); err != nil {
+		tm.logger.Error("%s: %v", errPrefix, err)
 	}
 }
 
