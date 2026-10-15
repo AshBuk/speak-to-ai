@@ -15,7 +15,6 @@ import (
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/logger"
 	"github.com/AshBuk/dabri/v2/internal/utils"
-	"github.com/AshBuk/dabri/v2/whisper/interfaces"
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 	"github.com/go-audio/wav"
 )
@@ -27,16 +26,6 @@ type WhisperEngine struct {
 	model     whisper.Model
 	modelPath string
 	logger    logger.Logger
-}
-
-// Return the underlying whisper.Model for advanced or direct interactions
-func (w *WhisperEngine) GetModel() interfaces.WhisperModel {
-	return w.model
-}
-
-// Return the engine's configuration
-func (w *WhisperEngine) GetConfig() *config.Config {
-	return w.config()
 }
 
 // Initialize and load a new Whisper model from the given path.

@@ -147,85 +147,96 @@ func (m *gtkManager) build() error {
 	if err != nil {
 		return err
 	}
-
-	grid, err := gtk.GridNew()
+	grid, err := m.buildGrid()
 	if err != nil {
 		return err
+	}
+	outer.PackStart(grid, false, false, 0)
+	if err := m.buildButtons(outer); err != nil {
+		return err
+	}
+
+	win.Add(outer)
+	m.applyState(StateReady)
+	return nil
+}
+
+// buildGrid lays out the status, settings and hotkey rows.
+func (m *gtkManager) buildGrid() (*gtk.Grid, error) {
+	grid, err := gtk.GridNew()
+	if err != nil {
+		return nil, err
 	}
 	grid.SetRowSpacing(10)
 	grid.SetColumnSpacing(12)
 
 	m.statusLabel = m.addRow(grid, 0, "Status", nil)
 
-	m.modelCombo, err = gtk.ComboBoxTextNew()
-	if err != nil {
-		return err
-	}
-	for _, c := range m.opts.Models {
-		m.modelCombo.Append(c.ID, c.Name)
-	}
-	m.modelCombo.SetActiveID(m.opts.ActiveModel)
-	m.modelCombo.Connect("changed", func() {
-		if m.suppress {
-			return
+	m.modelCombo, err = m.newCombo(m.opts.ActiveModel, func(c *gtk.ComboBoxText) {
+		for _, mc := range m.opts.Models {
+			c.Append(mc.ID, mc.Name)
 		}
-		id := m.modelCombo.GetActiveID()
-		if id == "" {
-			return
-		}
+	}, func(id string) {
 		if a := m.act(); a.OnSelectModel != nil {
 			go m.run("model switch", func() error { return a.OnSelectModel(context.Background(), id) })
 		}
 	})
+	if err != nil {
+		return nil, err
+	}
 	m.attachRow(grid, 1, "Model", m.modelCombo)
 
-	m.langCombo, err = gtk.ComboBoxTextNew()
-	if err != nil {
-		return err
-	}
-	for _, l := range m.opts.Languages {
-		m.langCombo.Append(l.Code, l.Name)
-	}
-	m.langCombo.SetActiveID(m.opts.ActiveLanguage)
-	m.langCombo.Connect("changed", func() {
-		if m.suppress {
-			return
+	m.langCombo, err = m.newCombo(m.opts.ActiveLanguage, func(c *gtk.ComboBoxText) {
+		for _, l := range m.opts.Languages {
+			c.Append(l.Code, l.Name)
 		}
-		code := m.langCombo.GetActiveID()
-		if code == "" {
-			return
-		}
+	}, func(code string) {
 		if a := m.act(); a.OnSelectLanguage != nil {
 			go m.run("language switch", func() error { return a.OnSelectLanguage(code) })
 		}
 	})
+	if err != nil {
+		return nil, err
+	}
 	m.attachRow(grid, 2, "Language", m.langCombo)
 
-	m.outputCombo, err = gtk.ComboBoxTextNew()
-	if err != nil {
-		return err
-	}
-	m.outputCombo.Append(configmodels.OutputModeActiveWindow, "Type to window")
-	m.outputCombo.Append(configmodels.OutputModeClipboard, "Clipboard")
-	m.outputCombo.SetActiveID(m.opts.OutputMode)
-	m.outputCombo.Connect("changed", func() {
-		if m.suppress {
-			return
-		}
-		mode := m.outputCombo.GetActiveID()
-		if mode == "" {
-			return
-		}
+	m.outputCombo, err = m.newCombo(m.opts.OutputMode, func(c *gtk.ComboBoxText) {
+		c.Append(configmodels.OutputModeActiveWindow, "Type to window")
+		c.Append(configmodels.OutputModeClipboard, "Clipboard")
+	}, func(mode string) {
 		if a := m.act(); a.OnSelectOutput != nil {
 			go m.run("output switch", func() error { return a.OnSelectOutput(mode) })
 		}
 	})
+	if err != nil {
+		return nil, err
+	}
 	m.attachRow(grid, 3, "Output", m.outputCombo)
 
 	m.addRow(grid, 4, "Hotkey", &m.opts.Hotkey)
+	return grid, nil
+}
 
-	outer.PackStart(grid, false, false, 0)
+// newCombo fills a combo box and selects active before connecting onSelect,
+// so only user changes reach it. Programmatic updates set m.suppress.
+func (m *gtkManager) newCombo(active string, fill func(*gtk.ComboBoxText), onSelect func(id string)) (*gtk.ComboBoxText, error) {
+	combo, err := gtk.ComboBoxTextNew()
+	if err != nil {
+		return nil, err
+	}
+	fill(combo)
+	combo.SetActiveID(active)
+	combo.Connect("changed", func() {
+		if id := combo.GetActiveID(); !m.suppress && id != "" {
+			onSelect(id)
+		}
+	})
+	return combo, nil
+}
 
+// buildButtons adds the record and hide-to-tray buttons.
+func (m *gtkManager) buildButtons(outer *gtk.Box) error {
+	var err error
 	m.startButton, err = gtk.ButtonNewWithLabel("Start Listening")
 	if err != nil {
 		return err
@@ -263,9 +274,6 @@ func (m *gtkManager) build() error {
 	} {
 		w.SetCanFocus(false)
 	}
-
-	win.Add(outer)
-	m.applyState(StateReady)
 	return nil
 }
 

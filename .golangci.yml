@@ -3,6 +3,10 @@ version: "2"
 run:
   timeout: 5m
   tests: false
+  # Lint the tray and GTK window; their untagged stubs compile in go test
+  build-tags:
+    - systray
+    - gtk
 
 linters:
   enable:
