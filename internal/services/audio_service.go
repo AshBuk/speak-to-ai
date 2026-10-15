@@ -186,6 +186,8 @@ func (as *AudioService) stopAndPrepareTranscription(swallowStopError bool) (stri
 	if err != nil {
 		as.logger.Warning("StopRecording returned error: %v", err)
 		as.handleRecordingError(err)
+		// Ensure state is reset so the hotkey toggle can recover
+		as.isRecording = false
 
 		// Auto-fallback to arecord if using ffmpeg
 		if as.config.Audio.RecordingMethod == "ffmpeg" {
@@ -193,15 +195,13 @@ func (as *AudioService) stopAndPrepareTranscription(swallowStopError bool) (stri
 				_ = as.cfg.UpdateRecordingMethod("arecord")
 			}
 			as.config.Audio.RecordingMethod = "arecord"
-			as.ClearSession()
+			as.clearSessionLocked()
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
 				as.ui.UpdateSettings(as.config)
 			}
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
-		// Ensure state is reset so the hotkey toggle can recover
-		as.isRecording = false
 		if as.ui != nil {
 			as.ui.SetRecordingState(false)
 		}
@@ -497,7 +497,15 @@ func (as *AudioService) handleTranscriptionCancellation(err error) {
 
 // ClearSession clears audio session state and temp files
 func (as *AudioService) ClearSession() {
-	if as.recorder != nil {
+	as.mu.Lock()
+	defer as.mu.Unlock()
+	as.clearSessionLocked()
+}
+
+// clearSessionLocked requires as.mu. An active recording keeps its file;
+// the recorder is reinitialized on the next start.
+func (as *AudioService) clearSessionLocked() {
+	if as.recorder != nil && !as.isRecording {
 		_ = as.recorder.CleanupFile()
 	}
 	as.audioRecorderNeedsReinit = true
