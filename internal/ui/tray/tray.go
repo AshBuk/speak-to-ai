@@ -8,6 +8,7 @@ package tray
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 
 	"fyne.io/systray"
 	"github.com/AshBuk/dabri/v2/config"
@@ -25,7 +26,7 @@ type TrayManager struct {
 	onShowConfig      func() error
 	onShowAbout       func() error
 	onResetToDefaults func() error
-	config            *config.Config
+	config            atomic.Pointer[config.Config] // Latest snapshot from UpdateSettings
 	logger            logger.Logger
 
 	// Menu items
@@ -162,10 +163,13 @@ func (tm *TrayManager) onReady() {
 
 // createSettingsSubmenus is implemented in settings_menu.go
 
+// cfg returns the latest config snapshot, nil before the first UpdateSettings
+func (tm *TrayManager) cfg() *config.Config { return tm.config.Load() }
+
 // UpdateSettings updates the settings display with new configuration
 func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	// Store and delegate all UI updates to helpers in settings_menu.go
-	tm.config = config
+	tm.config.Store(config)
 	// Ensure hotkeys UI reflects latest config
 	tm.updateHotkeysMenuUI()
 	// The helpers gracefully no-op if items are not yet created

@@ -22,14 +22,14 @@ func (tm *TrayManager) createSettingsSubmenus() {
 	tm.outputMenu = tm.settingsItem.AddSubMenuItem("Output", "Output settings")
 
 	// Populate with initial values if config is available
-	if tm.config != nil {
+	if tm.cfg() != nil {
 		tm.populateSettingsMenus()
 	}
 }
 
 // populateSettingsMenus populates the settings submenus with current config values
 func (tm *TrayManager) populateSettingsMenus() {
-	if tm.config == nil {
+	if tm.cfg() == nil {
 		return
 	}
 
@@ -78,7 +78,7 @@ func (tm *TrayManager) setupAudioRecorderMenu() {
 	)
 
 	// Update initial UI state
-	tm.updateRecorderRadioUI(tm.config.Audio.RecordingMethod)
+	tm.updateRecorderRadioUI(tm.cfg().Audio.RecordingMethod)
 }
 
 // setupLanguageMenu creates and configures the language selection submenu.
@@ -86,8 +86,8 @@ func (tm *TrayManager) setupAudioRecorderMenu() {
 // (GNOME AppIndicator has 3-level menu depth limit).
 func (tm *TrayManager) setupLanguageMenu() {
 	// Create current language display at the top
-	currentLang := constants.LanguageByCode(tm.config.General.Language)
-	currentName := tm.config.General.Language
+	currentLang := constants.LanguageByCode(tm.cfg().General.Language)
+	currentName := tm.cfg().General.Language
 	if currentLang != nil {
 		currentName = currentLang.Name + " (" + currentLang.Code + ")"
 	}
@@ -108,7 +108,7 @@ func (tm *TrayManager) setupLanguageMenu() {
 	// Flat list of all languages (GNOME-compatible, 3 levels: Settings > Set Language > Language)
 	for _, lang := range constants.WhisperLanguages {
 		indicator := "○ "
-		if tm.config.General.Language == lang.Code {
+		if tm.cfg().General.Language == lang.Code {
 			indicator = "● "
 		}
 		itm := tm.languageMenu.AddSubMenuItem(indicator+lang.Name+" ("+lang.Code+")", lang.Code)
@@ -129,8 +129,8 @@ func (tm *TrayManager) setupLanguageMenu() {
 // Unlike other radio menus, model items use custom click handling that supports
 // cancel-on-reclick: clicking a downloading model cancels the download (✖ indicator).
 func (tm *TrayManager) setupModelMenu() {
-	currentModel := constants.ModelByID(tm.config.General.WhisperModel)
-	currentName := tm.config.General.WhisperModel
+	currentModel := constants.ModelByID(tm.cfg().General.WhisperModel)
+	currentName := tm.cfg().General.WhisperModel
 	if currentModel != nil {
 		currentName = currentModel.Name
 	}
@@ -142,7 +142,7 @@ func (tm *TrayManager) setupModelMenu() {
 
 	for _, m := range constants.WhisperModels {
 		indicator := "○ "
-		if tm.config.General.WhisperModel == m.ID {
+		if tm.cfg().General.WhisperModel == m.ID {
 			indicator = "● "
 		}
 		itm := tm.modelMenu.AddSubMenuItem(indicator+m.Name, m.ID)
@@ -168,8 +168,8 @@ func (tm *TrayManager) handleModelClick(modelID string) {
 		tm.modelMu.Unlock()
 		cancel()
 		tm.logger.Info("Model download cancelled by user: %s", modelID)
-		if tm.config != nil {
-			tm.updateModelRadioUI(tm.config.General.WhisperModel)
+		if tm.cfg() != nil {
+			tm.updateModelRadioUI(tm.cfg().General.WhisperModel)
 		}
 		return
 	}
@@ -186,8 +186,8 @@ func (tm *TrayManager) handleModelClick(modelID string) {
 	tm.modelMu.Unlock()
 
 	// Restore UI for the previously downloading model
-	if prevModelID != "" && prevModelID != modelID && tm.config != nil {
-		tm.updateModelRadioUI(tm.config.General.WhisperModel)
+	if prevModelID != "" && prevModelID != modelID && tm.cfg() != nil {
+		tm.updateModelRadioUI(tm.cfg().General.WhisperModel)
 	}
 
 	tm.setModelDownloadingUI(modelID)
@@ -214,8 +214,8 @@ func (tm *TrayManager) handleModelClick(modelID string) {
 
 		if err != nil {
 			tm.logger.Error("Model switch failed: %v", err)
-			if tm.config != nil {
-				tm.updateModelRadioUI(tm.config.General.WhisperModel)
+			if tm.cfg() != nil {
+				tm.updateModelRadioUI(tm.cfg().General.WhisperModel)
 			}
 			return
 		}
@@ -267,7 +267,7 @@ func (tm *TrayManager) setupOutputMenu() {
 	// Create output mode items
 	for _, m := range modeDefs {
 		indicator := "○ "
-		if tm.config.Output.DefaultMode == m.key {
+		if tm.cfg().Output.DefaultMode == m.key {
 			indicator = "● "
 		}
 		itm := tm.outputMenu.AddSubMenuItem(indicator+m.title, "")
@@ -276,19 +276,19 @@ func (tm *TrayManager) setupOutputMenu() {
 
 	// Create display items (gray text)
 	tm.outputItems["mode"] = tm.outputMenu.AddSubMenuItem(
-		"Mode: "+humanizeOutputMode(tm.config.Output.DefaultMode),
+		"Mode: "+humanizeOutputMode(tm.cfg().Output.DefaultMode),
 		"Current output mode",
 	)
 	tm.outputItems["mode"].Disable()
 
 	tm.outputItems["clipboard_tool"] = tm.outputMenu.AddSubMenuItem(
-		"Clipboard Tool: "+tm.config.Output.ClipboardTool,
+		"Clipboard Tool: "+tm.cfg().Output.ClipboardTool,
 		"Current clipboard tool",
 	)
 	tm.outputItems["clipboard_tool"].Disable()
 
 	tm.outputItems["type_tool"] = tm.outputMenu.AddSubMenuItem(
-		"Type Tool: "+tm.config.Output.TypeTool,
+		"Type Tool: "+tm.cfg().Output.TypeTool,
 		"Current typing tool",
 	)
 	tm.outputItems["type_tool"].Disable()
@@ -328,14 +328,14 @@ func (tm *TrayManager) setupWorkflowNotifications() {
 				tm.logger.Error("Error toggling workflow notifications: %v", err)
 			}
 			// Reflect new state in UI using updated config
-			if tm.config != nil {
-				tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
+			if tm.cfg() != nil {
+				tm.updateWorkflowNotificationUI(tm.cfg().Notifications.EnableWorkflowNotifications)
 			}
 		}
 	})
 
 	// Update initial UI state
-	tm.updateWorkflowNotificationUI(tm.config.Notifications.EnableWorkflowNotifications)
+	tm.updateWorkflowNotificationUI(tm.cfg().Notifications.EnableWorkflowNotifications)
 }
 
 // hotkeyMenuConfig describes configuration for a single hotkey menu item
@@ -387,7 +387,7 @@ func (tm *TrayManager) createHotkeyMenuItem(cfg hotkeyMenuConfig, supportsCaptur
 
 // updateHotkeysMenuUI ensures hotkeys items exist and reflect current config
 func (tm *TrayManager) updateHotkeysMenuUI() {
-	if tm.hotkeysMenu == nil || tm.config == nil {
+	if tm.hotkeysMenu == nil || tm.cfg() == nil {
 		return
 	}
 
@@ -407,7 +407,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 			rebindTooltip:  "Change start/stop hotkey",
 			displayPrefix:  "Start/Stop Recording: ",
 			displayTooltip: "Current start/stop recording hotkey",
-			currentValue:   tm.config.Hotkeys.StartRecording,
+			currentValue:   tm.cfg().Hotkeys.StartRecording,
 		},
 		{
 			actionName:     "show_config",
@@ -417,7 +417,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 			rebindTooltip:  "Change show config hotkey",
 			displayPrefix:  "Show Config: ",
 			displayTooltip: "Current show config hotkey",
-			currentValue:   tm.config.Hotkeys.ShowConfig,
+			currentValue:   tm.cfg().Hotkeys.ShowConfig,
 		},
 		{
 			actionName:     "reset_to_defaults",
@@ -427,7 +427,7 @@ func (tm *TrayManager) updateHotkeysMenuUI() {
 			rebindTooltip:  "Change reset defaults hotkey",
 			displayPrefix:  "Reset to Defaults: ",
 			displayTooltip: "Current reset to defaults hotkey",
-			currentValue:   tm.config.Hotkeys.ResetToDefaults,
+			currentValue:   tm.cfg().Hotkeys.ResetToDefaults,
 		},
 	}
 
@@ -531,16 +531,16 @@ func (tm *TrayManager) updateOutputModeRadioUI(mode string) {
 
 // updateOutputUI updates the output settings display
 func (tm *TrayManager) updateOutputUI() {
-	if tm.config == nil {
+	if tm.cfg() == nil {
 		return
 	}
 
 	// Update mode radio buttons and display
-	tm.updateOutputModeRadioUI(tm.config.Output.DefaultMode)
+	tm.updateOutputModeRadioUI(tm.cfg().Output.DefaultMode)
 
 	// Get actual tool names if callback is available
-	clipboardTool := tm.config.Output.ClipboardTool
-	typeTool := tm.config.Output.TypeTool
+	clipboardTool := tm.cfg().Output.ClipboardTool
+	typeTool := tm.cfg().Output.TypeTool
 	if tm.onGetOutputTools != nil {
 		clipboardTool, typeTool = tm.onGetOutputTools()
 	}
