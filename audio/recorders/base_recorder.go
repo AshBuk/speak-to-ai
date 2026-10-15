@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AshBuk/dabri/v2/audio/interfaces"
 	"github.com/AshBuk/dabri/v2/audio/processing"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/logger"
@@ -26,19 +25,14 @@ const gracefulQuitTimeout = 1500 * time.Millisecond
 
 // Implements common functionality for audio recorders
 type BaseRecorder struct {
-	config             *config.Config
-	cmd                *exec.Cmd
-	outputFile         string
-	ctx                context.Context
-	cancel             context.CancelFunc
-	mutex              sync.Mutex
-	cmdTimeout         time.Duration
-	buffer             *bytes.Buffer                 // In-memory buffer for short recordings
-	useBuffer          bool                          // Flag to determine if recording to memory or file
-	tempManager        *processing.TempFileManager   // Manager for temporary file lifecycle
-	audioLevelCallback interfaces.AudioLevelCallback // Callback for audio level updates
-	currentAudioLevel  float64                       // Current audio level (0.0 to 1.0)
-	levelMutex         sync.RWMutex                  // Mutex for audio level access
+	config      *config.Config
+	cmd         *exec.Cmd
+	outputFile  string
+	ctx         context.Context
+	cancel      context.CancelFunc
+	mutex       sync.Mutex
+	cmdTimeout  time.Duration
+	tempManager *processing.TempFileManager // Manager for temporary file lifecycle
 
 	// Graceful stop: when quitToken is set, StopProcess first writes it to the
 	// process stdin (e.g. ffmpeg "q") so the process finalizes its own output
@@ -58,11 +52,6 @@ type BaseRecorder struct {
 
 // Create a new base recorder instance
 func NewBaseRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) BaseRecorder {
-	// Use an in-memory buffer for short recordings to avoid disk I/O
-	useBuffer := config.Audio.ExpectedDuration > 0 &&
-		config.Audio.ExpectedDuration < 10 &&
-		config.Audio.SampleRate <= 16000
-
 	// Determine the command timeout from the configuration
 	maxTime := time.Duration(config.Audio.MaxRecordingTime) * time.Second
 	if maxTime <= 0 {
@@ -72,8 +61,6 @@ func NewBaseRecorder(config *config.Config, logger logger.Logger, tempManager *p
 	return BaseRecorder{
 		config:      config,
 		cmdTimeout:  maxTime,
-		useBuffer:   useBuffer,
-		buffer:      bytes.NewBuffer(nil),
 		tempManager: tempManager,
 		logger:      logger,
 	}
@@ -84,70 +71,11 @@ func (b *BaseRecorder) GetOutputFile() string {
 	return b.outputFile
 }
 
-// Set the callback function for audio level monitoring
-func (b *BaseRecorder) SetAudioLevelCallback(callback interfaces.AudioLevelCallback) {
-	b.levelMutex.Lock()
-	defer b.levelMutex.Unlock()
-	b.audioLevelCallback = callback
-}
-
-// Return the current audio level (0.0 to 1.0)
-func (b *BaseRecorder) GetAudioLevel() float64 {
-	b.levelMutex.RLock()
-	defer b.levelMutex.RUnlock()
-	return b.currentAudioLevel
-}
-
-// Update the current audio level and invoke the callback if it is set
-func (b *BaseRecorder) updateAudioLevel(level float64) {
-	b.levelMutex.Lock()
-	b.currentAudioLevel = level
-	callback := b.audioLevelCallback
-	b.levelMutex.Unlock()
-	if callback != nil {
-		callback(level)
-	}
-}
-
-// Calculate the audio level (RMS) from a raw PCM data buffer
-func (b *BaseRecorder) calculateAudioLevel(data []byte) float64 {
-	if len(data) == 0 {
-		return 0.0
-	}
-	// Assume 16-bit PCM data
-	var sum int64
-	samples := len(data) / 2
-
-	for i := 0; i < len(data)-1; i += 2 {
-		// Convert bytes to a 16-bit signed integer
-		sample := int16(data[i]) | int16(data[i+1])<<8
-		sum += int64(sample) * int64(sample)
-	}
-
-	if samples == 0 {
-		return 0.0
-	}
-	// Calculate Root Mean Square (RMS) and normalize to a 0-1 range
-	rms := float64(sum) / float64(samples)
-	rms = rms / (32768.0 * 32768.0)
-
-	// Amplify for better visibility
-	if rms > 0 {
-		return rms * 10.0
-	}
-
-	return 0.0
-}
-
 // Remove the temporary audio file or clear the in-memory buffer
 func (b *BaseRecorder) CleanupFile() error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	if b.useBuffer {
-		b.buffer.Reset()
-		return nil
-	}
 	if b.outputFile == "" {
 		return nil // Nothing to clean up
 	}
@@ -156,14 +84,8 @@ func (b *BaseRecorder) CleanupFile() error {
 	return nil
 }
 
-// Create a temporary file for the audio recording or reset the buffer
+// Create a temporary file for the audio recording
 func (b *BaseRecorder) createTempFile() error {
-	if b.useBuffer {
-		// Using in-memory buffer, no file needed
-		b.buffer.Reset()
-		return nil
-	}
-
 	path, err := b.tempManager.CreateTempWav(b.config.General.TempAudioPath)
 	if err != nil {
 		return fmt.Errorf("failed to create temp audio file: %w", err)
@@ -178,33 +100,6 @@ func (b *BaseRecorder) StopRecording() (string, error) {
 		return "", err
 	}
 	return b.outputFile, nil
-}
-
-// Read audio data from a reader and calculate audio levels
-func (b *BaseRecorder) monitorAudioLevel(reader io.Reader) {
-	buf := make([]byte, 4096) // Buffer for reading audio data
-
-	for {
-		select {
-		case <-b.ctx.Done():
-			return
-		default:
-			n, err := reader.Read(buf)
-			if err != nil {
-				if err != io.EOF {
-					b.logger.Error("Error reading audio data: %v", err)
-				}
-				return
-			}
-			if n > 0 {
-				// Write to the in-memory buffer
-				b.buffer.Write(buf[:n])
-				// Calculate and update the audio level
-				level := b.calculateAudioLevel(buf[:n])
-				b.updateAudioLevel(level)
-			}
-		}
-	}
 }
 
 // Wait for the command to finish, ensuring it's only called once
@@ -290,11 +185,7 @@ func (b *BaseRecorder) StopProcess() error {
 	b.attemptGracefulShutdown()
 	b.ensureProcessReaped()
 	b.cleanup()
-
-	if !b.useBuffer {
-		return b.validateAudioFile()
-	}
-	return nil
+	return b.validateAudioFile()
 }
 
 func (b *BaseRecorder) attemptGracefulShutdown() {
@@ -438,19 +329,11 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 		return fmt.Errorf("recording already in progress")
 	}
 	b.ctx, b.cancel = context.WithTimeout(context.Background(), b.cmdTimeout)
-	// Set up the output file or in-memory buffer
-	if b.useBuffer {
-		b.buffer.Reset()
-	} else {
-		if err := b.createTempFile(); err != nil {
-			return err
-		}
+	// Set up the output file and append it to the command arguments
+	if err := b.createTempFile(); err != nil {
+		return err
 	}
-	// Add the output file to the command arguments if not using a buffer
-	finalArgs := args
-	if !b.useBuffer {
-		finalArgs = append(args, b.outputFile)
-	}
+	finalArgs := append(args, b.outputFile)
 	// Security: validate the command and sanitize arguments before execution
 	if !config.IsCommandAllowed(b.config, cmdName) {
 		return fmt.Errorf("command not allowed: %s", cmdName)
@@ -472,15 +355,6 @@ func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) er
 			return fmt.Errorf("failed to create stdin pipe: %w", err)
 		}
 		b.stdinPipe = stdin
-	}
-	// If using a buffer, set up a pipe to read stdout for audio level monitoring
-	if b.useBuffer {
-		stdout, err := b.cmd.StdoutPipe()
-		if err != nil {
-			b.cancel()
-			return fmt.Errorf("failed to create stdout pipe: %w", err)
-		}
-		go b.monitorAudioLevel(stdout)
 	}
 	// Reset wait state and start the process
 	b.waitOnce = sync.Once{}

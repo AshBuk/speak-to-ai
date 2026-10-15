@@ -23,7 +23,6 @@ audio:
   sample_rate: 16000            # Optimal for speech recognition (do not change)
   format: "s16le"               # Note: audio is always recorded in mono (1 channel)
   recording_method: "arecord"   # Options: "arecord", "ffmpeg"
-  expected_duration: 0          # Expected recording duration in seconds (0 = indefinite)
   max_recording_time: 300       # Hard cap in seconds to stop runaway recordings (default: 300)
   temp_file_cleanup_time: 30    # Auto-delete temporary audio files older than X minutes (default: 30)
 

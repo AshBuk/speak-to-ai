@@ -110,20 +110,18 @@ func (f *FFmpegRecorder) StartRecording() error {
 
 	// Warm-up: wait until minimal payload is written to avoid clipped start
 	// For WAV, header is 44 bytes. Ensure at least minAudioPayloadMs of payload is present.
-	if !f.useBuffer {
-		out := f.GetOutputFile()
-		sr := f.config.Audio.SampleRate
-		if sr <= 0 {
-			sr = 16000
+	out := f.GetOutputFile()
+	sr := f.config.Audio.SampleRate
+	if sr <= 0 {
+		sr = 16000
+	}
+	minPayload := int64((sr / (1000 / minAudioPayloadMs)) * 2) // 16-bit mono => 2 bytes per sample
+	deadline := time.Now().Add(warmupTimeout)
+	for time.Now().Before(deadline) {
+		if info, err := os.Stat(out); err == nil && info.Size() >= 44+minPayload {
+			break
 		}
-		minPayload := int64((sr / (1000 / minAudioPayloadMs)) * 2) // 16-bit mono => 2 bytes per sample
-		deadline := time.Now().Add(warmupTimeout)
-		for time.Now().Before(deadline) {
-			if info, err := os.Stat(out); err == nil && info.Size() >= 44+minPayload {
-				break
-			}
-			time.Sleep(warmupPollInterval)
-		}
+		time.Sleep(warmupPollInterval)
 	}
 	return nil
 }
@@ -196,14 +194,6 @@ func (f *FFmpegRecorder) buildBaseCommandArgs() []string {
 		"-flush_packets", "1", // Flush output muxer to disk per packet (avoid data loss on stop)
 	}
 
-	// Configure the output format
-	if f.useBuffer {
-		// Output WAV to stdout for in-memory processing
-		args = append(args, "-f", "wav", "-")
-	} else {
-		// Output to a WAV file. The path will be added by ExecuteRecordingCommand
-		args = append(args, "-f", "wav")
-	}
-
-	return args
+	// Output to a WAV file. The path will be added by ExecuteRecordingCommand
+	return append(args, "-f", "wav")
 }

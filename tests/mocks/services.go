@@ -63,14 +63,13 @@ func (m *MockUIService) Shutdown() error {
 	return m.shutdownError
 }
 
-func (m *MockUIService) SetRecordingState(isRecording bool)                {}
-func (m *MockUIService) ShowNotification(title, message string)            { m.Log.add("UI.Notify:" + title) }
-func (m *MockUIService) UpdateRecordingUI(isRecording bool, level float64) {}
-func (m *MockUIService) SetError(message string)                           {}
-func (m *MockUIService) SetSuccess(message string)                         {}
-func (m *MockUIService) ShowConfigFile() error                             { m.Log.add("UI.ShowConfig"); return nil }
-func (m *MockUIService) ShowAboutPage() error                              { return nil }
-func (m *MockUIService) UpdateSettings(cfg *config.Config)                 { m.Log.add("UI.UpdateSettings") }
+func (m *MockUIService) SetRecordingState(isRecording bool)     {}
+func (m *MockUIService) ShowNotification(title, message string) { m.Log.add("UI.Notify:" + title) }
+func (m *MockUIService) SetError(message string)                {}
+func (m *MockUIService) SetSuccess(message string)              {}
+func (m *MockUIService) ShowConfigFile() error                  { m.Log.add("UI.ShowConfig"); return nil }
+func (m *MockUIService) ShowAboutPage() error                   { return nil }
+func (m *MockUIService) UpdateSettings(cfg *config.Config)      { m.Log.add("UI.UpdateSettings") }
 
 // Test helper methods
 func (m *MockUIService) WasShutdownCalled() bool { return m.shutdownCalled }

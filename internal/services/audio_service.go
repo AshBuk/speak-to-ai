@@ -352,13 +352,6 @@ func (as *AudioService) Shutdown() error {
 
 // startStandardRecording starts standard recording mode
 func (as *AudioService) startStandardRecording() error {
-	// Set up audio level monitoring
-	as.recorder.SetAudioLevelCallback(func(level float64) {
-		if as.ui != nil {
-			as.ui.UpdateRecordingUI(true, level)
-		}
-		as.logger.Debug("Audio level: %.2f", level)
-	})
 	// Start recording
 	if err := as.recorder.StartRecording(); err != nil {
 		return fmt.Errorf("failed to start recording: %w", err)

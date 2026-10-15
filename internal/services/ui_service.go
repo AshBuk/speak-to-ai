@@ -87,11 +87,6 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 	}
 }
 
-// Update visual feedback during active recording
-func (us *UIService) UpdateRecordingUI(isRecording bool, level float64) {
-	us.SetRecordingState(isRecording)
-}
-
 // Display error notification and log for debugging
 func (us *UIService) SetError(message string) {
 	us.logger.Error("UI Error: %s", message)

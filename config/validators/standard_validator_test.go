@@ -20,7 +20,6 @@ func setDefaultConfigForTest(config *models.Config) {
 	config.Audio.SampleRate = 16000
 	config.Audio.Format = "s16le"
 	config.Audio.RecordingMethod = "arecord"
-	config.Audio.ExpectedDuration = 0
 	config.Audio.MaxRecordingTime = 300
 
 	config.Output.DefaultMode = models.OutputModeActiveWindow
