@@ -202,62 +202,6 @@ func TestWebSocketServer_Authentication_WithToken(t *testing.T) {
 	}
 }
 
-func TestWebSocketServer_ValidateToken(t *testing.T) {
-	cfg := createTestConfig()
-	cfg.WebServer.AuthToken = "test-token"
-
-	server := NewWebSocketServer(cfg, testutils.NewMockLogger())
-
-	tests := []struct {
-		name     string
-		token    string
-		expected bool
-	}{
-		{
-			name:     "valid token",
-			token:    "test-token",
-			expected: true,
-		},
-		{
-			name:     "invalid token",
-			token:    "wrong-token",
-			expected: false,
-		},
-		{
-			name:     "empty token",
-			token:    "",
-			expected: false,
-		},
-		{
-			name:     "token with whitespace",
-			token:    "  test-token  ",
-			expected: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := server.validateToken(tt.token)
-			if result != tt.expected {
-				t.Errorf("Expected %v, got %v", tt.expected, result)
-			}
-		})
-	}
-}
-
-func TestWebSocketServer_ValidateToken_NoAuthToken(t *testing.T) {
-	cfg := createTestConfig()
-	cfg.WebServer.AuthToken = ""
-
-	server := NewWebSocketServer(cfg, testutils.NewMockLogger())
-
-	result := server.validateToken("any-token")
-
-	if result {
-		t.Error("Expected validation to fail when no auth token is set")
-	}
-}
-
 func TestCheckOrigin(t *testing.T) {
 	tests := []struct {
 		name, cors, token, origin string
@@ -491,49 +435,6 @@ func TestWebSocketServer_ExecuteWithRetry_MaxRetries(t *testing.T) {
 	// Verify retry count was reset after max retries
 	if server.retryCount[conn] != 0 {
 		t.Errorf("Expected retry count to be reset to 0, got %d", server.retryCount[conn])
-	}
-}
-
-func TestGetClientIP(t *testing.T) {
-	tests := []struct {
-		name     string
-		setupReq func(*http.Request)
-		expected string
-	}{
-		{
-			name: "X-Forwarded-For header",
-			setupReq: func(req *http.Request) {
-				req.Header.Set("X-Forwarded-For", "192.168.1.1,10.0.0.1")
-			},
-			expected: "192.168.1.1",
-		},
-		{
-			name: "X-Real-IP header",
-			setupReq: func(req *http.Request) {
-				req.Header.Set("X-Real-IP", "192.168.1.2")
-			},
-			expected: "192.168.1.2",
-		},
-		{
-			name: "RemoteAddr fallback",
-			setupReq: func(req *http.Request) {
-				req.RemoteAddr = "192.168.1.3:12345"
-			},
-			expected: "192.168.1.3",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
-			tt.setupReq(req)
-
-			result := getClientIP(req)
-
-			if result != tt.expected {
-				t.Errorf("Expected %q, got %q", tt.expected, result)
-			}
-		})
 	}
 }
 

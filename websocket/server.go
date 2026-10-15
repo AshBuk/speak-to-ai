@@ -125,6 +125,9 @@ func (s *WebSocketServer) Start() error {
 	if !s.config.WebServer.Enabled {
 		return nil
 	}
+	if s.config.WebServer.CORSOrigins == "*" && s.config.WebServer.AuthToken == "" {
+		s.logger.Warning("WebSocket: browser clients are rejected until auth_token or an explicit cors_origins is set")
+	}
 	// Handler for WebSocket connection setup
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWebSocket)
@@ -295,15 +298,5 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		s.logger.Error("Error sending message: %v", err)
-	}
-}
-
-// Notify all active clients of server-wide events
-func (s *WebSocketServer) BroadcastMessage(messageType string, payload interface{}) {
-	s.clientsLock.Lock()
-	defer s.clientsLock.Unlock()
-
-	for conn := range s.clients {
-		s.sendMessage(conn, messageType, payload)
 	}
 }
