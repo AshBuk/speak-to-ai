@@ -110,32 +110,13 @@ func GetKeyName(keyCode int) string {
 func IsModifierPressed(mod string, state map[string]bool) bool {
 	m := strings.ToLower(mod)
 	switch m {
-	case "ctrl":
-		return state["leftctrl"] || state["rightctrl"]
-	case "leftctrl":
-		return state["leftctrl"]
-	case "rightctrl":
-		return state["rightctrl"]
-	case "alt":
-		return state["leftalt"] || state["rightalt"]
-	case "leftalt":
-		return state["leftalt"]
-	case "rightalt", "altgr":
-		return state["rightalt"]
-	case "shift":
-		return state["leftshift"] || state["rightshift"]
-	case "leftshift":
-		return state["leftshift"]
-	case "rightshift":
-		return state["rightshift"]
+	case "ctrl", "alt", "shift":
+		return state["left"+m] || state["right"+m]
 	case "super", "meta", "win":
 		return state["leftmeta"] || state["rightmeta"]
-	case "leftmeta":
-		return state["leftmeta"]
-	case "rightmeta":
-		return state["rightmeta"]
 	default:
 		// Fallback to a simple mapping for any other names
+		// (side-specific names and altgr map directly to evdev keys)
 		return state[ConvertModifierToEvdev(m)]
 	}
 }
