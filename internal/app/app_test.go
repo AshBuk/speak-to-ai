@@ -62,52 +62,14 @@ func TestApp_NewApp(t *testing.T) {
 	if app == nil {
 		t.Fatal("NewApp returned nil")
 	}
-	if app.Services == nil {
-		t.Error("Services container not initialized")
+	if app.Services != nil {
+		t.Error("Services must stay nil until Initialize")
 	}
 	if app.Runtime == nil {
 		t.Error("Runtime context not initialized")
 	}
 	if app.Runtime.Logger != mockLogger {
 		t.Error("Runtime logger not set correctly")
-	}
-}
-
-func TestApp_ServiceAccessors(t *testing.T) {
-	mockLogger := testutils.NewMockLogger()
-	app := NewApp(mockLogger)
-	// Test accessor methods with nil services
-	if app.Audio() != nil {
-		t.Error("Audio() should return nil when service is not set")
-	}
-	if app.UI() != nil {
-		t.Error("UI() should return nil when service is not set")
-	}
-	if app.IO() != nil {
-		t.Error("IO() should return nil when service is not set")
-	}
-	if app.Config() != nil {
-		t.Error("Config() should return nil when service is not set")
-	}
-	if app.Hotkeys() != nil {
-		t.Error("Hotkeys() should return nil when service is not set")
-	}
-	// Test accessor methods with nil Services container
-	app.Services = nil
-	if app.Audio() != nil {
-		t.Error("Audio() should return nil when Services container is nil")
-	}
-	if app.UI() != nil {
-		t.Error("UI() should return nil when Services container is nil")
-	}
-	if app.IO() != nil {
-		t.Error("IO() should return nil when Services container is nil")
-	}
-	if app.Config() != nil {
-		t.Error("Config() should return nil when Services container is nil")
-	}
-	if app.Hotkeys() != nil {
-		t.Error("Hotkeys() should return nil when Services container is nil")
 	}
 }
 
@@ -126,17 +88,6 @@ func TestApp_Shutdown_NilServices(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Error("Context should be cancelled after Shutdown()")
 	}
-}
-
-// Mock services for testing
-type mockServiceWithShutdown struct {
-	shutdownCalled bool
-	shutdownError  error
-}
-
-func (m *mockServiceWithShutdown) Shutdown() error {
-	m.shutdownCalled = true
-	return m.shutdownError
 }
 
 func TestApp_Integration_Shutdown_WithServices(t *testing.T) {
@@ -179,48 +130,5 @@ func TestApp_Integration_AppLifecycle(t *testing.T) {
 	// Verify context was cancelled
 	if app.Runtime.Ctx.Err() == nil {
 		t.Error("Context should be cancelled after shutdown")
-	}
-}
-
-func TestApp_HandlerMethods_NilServices(t *testing.T) {
-	mockLogger := testutils.NewMockLogger()
-	app := NewApp(mockLogger)
-	app.Services = nil
-	// Test all handler methods with nil services
-	if err := app.handleStartRecording(); err == nil {
-		t.Error("handleStartRecording should fail with nil services")
-	}
-
-	if err := app.handleStopRecordingAndTranscribe(); err == nil {
-		t.Error("handleStopRecordingAndTranscribe should fail with nil services")
-	}
-
-	if err := app.handleShowConfig(); err == nil {
-		t.Error("handleShowConfig should fail with nil services")
-	}
-
-	if err := app.handleResetToDefaults(); err == nil {
-		t.Error("handleResetToDefaults should fail with nil services")
-	}
-}
-
-func TestApp_HandlerMethods_NilSpecificServices(t *testing.T) {
-	mockLogger := testutils.NewMockLogger()
-	app := NewApp(mockLogger)
-	// Services container exists but individual services are nil
-	if err := app.handleStartRecording(); err == nil {
-		t.Error("handleStartRecording should fail with nil audio service")
-	}
-
-	if err := app.handleStopRecordingAndTranscribe(); err == nil {
-		t.Error("handleStopRecordingAndTranscribe should fail with nil audio service")
-	}
-
-	if err := app.handleShowConfig(); err == nil {
-		t.Error("handleShowConfig should fail with nil UI service")
-	}
-
-	if err := app.handleResetToDefaults(); err == nil {
-		t.Error("handleResetToDefaults should fail with nil config service")
 	}
 }

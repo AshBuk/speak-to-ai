@@ -4,8 +4,9 @@
 package outputters
 
 import (
+	"os"
 	"os/exec"
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/AshBuk/dabri/v2/config"
@@ -119,21 +120,17 @@ func TestClipboardOutputter_CopyToClipboard_UnsupportedTool(t *testing.T) {
 
 func TestClipboardOutputter_CopyToClipboard_SupportedTools(t *testing.T) {
 	tests := []struct {
-		name string
-		tool string
+		tool         string
+		expectedArgs []string
 	}{
-		{
-			name: "xsel",
-			tool: "xsel",
-		},
-		{
-			name: "wl-copy",
-			tool: "wl-copy",
-		},
+		{tool: "xsel", expectedArgs: []string{"--clipboard", "--input"}},
+		{tool: "wl-copy", expectedArgs: []string{""}},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.tool, func(t *testing.T) {
+			// A stub keeps the developer's real clipboard untouched
+			captureFile := installFakeTool(t, tt.tool)
 			cfg := &config.Config{}
 			cfg.Security.AllowedCommands = []string{tt.tool}
 
@@ -141,12 +138,14 @@ func TestClipboardOutputter_CopyToClipboard_SupportedTools(t *testing.T) {
 				clipboardTool: tt.tool,
 				config:        cfg,
 			}
-
-			// Environment may or may not have the tool; accept success or failure,
-			// but failure must not be due to unsupported tool.
-			err := outputter.CopyToClipboard("test text")
-			if err != nil && strings.Contains(err.Error(), "unsupported clipboard tool:") {
-				t.Errorf("tool %s should be supported, got error: %v", tt.tool, err)
+			if err := outputter.CopyToClipboard("test text"); err != nil {
+				t.Fatalf("expected fake %s to run successfully, got %v", tt.tool, err)
+			}
+			if args := readCapturedArgs(t, captureFile); !slices.Equal(args, tt.expectedArgs) {
+				t.Errorf("expected args %q, got %q", tt.expectedArgs, args)
+			}
+			if stdin, err := os.ReadFile(captureFile + ".stdin"); err != nil || string(stdin) != "test text" {
+				t.Errorf("expected text on stdin, got %q (%v)", stdin, err)
 			}
 		})
 	}

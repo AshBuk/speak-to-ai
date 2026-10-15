@@ -1,6 +1,10 @@
 # Build artifacts
 build/
 dist/
+# flatpak-builder state holds a symlink to /run; BuildKit applies a context
+# symlink's SELinux label to its target, which relabels the host /run
+.flatpak-builder/
+build-flatpak/
 tools/
 lib/
 sources/

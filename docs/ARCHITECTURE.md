@@ -60,6 +60,7 @@ The application follows a **dual-mode daemon architecture** with clear separatio
   HotkeyService -> ConfigAdapter -> hotkey mapping
   // Start/stop is a single toggle resolved against AudioService.IsRecording(),
   // shared by hotkey, window, tray and CLI (one source of truth, no per-surface state).
+  // It lives with the other user actions in internal/services/actions.go.
 
 // Output pipeline
   IOService -> OutputManager -> (clipboard/typing)
@@ -91,20 +92,17 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 
 #### `internal/app/` - Application Core
 - **`app.go`**: Application orchestrator with ServiceContainer and RuntimeContext; the window backend owns the main loop (GTK loop, or blocking no-op)
-- **`handlers.go`**: Hotkey handlers that delegate to services; recording is a single start/stop toggle decided from AudioService state
 - **`ipc.go`**: IPC server initialization and command handlers
 
 ### **Service Layer** (`internal/services/`)
 - **`interfaces.go`**: Service contracts and ServiceContainer definition
-- **`factory_components.go`**: Components initialization (recorder, whisper, output, hotkeys, tray, window, notify, websocket)
-- **`factory_assembler.go`**: Services assembly and cross-dependencies
-- **`factory_wirer.go`**: Tray and window callback wiring (shared recording toggle, model/language/output selection)
-- **`factory.go`**: Facade delegating to FactoryComponents, FactoryAssembler, FactoryWirer
+- **`factory.go`**: `NewContainer` builds the components (recorder, whisper, output, hotkeys, tray, window, notify, websocket), assembles the services and wires tray and window callbacks
+- **`actions.go`**: User actions shared by hotkeys, tray, window and IPC (recording toggle, reset to defaults, model switch with rollback, language/output/recorder selection, hotkey rebinding)
 - **`audio_service.go`**: Audio recording, Whisper transcription
 - **`ui_service.go`**: System tray, main window, notifications, UI state (fans state/config changes out to both tray and window)
 - **`io_service.go`**: Text output, WebSocket server
 - **`config_service.go`**: Configuration file operations
-- **`hotkey_service.go`**: Hotkey registration and the recording toggle
+- **`hotkey_service.go`**: Hotkey registration, reload and capture for rebinding
 
 Related constants:
 - **`internal/constants/ui.go`**: UI icons/messages/titles centralization
@@ -123,8 +121,6 @@ Related constants:
 - **`tempfile_manager.go`**: Temporary audio file lifecycle management
 
 #### Testing & Mocking
-- **`mocks/mock_recorder.go`**: Mock implementation for testing
-- **`interfaces/interface_validation_test.go`**: Interface compliance tests
 - **`*_test.go`**: Comprehensive unit tests for all components
 
 ### **Hotkey Management** (`hotkeys/`)
@@ -171,7 +167,6 @@ Related constants:
     - **Wayland (GNOME)**: Uses `ydotool` → falls back to `wtype` if available
     - Automatic runtime fallback: if primary tool fails, tries alternative typing tool
   - `input_daemon.go`: Owns a `ydotoold` process inside Flatpak on wlroots/Hyprland, where the host daemon's socket is invisible to the sandbox; returns nil (→ clipboard fallback) when uinput is inaccessible
-  - `mock_outputter.go`: Mock implementation for testing
 
 ### **WebSocket API** (`websocket/`)
 

@@ -11,8 +11,6 @@ import (
 
 // Defines the contract for managing the lifecycle of Whisper models
 type ModelManager interface {
-	// Initialize and validate the configured model
-	Initialize(ctx context.Context) error
 	// Return the absolute path to the validated model file
 	GetModelPath(ctx context.Context) (string, error)
 	// Check if the model file at the given path is valid

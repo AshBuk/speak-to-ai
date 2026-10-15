@@ -111,20 +111,6 @@ func TestConfigService_ToggleWorkflowNotifications(t *testing.T) {
 	}
 }
 
-func TestConfigService_LoadConfig(t *testing.T) {
-	mockLogger := testutils.NewMockLogger()
-	testConfig := createTestConfig()
-
-	service := NewConfigService(mockLogger, testConfig, "")
-
-	if err := service.LoadConfig("/new/path/config.yaml"); err != nil {
-		t.Errorf("LoadConfig failed: %v", err)
-	}
-	if service.configFile != "/new/path/config.yaml" {
-		t.Error("Config file path not updated correctly")
-	}
-}
-
 func TestConfigService_SaveConfig_NoPath(t *testing.T) {
 	mockLogger := testutils.NewMockLogger()
 	testConfig := createTestConfig()

@@ -280,31 +280,3 @@ func TestHotkeyManager_MultipleStartStop(t *testing.T) {
 		t.Error("Manager should not be listening after final stop")
 	}
 }
-
-func TestHotkeyManager_ConcurrentAccess_Extended(t *testing.T) {
-	config := adapters.NewConfigAdapter("ctrl+r", "auto")
-	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
-	mockProvider := mocks.NewMockHotkeyProvider()
-	manager.provider = mockProvider
-
-	manager.RegisterToggle(func() error { return nil })
-
-	// Test concurrent toggle presses
-	done := make(chan bool, 10)
-
-	for i := 0; i < 10; i++ {
-		go func() {
-			defer func() { done <- true }()
-			for j := 0; j < 100; j++ {
-				_ = manager.SimulateHotkeyPress("toggle_recording")
-			}
-		}()
-	}
-
-	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
-		<-done
-	}
-
-	// Should not panic and should complete successfully
-}

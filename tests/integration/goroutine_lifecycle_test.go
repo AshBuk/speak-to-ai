@@ -7,23 +7,31 @@ package integration
 
 import (
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/hotkeys/providers"
 	"github.com/AshBuk/dabri/v2/internal/app"
+	"github.com/AshBuk/dabri/v2/internal/constants"
 	"github.com/AshBuk/dabri/v2/internal/testutils"
+	whisperproviders "github.com/AshBuk/dabri/v2/whisper/providers"
 	"go.uber.org/goleak"
 )
 
 // Shared goleak ignore rules for known long-lived goroutines from dependencies.
-// D-Bus connection workers persist beyond individual test scope.
+// The shared D-Bus session connection lives for the whole process: its reader
+// blocks in a socket read (inWorker below the top frame) and newConn parks a
+// goroutine until the connection context ends.
 // HTTP transport pool goroutines linger after model download attempts;
 // IgnoreAnyFunction is needed because the top of the stack is crypto/tls.(*Conn).Read,
 // not the HTTP function itself.
 var goLeakIgnores = []goleak.Option{
-	goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
-	goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.(*Conn).outWorker"),
+	goleak.IgnoreAnyFunction("github.com/godbus/dbus/v5.(*Conn).inWorker"),
+	goleak.IgnoreTopFunction("github.com/godbus/dbus/v5.newConn.func1"),
 	goleak.IgnoreAnyFunction("net/http.(*persistConn).writeLoop"),
 	goleak.IgnoreAnyFunction("net/http.(*persistConn).readLoop"),
 	goleak.IgnoreAnyFunction("net/http.(*http2ClientConn).readLoop"),
@@ -34,58 +42,39 @@ func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m, goLeakIgnores...)
 }
 
-// TestAppShutdownNoGoroutineLeaks verifies graceful shutdown without leaks
-func TestAppShutdownNoGoroutineLeaks(t *testing.T) {
+// TestAppLifecycle builds the full app (real whisper engine, mock tray, no-op
+// window) and checks that shutdown is quick and leaves no goroutines behind.
+func TestAppLifecycle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
+	}
+	var defaults config.Config
+	config.SetDefaultConfig(&defaults)
+	model := constants.ModelByID(defaults.General.WhisperModel)
+	if _, err := os.Stat(whisperproviders.NewModelPathResolver(&defaults, model.FileName).GetBundledModelPath()); err != nil {
+		t.Skipf("No local %s model; Initialize would download it", model.ID)
+	}
+	if _, err := exec.LookPath(defaults.Audio.RecordingMethod); err != nil {
+		t.Skipf("Recorder %s not installed", defaults.Audio.RecordingMethod)
 	}
 
 	defer goleak.VerifyNone(t, goLeakIgnores...)
 
-	mockLogger := testutils.NewMockLogger()
-	app := app.NewApp(mockLogger)
-	// Initialize without starting long-lived services
-	err := app.Initialize("../../config.yaml", false)
-	if err != nil {
-		t.Logf("Initialize failed (expected in test environment): %v", err)
+	a := app.NewApp(testutils.NewMockLogger())
+	// A missing config file is created with defaults
+	if err := a.Initialize(filepath.Join(t.TempDir(), "config.yaml"), false); err != nil {
+		t.Fatalf("Initialize failed: %v", err)
 	}
-	// Shutdown should complete without goroutine leaks
-	err = app.Shutdown()
-	http.DefaultClient.CloseIdleConnections()
-	if err != nil {
-		t.Errorf("Shutdown failed: %v", err)
-	}
-	// Give goroutines time to exit
-	time.Sleep(200 * time.Millisecond)
-}
-
-// TestGracefulShutdownTimeout verifies shutdown completes within timeout
-func TestGracefulShutdownTimeout(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
-	mockLogger := testutils.NewMockLogger()
-	app := app.NewApp(mockLogger)
-	err := app.Initialize("../../config.yaml", false)
-	if err != nil {
-		t.Logf("Initialize failed: %v", err)
-	}
-
-	// Measure shutdown time
 	start := time.Now()
-	err = app.Shutdown()
-	http.DefaultClient.CloseIdleConnections()
+	err := a.Shutdown()
 	duration := time.Since(start)
+	http.DefaultClient.CloseIdleConnections()
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
 	}
-	// Shutdown should complete quickly (< 6 seconds including 5s timeout)
 	if duration > 6*time.Second {
 		t.Errorf("Shutdown took too long: %v (expected < 6s)", duration)
 	}
-
-	t.Logf("Shutdown completed in %v", duration)
 }
 
 // TestEvdevProviderLifecycle verifies evdev provider goroutine cleanup

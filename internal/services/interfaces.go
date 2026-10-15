@@ -11,6 +11,7 @@ import (
 	"github.com/AshBuk/dabri/v2/audio/processing"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/hotkeys/adapters"
+	"github.com/AshBuk/dabri/v2/internal/logger"
 	"github.com/AshBuk/dabri/v2/internal/ui/window"
 	"github.com/AshBuk/dabri/v2/output/outputters"
 )
@@ -83,8 +84,6 @@ type IOServiceInterface interface {
 
 	// StartWebSocketServer starts the WebSocket server for remote control
 	StartWebSocketServer() error
-	// StopWebSocketServer stops the WebSocket server
-	StopWebSocketServer() error
 
 	// Shutdown releases IO resources
 	Shutdown() error
@@ -92,10 +91,6 @@ type IOServiceInterface interface {
 
 // ConfigServiceInterface defines the contract for configuration operations
 type ConfigServiceInterface interface {
-	// LoadConfig reads configuration from the given file
-	LoadConfig(configFile string) error
-	// SaveConfig persists the current configuration to disk
-	SaveConfig() error
 	// ResetToDefaults restores all settings to their default values
 	ResetToDefaults() error
 	// GetConfig returns the current configuration
@@ -129,11 +124,9 @@ type HotkeyServiceInterface interface {
 
 	// RegisterHotkeys activates hotkey capture for the current session
 	RegisterHotkeys() error
-	// UnregisterHotkeys releases hotkey capture
-	UnregisterHotkeys() error
 
 	// ReloadFromConfig applies new hotkey bindings without restarting
-	ReloadFromConfig(toggleRecording func() error, configProvider func() adapters.HotkeyConfig) error
+	ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error
 
 	// CaptureOnce captures a single keypress for hotkey rebinding
 	CaptureOnce(timeoutMs int) (string, error)
@@ -147,6 +140,7 @@ type HotkeyServiceInterface interface {
 
 // ServiceContainer holds all service interfaces
 type ServiceContainer struct {
+	Logger          logger.Logger
 	Audio           AudioServiceInterface
 	UI              UIServiceInterface
 	IO              IOServiceInterface
@@ -155,11 +149,6 @@ type ServiceContainer struct {
 	Window          window.Manager
 	TempFileManager *processing.TempFileManager
 	InputDaemon     *outputters.YdotoolDaemon
-}
-
-// Create a new service container with all services
-func NewServiceContainer() *ServiceContainer {
-	return &ServiceContainer{}
 }
 
 // Gracefully shut down all services

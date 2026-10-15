@@ -13,7 +13,7 @@
 | **Mock code** | 964 LOC |
 | **Total codebase** | 19,729 LOC |
 
-_Mock sources: all `.go` under `audio/mocks/`, `hotkeys/mocks/`, and `tests/mocks/`, plus `internal/testutils/mock_logger.go`, `internal/ui/tray/mock_tray.go`, and `output/outputters/mock_outputter.go`._
+_Mock sources: all `.go` under `hotkeys/mocks/` and `tests/mocks/`, plus `internal/testutils/mock_logger.go` and `internal/ui/tray/mock_tray.go`._
 
 ---
 

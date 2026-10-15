@@ -38,14 +38,6 @@ func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
 	cs.uiService = uiService
 }
 
-// Update active configuration path reference
-func (cs *ConfigService) LoadConfig(configFile string) error {
-	cs.logger.Info("Loading configuration from: %s", configFile)
-	cs.configFile = configFile
-	// Config is already loaded by factory, just update the file path
-	return nil
-}
-
 // Persist current configuration state to disk
 func (cs *ConfigService) SaveConfig() error {
 	cs.logger.Info("Saving configuration to: %s", cs.configFile)

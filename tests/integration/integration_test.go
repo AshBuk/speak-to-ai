@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/whisper"
@@ -18,28 +19,6 @@ import (
 
 // Integration tests for complete user scenarios
 // Run with: go test -tags=integration ./tests/integration/...
-
-func TestApplicationInitialization(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
-	// Test that basic config loading works
-	tempDir := t.TempDir()
-	// Create test config
-	cfg := &config.Config{}
-	config.SetDefaultConfig(cfg)
-	cfg.General.TempAudioPath = tempDir
-	cfg.Output.DefaultMode = "clipboard" // Safe for testing
-	cfg.WebServer.Enabled = false
-	// Test config validation
-	err := config.ValidateConfig(cfg)
-	if err != nil {
-		t.Logf("Config validation failed (expected in test environment): %v", err)
-	}
-
-	t.Log("Application initialization test completed")
-}
 
 func TestConfigurationLoading(t *testing.T) {
 	tests := []struct {
@@ -93,56 +72,6 @@ invalid: yaml: content:
 	}
 }
 
-func TestHotkeyManagerIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
-	// Test that hotkey manager can be created and configured
-	cfg := &config.Config{}
-	config.SetDefaultConfig(cfg)
-	// Test different hotkey configurations
-	testHotkeys := []string{
-		"altgr+comma",
-		"ctrl+shift+r",
-		"alt+space",
-	}
-
-	for _, hotkey := range testHotkeys {
-		t.Run("hotkey_"+hotkey, func(t *testing.T) {
-			cfg.Hotkeys.StartRecording = hotkey
-			// This would normally require elevated permissions
-			// In test environment, we just verify it doesn't crash
-			t.Logf("Testing hotkey configuration: %s", hotkey)
-		})
-	}
-}
-
-func TestOutputManagerIntegration(t *testing.T) {
-	// Test output manager creation with different configurations
-	cfg := &config.Config{}
-	config.SetDefaultConfig(cfg)
-	testModes := []string{"clipboard", "active_window"}
-
-	for _, mode := range testModes {
-		t.Run("mode_"+mode, func(t *testing.T) {
-			cfg.Output.DefaultMode = mode
-			// Test that output manager can be created
-			// Actual functionality would require external tools
-			t.Logf("Testing output mode: %s", mode)
-		})
-	}
-}
-
-func TestEnvironmentDetection(t *testing.T) {
-	// Test that environment detection doesn't crash
-	// and returns reasonable values
-
-	// This would test actual environment detection
-	// but in CI it might return "Unknown"
-	t.Log("Environment detection test - results may vary in CI")
-}
-
 func TestModelManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -157,7 +86,10 @@ func TestModelManagement(t *testing.T) {
 		modelManager := whisper.NewModelManager(cfg)
 
 		// This should always return a path (even if file doesn't exist in dev)
-		modelPath, err := modelManager.GetModelPath(context.Background())
+		// A short deadline keeps a missing model from starting a full download
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		modelPath, err := modelManager.GetModelPath(ctx)
 
 		if err != nil {
 			t.Logf("Bundled model not found (expected in development): %v", err)

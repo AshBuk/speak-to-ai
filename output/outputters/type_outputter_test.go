@@ -171,13 +171,15 @@ func TestTypeOutputter_TypeToActiveWindow_SupportedTools(t *testing.T) {
 	}
 }
 
+// installFakeTool puts a stub tool alone on PATH that records its argv to the
+// returned file and its stdin to the same path with a .stdin suffix.
 func installFakeTool(t *testing.T, tool string) string {
 	t.Helper()
 
 	dir := t.TempDir()
 	captureFile := filepath.Join(dir, "args.txt")
 	script := filepath.Join(dir, tool)
-	content := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$CAPTURE_FILE\"\n"
+	content := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$CAPTURE_FILE\"\ncommand -p cat > \"$CAPTURE_FILE.stdin\"\n"
 	if err := os.WriteFile(script, []byte(content), 0700); err != nil {
 		t.Fatalf("write fake tool: %v", err)
 	}
