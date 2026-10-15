@@ -11,7 +11,6 @@ import (
 
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/logger"
-	"github.com/AshBuk/dabri/v2/whisper/interfaces"
 )
 
 // WhisperEngine is a no-cgo stub that fails gracefully when CGO is disabled
@@ -33,14 +32,4 @@ func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 // TranscribeWithContext returns an error in the stub implementation
 func (w *WhisperEngine) TranscribeWithContext(_ context.Context, _ string) (string, error) {
 	return "", errors.New("transcription unavailable: built without cgo")
-}
-
-// GetModel returns nil in the stub implementation
-func (w *WhisperEngine) GetModel() interfaces.WhisperModel {
-	return nil
-}
-
-// GetConfig returns nil in the stub implementation
-func (w *WhisperEngine) GetConfig() *config.Config {
-	return nil
 }

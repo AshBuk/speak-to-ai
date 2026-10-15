@@ -5,8 +5,6 @@ package interfaces
 
 import (
 	"context"
-
-	"github.com/AshBuk/dabri/v2/config"
 )
 
 // Defines the contract for managing the lifecycle of Whisper models
@@ -19,21 +17,4 @@ type ModelManager interface {
 	SwitchModel(ctx context.Context, modelID string) (string, error)
 	// Delete a downloaded model by ID. Cannot delete the active model.
 	DeleteModel(modelID string) error
-}
-
-// Represents a whisper.Model type without a direct CGO dependency
-type WhisperModel interface{}
-
-// Defines the contract for a speech-to-text transcription engine
-type WhisperEngine interface {
-	// Transcribe an audio file and return the resulting text
-	Transcribe(audioFile string) (string, error)
-	// Add cancellation support for long running operations
-	TranscribeWithContext(ctx context.Context, audioFile string) (string, error)
-	// Close the engine and release any associated resources
-	Close() error
-	// Return the underlying model object
-	GetModel() WhisperModel
-	// Return the configuration used by the engine
-	GetConfig() *config.Config
 }
