@@ -13,8 +13,7 @@
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  AUDIO RECORDER FACTORY                                                 │
 │  [audio/factory/factory.go]                                             │
-│  ├─ CreateRecorder()                                                    │
-│  └─ CreateRecorderWithFallback()  ← Tests and falls back if needed      │
+│  └─ CreateRecorder()                                                    │
 └─────────────────────────────────────────────────────────────────────────┘
                       │                               │
           ┌───────────┴───────────┐                   │

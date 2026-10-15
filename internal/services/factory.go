@@ -35,7 +35,11 @@ import (
 //  3. Hotkeys, WebSocket, tray, window, notifications (UI/control)
 //  4. Services and their cross-references, then UI callbacks
 func NewContainer(ctx context.Context, log logger.Logger, cfg *config.Config, cfgFile string, env platform.EnvironmentType) (*ServiceContainer, error) {
-	modelManager := whisper.NewModelManager(cfg, log)
+	// Components that apply settings live read them through current.
+	// The rest keep cfg, which later updates never mutate.
+	configSvc := NewConfigService(log, cfg, cfgFile)
+	current := configSvc.GetConfig
+	modelManager := whisper.NewModelManager(current, log)
 	// Resolving the model downloads it when missing
 	modelPath, err := modelManager.GetModelPath(ctx)
 	if err != nil {
@@ -54,12 +58,14 @@ func NewContainer(ctx context.Context, log logger.Logger, cfg *config.Config, cf
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize audio recorder: %w", err)
 	}
-	engine, err := whisper.NewWhisperEngine(cfg, modelPath, log)
+	engine, err := whisper.NewWhisperEngine(current, modelPath, log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize whisper engine: %w", err)
 	}
 
 	// Graceful degradation: if typing fails, fall back to clipboard only.
+	// The fallback edits cfg in place, which is safe only because nothing
+	// reads it concurrently yet.
 	// platform.EnvironmentType is aliased across output/hotkeys packages — no conversion needed
 	outputter, err := outputFactory.GetOutputterFromConfig(cfg, env)
 	if err != nil {
@@ -78,12 +84,11 @@ func NewContainer(ctx context.Context, log logger.Logger, cfg *config.Config, cf
 	trayManager.Start()
 	trayManager.UpdateSettings(cfg)
 	win := newWindow(ctx, cfg, log)
-	notifier := notify.NewNotificationManager("Dabri", cfg)
+	notifier := notify.NewNotificationManager("Dabri", current)
 
-	configSvc := NewConfigService(log, cfg, cfgFile)
-	audioSvc := NewAudioService(log, cfg, recorder, engine, modelManager, tempFiles)
-	uiSvc := NewUIService(log, trayManager, notifier, win, cfg)
-	ioSvc := NewIOService(log, cfg, outputter, wsServer)
+	audioSvc := NewAudioService(log, current, recorder, engine, modelManager, tempFiles)
+	uiSvc := NewUIService(log, trayManager, notifier, win, current)
+	ioSvc := NewIOService(log, current, outputter, wsServer)
 
 	configSvc.SetUIService(uiSvc)     // reload notifications
 	ioSvc.SetUIService(uiSvc)         // output notifications

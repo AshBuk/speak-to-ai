@@ -12,6 +12,7 @@ import (
 
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/notify"
+	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
 
 // Helper function to create test config
@@ -47,7 +48,7 @@ func TestNotificationManager_Integration(t *testing.T) {
 		t.Skip("notify-send not available, skipping integration test")
 	}
 
-	nm := notify.NewNotificationManager("Integration Test", createTestConfig())
+	nm := notify.NewNotificationManager("Integration Test", testutils.StaticConfig(createTestConfig()))
 	// Test a sequence of notifications
 	err := nm.NotifyStartRecording()
 	if err != nil {

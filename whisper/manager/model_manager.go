@@ -17,13 +17,13 @@ import (
 
 // Manages Whisper model lifecycle: resolution, download, and validation
 type ModelManager struct {
-	config *config.Config
+	config func() *config.Config // Current config; the active model applies live
 	logger logger.Logger
 }
 
 // Create a new manager responsible for the Whisper model.
 // An optional logger enables download-progress reporting.
-func NewModelManager(config *config.Config, loggers ...logger.Logger) *ModelManager {
+func NewModelManager(config func() *config.Config, loggers ...logger.Logger) *ModelManager {
 	m := &ModelManager{config: config}
 	if len(loggers) > 0 {
 		m.logger = loggers[0]
@@ -64,7 +64,7 @@ func (m *ModelManager) resolveModel(ctx context.Context, modelID string) (string
 		return "", fmt.Errorf("unknown model ID: %s", modelID)
 	}
 
-	resolver := providers.NewModelPathResolver(m.config, def.FileName)
+	resolver := providers.NewModelPathResolver(m.config(), def.FileName)
 
 	// Check bundled / user data / dev paths
 	modelPath := resolver.GetBundledModelPath()
@@ -109,7 +109,7 @@ func (m *ModelManager) DeleteModel(modelID string) error {
 	if modelID == m.configuredModelID() {
 		return fmt.Errorf("cannot delete active model: %s", modelID)
 	}
-	resolver := providers.NewModelPathResolver(m.config, def.FileName)
+	resolver := providers.NewModelPathResolver(m.config(), def.FileName)
 	path := resolver.GetUserDataModelPath()
 	if err := os.Remove(path); err != nil {
 		if os.IsNotExist(err) {
@@ -122,7 +122,7 @@ func (m *ModelManager) DeleteModel(modelID string) error {
 
 // configuredModelID returns the model ID from config, falling back to default
 func (m *ModelManager) configuredModelID() string {
-	if id := m.config.General.WhisperModel; id != "" {
+	if id := m.config().General.WhisperModel; id != "" {
 		return id
 	}
 	return constants.DefaultModelID

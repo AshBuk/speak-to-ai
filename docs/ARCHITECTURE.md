@@ -101,7 +101,7 @@ The application follows a **dual-mode daemon architecture** with clear separatio
 - **`audio_service.go`**: Audio recording, Whisper transcription
 - **`ui_service.go`**: System tray, main window, notifications, UI state (fans state/config changes out to both tray and window)
 - **`io_service.go`**: Text output, WebSocket server
-- **`config_service.go`**: Configuration file operations
+- **`config_service.go`**: Configuration file operations. A change is saved as a new copy and published only after the save succeeds, so a config returned by `GetConfig` is never mutated. Components that apply settings live (notifications, the whisper engine and model manager, the audio, IO and UI services) read through `GetConfig`. The rest keep the startup config.
 - **`hotkey_service.go`**: Hotkey registration, reload and capture for rebinding
 
 Related constants:

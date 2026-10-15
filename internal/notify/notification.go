@@ -14,11 +14,11 @@ import (
 // Manages the sending of desktop notifications
 type NotificationManager struct {
 	appName string
-	config  *config.Config
+	config  func() *config.Config // Current config; workflow toggles apply live
 }
 
 // Create a new notification manager
-func NewNotificationManager(appName string, cfg *config.Config) *NotificationManager {
+func NewNotificationManager(appName string, cfg func() *config.Config) *NotificationManager {
 	return &NotificationManager{
 		appName: appName,
 		config:  cfg,
@@ -27,7 +27,7 @@ func NewNotificationManager(appName string, cfg *config.Config) *NotificationMan
 
 // Show a notification when recording starts
 func (nm *NotificationManager) NotifyStartRecording() error {
-	if !nm.config.Notifications.EnableWorkflowNotifications {
+	if !nm.config().Notifications.EnableWorkflowNotifications {
 		return nil // Skip if workflow notifications are disabled
 	}
 	return nm.sendNotification(constants.NotifyTitleRecordingStart, constants.NotifyRecordingStartMsg, "microphone-sensitivity-high-symbolic")
@@ -35,7 +35,7 @@ func (nm *NotificationManager) NotifyStartRecording() error {
 
 // Show a notification when recording stops
 func (nm *NotificationManager) NotifyStopRecording() error {
-	if !nm.config.Notifications.EnableWorkflowNotifications {
+	if !nm.config().Notifications.EnableWorkflowNotifications {
 		return nil // Skip if workflow notifications are disabled
 	}
 	return nm.sendNotification(constants.NotifyTitleRecordingStop, constants.NotifyRecordingStopMsg, "microphone-sensitivity-muted-symbolic")
@@ -43,12 +43,13 @@ func (nm *NotificationManager) NotifyStopRecording() error {
 
 // Show a notification when transcription is complete
 func (nm *NotificationManager) NotifyTranscriptionComplete() error {
-	if !nm.config.Notifications.EnableWorkflowNotifications {
+	cfg := nm.config()
+	if !cfg.Notifications.EnableWorkflowNotifications {
 		return nil // Skip if workflow notifications are disabled
 	}
 	// Select message based on current output mode
 	body := constants.NotifyTranscriptionMsg
-	if nm.config.Output.DefaultMode == config.OutputModeActiveWindow {
+	if cfg.Output.DefaultMode == config.OutputModeActiveWindow {
 		body = constants.NotifyTranscriptionTypedMsg
 	}
 	return nm.sendNotification(constants.NotifyTitleTranscription, body, "edit-copy-symbolic")
@@ -72,7 +73,7 @@ func (nm *NotificationManager) ShowNotification(summary, body string) error {
 // Send a notification using the notify-send command
 func (nm *NotificationManager) sendNotification(summary, body, icon string) error {
 	// Security: validate command before execution
-	if !config.IsCommandAllowed(nm.config, "notify-send") {
+	if !config.IsCommandAllowed(nm.config(), "notify-send") {
 		return fmt.Errorf("notify-send command not allowed")
 	}
 

@@ -28,7 +28,7 @@ type UIService struct {
 	tray   tray.Manager
 	notify *notify.NotificationManager
 	window window.Manager
-	config *config.Config
+	config func() *config.Config
 }
 
 // Create a new service instance
@@ -37,7 +37,7 @@ func NewUIService(
 	trayManager tray.Manager,
 	notifyManager *notify.NotificationManager,
 	mainWindow window.Manager,
-	config *config.Config,
+	config func() *config.Config,
 ) *UIService {
 	return &UIService{
 		logger: logger,
@@ -176,7 +176,7 @@ func (us *UIService) createDefaultConfig(path string) error {
 	}
 
 	// Use current config if available, otherwise create default
-	cfg := us.config
+	cfg := us.config()
 	if cfg == nil {
 		cfg = &config.Config{}
 		config.SetDefaultConfig(cfg)

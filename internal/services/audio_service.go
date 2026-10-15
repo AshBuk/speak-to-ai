@@ -23,7 +23,7 @@ import (
 // Orchestrates recording, transcription, and output workflows
 type AudioService struct {
 	logger        logger.Logger
-	config        *config.Config
+	config        func() *config.Config // Current config; read per operation
 	recorder      interfaces.AudioRecorder
 	whisperEngine *whisper.WhisperEngine
 	modelManager  whisper.ModelManager
@@ -57,7 +57,7 @@ var ErrNoRecordingInProgress = errors.New("no recording in progress")
 // Create a new AudioService instance
 func NewAudioService(
 	logger logger.Logger,
-	config *config.Config,
+	config func() *config.Config,
 	recorder interfaces.AudioRecorder,
 	whisperEngine *whisper.WhisperEngine,
 	modelManager whisper.ModelManager,
@@ -190,15 +190,16 @@ func (as *AudioService) stopAndPrepareTranscription(swallowStopError bool) (stri
 		as.isRecording = false
 
 		// Auto-fallback to arecord if using ffmpeg
-		if as.config.Audio.RecordingMethod == "ffmpeg" {
+		if as.config().Audio.RecordingMethod == "ffmpeg" {
 			if as.cfg != nil {
-				_ = as.cfg.UpdateRecordingMethod("arecord")
+				if err := as.cfg.UpdateRecordingMethod("arecord"); err != nil {
+					as.logger.Error("Failed to persist arecord fallback: %v", err)
+				}
 			}
-			as.config.Audio.RecordingMethod = "arecord"
 			as.clearSessionLocked()
 			if as.ui != nil {
 				as.ui.ShowNotification("Audio Fallback", "Switched to arecord due to ffmpeg capture error. Try recording again.")
-				as.ui.UpdateSettings(as.config)
+				as.ui.UpdateSettings(as.config())
 			}
 			as.logger.Info("Auto-fallback: switched to arecord due to ffmpeg failure")
 		}
@@ -303,7 +304,7 @@ func (as *AudioService) ensureModelAvailable() error {
 func (as *AudioService) ensureAudioRecorderAvailable() error {
 	if as.audioRecorderNeedsReinit || as.recorder == nil {
 		as.logger.Info("Reinitializing audio recorder...")
-		recorder, err := factory.GetRecorder(as.config, as.logger, as.tempManager)
+		recorder, err := factory.GetRecorder(as.config(), as.logger, as.tempManager)
 		if err != nil {
 			return fmt.Errorf("failed to reinitialize audio recorder: %w", err)
 		}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/constants"
+	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
 
 // Helper function to create test config
@@ -52,7 +53,7 @@ func recordedArgs(t *testing.T, argsFile string) []string {
 func TestNewNotificationManager(t *testing.T) {
 	appName := "TestApp"
 	cfg := createTestConfig()
-	nm := NewNotificationManager(appName, cfg)
+	nm := NewNotificationManager(appName, testutils.StaticConfig(cfg))
 	if nm == nil {
 		t.Fatal("NewNotificationManager returned nil")
 	}
@@ -64,7 +65,7 @@ func TestNewNotificationManager(t *testing.T) {
 
 func TestShowNotification_PassesTextAfterOptionTerminator(t *testing.T) {
 	args := installFakeNotifySend(t, 0)
-	nm := NewNotificationManager("TestApp", createTestConfig())
+	nm := NewNotificationManager("TestApp", testutils.StaticConfig(createTestConfig()))
 
 	// A summary that looks like a flag must not be parsed as one
 	if err := nm.ShowNotification("--urgency=critical", "body"); err != nil {
@@ -82,7 +83,7 @@ func TestWorkflowNotifications_FollowSetting(t *testing.T) {
 			args := installFakeNotifySend(t, 0)
 			cfg := createTestConfig()
 			cfg.Notifications.EnableWorkflowNotifications = enabled
-			nm := NewNotificationManager("TestApp", cfg)
+			nm := NewNotificationManager("TestApp", testutils.StaticConfig(cfg))
 
 			for _, notify := range []func() error{nm.NotifyStartRecording, nm.NotifyStopRecording, nm.NotifyTranscriptionComplete} {
 				if err := notify(); err != nil {
@@ -113,7 +114,7 @@ func TestNotifyTranscriptionComplete_BodyFollowsOutputMode(t *testing.T) {
 			cfg.Notifications.EnableWorkflowNotifications = true
 			cfg.Output.DefaultMode = mode
 
-			if err := NewNotificationManager("TestApp", cfg).NotifyTranscriptionComplete(); err != nil {
+			if err := NewNotificationManager("TestApp", testutils.StaticConfig(cfg)).NotifyTranscriptionComplete(); err != nil {
 				t.Fatal(err)
 			}
 			if got := recordedArgs(t, args); len(got) == 0 || got[len(got)-1] != body {
@@ -129,7 +130,7 @@ func TestSendNotification_Errors(t *testing.T) {
 		cfg := createTestConfig()
 		cfg.Security.AllowedCommands = []string{"xsel"}
 
-		err := NewNotificationManager("TestApp", cfg).NotifyError("boom")
+		err := NewNotificationManager("TestApp", testutils.StaticConfig(cfg)).NotifyError("boom")
 		if err == nil || err.Error() != "notify-send command not allowed" {
 			t.Errorf("got %v", err)
 		}
@@ -139,7 +140,7 @@ func TestSendNotification_Errors(t *testing.T) {
 	})
 	t.Run("notify-send fails", func(t *testing.T) {
 		installFakeNotifySend(t, 1)
-		err := NewNotificationManager("TestApp", createTestConfig()).NotifyError("boom")
+		err := NewNotificationManager("TestApp", testutils.StaticConfig(createTestConfig())).NotifyError("boom")
 		if err == nil || !strings.HasPrefix(err.Error(), "failed to send notification:") {
 			t.Errorf("got %v", err)
 		}
@@ -147,7 +148,7 @@ func TestSendNotification_Errors(t *testing.T) {
 }
 
 func TestNotificationManager_IsAvailable(t *testing.T) {
-	nm := NewNotificationManager("TestApp", createTestConfig())
+	nm := NewNotificationManager("TestApp", testutils.StaticConfig(createTestConfig()))
 
 	installFakeNotifySend(t, 0)
 	if !nm.IsAvailable() {
