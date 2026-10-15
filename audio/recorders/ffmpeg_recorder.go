@@ -20,7 +20,6 @@ const (
 	warmupTimeout      = 2500 * time.Millisecond
 	warmupPollInterval = 40 * time.Millisecond
 	postRollDelay      = 600 * time.Millisecond
-	retryFlushDelay    = 1800 * time.Millisecond
 
 	// Audio validation constants
 	minAudioPayloadMs = 50 // Minimum audio payload in milliseconds
@@ -126,34 +125,11 @@ func (f *FFmpegRecorder) StartRecording() error {
 	return nil
 }
 
-// Stop recording with ffmpeg-specific adaptive flush for short recordings
+// Stop recording after a short post-roll so the last words are not trimmed
 func (f *FFmpegRecorder) StopRecording() (string, error) {
 	// Always allow a small post-roll before stopping to avoid trimming
 	time.Sleep(postRollDelay)
-
-	// Stop the base recording process
-	outputFile, err := f.BaseRecorder.StopRecording()
-	if err == nil {
-		return outputFile, nil // Success on first attempt
-	}
-	// Retry on empty/too-short files regardless of duration (ffmpeg flush)
-	isEmptyFileError := strings.Contains(err.Error(), "audio file is empty") ||
-		strings.Contains(err.Error(), "audio file too short")
-	if !isEmptyFileError {
-		return outputFile, err
-	}
-	// ffmpeg-specific retry: short recordings need extra time to flush
-	f.logger.Warning("ffmpeg recording resulted in empty/short file, retrying with extra flush time...")
-	time.Sleep(retryFlushDelay)
-	// Re-check the file
-	info, statErr := os.Stat(outputFile)
-	if statErr == nil && info.Size() > 44 {
-		f.logger.Info("Retry successful: file now has %d bytes", info.Size())
-		return outputFile, nil
-	}
-	// Still failed after retry
-	f.logger.Error("Retry failed, file still empty or too small")
-	return outputFile, err
+	return f.BaseRecorder.StopRecording()
 }
 
 // Build the base command-line arguments for an ffmpeg recording process

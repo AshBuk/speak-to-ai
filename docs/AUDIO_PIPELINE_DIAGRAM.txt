@@ -95,7 +95,7 @@ Capabilities:
 ├─  Concurrent audio: Always (via PulseAudio API)
 ├─  Auto-resolves 'default' → actual source name
 ├─  Warm-up mechanism: Prevents clipped audio starts
-└─  Adaptive flush: Handles short recordings reliably
+└─  Post-roll: Keeps the last words from being trimmed
 Trade-offs:
 └─  Higher latency (~20-30ms), requires PipeWire/PulseAudio running
 ____________________________________________________________________________

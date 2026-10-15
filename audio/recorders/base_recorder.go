@@ -133,10 +133,7 @@ func (b *BaseRecorder) verifyProcessStarted(startTime time.Time) error {
 
 // Validate that the audio file was created and has valid content
 func (b *BaseRecorder) validateAudioFile() error {
-	// Allow buffers to flush to disk
-	b.logger.Debug("Waiting for buffers to flush...")
-	time.Sleep(500 * time.Millisecond)
-
+	// The process has been reaped, so its output file is complete
 	b.logger.Debug("Checking audio file: %s", b.outputFile)
 	info, err := os.Stat(b.outputFile)
 	if err != nil {
