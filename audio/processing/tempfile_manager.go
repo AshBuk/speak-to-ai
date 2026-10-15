@@ -14,7 +14,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Manages the lifecycle of temporary audio files
+// TempFileManager manages the lifecycle of temporary audio files
 type TempFileManager struct {
 	tempFiles      map[string]time.Time
 	mutex          sync.Mutex
@@ -26,7 +26,7 @@ type TempFileManager struct {
 	wg             sync.WaitGroup
 }
 
-// Create a new TempFileManager instance
+// NewTempFileManager creates a new TempFileManager instance
 func NewTempFileManager(cleanupTimeout time.Duration, loggers ...logger.Logger) *TempFileManager {
 	var logSink logger.Logger
 	if len(loggers) > 0 && loggers[0] != nil {
@@ -59,14 +59,14 @@ func (t *TempFileManager) Start() {
 	}()
 }
 
-// Add a file to the manager for tracking and eventual cleanup
+// AddFile adds a file to the manager for tracking and eventual cleanup
 func (t *TempFileManager) AddFile(path string) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	t.tempFiles[path] = time.Now()
 }
 
-// Remove a file from tracking and optionally delete it from disk
+// RemoveFile removes a file from tracking and optionally deletes it from disk
 func (t *TempFileManager) RemoveFile(path string, shouldDelete bool) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -118,7 +118,7 @@ func (t *TempFileManager) cleanupOldFiles() {
 	}
 }
 
-// Remove all tracked temporary files from disk immediately
+// CleanupAll removes all tracked temporary files from disk immediately
 func (t *TempFileManager) CleanupAll() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -150,7 +150,7 @@ func (t *TempFileManager) Stop() {
 	t.wg.Wait()
 }
 
-// Create a new temporary .wav file and register it for cleanup
+// CreateTempWav creates a new temporary .wav file and registers it for cleanup
 func (t *TempFileManager) CreateTempWav(baseDir string) (string, error) {
 	// Determine the directory for the temporary file
 	dir := baseDir

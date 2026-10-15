@@ -13,7 +13,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Manages persistent configuration state and validation.
+// ConfigService manages persistent configuration state and validation.
 // Every change publishes a new copy, so a *config.Config returned by
 // GetConfig is never mutated and is safe to read from any goroutine.
 type ConfigService struct {
@@ -24,7 +24,7 @@ type ConfigService struct {
 	uiService  UIServiceInterface
 }
 
-// Create a new ConfigService instance
+// NewConfigService creates a new ConfigService instance
 func NewConfigService(
 	logger logger.Logger,
 	config *config.Config,
@@ -39,12 +39,12 @@ func NewConfigService(
 	return cs
 }
 
-// Wire UI service to enable user feedback after config changes
+// SetUIService wires UI service to enable user feedback after config changes
 func (cs *ConfigService) SetUIService(uiService UIServiceInterface) {
 	cs.uiService = uiService
 }
 
-// Persist current configuration state to disk
+// SaveConfig persists current configuration state to disk
 func (cs *ConfigService) SaveConfig() error {
 	return cs.update(func(*config.Config) {})
 }
@@ -67,7 +67,7 @@ func (cs *ConfigService) update(fn func(*config.Config)) error {
 	return nil
 }
 
-// Restore factory defaults and notify user of successful reset
+// ResetToDefaults restores factory defaults and notifies the user of successful reset
 func (cs *ConfigService) ResetToDefaults() error {
 	cs.logger.Info("Resetting configuration to defaults...")
 	if err := cs.update(config.SetDefaultConfig); err != nil {
@@ -83,12 +83,12 @@ func (cs *ConfigService) ResetToDefaults() error {
 	return nil
 }
 
-// Provide read-only access to current configuration
+// GetConfig provides read-only access to current configuration
 func (cs *ConfigService) GetConfig() *config.Config {
 	return cs.current.Load()
 }
 
-// Change whisper model setting; a failed save keeps the old value
+// UpdateWhisperModel changes whisper model setting; a failed save keeps the old value
 func (cs *ConfigService) UpdateWhisperModel(modelID string) error {
 	cs.logger.Info("Updating whisper model to: %s", modelID)
 	if cs.GetConfig().General.WhisperModel == modelID {
@@ -100,7 +100,7 @@ func (cs *ConfigService) UpdateWhisperModel(modelID string) error {
 	return nil
 }
 
-// Change whisper language setting; a failed save keeps the old value
+// UpdateLanguage changes whisper language setting; a failed save keeps the old value
 func (cs *ConfigService) UpdateLanguage(language string) error {
 	cs.logger.Info("Updating language to: %s", language)
 	if cs.GetConfig().General.Language == language {
@@ -112,7 +112,7 @@ func (cs *ConfigService) UpdateLanguage(language string) error {
 	return nil
 }
 
-// Switch between clipboard and typing output; a failed save keeps the old value
+// UpdateOutputMode switches between clipboard and typing output; a failed save keeps the old value
 func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	cs.logger.Info("Updating output mode to: %s", mode)
 	if cs.GetConfig().Output.DefaultMode == mode {
@@ -124,7 +124,7 @@ func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	return nil
 }
 
-// Enable/disable desktop notifications for workflow events
+// ToggleWorkflowNotifications enables or disables desktop notifications for workflow events
 func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.logger.Info("Toggling workflow notifications")
 	return cs.update(func(c *config.Config) {
@@ -132,7 +132,7 @@ func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	})
 }
 
-// Switch audio backend (arecord/ffmpeg) with validation and persistence
+// UpdateRecordingMethod switches audio backend (arecord/ffmpeg) with validation and persistence
 func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	cs.logger.Info("Updating recording method to: %s", method)
 	if method != "arecord" && method != "ffmpeg" {
@@ -147,7 +147,7 @@ func (cs *ConfigService) UpdateRecordingMethod(method string) error {
 	return nil
 }
 
-// Rebind hotkey combinations; a failed save keeps the old bindings
+// UpdateHotkey rebinds hotkey combinations; a failed save keeps the old bindings
 func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	var set func(c *config.Config)
 	switch action {
@@ -171,7 +171,7 @@ func (cs *ConfigService) UpdateHotkey(action, combo string) error {
 	return nil
 }
 
-// Ensure final configuration state is saved before termination
+// Shutdown ensures final configuration state is saved before termination
 func (cs *ConfigService) Shutdown() error {
 	cs.logger.Info("ConfigService shutdown complete")
 	return nil

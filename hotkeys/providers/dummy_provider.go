@@ -10,7 +10,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Implements a KeyboardEventProvider with no actual functionality
+// DummyKeyboardProvider implements a KeyboardEventProvider with no actual functionality
 // Use as a fallback when no other providers are available
 type DummyKeyboardProvider struct {
 	callbacks   map[string]func() error
@@ -18,7 +18,7 @@ type DummyKeyboardProvider struct {
 	logger      logger.Logger
 }
 
-// Create a new DummyKeyboardProvider
+// NewDummyKeyboardProvider creates a new DummyKeyboardProvider
 func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	return &DummyKeyboardProvider{
 		callbacks:   make(map[string]func() error),
@@ -27,12 +27,12 @@ func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	}
 }
 
-// Return true as the dummy provider is always supported as a fallback
+// IsSupported returns true as the dummy provider is always supported as a fallback
 func (p *DummyKeyboardProvider) IsSupported() bool {
 	return true
 }
 
-// Log helpful instructions and warnings instead of starting a listener
+// Start logs helpful instructions and warnings instead of starting a listener
 func (p *DummyKeyboardProvider) Start() error {
 	if p.isListening {
 		return fmt.Errorf("dummy keyboard provider already started")
@@ -61,12 +61,12 @@ func (p *DummyKeyboardProvider) Start() error {
 	return nil
 }
 
-// Update the state to indicate the provider is stopped
+// Stop updates the state to indicate the provider is stopped
 func (p *DummyKeyboardProvider) Stop() {
 	p.isListening = false
 }
 
-// Store the callback but never call it
+// RegisterHotkey stores the callback but never calls it
 func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
 	p.logger.Info("Registered action: %s (%s) (but it will not function with dummy provider)", id, hotkey)
 	p.callbacks[id] = callback
@@ -76,7 +76,7 @@ func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(
 // SupportsCaptureOnce returns false as dummy provider has no real functionality
 func (p *DummyKeyboardProvider) SupportsCaptureOnce() bool { return false }
 
-// Return an error as this functionality is not supported
+// CaptureOnce returns an error as this functionality is not supported
 func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dummy provider")
 }

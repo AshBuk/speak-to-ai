@@ -179,7 +179,7 @@ func (f *Factory) createTypeOutputter(env EnvironmentType) (interfaces.Outputter
 	return outputters.NewTypeOutputter(tool, f.config)
 }
 
-// Create an outputter directly from a configuration
+// GetOutputterFromConfig creates an outputter directly from a configuration
 func GetOutputterFromConfig(config *config.Config, env EnvironmentType) (interfaces.Outputter, error) {
 	factory := NewFactory(config)
 	return factory.GetOutputter(env)

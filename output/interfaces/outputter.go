@@ -3,7 +3,7 @@
 
 package interfaces
 
-// Defines the contract for text output operations
+// Outputter defines the contract for text output operations
 type Outputter interface {
 	// Copy text to the system clipboard
 	CopyToClipboard(text string) error

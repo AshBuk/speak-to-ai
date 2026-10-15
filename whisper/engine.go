@@ -19,7 +19,7 @@ import (
 	"github.com/go-audio/wav"
 )
 
-// Provides an interface for interacting with the whisper.cpp model.
+// WhisperEngine provides an interface for interacting with the whisper.cpp model.
 // It encapsulates model loading, context management, and the transcription process
 type WhisperEngine struct {
 	config    func() *config.Config // Current config; language changes apply live
@@ -28,7 +28,7 @@ type WhisperEngine struct {
 	logger    logger.Logger
 }
 
-// Initialize and load a new Whisper model from the given path.
+// NewWhisperEngine initializes and loads a new Whisper model from the given path.
 // Return an error if the model file is not found or fails to load
 func NewWhisperEngine(config func() *config.Config, modelPath string, loggers ...logger.Logger) (*WhisperEngine, error) {
 	if !utils.IsValidFile(modelPath) {
@@ -56,7 +56,7 @@ func NewWhisperEngine(config func() *config.Config, modelPath string, loggers ..
 	}, nil
 }
 
-// Release the resources associated with the loaded Whisper model
+// Close releases the resources associated with the loaded Whisper model
 func (w *WhisperEngine) Close() error {
 	if w.model != nil {
 		return w.model.Close()
@@ -64,7 +64,7 @@ func (w *WhisperEngine) Close() error {
 	return nil
 }
 
-// Perform speech-to-text conversion on the given audio file.
+// Transcribe performs speech-to-text conversion on the given audio file.
 // Handle file validation, audio loading, context management, and processing
 func (w *WhisperEngine) Transcribe(audioFile string) (string, error) {
 	if !utils.IsValidFile(audioFile) {

@@ -19,9 +19,21 @@ linters:
     - unused
     - unparam
     - gocyclo
+    - revive
   settings:
     gocyclo:
       min-complexity: 15
+    revive:
+      rules:
+        # Exported identifiers need a doc comment that starts with their name
+        - name: exported
+          arguments:
+            - disableStutteringCheck
   exclusions:
     paths:
       - build
+    rules:
+      # Test doubles mirror interfaces documented elsewhere
+      - path: (mocks/|mock_tray\.go|testutils/)
+        linters:
+          - revive

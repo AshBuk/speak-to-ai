@@ -12,13 +12,13 @@ import (
 	"github.com/AshBuk/dabri/v2/output/interfaces"
 )
 
-// Implements the Outputter interface for typing text into the active window
+// TypeOutputter implements the Outputter interface for typing text into the active window
 type TypeOutputter struct {
 	typeTool string
 	config   *config.Config
 }
 
-// Create a new type outputter
+// NewTypeOutputter creates a new type outputter
 func NewTypeOutputter(typeTool string, cfg *config.Config) (interfaces.Outputter, error) {
 	// Verify the required tool exists in the system's PATH
 	if _, err := exec.LookPath(typeTool); err != nil {
@@ -30,7 +30,7 @@ func NewTypeOutputter(typeTool string, cfg *config.Config) (interfaces.Outputter
 	}, nil
 }
 
-// Simulate typing text into the currently active window
+// TypeToActiveWindow simulates typing text into the currently active window
 func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	// Security: validate the command before execution
 	if !config.IsCommandAllowed(o.config, o.typeTool) {
@@ -79,12 +79,12 @@ func (o *TypeOutputter) TypeToActiveWindow(text string) error {
 	return nil
 }
 
-// Return an error as clipboard operations are not supported by this outputter
+// CopyToClipboard returns an error as clipboard operations are not supported by this outputter
 func (o *TypeOutputter) CopyToClipboard(text string) error {
 	return fmt.Errorf("copying to clipboard not supported by type outputter")
 }
 
-// Return the name of the typing tool being used
+// GetToolNames returns the name of the typing tool being used
 func (o *TypeOutputter) GetToolNames() (clipboardTool, typeTool string) {
 	return "", o.typeTool
 }

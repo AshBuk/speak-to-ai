@@ -27,8 +27,10 @@ import (
 type Config = models.Config
 
 const (
-	// Output mode constants, aliased from the models package for convenience.
-	OutputModeClipboard    = models.OutputModeClipboard
+	// OutputModeClipboard copies transcripts to the clipboard. Both output
+	// mode constants are aliased from the models package for convenience.
+	OutputModeClipboard = models.OutputModeClipboard
+	// OutputModeActiveWindow types transcripts into the focused window.
 	OutputModeActiveWindow = models.OutputModeActiveWindow
 
 	// AppName is the application identifier used in paths.
@@ -72,52 +74,52 @@ func EnsureConfigDir() (string, error) {
 	return dir, nil
 }
 
-// Load configuration from the specified file using the configured loader.
+// LoadConfig loads configuration from the specified file using the configured loader.
 func LoadConfig(filename string, loggers ...logger.Logger) (*Config, error) {
 	return loaders.LoadConfig(filename, loggers...)
 }
 
-// Write the configuration to the specified file.
+// SaveConfig writes the configuration to the specified file.
 func SaveConfig(filename string, config *Config) error {
 	return loaders.SaveConfig(filename, config)
 }
 
-// Apply the default values to a configuration object.
+// SetDefaultConfig applies the default values to a configuration object.
 func SetDefaultConfig(config *Config) {
 	loaders.SetDefaultConfig(config)
 }
 
-// Check the configuration for correctness and apply corrections if necessary.
+// ValidateConfig checks the configuration for correctness and applies corrections if necessary.
 func ValidateConfig(config *Config) error {
 	return validators.ValidateConfig(config)
 }
 
-// Check if a command is permitted by the security policy.
+// IsCommandAllowed checks if a command is permitted by the security policy.
 func IsCommandAllowed(config *Config, command string) bool {
 	return security.IsCommandAllowed(config, command)
 }
 
-// Remove potentially unsafe arguments from a command.
+// SanitizeCommandArgs removes potentially unsafe arguments from a command.
 func SanitizeCommandArgs(args []string) []string {
 	return security.SanitizeCommandArgs(args)
 }
 
-// Verify if the configuration file has been tampered with.
+// VerifyConfigIntegrity verifies if the configuration file has been tampered with.
 func VerifyConfigIntegrity(filename string, config *Config, loggers ...logger.Logger) error {
 	return security.VerifyConfigIntegrity(filename, config, loggers...)
 }
 
-// Calculate and update the integrity hash for the configuration file.
+// UpdateConfigHash calculates and updates the integrity hash for the configuration file.
 func UpdateConfigHash(filename string, config *Config, loggers ...logger.Logger) error {
 	return security.UpdateConfigHash(filename, config, loggers...)
 }
 
-// Compute the SHA-256 hash of a file.
+// CalculateFileHash computes the SHA-256 hash of a file.
 func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error) {
 	return security.CalculateFileHash(filename, loggers...)
 }
 
-// Enforce that a file does not exceed the configured size limit.
+// EnforceFileSizeLimit enforces that a file does not exceed the configured size limit.
 func EnforceFileSizeLimit(filename string, config *Config) error {
 	return security.EnforceFileSizeLimit(filename, config)
 }

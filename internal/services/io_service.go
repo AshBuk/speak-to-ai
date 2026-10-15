@@ -16,7 +16,7 @@ import (
 	"github.com/AshBuk/dabri/v2/websocket"
 )
 
-// Handles text output routing and transcription synchronization
+// IOService handles text output routing and transcription synchronization
 type IOService struct {
 	logger          logger.Logger
 	config          func() *config.Config
@@ -32,7 +32,7 @@ type IOService struct {
 	transcriptionResultChan chan string
 }
 
-// Create a new service instance
+// NewIOService creates a new service instance
 func NewIOService(
 	logger logger.Logger,
 	config func() *config.Config,
@@ -47,7 +47,7 @@ func NewIOService(
 	}
 }
 
-// Prevent clipboard race conditions during async transcription
+// BeginTranscription prevents clipboard race conditions during async transcription
 func (ios *IOService) BeginTranscription() {
 	ios.mu.Lock()
 	defer ios.mu.Unlock()
@@ -63,7 +63,7 @@ func (ios *IOService) BeginTranscription() {
 	}
 }
 
-// Release clipboard protection and notify waiting readers
+// CompleteTranscription releases clipboard protection and notifies waiting readers
 func (ios *IOService) CompleteTranscription(result string) {
 	ios.mu.Lock()
 	inProgress := ios.transcriptionInProgress
@@ -79,7 +79,7 @@ func (ios *IOService) CompleteTranscription(result string) {
 	}
 }
 
-// Block until transcription completes or timeout for synchronized reads
+// WaitForTranscription blocks until transcription completes or times out, for synchronized reads
 func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error) {
 	ios.mu.Lock()
 	inProgress := ios.transcriptionInProgress
@@ -100,7 +100,7 @@ func (ios *IOService) WaitForTranscription(timeout time.Duration) (string, error
 	}
 }
 
-// Route text to configured output method with fallback strategy
+// OutputText routes text to configured output method with fallback strategy
 func (ios *IOService) OutputText(text string) error {
 	out := ios.outputter()
 	if out == nil {
@@ -128,7 +128,7 @@ func (ios *IOService) OutputText(text string) error {
 	return nil
 }
 
-// Switch output mode and persist setting with UI refresh
+// SetOutputMethod switches output mode and persists the setting with UI refresh
 func (ios *IOService) SetOutputMethod(method string) error {
 	ios.logger.Info("Setting output method to: %s", method)
 	// Validate method
@@ -157,7 +157,7 @@ func (ios *IOService) SetOutputMethod(method string) error {
 	return nil
 }
 
-// Enable external client communication channel
+// StartWebSocketServer enables external client communication channel
 func (ios *IOService) StartWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return fmt.Errorf("WebSocket server not configured")
@@ -167,7 +167,7 @@ func (ios *IOService) StartWebSocketServer() error {
 	return ios.webSocketServer.Start()
 }
 
-// Gracefully close external client connections
+// StopWebSocketServer gracefully closes external client connections
 func (ios *IOService) StopWebSocketServer() error {
 	if ios.webSocketServer == nil {
 		return nil
@@ -178,7 +178,7 @@ func (ios *IOService) StopWebSocketServer() error {
 	return nil
 }
 
-// Report active clipboard/typing tool implementations for debugging
+// GetOutputToolNames reports active clipboard/typing tool implementations for debugging
 func (ios *IOService) GetOutputToolNames() (clipboardTool, typeTool string) {
 	out := ios.outputter()
 	if out == nil {
@@ -201,7 +201,7 @@ func (ios *IOService) setOutputter(out outputInterfaces.Outputter) {
 	ios.mu.Unlock()
 }
 
-// Ensure all connections are closed before termination
+// Shutdown ensures all connections are closed before termination
 func (ios *IOService) Shutdown() error {
 	var lastErr error
 	// Stop WebSocket server
@@ -219,10 +219,10 @@ func (ios *IOService) detectOutputEnvironment() outputFactory.EnvironmentType {
 	return platform.DetectEnvironment()
 }
 
-// Wire UI service for settings refresh notifications
+// SetUIService wires UI service for settings refresh notifications
 func (ios *IOService) SetUIService(ui UIServiceInterface) { ios.ui = ui }
 
-// Wire config service for persistent setting changes
+// SetConfigService wires config service for persistent setting changes
 func (ios *IOService) SetConfigService(cfg ConfigServiceInterface) { ios.cfg = cfg }
 
 // fallbackToTyping switches to typing mode and executes the output

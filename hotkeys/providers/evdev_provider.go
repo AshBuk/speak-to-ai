@@ -21,7 +21,7 @@ import (
 	evdev "github.com/holoplot/go-evdev"
 )
 
-// Implements KeyboardEventProvider using the Linux evdev interface
+// EvdevKeyboardProvider implements KeyboardEventProvider using the Linux evdev interface
 type EvdevKeyboardProvider struct {
 	devices       []*evdev.InputDevice
 	callbacks     map[string]func() error
@@ -35,7 +35,7 @@ type EvdevKeyboardProvider struct {
 	noAccessOnce  sync.Once       // Summarize "no accessible input devices" at most once per provider
 }
 
-// Create a new EvdevKeyboardProvider instance
+// NewEvdevKeyboardProvider creates a new EvdevKeyboardProvider instance
 func NewEvdevKeyboardProvider(logger logger.Logger) *EvdevKeyboardProvider {
 	return &EvdevKeyboardProvider{
 		callbacks:     make(map[string]func() error),
@@ -47,7 +47,7 @@ func NewEvdevKeyboardProvider(logger logger.Logger) *EvdevKeyboardProvider {
 	}
 }
 
-// Check if the evdev provider is supported on the current system
+// IsSupported checks if the evdev provider is supported on the current system
 func (p *EvdevKeyboardProvider) IsSupported() bool {
 	// Attempt to find keyboard devices without keeping them open
 	devices, err := p.findKeyboardDevices()
@@ -264,7 +264,7 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 	}
 }
 
-// Register a callback for a hotkey. evdev owns bindings and matches physical
+// RegisterHotkey registers a callback for a hotkey. evdev owns bindings and matches physical
 // keys, so it keys callbacks by the combo; id is unused here.
 func (p *EvdevKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
 	p.mutex.Lock()
@@ -444,7 +444,7 @@ func (cs *captureSession) cleanup() {
 // SupportsCaptureOnce returns true as evdev supports one-shot hotkey capture
 func (p *EvdevKeyboardProvider) SupportsCaptureOnce() bool { return true }
 
-// Start a short-lived capture session to get a single hotkey combination
+// CaptureOnce starts a short-lived capture session to get a single hotkey combination
 // Note: This creates a fresh isolated session, not tied to the regular provider lifecycle
 func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	devices, err := p.findKeyboardDevices()

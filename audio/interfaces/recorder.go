@@ -3,7 +3,7 @@
 
 package interfaces
 
-// Defines the contract for an audio recorder
+// AudioRecorder defines the contract for an audio recorder
 type AudioRecorder interface {
 	// Start the audio recording process
 	StartRecording() error

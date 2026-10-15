@@ -18,7 +18,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Implements KeyboardEventProvider using the GlobalShortcuts portal through the
+// DbusKeyboardProvider implements KeyboardEventProvider using the GlobalShortcuts portal through the
 // go-wlportal/shortcuts adapter.
 type DbusKeyboardProvider struct {
 	callbacks   map[string]func() error // keyed by stable action id
@@ -30,7 +30,7 @@ type DbusKeyboardProvider struct {
 	wg          sync.WaitGroup // Tracks listener goroutine
 }
 
-// Create a new D-Bus keyboard provider
+// NewDbusKeyboardProvider creates a new D-Bus keyboard provider
 func NewDbusKeyboardProvider(logger logger.Logger) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
 		callbacks: make(map[string]func() error),
@@ -54,7 +54,7 @@ func describeAction(id string) string {
 	return id
 }
 
-// Check if the D-Bus GlobalShortcuts portal is available
+// IsSupported checks if the D-Bus GlobalShortcuts portal is available
 func (p *DbusKeyboardProvider) IsSupported() bool {
 	if shortcuts.Available() {
 		p.logger.Info("D-Bus portal GlobalShortcuts detected")
@@ -64,7 +64,7 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 	return false
 }
 
-// Register an action and its callback. Binding is deferred until Start.
+// RegisterHotkey registers an action and its callback. Binding is deferred until Start.
 func (p *DbusKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -145,7 +145,7 @@ func (p *DbusKeyboardProvider) Stop() {
 // SupportsCaptureOnce returns false as D-Bus GlobalShortcuts portal doesn't support one-shot capture
 func (p *DbusKeyboardProvider) SupportsCaptureOnce() bool { return false }
 
-// Return an error as this provider does not support capture-once functionality
+// CaptureOnce returns an error as this provider does not support capture-once functionality
 func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("captureOnce not supported in dbus provider")
 }

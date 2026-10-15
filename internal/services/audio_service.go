@@ -20,7 +20,7 @@ import (
 	"github.com/AshBuk/dabri/v2/whisper"
 )
 
-// Orchestrates recording, transcription, and output workflows
+// AudioService orchestrates recording, transcription, and output workflows
 type AudioService struct {
 	logger        logger.Logger
 	config        func() *config.Config // Current config; read per operation
@@ -54,7 +54,7 @@ type AudioService struct {
 // ErrNoRecordingInProgress indicates a stop request when no session is active.
 var ErrNoRecordingInProgress = errors.New("no recording in progress")
 
-// Create a new AudioService instance
+// NewAudioService creates a new AudioService instance
 func NewAudioService(
 	logger logger.Logger,
 	config func() *config.Config,
@@ -77,13 +77,13 @@ func NewAudioService(
 	}
 }
 
-// Wire dependencies to prevent circular imports during initialization
+// SetDependencies wires dependencies to prevent circular imports during initialization
 func (as *AudioService) SetDependencies(ui UIServiceInterface, io IOServiceInterface) {
 	as.ui = ui
 	as.io = io
 }
 
-// Wire config service for runtime setting persistence
+// SetConfig wires config service for runtime setting persistence
 func (as *AudioService) SetConfig(cfg ConfigServiceInterface) { as.cfg = cfg }
 
 // HandleStartRecording starts audio recording

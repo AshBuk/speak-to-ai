@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Convert a key code to its string representation
+// GetKeyName converts a key code to its string representation
 func GetKeyName(keyCode int) string {
 	keyMap := map[int]string{
 		1:   "esc",
@@ -106,7 +106,7 @@ func GetKeyName(keyCode int) string {
 	return ""
 }
 
-// Determine if a generic or side-specific modifier is pressed
+// IsModifierPressed determines if a generic or side-specific modifier is pressed
 func IsModifierPressed(mod string, state map[string]bool) bool {
 	m := strings.ToLower(mod)
 	switch m {
@@ -121,7 +121,7 @@ func IsModifierPressed(mod string, state map[string]bool) bool {
 	}
 }
 
-// Build a list of active modifiers for use in CaptureOnce
+// BuildModifierState builds a list of active modifiers for use in CaptureOnce
 func BuildModifierState(modState map[string]bool) []string {
 	mods := make([]string, 0, 5)
 
@@ -144,7 +144,7 @@ func BuildModifierState(modState map[string]bool) []string {
 	return mods
 }
 
-// Check if a key name corresponds to a modifier key
+// IsModifierKey checks if a key name corresponds to a modifier key
 func IsModifierKey(keyName string) bool {
 	switch strings.ToLower(keyName) {
 	case "leftctrl", "rightctrl", "leftalt", "rightalt",
@@ -154,7 +154,7 @@ func IsModifierKey(keyName string) bool {
 	return IsModifier(keyName)
 }
 
-// Check if the escape key was pressed without any modifiers
+// CheckCancelCondition checks if the escape key was pressed without any modifiers
 func CheckCancelCondition(keyName string, modState map[string]bool) bool {
 	if !strings.EqualFold(keyName, "esc") {
 		return false
@@ -167,7 +167,7 @@ func CheckCancelCondition(keyName string, modState map[string]bool) bool {
 		!modState["leftmeta"] && !modState["rightmeta"]
 }
 
-// Build a hotkey string from a list of modifiers and a key
+// BuildHotkeyString builds a hotkey string from a list of modifiers and a key
 func BuildHotkeyString(mods []string, keyName string) string {
 	combo := strings.ToLower(keyName)
 	if len(mods) > 0 {

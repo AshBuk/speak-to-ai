@@ -26,7 +26,7 @@ type portalKeyboard interface {
 	KeyCombo(keycodes ...typing.Keycode) error
 }
 
-// types text through the RemoteDesktop portal via the go-wlportal/typing adapter
+// PortalOutputter types text through the RemoteDesktop portal via the go-wlportal/typing adapter
 type PortalOutputter struct {
 	kbd       portalKeyboard
 	clipboard interfaces.Outputter

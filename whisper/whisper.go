@@ -18,12 +18,12 @@ import (
 	"github.com/AshBuk/dabri/v2/whisper/manager"
 )
 
-// Re-export key interfaces for convenience
+// ModelManager re-exports the model manager interface for convenience
 type (
 	ModelManager = interfaces.ModelManager
 )
 
-// Create a new manager for the bundled Whisper model.
+// NewModelManager creates a new manager for the bundled Whisper model.
 // An optional logger enables download-progress reporting.
 func NewModelManager(config func() *config.Config, loggers ...logger.Logger) ModelManager {
 	return manager.NewModelManager(config, loggers...)

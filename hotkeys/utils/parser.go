@@ -10,7 +10,7 @@ import (
 	"github.com/AshBuk/dabri/v2/hotkeys/interfaces"
 )
 
-// Parse a hotkey string into a KeyCombination struct
+// ParseHotkey parses a hotkey string into a KeyCombination struct
 // Treat the last part as the main key and all preceding parts as modifiers
 func ParseHotkey(hotkeyStr string) interfaces.KeyCombination {
 	combo := interfaces.KeyCombination{}
@@ -29,7 +29,7 @@ func ParseHotkey(hotkeyStr string) interfaces.KeyCombination {
 	return combo
 }
 
-// Check if a key name represents a modifier key
+// IsModifier checks if a key name represents a modifier key
 func IsModifier(keyName string) bool {
 	modifiers := map[string]bool{
 		"ctrl":       true,
@@ -52,7 +52,7 @@ func IsModifier(keyName string) bool {
 	return modifiers[strings.ToLower(keyName)]
 }
 
-// Convert a common modifier name to its evdev key name equivalent
+// ConvertModifierToEvdev converts a common modifier name to its evdev key name equivalent
 func ConvertModifierToEvdev(modifier string) string {
 	modifierMap := map[string]string{
 		"ctrl":  "leftctrl",
@@ -71,7 +71,7 @@ func ConvertModifierToEvdev(modifier string) string {
 	return strings.ToLower(modifier)
 }
 
-// Normalize a hotkey string to its canonical form
+// NormalizeHotkey normalizes a hotkey string to its canonical form
 // This involves making it lowercase, trimming whitespace, ordering modifiers,
 // and using canonical names for modifiers
 func NormalizeHotkey(hotkeyStr string) string {
@@ -134,7 +134,7 @@ func NormalizeHotkey(hotkeyStr string) string {
 	return strings.Join(ordered, "+") + "+" + key
 }
 
-// Perform basic validation on a hotkey string
+// ValidateHotkey performs basic validation on a hotkey string
 // Return an error if the string is empty or if the main key is a modifier
 func ValidateHotkey(hotkeyStr string) error {
 	s := NormalizeHotkey(hotkeyStr)
