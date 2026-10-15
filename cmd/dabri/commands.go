@@ -104,41 +104,24 @@ func printResponse(command string, resp ipc.Response) {
 	case "start":
 		fmt.Println("Recording started.")
 	case "toggle":
-		recording := getBoolOr(data, "recording", false)
-		if recording {
+		if getBoolOr(data, "recording", false) {
 			fmt.Println("Recording started.")
 		} else {
-			if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
-				fmt.Println(transcript)
-			} else {
-				fmt.Println("Recording stopped.")
-			}
+			printTranscript(data, "Recording stopped.")
 		}
 	case "stop":
-		if warning, ok := getString(data, "warning"); ok && warning != "" {
+		if warning := getString(data, "warning"); warning != "" {
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
 		}
-		if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
-			fmt.Println(transcript)
-		} else {
-			fmt.Println("Recording stopped (no transcript available).")
-		}
+		printTranscript(data, "Recording stopped (no transcript available).")
 	case "status":
 		printStatusResponse(data)
 	case "transcript":
-		if transcript, ok := getString(data, "transcript"); ok && transcript != "" {
-			fmt.Println(transcript)
-		} else {
-			fmt.Println("No transcript available.")
-		}
+		printTranscript(data, "No transcript available.")
 	case "set":
-		if model, ok := getString(data, "model"); ok && model != "" {
-			fmt.Printf("Model switched to: %s\n", model)
-		}
+		printField(data, "model", "Model switched to: %s\n")
 	case "delete":
-		if model, ok := getString(data, "model"); ok && model != "" {
-			fmt.Printf("Model deleted: %s\n", model)
-		}
+		printField(data, "model", "Model deleted: %s\n")
 	default:
 		if resp.Message != "" {
 			fmt.Println(resp.Message)
@@ -153,40 +136,44 @@ func printStatusResponse(data map[string]any) {
 	// Config section
 	if cfg := getMap(data, "config"); cfg != nil {
 		fmt.Println("\nConfig:")
-		if model, ok := getString(cfg, "model"); ok && model != "" {
-			fmt.Printf("  Model: %s\n", model)
-		}
-		if lang, ok := getString(cfg, "language"); ok && lang != "" {
-			fmt.Printf("  Language: %s\n", lang)
-		}
-		if mode, ok := getString(cfg, "output_mode"); ok && mode != "" {
-			fmt.Printf("  Output mode: %s\n", mode)
-		}
-		if method, ok := getString(cfg, "audio_method"); ok && method != "" {
-			fmt.Printf("  Audio method: %s\n", method)
-		}
+		printField(cfg, "model", "  Model: %s\n")
+		printField(cfg, "language", "  Language: %s\n")
+		printField(cfg, "output_mode", "  Output mode: %s\n")
+		printField(cfg, "audio_method", "  Audio method: %s\n")
 	}
 	// Hotkeys section
 	if hotkeys := getMap(data, "hotkeys"); hotkeys != nil {
 		fmt.Println("\nHotkeys:")
-		if startStop, ok := getString(hotkeys, "start_stop"); ok && startStop != "" {
-			fmt.Printf("  Start/Stop: %s\n", startStop)
-		}
-		if showConfig, ok := getString(hotkeys, "show_config"); ok && showConfig != "" {
-			fmt.Printf("  Show config: %s\n", showConfig)
-		}
+		printField(hotkeys, "start_stop", "  Start/Stop: %s\n")
+		printField(hotkeys, "show_config", "  Show config: %s\n")
 	}
 	// WebSocket section
 	if ws := getMap(data, "websocket"); ws != nil {
 		enabled := getBoolOr(ws, "enabled", false)
 		if enabled {
-			host, _ := getString(ws, "host")
+			host := getString(ws, "host")
 			port := getIntOr(ws, "port", 0)
 			fmt.Printf("\nWebSocket: enabled (%s:%d)\n", host, port)
 		} else {
 			fmt.Println("\nWebSocket: disabled")
 		}
 	}
+}
+
+// printTranscript prints the transcript, or fallback when there is none.
+func printTranscript(data map[string]any, fallback string) {
+	if !printField(data, "transcript", "%s\n") {
+		fmt.Println(fallback)
+	}
+}
+
+// printField prints the string at key with format when it is non-empty.
+func printField(data map[string]any, key, format string) bool {
+	value := getString(data, key)
+	if value != "" {
+		fmt.Printf(format, value)
+	}
+	return value != ""
 }
 
 // --- Response parsing helpers ---
@@ -201,13 +188,9 @@ func mapFromResponse(data any) map[string]any {
 	return map[string]any{}
 }
 
-func getString(data map[string]any, key string) (string, bool) {
-	if value, ok := data[key]; ok {
-		if str, ok := value.(string); ok {
-			return str, true
-		}
-	}
-	return "", false
+func getString(data map[string]any, key string) string {
+	str, _ := data[key].(string)
+	return str
 }
 
 func getBoolOr(data map[string]any, key string, fallback bool) bool {
