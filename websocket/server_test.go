@@ -258,6 +258,33 @@ func TestWebSocketServer_ValidateToken_NoAuthToken(t *testing.T) {
 	}
 }
 
+func TestCheckOrigin(t *testing.T) {
+	tests := []struct {
+		name, cors, token, origin string
+		want                      bool
+	}{
+		{"no origin header", "*", "", "", true},
+		{"wildcard without token rejects browsers", "*", "", "https://evil.example", false},
+		{"wildcard with token", "*", "secret", "https://evil.example", true},
+		{"exact match", "http://localhost:3000", "", "http://localhost:3000", true},
+		{"mismatch", "http://localhost:3000", "", "https://evil.example", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := createTestConfig()
+			cfg.WebServer.CORSOrigins = tt.cors
+			cfg.WebServer.AuthToken = tt.token
+			req := httptest.NewRequest("GET", "/ws", nil)
+			if tt.origin != "" {
+				req.Header.Set("Origin", tt.origin)
+			}
+			if got := checkOriginFunc(cfg)(req); got != tt.want {
+				t.Errorf("checkOrigin = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestWebSocketServer_SendMessage(t *testing.T) {
 	cfg := createTestConfig()
 	server := NewWebSocketServer(cfg, testutils.NewMockLogger())

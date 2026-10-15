@@ -71,16 +71,18 @@ type Message struct {
 // checkOriginFunc creates a CORS origin validation function
 func checkOriginFunc(cfg *config.Config) func(*http.Request) bool {
 	return func(r *http.Request) bool {
-		// Allow all origins if configured with "*"
-		if cfg.WebServer.CORSOrigins == "*" {
-			return true
-		}
-
 		// Get the origin from the request
 		origin := r.Header.Get("Origin")
 		if origin == "" {
 			// No origin header - might be same-origin request
 			return true
+		}
+
+		// Allow all origins if configured with "*"
+		// Without a token any web page open in the user's browser could
+		// drive the microphone, so "*" admits browser origins only with one
+		if cfg.WebServer.CORSOrigins == "*" {
+			return cfg.WebServer.AuthToken != ""
 		}
 
 		// Check if origin matches configured CORS origins
