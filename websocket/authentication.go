@@ -6,7 +6,6 @@ package websocket
 import (
 	"crypto/subtle"
 	"net/http"
-	"strings"
 )
 
 // Verify client credentials via token or open access policy
@@ -28,33 +27,4 @@ func (s *WebSocketServer) authenticate(r *http.Request) bool {
 	headerMatch := subtle.ConstantTimeCompare([]byte(headerToken), []byte(s.config.WebServer.AuthToken)) == 1
 
 	return queryMatch || headerMatch
-}
-
-// Confirm token matches configured authentication secret
-func (s *WebSocketServer) validateToken(token string) bool { // nolint:unused // used in tests
-	// If auth token is not set, all tokens are invalid
-	if s.config.WebServer.AuthToken == "" {
-		return false
-	}
-	// Trim whitespace
-	token = strings.TrimSpace(token)
-	// Compare with configured token using constant-time comparison
-	return subtle.ConstantTimeCompare([]byte(token), []byte(s.config.WebServer.AuthToken)) == 1
-}
-
-// Extract real client IP considering proxy headers
-func getClientIP(r *http.Request) string { // nolint:unused // used in tests
-	// Check for X-Forwarded-For header
-	forwardedFor := r.Header.Get("X-Forwarded-For")
-	if forwardedFor != "" {
-		// Take the first IP in the list
-		return strings.Split(forwardedFor, ",")[0]
-	}
-	// Check for X-Real-IP header
-	realIP := r.Header.Get("X-Real-IP")
-	if realIP != "" {
-		return realIP
-	}
-	// Fall back to RemoteAddr
-	return strings.Split(r.RemoteAddr, ":")[0]
 }

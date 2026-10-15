@@ -71,16 +71,18 @@ type Message struct {
 // checkOriginFunc creates a CORS origin validation function
 func checkOriginFunc(cfg *config.Config) func(*http.Request) bool {
 	return func(r *http.Request) bool {
-		// Allow all origins if configured with "*"
-		if cfg.WebServer.CORSOrigins == "*" {
-			return true
-		}
-
 		// Get the origin from the request
 		origin := r.Header.Get("Origin")
 		if origin == "" {
 			// No origin header - might be same-origin request
 			return true
+		}
+
+		// Allow all origins if configured with "*"
+		// Without a token any web page open in the user's browser could
+		// drive the microphone, so "*" admits browser origins only with one
+		if cfg.WebServer.CORSOrigins == "*" {
+			return cfg.WebServer.AuthToken != ""
 		}
 
 		// Check if origin matches configured CORS origins
@@ -122,6 +124,9 @@ func (s *WebSocketServer) audioController() AudioController {
 func (s *WebSocketServer) Start() error {
 	if !s.config.WebServer.Enabled {
 		return nil
+	}
+	if s.config.WebServer.CORSOrigins == "*" && s.config.WebServer.AuthToken == "" {
+		s.logger.Warning("WebSocket: browser clients are rejected until auth_token or an explicit cors_origins is set")
 	}
 	// Handler for WebSocket connection setup
 	mux := http.NewServeMux()
@@ -293,15 +298,5 @@ func (s *WebSocketServer) sendMessage(conn *websocket.Conn, messageType string, 
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		s.logger.Error("Error sending message: %v", err)
-	}
-}
-
-// Notify all active clients of server-wide events
-func (s *WebSocketServer) BroadcastMessage(messageType string, payload interface{}) {
-	s.clientsLock.Lock()
-	defer s.clientsLock.Unlock()
-
-	for conn := range s.clients {
-		s.sendMessage(conn, messageType, payload)
 	}
 }

@@ -45,7 +45,7 @@ web_server:
   auth_token: ""        # Optional Bearer token for API authentication
   api_version: "v1"
   log_requests: true
-  cors_origins: "*"     # CORS origins to allow (e.g. "*" or "http://localhost:3000")
+  cors_origins: "*"     # CORS origins to allow (e.g. "*" or "http://localhost:3000"); "*" admits browsers only with auth_token
   max_clients: 10       # Maximum concurrent WebSocket clients
 
 # Security settings
