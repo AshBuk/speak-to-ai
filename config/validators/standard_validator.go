@@ -87,7 +87,7 @@ func validateSecurityConfig(config *models.Config, errors *[]string) {
 	}
 }
 
-// Inspect the configuration for invalid or unsafe values.
+// ValidateConfig inspects the configuration for invalid or unsafe values.
 // It automatically corrects offending values to safe defaults and returns an error
 // that aggregates all validation issues found. This ensures the application can
 // always run with a sane configuration

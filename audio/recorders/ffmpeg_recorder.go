@@ -25,13 +25,13 @@ const (
 	minAudioPayloadMs = 50 // Minimum audio payload in milliseconds
 )
 
-// Implements the AudioRecorder interface using the `ffmpeg` command-line tool
+// FFmpegRecorder implements the AudioRecorder interface using the `ffmpeg` command-line tool
 type FFmpegRecorder struct {
 	BaseRecorder
 	recordingStartTime time.Time
 }
 
-// Create a new instance of the ffmpeg-based recorder
+// NewFFmpegRecorder creates a new instance of the ffmpeg-based recorder
 func NewFFmpegRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) *FFmpegRecorder {
 	r := &FFmpegRecorder{
 		BaseRecorder: NewBaseRecorder(config, logger, tempManager),
@@ -94,7 +94,7 @@ func (f *FFmpegRecorder) resolvePulseAudioSource(device string) string {
 	return device
 }
 
-// Start an audio recording using the `ffmpeg` command
+// StartRecording starts an audio recording using the `ffmpeg` command
 func (f *FFmpegRecorder) StartRecording() error {
 	// Track recording start time for adaptive flush
 	f.recordingStartTime = time.Now()
@@ -125,7 +125,7 @@ func (f *FFmpegRecorder) StartRecording() error {
 	return nil
 }
 
-// Stop recording after a short post-roll so the last words are not trimmed
+// StopRecording stops recording after a short post-roll so the last words are not trimmed
 func (f *FFmpegRecorder) StopRecording() (string, error) {
 	// Always allow a small post-roll before stopping to avoid trimming
 	time.Sleep(postRollDelay)

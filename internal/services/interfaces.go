@@ -149,7 +149,7 @@ type ServiceContainer struct {
 	InputDaemon     *outputters.YdotoolDaemon
 }
 
-// Gracefully shut down all services
+// Shutdown gracefully shuts down all services
 func (sc *ServiceContainer) Shutdown() error {
 	var errs []error
 	if sc.Audio != nil {

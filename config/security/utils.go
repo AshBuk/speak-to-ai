@@ -16,7 +16,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Check if a command is in the security whitelist.
+// IsCommandAllowed checks if a command is in the security whitelist.
 // It checks only the base name of the command, ignoring the path, to ensure
 // that path-based bypasses are not possible (e.g., /usr/bin/evil is treated as evil)
 func IsCommandAllowed(config *models.Config, command string) bool {
@@ -29,7 +29,7 @@ func IsCommandAllowed(config *models.Config, command string) bool {
 	return false
 }
 
-// Filter a list of arguments to remove shell metacharacters
+// SanitizeCommandArgs filters a list of arguments to remove shell metacharacters
 // and other constructs that could be used for command injection attacks
 func SanitizeCommandArgs(args []string) []string {
 	sanitized := make([]string, 0, len(args))
@@ -43,7 +43,7 @@ func SanitizeCommandArgs(args []string) []string {
 	return sanitized
 }
 
-// Verify the config file against a stored hash to ensure
+// VerifyConfigIntegrity verifies the config file against a stored hash to ensure
 // it has not been modified without authorization
 func VerifyConfigIntegrity(filename string, config *models.Config, loggers ...logger.Logger) error {
 	if !config.Security.CheckIntegrity {
@@ -64,7 +64,7 @@ func VerifyConfigIntegrity(filename string, config *models.Config, loggers ...lo
 	return nil
 }
 
-// Calculate a new hash for the configuration file and store it
+// UpdateConfigHash calculates a new hash for the configuration file and stores it
 // within the config struct. This is used to "seal" the config after valid changes
 func UpdateConfigHash(filename string, config *models.Config, loggers ...logger.Logger) error {
 	hash, err := CalculateFileHash(filename, loggers...)
@@ -75,7 +75,7 @@ func UpdateConfigHash(filename string, config *models.Config, loggers ...logger.
 	return nil
 }
 
-// Compute the SHA-256 hash of a file's content
+// CalculateFileHash computes the SHA-256 hash of a file's content
 func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error) {
 	var logSink logger.Logger = logger.NewDefaultLogger(logger.WarningLevel)
 	if len(loggers) > 0 && loggers[0] != nil {
@@ -106,7 +106,7 @@ func CalculateFileHash(filename string, loggers ...logger.Logger) (string, error
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// Enforce the maximum configured size for a file.
+// EnforceFileSizeLimit enforces the maximum configured size for a file.
 // This is a security measure to prevent denial-of-service attacks using large files
 func EnforceFileSizeLimit(filename string, config *models.Config) error {
 	info, err := os.Stat(filename)

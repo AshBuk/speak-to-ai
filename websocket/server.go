@@ -43,7 +43,7 @@ const (
 	transcriptionCtxTimeout = 30 * time.Second // Context timeout for transcription
 )
 
-// Enables real-time speech-to-text API for external clients
+// WebSocketServer enables real-time speech-to-text API for external clients
 type WebSocketServer struct {
 	config      *config.Config
 	clients     map[*websocket.Conn]bool
@@ -58,7 +58,7 @@ type WebSocketServer struct {
 	wg          sync.WaitGroup
 }
 
-// Protocol structure for bidirectional client communication
+// Message is the protocol structure for bidirectional client communication
 type Message struct {
 	Type       string      `json:"type"`
 	Payload    interface{} `json:"payload,omitempty"`
@@ -91,7 +91,7 @@ func checkOriginFunc(cfg *config.Config) func(*http.Request) bool {
 	}
 }
 
-// Initialize server with security and resource constraints.
+// NewWebSocketServer initializes server with security and resource constraints.
 func NewWebSocketServer(config *config.Config, logger logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		config:  config,
@@ -120,7 +120,7 @@ func (s *WebSocketServer) audioController() AudioController {
 	return s.audio
 }
 
-// Begin accepting client connections with health monitoring
+// Start begins accepting client connections with health monitoring
 func (s *WebSocketServer) Start() error {
 	if !s.config.WebServer.Enabled {
 		return nil
@@ -168,7 +168,7 @@ func (s *WebSocketServer) Start() error {
 	return nil
 }
 
-// Ensure clean client disconnection before termination
+// Stop ensures clean client disconnection before termination
 func (s *WebSocketServer) Stop() {
 	if s.server != nil && s.started.Load() {
 		s.logger.Info("Stopping WebSocket server...")

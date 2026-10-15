@@ -11,6 +11,7 @@ import (
 // Lower values are more verbose (DebugLevel=0), higher values filter more (ErrorLevel=3)
 type LogLevel int
 
+// Log levels, from most to least verbose
 const (
 	DebugLevel   LogLevel = iota // Most verbose - development diagnostics
 	InfoLevel                    // Normal operations and state changes
@@ -36,7 +37,7 @@ type Config struct {
 	Level LogLevel // min level
 }
 
-// Thread-safe implementation wrapping log.Printf with level filtering
+// DefaultLogger is a thread-safe implementation wrapping log.Printf with level filtering
 type DefaultLogger struct {
 	level    LogLevel // min level
 	stdFlags int      // formatting flags for log output

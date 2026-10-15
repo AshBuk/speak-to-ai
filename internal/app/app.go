@@ -17,7 +17,7 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/services"
 )
 
-// Manages application lifecycle and context
+// RuntimeContext manages application lifecycle and context
 type RuntimeContext struct {
 	Ctx        context.Context    // Main application context for cancellation propagation
 	Cancel     context.CancelFunc // Function to cancel the context and trigger shutdown
@@ -25,7 +25,7 @@ type RuntimeContext struct {
 	Logger     logger.Logger      // Application-wide logger instance
 }
 
-// Create a new runtime context
+// NewRuntimeContext creates a new runtime context
 func NewRuntimeContext(logger logger.Logger) *RuntimeContext {
 	ctx, cancel := context.WithCancel(context.Background())
 	shutdownCh := make(chan os.Signal, 1)
@@ -39,7 +39,7 @@ func NewRuntimeContext(logger logger.Logger) *RuntimeContext {
 	}
 }
 
-// Represents the main application and its services
+// App represents the main application and its services
 type App struct {
 	Services  *services.ServiceContainer // DI Pattern. Container for: Audio, UI, IO, Config, Hotkeys, TempFileManager; nil until Initialize
 	Runtime   *RuntimeContext            // Application lifecycle management (context, cancel, shutdown channel, logger)
@@ -129,7 +129,7 @@ func (a *App) startServices() error {
 	return nil
 }
 
-// Start the application and wait for a shutdown signal
+// RunAndWait starts the application and waits for a shutdown signal
 // Event Loop - blocks until OS signal or context cancellation
 func (a *App) RunAndWait() error {
 	a.Runtime.Logger.Info("Starting application...")
@@ -163,7 +163,7 @@ func (a *App) waitForShutdown() {
 	}
 }
 
-// Graceful Shutdown - ensures clean resource cleanup
+// Shutdown performs a graceful shutdown that ensures clean resource cleanup
 // Shutdown sequence: Cancel() → Stop IPC → Shutdown Services
 // Each service is responsible for waiting on its own goroutines via WaitGroup
 func (a *App) Shutdown() error {

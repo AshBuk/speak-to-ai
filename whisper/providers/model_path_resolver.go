@@ -19,7 +19,7 @@ const (
 	FlatpakModelsDir = "/app/share/dabri/language-models"
 )
 
-// Implements the logic for resolving the path to the bundled model
+// ModelPathResolver implements the logic for resolving the path to the bundled model
 // based on the execution environment (e.g., AppImage, system package, dev)
 type ModelPathResolver struct {
 	config        *config.Config

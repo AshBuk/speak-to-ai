@@ -13,6 +13,7 @@ import "context"
 // State is the high-level status surfaced by the window indicator.
 type State int
 
+// Window states, shown by the status indicator
 const (
 	StateReady State = iota
 	StateRecording

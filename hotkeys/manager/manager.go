@@ -17,7 +17,7 @@ import (
 // HotkeyAction represents a hotkey action callback
 type HotkeyAction func() error
 
-// Manages keyboard shortcuts, providers, and actions
+// HotkeyManager manages keyboard shortcuts, providers, and actions
 type HotkeyManager struct {
 	config          adapters.HotkeyConfig
 	isListening     bool
@@ -29,7 +29,7 @@ type HotkeyManager struct {
 	logger          logger.Logger
 }
 
-// Create a new instance of the HotkeyManager
+// NewHotkeyManager creates a new instance of the HotkeyManager
 func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) *HotkeyManager {
 	manager := &HotkeyManager{
 		config:        config,
@@ -54,21 +54,21 @@ func (h *HotkeyManager) RegisterToggle(toggle func() error) {
 	h.recordingToggle = toggle
 }
 
-// Register a custom hotkey action
+// RegisterHotkeyAction registers a custom hotkey action
 func (h *HotkeyManager) RegisterHotkeyAction(hotkey string, action HotkeyAction) {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	h.hotkeyActions[hotkey] = action
 }
 
-// Unregister a custom hotkey action
+// UnregisterHotkeyAction unregisters a custom hotkey action
 func (h *HotkeyManager) UnregisterHotkeyAction(hotkey string) {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
 	delete(h.hotkeyActions, hotkey)
 }
 
-// Return all registered hotkeys
+// GetRegisteredHotkeys returns all registered hotkeys
 func (h *HotkeyManager) GetRegisteredHotkeys() []string {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
@@ -117,7 +117,7 @@ func (h *HotkeyManager) Stop() {
 	}
 }
 
-// Simulate a hotkey press for testing purposes
+// SimulateHotkeyPress simulates a hotkey press for testing purposes
 func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	h.hotkeysMutex.Lock()
 	defer h.hotkeysMutex.Unlock()
@@ -133,7 +133,7 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 	return nil
 }
 
-// Reload the configuration by stopping, updating the provider, and restarting
+// ReloadConfig reloads the configuration by stopping, updating the provider, and restarting
 func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	if h.isListening && h.provider != nil {
 		h.provider.Stop()
@@ -155,7 +155,7 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	return nil
 }
 
-// Attempt to capture a single hotkey combination
+// CaptureOnce attempts to capture a single hotkey combination
 // Temporarily stops provider to release devices, then captures on fresh instance
 func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	if h.provider == nil {
@@ -183,7 +183,7 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("capture not supported")
 }
 
-// Check if the active provider supports the capture-once functionality
+// SupportsCaptureOnce checks if the active provider supports the capture-once functionality
 func (h *HotkeyManager) SupportsCaptureOnce() bool {
 	if h.provider == nil {
 		return false

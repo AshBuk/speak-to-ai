@@ -20,7 +20,7 @@ import (
 	appversion "github.com/AshBuk/dabri/v2/internal/version"
 )
 
-// Coordinates tray icon states, desktop notifications and the main window.
+// UIService coordinates tray icon states, desktop notifications and the main window.
 // It is the single fan-out point: state/level updates are routed to both the
 // tray and the window backend (no-op when no GUI is compiled in).
 type UIService struct {
@@ -31,7 +31,7 @@ type UIService struct {
 	config func() *config.Config
 }
 
-// Create a new service instance
+// NewUIService creates a new service instance
 func NewUIService(
 	logger logger.Logger,
 	trayManager tray.Manager,
@@ -48,7 +48,7 @@ func NewUIService(
 	}
 }
 
-// Update tray icon to reflect current recording state
+// SetRecordingState updates tray icon to reflect current recording state
 func (us *UIService) SetRecordingState(isRecording bool) {
 	if us.tray != nil {
 		us.tray.SetRecordingState(isRecording)
@@ -62,7 +62,7 @@ func (us *UIService) SetRecordingState(isRecording bool) {
 	}
 }
 
-// Display desktop notification with appropriate icon
+// ShowNotification displays desktop notification with appropriate icon
 func (us *UIService) ShowNotification(title, message string) {
 	if us.notify != nil {
 		// Use appropriate notification method based on message type
@@ -73,7 +73,7 @@ func (us *UIService) ShowNotification(title, message string) {
 	}
 }
 
-// Refresh tray menu items to reflect config changes
+// UpdateSettings refreshes tray menu items to reflect config changes
 func (us *UIService) UpdateSettings(cfg *config.Config) {
 	if us.tray != nil {
 		us.tray.UpdateSettings(cfg)
@@ -87,7 +87,7 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 	}
 }
 
-// Display error notification and log for debugging
+// SetError displays an error notification and logs it for debugging
 func (us *UIService) SetError(message string) {
 	us.logger.Error("UI Error: %s", message)
 	if us.window != nil {
@@ -100,7 +100,7 @@ func (us *UIService) SetError(message string) {
 	}
 }
 
-// Display success notification for completed operations
+// SetSuccess displays success notification for completed operations
 func (us *UIService) SetSuccess(message string) {
 	us.logger.Info("UI Success: %s", message)
 	if us.notify != nil {
@@ -110,7 +110,7 @@ func (us *UIService) SetSuccess(message string) {
 	}
 }
 
-// Write the About HTML to a cache file and open it with the system browser.
+// ShowAboutPage writes the About HTML to a cache file and opens it with the system browser.
 // We use the user cache dir rather than os.TempDir(): under Flatpak the latter
 // is the sandbox-private /tmp, which the host browser cannot read, so xdg-open
 // would silently open nothing. XDG_CACHE_HOME maps to a host-visible path.
@@ -128,7 +128,7 @@ func (us *UIService) ShowAboutPage() error {
 	return us.openWithSystem(path)
 }
 
-// Open configuration file with system default editor
+// ShowConfigFile opens configuration file with system default editor
 func (us *UIService) ShowConfigFile() error {
 	us.logger.Info("Showing config file...")
 	path, ok := us.getConfigPath()
@@ -252,7 +252,7 @@ func (us *UIService) sendNotification(title, message, _ string) error {
 	}
 }
 
-// Clean termination of UI components
+// Shutdown terminates UI components cleanly
 func (us *UIService) Shutdown() error {
 	if us.tray != nil {
 		// Ensure tray event loop and systray are stopped to avoid shutdown hangs

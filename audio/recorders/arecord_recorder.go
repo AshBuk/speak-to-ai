@@ -12,12 +12,12 @@ import (
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
 
-// Implements the AudioRecorder interface using the `arecord` command-line tool
+// ArecordRecorder implements the AudioRecorder interface using the `arecord` command-line tool
 type ArecordRecorder struct {
 	BaseRecorder
 }
 
-// Create a new instance of the arecord-based recorder
+// NewArecordRecorder creates a new instance of the arecord-based recorder
 func NewArecordRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) *ArecordRecorder {
 	r := &ArecordRecorder{
 		BaseRecorder: NewBaseRecorder(config, logger, tempManager),
@@ -31,7 +31,7 @@ func NewArecordRecorder(config *config.Config, logger logger.Logger, tempManager
 	return r
 }
 
-// Start an audio recording using the `arecord` command
+// StartRecording starts an audio recording using the `arecord` command
 func (a *ArecordRecorder) StartRecording() error {
 	// Build the command-line arguments for arecord
 	formatArg := a.getArecordFormat()

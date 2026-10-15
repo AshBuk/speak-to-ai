@@ -23,7 +23,7 @@ import (
 // request (e.g. ffmpeg writing the WAV trailer) before escalating to signals.
 const gracefulQuitTimeout = 1500 * time.Millisecond
 
-// Implements common functionality for audio recorders
+// BaseRecorder implements common functionality for audio recorders
 type BaseRecorder struct {
 	config      *config.Config
 	cmd         *exec.Cmd
@@ -50,7 +50,7 @@ type BaseRecorder struct {
 	logger logger.Logger
 }
 
-// Create a new base recorder instance
+// NewBaseRecorder creates a new base recorder instance
 func NewBaseRecorder(config *config.Config, logger logger.Logger, tempManager *processing.TempFileManager) BaseRecorder {
 	// Determine the command timeout from the configuration
 	maxTime := time.Duration(config.Audio.MaxRecordingTime) * time.Second
@@ -66,12 +66,12 @@ func NewBaseRecorder(config *config.Config, logger logger.Logger, tempManager *p
 	}
 }
 
-// Return the path to the recorded audio file
+// GetOutputFile returns the path to the recorded audio file
 func (b *BaseRecorder) GetOutputFile() string {
 	return b.outputFile
 }
 
-// Remove the temporary audio file or clear the in-memory buffer
+// CleanupFile removes the temporary audio file
 func (b *BaseRecorder) CleanupFile() error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
@@ -94,7 +94,7 @@ func (b *BaseRecorder) createTempFile() error {
 	return nil
 }
 
-// Provide a common implementation for stopping the recording process
+// StopRecording provides a common implementation for stopping the recording process
 func (b *BaseRecorder) StopRecording() (string, error) {
 	if err := b.StopProcess(); err != nil {
 		return "", err
@@ -170,7 +170,7 @@ func (b *BaseRecorder) validateAudioFile() error {
 	return nil
 }
 
-// Stop the recording process gracefully, with retries and final termination
+// StopProcess stops the recording process gracefully, with retries and final termination
 func (b *BaseRecorder) StopProcess() error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
@@ -316,7 +316,7 @@ func (b *BaseRecorder) logStderr() {
 	}
 }
 
-// Execute a recording command with context, timeout, and output handling.
+// ExecuteRecordingCommand executes a recording command with context, timeout, and output handling.
 // This is the primary method for concrete recorder implementations to use
 func (b *BaseRecorder) ExecuteRecordingCommand(cmdName string, args []string) error {
 	b.mutex.Lock()

@@ -24,7 +24,7 @@ import (
 //go:embed default_config.yaml
 var defaultConfigYAML []byte
 
-// Read a configuration file, apply defaults, and validate the result.
+// LoadConfig reads a configuration file, applies defaults, and validates the result.
 // If the file doesn't exist, log a warning and return a default configuration.
 // The process is: 1. Apply defaults. 2. Read file. 3. Unmarshal YAML. 4. Validate
 func LoadConfig(filename string, loggers ...logger.Logger) (*models.Config, error) {
@@ -69,7 +69,7 @@ func LoadConfig(filename string, loggers ...logger.Logger) (*models.Config, erro
 	return &config, nil
 }
 
-// Reset the configuration to the embedded default values.
+// SetDefaultConfig resets the configuration to the embedded default values.
 func SetDefaultConfig(config *models.Config) {
 	*config = models.Config{}
 	if err := yaml.Unmarshal(defaultConfigYAML, config); err != nil {
@@ -86,7 +86,7 @@ func writeDefaultConfigFile(path string) error {
 	return os.WriteFile(path, defaultConfigYAML, 0o600)
 }
 
-// Marshal the configuration to YAML and write it to a file.
+// SaveConfig marshals the configuration to YAML and writes it to a file.
 // It ensures the target directory exists and sets restrictive file permissions (0600)
 // for security
 func SaveConfig(filename string, config *models.Config) error {

@@ -9,7 +9,7 @@ import (
 	"github.com/AshBuk/dabri/v2/config"
 )
 
-// Defines the interface for tray managers
+// Manager defines the interface for tray managers
 type Manager interface {
 	Start()
 	SetRecordingState(isRecording bool)
