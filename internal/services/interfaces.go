@@ -49,8 +49,6 @@ type UIServiceInterface interface {
 	// UpdateSettings refreshes tray menu to reflect config changes
 	UpdateSettings(config *config.Config)
 
-	// UpdateRecordingUI updates visual feedback during recording
-	UpdateRecordingUI(isRecording bool, level float64)
 	// SetError displays an error notification
 	SetError(message string)
 	// SetSuccess displays a success notification

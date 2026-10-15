@@ -7,19 +7,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshBuk/dabri/v2/audio/interfaces"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
 
 type fakeRecorder struct{ cleanups int }
 
-func (r *fakeRecorder) StartRecording() error                               { return nil }
-func (r *fakeRecorder) StopRecording() (string, error)                      { return "", nil }
-func (r *fakeRecorder) GetOutputFile() string                               { return "" }
-func (r *fakeRecorder) CleanupFile() error                                  { r.cleanups++; return nil }
-func (r *fakeRecorder) SetAudioLevelCallback(interfaces.AudioLevelCallback) {}
-func (r *fakeRecorder) GetAudioLevel() float64                              { return 0 }
+func (r *fakeRecorder) StartRecording() error          { return nil }
+func (r *fakeRecorder) StopRecording() (string, error) { return "", nil }
+func (r *fakeRecorder) GetOutputFile() string          { return "" }
+func (r *fakeRecorder) CleanupFile() error             { r.cleanups++; return nil }
 
 func TestAudioService_ClearSessionKeepsActiveRecording(t *testing.T) {
 	rec := &fakeRecorder{}

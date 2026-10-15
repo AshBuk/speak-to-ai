@@ -43,7 +43,6 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 		name         string
 		device       string
 		sampleRate   int
-		useBuffer    bool
 		expectDevice string
 		expectRate   string
 	}{
@@ -51,17 +50,8 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			name:         "basic file output",
 			device:       "hw:0,0",
 			sampleRate:   44100,
-			useBuffer:    false,
 			expectDevice: "hw:0,0",
 			expectRate:   "44100",
-		},
-		{
-			name:         "buffer mode should output to stdout",
-			device:       "plughw:1,0",
-			sampleRate:   48000,
-			useBuffer:    true,
-			expectDevice: "plughw:1,0",
-			expectRate:   "48000",
 		},
 	}
 
@@ -74,13 +64,12 @@ func TestFFmpegRecorder_buildBaseCommandArgs(t *testing.T) {
 			mockLogger := testutils.NewMockLogger()
 			tempMgr := processing.NewTempFileManager(30 * time.Minute)
 			recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-			recorder.useBuffer = tt.useBuffer
 			recorder.outputFile = "/tmp/test.wav"
 			args := recorder.buildBaseCommandArgs()
 			verifyArgFlag(t, args, "-i", tt.expectDevice, "device")
 			verifyArgFlag(t, args, "-ar", tt.expectRate, "sample rate")
 			verifyArgFlag(t, args, "-q:a", "0", "quality setting")
-			verifyOutputMode(t, args, tt.useBuffer)
+			verifyOutputMode(t, args)
 		})
 	}
 }
@@ -192,48 +181,6 @@ func TestFFmpegRecorder_InvalidConfiguration(t *testing.T) {
 	}
 }
 
-// TestFFmpegRecorder_AudioLevelCallbacks tests audio level monitoring
-func TestFFmpegRecorder_AudioLevelCallbacks(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	mockLogger := testutils.NewMockLogger()
-	tempMgr := processing.NewTempFileManager(30 * time.Minute)
-	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-
-	// Test initial audio level
-	if recorder.GetAudioLevel() != 0.0 {
-		t.Errorf("Expected initial audio level 0.0, got %f", recorder.GetAudioLevel())
-	}
-
-	// Test callback setting
-	var receivedLevel float64
-	var callbackCalled bool
-
-	recorder.SetAudioLevelCallback(func(level float64) {
-		receivedLevel = level
-		callbackCalled = true
-	})
-
-	// Test audio level update
-	testLevel := 0.85
-	recorder.updateAudioLevel(testLevel)
-
-	// Give callback time to execute
-	time.Sleep(1 * time.Millisecond)
-
-	if !callbackCalled {
-		t.Error("Expected audio level callback to be called")
-	}
-
-	if receivedLevel != testLevel {
-		t.Errorf("Expected callback to receive level %f, got %f", testLevel, receivedLevel)
-	}
-
-	if recorder.GetAudioLevel() != testLevel {
-		t.Errorf("Expected stored audio level %f, got %f", testLevel, recorder.GetAudioLevel())
-	}
-}
-
 // TestFFmpegRecorder_CleanupFile tests file cleanup functionality
 func TestFFmpegRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
@@ -269,22 +216,6 @@ func TestFFmpegRecorder_CleanupFile(t *testing.T) {
 	}
 }
 
-// TestFFmpegRecorder_BufferMode tests in-memory buffer functionality
-func TestFFmpegRecorder_BufferMode(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
-	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
-
-	mockLogger := testutils.NewMockLogger()
-	tempMgr := processing.NewTempFileManager(30 * time.Minute)
-	recorder := NewFFmpegRecorder(cfg, mockLogger, tempMgr)
-
-	// Should be using buffer mode for short, low-quality recordings
-	if !recorder.useBuffer {
-		t.Error("Expected buffer mode to be enabled for short recordings")
-	}
-}
-
 // verifyArgFlag checks if a command-line flag and its value are present in args
 func verifyArgFlag(t *testing.T, args []string, flag, expectedValue, description string) {
 	for i, arg := range args {
@@ -295,30 +226,9 @@ func verifyArgFlag(t *testing.T, args []string, flag, expectedValue, description
 	t.Errorf("Expected %s %s not found in args: %v", description, expectedValue, args)
 }
 
-// verifyOutputMode validates FFmpeg output configuration based on buffer/file mode
-func verifyOutputMode(t *testing.T, args []string, useBuffer bool) {
-	hasWavMode := false
-	hasStdout := false
-
-	for i, arg := range args {
-		if arg == "-f" && i+1 < len(args) && args[i+1] == "wav" {
-			hasWavMode = true
-		}
-		if arg == "-" {
-			hasStdout = true
-		}
-	}
-
-	if useBuffer {
-		if !hasWavMode || !hasStdout {
-			t.Error("Expected wav stdout mode (-f wav -) in buffer mode")
-		}
-	} else {
-		if hasStdout {
-			t.Error("Did not expect stdout mode in file output mode")
-		}
-		if !hasWavMode {
-			t.Error("Expected wav file output mode (-f wav)")
-		}
+// verifyOutputMode validates that FFmpeg writes WAV to a file, not stdout
+func verifyOutputMode(t *testing.T, args []string) {
+	if args[len(args)-2] != "-f" || args[len(args)-1] != "wav" {
+		t.Errorf("Expected args to end with wav file output (-f wav), got %v", args)
 	}
 }

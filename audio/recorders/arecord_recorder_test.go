@@ -180,48 +180,6 @@ func TestArecordRecorder_InvalidConfiguration(t *testing.T) {
 	}
 }
 
-// TestArecordRecorder_AudioLevelCallbacks tests audio level monitoring
-func TestArecordRecorder_AudioLevelCallbacks(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.Device = "default"
-	mockLogger := testutils.NewMockLogger()
-	tempMgr := processing.NewTempFileManager(30 * time.Minute)
-	recorder := NewArecordRecorder(cfg, mockLogger, tempMgr)
-
-	// Test initial audio level
-	if recorder.GetAudioLevel() != 0.0 {
-		t.Errorf("Expected initial audio level 0.0, got %f", recorder.GetAudioLevel())
-	}
-
-	// Test callback setting
-	var receivedLevel float64
-	var callbackCalled bool
-
-	recorder.SetAudioLevelCallback(func(level float64) {
-		receivedLevel = level
-		callbackCalled = true
-	})
-
-	// Test audio level update
-	testLevel := 0.75
-	recorder.updateAudioLevel(testLevel)
-
-	// Give callback time to execute
-	time.Sleep(1 * time.Millisecond)
-
-	if !callbackCalled {
-		t.Error("Expected audio level callback to be called")
-	}
-
-	if receivedLevel != testLevel {
-		t.Errorf("Expected callback to receive level %f, got %f", testLevel, receivedLevel)
-	}
-
-	if recorder.GetAudioLevel() != testLevel {
-		t.Errorf("Expected stored audio level %f, got %f", testLevel, recorder.GetAudioLevel())
-	}
-}
-
 // TestArecordRecorder_CleanupFile tests file cleanup functionality
 func TestArecordRecorder_CleanupFile(t *testing.T) {
 	cfg := &config.Config{}
@@ -255,21 +213,4 @@ func TestArecordRecorder_CleanupFile(t *testing.T) {
 		t.Error("File should be removed after cleanup")
 		os.Remove(fileName) // Clean up in case test failed
 	}
-}
-
-// TestArecordRecorder_BufferMode tests in-memory buffer functionality
-func TestArecordRecorder_BufferMode(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Audio.ExpectedDuration = 5 // Short duration should trigger buffer mode
-	cfg.Audio.SampleRate = 16000   // Low sample rate should trigger buffer mode
-
-	mockLogger := testutils.NewMockLogger()
-	tempMgr := processing.NewTempFileManager(30 * time.Minute)
-	recorder := NewArecordRecorder(cfg, mockLogger, tempMgr)
-
-	// Should be using buffer mode for short, low-quality recordings
-	if !recorder.useBuffer {
-		t.Error("Expected buffer mode to be enabled for short recordings")
-	}
-
 }

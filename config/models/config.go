@@ -35,7 +35,6 @@ type Config struct {
 		SampleRate          int    `yaml:"sample_rate"`
 		Format              string `yaml:"format"`
 		RecordingMethod     string `yaml:"recording_method"`       // Recording backend: "arecord" or "ffmpeg"
-		ExpectedDuration    int    `yaml:"expected_duration"`      // Expected recording duration in seconds (0 for indefinite)
 		MaxRecordingTime    int    `yaml:"max_recording_time"`     // Maximum recording time in seconds to prevent runaway recordings
 		TempFileCleanupTime int    `yaml:"temp_file_cleanup_time"` // Cleanup timeout for temp files in minutes (default: 30)
 	} `yaml:"audio"`
