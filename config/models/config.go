@@ -23,7 +23,9 @@ type Config struct {
 	Hotkeys struct {
 		// Hotkey provider: "dbus" (default, portal-based) | "evdev" (direct input, requires udev rule or input group).
 		// Omit or leave empty for auto-selection: dbus → evdev → disabled.
-		Provider        string `yaml:"provider"`
+		Provider string `yaml:"provider"`
+		// Recording hotkey mode: "toggle" (default, press to start and again to stop) | "ptt" (record while held).
+		Mode            string `yaml:"mode"`
 		StartRecording  string `yaml:"start_recording"`
 		StopRecording   string `yaml:"stop_recording"`
 		ShowConfig      string `yaml:"show_config"`

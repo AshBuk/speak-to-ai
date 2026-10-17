@@ -107,7 +107,7 @@ func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
 
-	callback := func() error {
+	callback := func(bool) error {
 		callbackCalled = true
 		return nil
 	}
@@ -129,7 +129,7 @@ func TestDummyKeyboardProvider_RegisterHotkey(t *testing.T) {
 	}
 
 	// Test calling the stored callback
-	err = storedCallback()
+	err = storedCallback(true)
 	if err != nil {
 		t.Errorf("Stored callback returned error: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
 	// Register multiple hotkeys
 	for _, hotkey := range hotkeys {
 		localHotkey := hotkey // capture for closure
-		callback := func() error {
+		callback := func(bool) error {
 			callbackResults[localHotkey] = true
 			return nil
 		}
@@ -179,7 +179,7 @@ func TestDummyKeyboardProvider_RegisterMultipleHotkeys(t *testing.T) {
 			continue
 		}
 
-		err := callback()
+		err := callback(true)
 		if err != nil {
 			t.Errorf("Callback for '%s' returned error: %v", hotkey, err)
 		}
@@ -199,12 +199,12 @@ func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
 	firstCallbackCalled := false
 	secondCallbackCalled := false
 
-	firstCallback := func() error {
+	firstCallback := func(bool) error {
 		firstCallbackCalled = true
 		return nil
 	}
 
-	secondCallback := func() error {
+	secondCallback := func(bool) error {
 		secondCallbackCalled = true
 		return nil
 	}
@@ -228,7 +228,7 @@ func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
 
 	// Call the stored callback
 	callback := provider.callbacks["ctrl+r"]
-	err = callback()
+	err = callback(true)
 	if err != nil {
 		t.Errorf("Callback returned error: %v", err)
 	}

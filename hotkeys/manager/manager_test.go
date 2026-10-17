@@ -81,14 +81,14 @@ func TestHotkeyManager_Stop(t *testing.T) {
 	}
 }
 
-func TestHotkeyManager_RegisterToggle(t *testing.T) {
+func TestHotkeyManager_RegisterRecording(t *testing.T) {
 	config := adapters.NewConfigAdapter("ctrl+shift+r", "auto")
 	manager := NewHotkeyManager(config, interfaces.EnvironmentX11, testutils.NewMockLogger())
 	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 
 	toggleCount := 0
-	manager.RegisterToggle(func() error {
+	manager.RegisterRecording(func(bool) error {
 		toggleCount++
 		return nil
 	})
@@ -126,7 +126,7 @@ func TestHotkeyManager_SimulateHotkeyPress_CallbackError(t *testing.T) {
 	manager.provider = mockProvider
 
 	testError := errors.New("callback error")
-	manager.RegisterToggle(func() error {
+	manager.RegisterRecording(func(bool) error {
 		return testError
 	})
 
@@ -213,7 +213,7 @@ func TestHotkeyManager_ConcurrentAccess(t *testing.T) {
 	mockProvider := mocks.NewMockHotkeyProvider()
 	manager.provider = mockProvider
 
-	manager.RegisterToggle(func() error { return nil })
+	manager.RegisterRecording(func(bool) error { return nil })
 
 	// Test concurrent toggle presses (exercises the hotkey mutex)
 	done := make(chan bool, 2)

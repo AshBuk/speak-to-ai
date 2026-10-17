@@ -13,7 +13,7 @@ import (
 // DummyKeyboardProvider implements a KeyboardEventProvider with no actual functionality
 // Use as a fallback when no other providers are available
 type DummyKeyboardProvider struct {
-	callbacks   map[string]func() error
+	callbacks   map[string]func(bool) error
 	isListening bool
 	logger      logger.Logger
 }
@@ -21,7 +21,7 @@ type DummyKeyboardProvider struct {
 // NewDummyKeyboardProvider creates a new DummyKeyboardProvider
 func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	return &DummyKeyboardProvider{
-		callbacks:   make(map[string]func() error),
+		callbacks:   make(map[string]func(bool) error),
 		isListening: false,
 		logger:      logger,
 	}
@@ -67,7 +67,7 @@ func (p *DummyKeyboardProvider) Stop() {
 }
 
 // RegisterHotkey stores the callback but never calls it
-func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
+func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error {
 	p.logger.Info("Registered action: %s (%s) (but it will not function with dummy provider)", id, hotkey)
 	p.callbacks[id] = callback
 	return nil

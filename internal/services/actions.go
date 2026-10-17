@@ -5,6 +5,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -31,6 +32,25 @@ func (c *ServiceContainer) ToggleRecording() error {
 		return c.Audio.HandleStopRecording()
 	}
 	return c.Audio.HandleStartRecording()
+}
+
+// RecordingHotkey maps the recording hotkey's press and release to an action
+// for the configured mode: toggle on press, or record while held (push-to-talk).
+func (c *ServiceContainer) RecordingHotkey(pressed bool) error {
+	if c.Config.GetConfig().Hotkeys.Mode != "ptt" {
+		if !pressed {
+			return nil
+		}
+		return c.ToggleRecording()
+	}
+	if pressed {
+		return c.Audio.HandleStartRecording()
+	}
+	// The recording may already be stopped by the tray, window or time limit
+	if err := c.Audio.HandleStopRecording(); !errors.Is(err, ErrNoRecordingInProgress) {
+		return err
+	}
+	return nil
 }
 
 // ResetToDefaults restores default settings and applies the default hotkeys
@@ -133,7 +153,7 @@ func (c *ServiceContainer) rebindHotkey(action string) error {
 }
 
 func (c *ServiceContainer) reloadHotkeys() error {
-	return c.Hotkeys.ReloadFromConfig(c.ToggleRecording, hotkeyConfig(c.Config.GetConfig()))
+	return c.Hotkeys.ReloadFromConfig(c.RecordingHotkey, hotkeyConfig(c.Config.GetConfig()))
 }
 
 func (c *ServiceContainer) updateUISettings() {

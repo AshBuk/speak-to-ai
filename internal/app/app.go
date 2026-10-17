@@ -97,7 +97,7 @@ func (a *App) initializeServices(cfg *config.Config, cfgFilePath string) error {
 
 	// Hotkeys trigger the shared user actions (services/actions.go)
 	if err := a.Services.Hotkeys.SetupHotkeyCallbacks(
-		a.Services.ToggleRecording,   // Start/stop recording (shared toggle)
+		a.Services.RecordingHotkey,   // Start/stop recording (toggle or push-to-talk)
 		a.Services.UI.ShowConfigFile, // Display configuration
 		a.Services.ResetToDefaults,   // Reset settings and reload hotkeys
 	); err != nil {

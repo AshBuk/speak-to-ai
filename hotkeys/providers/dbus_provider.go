@@ -21,8 +21,8 @@ import (
 // DbusKeyboardProvider implements KeyboardEventProvider using the GlobalShortcuts portal through the
 // go-wlportal/shortcuts adapter.
 type DbusKeyboardProvider struct {
-	callbacks   map[string]func() error // keyed by stable action id
-	triggers    map[string]string       // action id -> desired key combo
+	callbacks   map[string]func(bool) error // keyed by stable action id
+	triggers    map[string]string           // action id -> desired key combo
 	session     *shortcuts.Session
 	isListening bool
 	mutex       sync.Mutex
@@ -33,7 +33,7 @@ type DbusKeyboardProvider struct {
 // NewDbusKeyboardProvider creates a new D-Bus keyboard provider
 func NewDbusKeyboardProvider(logger logger.Logger) *DbusKeyboardProvider {
 	return &DbusKeyboardProvider{
-		callbacks: make(map[string]func() error),
+		callbacks: make(map[string]func(bool) error),
 		triggers:  make(map[string]string),
 		logger:    logger,
 	}
@@ -65,7 +65,7 @@ func (p *DbusKeyboardProvider) IsSupported() bool {
 }
 
 // RegisterHotkey registers an action and its callback. Binding is deferred until Start.
-func (p *DbusKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
+func (p *DbusKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
@@ -155,15 +155,12 @@ func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error
 func (p *DbusKeyboardProvider) listen(events <-chan shortcuts.Event) {
 	defer p.wg.Done()
 	for e := range events {
-		if !e.Pressed {
-			continue
-		}
 		callback, exists := p.callbacks[e.ID]
 		if !exists {
 			continue
 		}
-		p.logger.Info("Hotkey activated: %s", e.ID)
-		if err := callback(); err != nil {
+		p.logger.Info("Hotkey %s: pressed=%t", e.ID, e.Pressed)
+		if err := callback(e.Pressed); err != nil {
 			p.logger.Error("Error executing hotkey callback: %v", err)
 		}
 	}

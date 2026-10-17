@@ -133,12 +133,15 @@ hotkeys:
 ```
 Restart Dabri after saving.
 
+**Push-to-talk:** set `mode: ptt` under `hotkeys` to record only while the key is held. The default `mode: toggle` starts on the first press and stops on the next. Push-to-talk needs the key release event. evdev always reports it. With the portal it depends on the compositor: if recording does not stop when you let go, switch to evdev. evdev does not grab the key, so the focused window receives the held combo and its autorepeat. Pick a key that does nothing there, such as `scrolllock`.
+
 **Default provider: D-Bus GlobalShortcuts portal** — works out of the box on GNOME and KDE, no setup required.
 
 **Hyprland:** The portal registers shortcuts but Hyprland requires an explicit binding in `hyprland.conf`. Run `hyprctl globalshortcuts` while Dabri is running to see the registered IDs, then add:
 ```
 bind = <mods>, <key>, global, <appid>:<shortcutid>
 ```
+For push-to-talk Hyprland must report the key release. With a Lua config (`hyprland.lua`, 0.56.2) it does so only some of the time, so recording may not stop when you let go. Use evdev for push-to-talk there. TODO: verify `hyprland.conf`.
 
 #### Optional: evdev provider
 

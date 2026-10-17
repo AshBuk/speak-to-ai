@@ -115,7 +115,7 @@ type ConfigServiceInterface interface {
 type HotkeyServiceInterface interface {
 	// SetupHotkeyCallbacks connects application handlers to hotkey events
 	SetupHotkeyCallbacks(
-		toggleRecording func() error,
+		recording func(pressed bool) error,
 		showConfig func() error,
 		reloadConfig func() error,
 	) error
@@ -124,7 +124,7 @@ type HotkeyServiceInterface interface {
 	RegisterHotkeys() error
 
 	// ReloadFromConfig applies new hotkey bindings without restarting
-	ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error
+	ReloadFromConfig(recording func(pressed bool) error, cfg adapters.HotkeyConfig) error
 
 	// CaptureOnce captures a single keypress for hotkey rebinding
 	CaptureOnce(timeoutMs int) (string, error)

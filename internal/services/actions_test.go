@@ -58,6 +58,21 @@ func TestToggleRecording(t *testing.T) {
 	f.expect(t, "Audio.Start", "Audio.Stop")
 }
 
+func TestRecordingHotkey(t *testing.T) {
+	// Toggle mode acts on press only
+	f := newActionFixture()
+	_ = f.c.RecordingHotkey(true)
+	_ = f.c.RecordingHotkey(false)
+	f.expect(t, "Audio.Start")
+
+	// Push-to-talk records while held
+	f = newActionFixture()
+	f.cfg.Cfg.Hotkeys.Mode = "ptt"
+	_ = f.c.RecordingHotkey(true)
+	_ = f.c.RecordingHotkey(false)
+	f.expect(t, "Audio.Start", "Audio.Stop")
+}
+
 func TestResetToDefaults(t *testing.T) {
 	f := newActionFixture()
 	if err := f.c.ResetToDefaults(); err != nil {

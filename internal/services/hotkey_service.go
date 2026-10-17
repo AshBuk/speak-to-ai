@@ -16,7 +16,7 @@ import (
 type HotkeyManager interface {
 	Start() error
 	Stop()
-	RegisterToggle(toggle func() error)
+	RegisterRecording(recording func(pressed bool) error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
 	CaptureOnce(timeout time.Duration) (string, error)
@@ -42,7 +42,7 @@ func NewHotkeyService(
 
 // SetupHotkeyCallbacks connects application handlers to low-level hotkey events
 func (hs *HotkeyService) SetupHotkeyCallbacks(
-	toggleRecording func() error,
+	recording func(pressed bool) error,
 	showConfig func() error,
 	resetToDefaults func() error,
 ) error {
@@ -50,8 +50,8 @@ func (hs *HotkeyService) SetupHotkeyCallbacks(
 		return fmt.Errorf("hotkey manager not available")
 	}
 	hs.logger.Info("Setting up hotkey callbacks...")
-	// Register the recording toggle (owns the start/stop decision)
-	hs.hotkeyManager.RegisterToggle(toggleRecording)
+	// Register the recording hotkey handler (owns the start/stop decision)
+	hs.hotkeyManager.RegisterRecording(recording)
 	// Register additional hotkey actions
 	hs.hotkeyManager.RegisterHotkeyAction("show_config", showConfig)
 	hs.hotkeyManager.RegisterHotkeyAction("reset_to_defaults", resetToDefaults)
@@ -99,12 +99,12 @@ func (hs *HotkeyService) Shutdown() error {
 }
 
 // ReloadFromConfig applies new hotkey bindings without restarting the service
-func (hs *HotkeyService) ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error {
+func (hs *HotkeyService) ReloadFromConfig(recording func(pressed bool) error, cfg adapters.HotkeyConfig) error {
 	if hs.hotkeyManager == nil {
 		return fmt.Errorf("hotkey manager not available")
 	}
-	// ensure the toggle is set (in case of provider swap)
-	hs.hotkeyManager.RegisterToggle(toggleRecording)
+	// ensure the recording handler is set (in case of provider swap)
+	hs.hotkeyManager.RegisterRecording(recording)
 	return hs.hotkeyManager.ReloadConfig(cfg)
 }
 

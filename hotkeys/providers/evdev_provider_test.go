@@ -4,10 +4,12 @@
 package providers
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/AshBuk/dabri/v2/hotkeys/utils"
 	"github.com/AshBuk/dabri/v2/internal/testutils"
+	evdev "github.com/holoplot/go-evdev"
 )
 
 func TestNewEvdevKeyboardProvider(t *testing.T) {
@@ -33,7 +35,7 @@ func TestNewEvdevKeyboardProvider(t *testing.T) {
 func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewEvdevKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
-	callback := func() error {
+	callback := func(bool) error {
 		callbackCalled = true
 		return nil
 	}
@@ -54,7 +56,7 @@ func TestEvdevKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 	// Test the stored callback
 	if storedCallback != nil {
-		err := storedCallback()
+		err := storedCallback(true)
 		if err != nil {
 			t.Errorf("callback returned error: %v", err)
 		}
@@ -193,3 +195,28 @@ func TestGetKeyName(t *testing.T) {
 }
 
 // Test helper functions that are used by the evdev provider
+
+func TestEvdevKeyboardProvider_PressAndRelease(t *testing.T) {
+	p := NewEvdevKeyboardProvider(testutils.NewMockLogger())
+	var got []bool
+	_ = p.RegisterHotkey("toggle_recording", "alt+r", func(pressed bool) error {
+		got = append(got, pressed)
+		return nil
+	})
+	key := func(code uint16, value int32) {
+		p.handleKeyEvent(0, &evdev.InputEvent{Type: evdev.EV_KEY, Code: evdev.EvCode(code), Value: value})
+	}
+	const alt, r = 56, 19
+
+	key(r, 1) // no modifier: not a hotkey press
+	key(r, 0) // release without a pending press is ignored
+	key(alt, 1)
+	key(r, 1)
+	key(r, 2) // autorepeat is ignored
+	key(alt, 0)
+	key(r, 0) // release fires even after the modifier is let go
+
+	if !slices.Equal(got, []bool{true, false}) {
+		t.Errorf("callbacks = %v, want [true false]", got)
+	}
+}

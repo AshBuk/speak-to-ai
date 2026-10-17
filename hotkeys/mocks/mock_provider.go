@@ -15,7 +15,7 @@ type MockHotkeyProvider struct {
 	mu                sync.RWMutex
 	isStarted         bool
 	isSupported       bool
-	registeredHotkeys map[string]func() error
+	registeredHotkeys map[string]func(bool) error
 	startError        error
 	stopCalled        bool
 }
@@ -24,7 +24,7 @@ type MockHotkeyProvider struct {
 func NewMockHotkeyProvider() *MockHotkeyProvider {
 	return &MockHotkeyProvider{
 		isSupported:       true,
-		registeredHotkeys: make(map[string]func() error),
+		registeredHotkeys: make(map[string]func(bool) error),
 	}
 }
 
@@ -55,7 +55,7 @@ func (m *MockHotkeyProvider) Stop() {
 }
 
 // RegisterHotkey simulates registering an action, keyed by its stable id.
-func (m *MockHotkeyProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
+func (m *MockHotkeyProvider) RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -122,5 +122,5 @@ func (m *MockHotkeyProvider) SimulateHotkeyPress(hotkey string) error {
 	if !exists {
 		return fmt.Errorf("hotkey %s not registered", hotkey)
 	}
-	return callback()
+	return callback(true)
 }

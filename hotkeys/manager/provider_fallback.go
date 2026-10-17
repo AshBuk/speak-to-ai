@@ -17,15 +17,15 @@ const actionToggleRecording = "toggle_recording"
 // Register all configured hotkeys on the given provider
 func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventProvider) error {
 	// Register the primary start/stop recording hotkey
-	if err := provider.RegisterHotkey(actionToggleRecording, h.config.GetStartRecordingHotkey(), func() error {
-		// The toggle owns the start/stop decision against the recorder's real
+	if err := provider.RegisterHotkey(actionToggleRecording, h.config.GetStartRecordingHotkey(), func(pressed bool) error {
+		// The callback owns the start/stop decision against the recorder's real
 		// state, so this path holds no recording state of its own.
-		if h.recordingToggle == nil {
+		if h.recording == nil {
 			return nil
 		}
-		h.logger.Info("Toggle recording hotkey detected")
-		if err := h.recordingToggle(); err != nil {
-			h.logger.Error("Error toggling recording: %v", err)
+		h.logger.Info("Recording hotkey detected: pressed=%t", pressed)
+		if err := h.recording(pressed); err != nil {
+			h.logger.Error("Error handling recording hotkey: %v", err)
 			return err
 		}
 		return nil
@@ -43,12 +43,18 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 		}
 
 		act := action
-		if err := provider.RegisterHotkey(actionName, hk, func() error {
-			h.logger.Info("Custom hotkey detected: %s (%s)", actionName, hk)
-			if err := act(); err != nil {
-				h.logger.Error("Error executing hotkey action for %s: %v", actionName, err)
-				return err
+		if err := provider.RegisterHotkey(actionName, hk, func(pressed bool) error {
+			if !pressed {
+				return nil
 			}
+			h.logger.Info("Custom hotkey detected: %s (%s)", actionName, hk)
+			// Off the provider's listener: an action may reload hotkeys, which
+			// stops the provider and waits for that listener to exit.
+			go func() {
+				if err := act(); err != nil {
+					h.logger.Error("Error executing hotkey action for %s: %v", actionName, err)
+				}
+			}()
 			return nil
 		}); err != nil {
 			return fmt.Errorf("failed to register hotkey %s for action %s: %w", hk, actionName, err)

@@ -26,7 +26,7 @@ func TestNewDbusKeyboardProvider(t *testing.T) {
 func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
 	callbackCalled := false
-	callback := func() error {
+	callback := func(bool) error {
 		callbackCalled = true
 		return nil
 	}
@@ -47,7 +47,7 @@ func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 	// Test the stored callback
 	if storedCallback != nil {
-		err := storedCallback()
+		err := storedCallback(true)
 		if err != nil {
 			t.Errorf("callback returned error: %v", err)
 		}
@@ -59,7 +59,7 @@ func TestDbusKeyboardProvider_RegisterHotkey(t *testing.T) {
 
 func TestDbusKeyboardProvider_RegisterHotkey_Duplicate(t *testing.T) {
 	provider := NewDbusKeyboardProvider(testutils.NewMockLogger())
-	callback := func() error { return nil }
+	callback := func(bool) error { return nil }
 	// Register first hotkey
 	err := provider.RegisterHotkey("ctrl+a", "ctrl+a", callback)
 	if err != nil {

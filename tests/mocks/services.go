@@ -171,14 +171,14 @@ func (m *MockHotkeyService) Shutdown() error {
 }
 
 func (m *MockHotkeyService) SetupHotkeyCallbacks(
-	toggleRecording func() error,
+	recording func(pressed bool) error,
 	showConfig func() error,
 	resetToDefaults func() error,
 ) error {
 	return nil
 }
 func (m *MockHotkeyService) RegisterHotkeys() error { return nil }
-func (m *MockHotkeyService) ReloadFromConfig(toggleRecording func() error, cfg adapters.HotkeyConfig) error {
+func (m *MockHotkeyService) ReloadFromConfig(recording func(pressed bool) error, cfg adapters.HotkeyConfig) error {
 	m.Log.add("Hotkeys.Reload:" + cfg.GetStartRecordingHotkey())
 	return nil
 }

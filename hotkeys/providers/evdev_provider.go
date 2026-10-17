@@ -24,10 +24,11 @@ import (
 // EvdevKeyboardProvider implements KeyboardEventProvider using the Linux evdev interface
 type EvdevKeyboardProvider struct {
 	devices       []*evdev.InputDevice
-	callbacks     map[string]func() error
+	callbacks     map[string]func(bool) error
 	stopListening chan bool
 	isListening   bool
 	modifierState map[string]bool // Tracks the state of modifier keys
+	held          map[string]bool // Hotkeys whose press fired and whose release is pending
 	mutex         sync.RWMutex
 	logger        logger.Logger
 	wg            *sync.WaitGroup // Tracks device listener goroutines; pointer to allow safe replacement on restart
@@ -38,10 +39,11 @@ type EvdevKeyboardProvider struct {
 // NewEvdevKeyboardProvider creates a new EvdevKeyboardProvider instance
 func NewEvdevKeyboardProvider(logger logger.Logger) *EvdevKeyboardProvider {
 	return &EvdevKeyboardProvider{
-		callbacks:     make(map[string]func() error),
+		callbacks:     make(map[string]func(bool) error),
 		stopListening: make(chan bool),
 		isListening:   false,
 		modifierState: make(map[string]bool),
+		held:          make(map[string]bool),
 		logger:        logger,
 		wg:            &sync.WaitGroup{},
 	}
@@ -225,48 +227,49 @@ func (p *EvdevKeyboardProvider) handleKeyEvent(_ int, event *evdev.InputEvent) {
 		p.modifierState[strings.ToLower(keyName)] = (event.Value == 1)
 		p.mutex.Unlock()
 	}
-	// Only process key-down events for hotkey triggers
-	if event.Value != 1 {
+	// Value 2 is autorepeat, which is neither edge of a hotkey
+	if event.Value == 2 {
 		return
 	}
-	// Create a thread-safe copy of callbacks and modifier state
-	p.mutex.RLock()
-	callbacksCopy := make(map[string]func() error, len(p.callbacks))
-	for k, v := range p.callbacks {
-		callbacksCopy[k] = v
-	}
-	modState := make(map[string]bool, len(p.modifierState))
-	for k, v := range p.modifierState {
-		modState[k] = v
-	}
-	p.mutex.RUnlock()
-	// Check for registered hotkeys
-	for hotkeyStr, callback := range callbacksCopy {
+	pressed := event.Value == 1
+	// Collect the callbacks to fire under the lock, and run them after it
+	p.mutex.Lock()
+	var fire []func(bool) error
+	for hotkeyStr, callback := range p.callbacks {
 		hotkey := utils.ParseHotkey(hotkeyStr)
-		// Check if the pressed key matches the hotkey's main key
-		if strings.EqualFold(hotkey.Key, keyName) {
-			// Check if all required modifiers are also pressed
-			allModifiersPressed := true
-			for _, mod := range hotkey.Modifiers {
-				if !utils.IsModifierPressed(mod, modState) {
-					allModifiersPressed = false
-					break
-				}
-			}
-			if allModifiersPressed {
-				go func(cb func() error) {
-					if err := cb(); err != nil {
-						p.logger.Error("Hotkey callback error: %v", err)
-					}
-				}(callback)
-			}
+		if !strings.EqualFold(hotkey.Key, keyName) {
+			continue
+		}
+		// A press needs all modifiers down. A release only needs a pending
+		// press, since modifiers are often let go before the main key.
+		if pressed && !allModifiersPressed(hotkey.Modifiers, p.modifierState) || !pressed && !p.held[hotkeyStr] {
+			continue
+		}
+		p.held[hotkeyStr] = pressed
+		fire = append(fire, callback)
+	}
+	p.mutex.Unlock()
+	// Run on this listener, in event order, so a release never overtakes its press
+	for _, cb := range fire {
+		if err := cb(pressed); err != nil {
+			p.logger.Error("Hotkey callback error: %v", err)
 		}
 	}
 }
 
+// allModifiersPressed reports whether every modifier in mods is held
+func allModifiersPressed(mods []string, modState map[string]bool) bool {
+	for _, mod := range mods {
+		if !utils.IsModifierPressed(mod, modState) {
+			return false
+		}
+	}
+	return true
+}
+
 // RegisterHotkey registers a callback for a hotkey. evdev owns bindings and matches physical
 // keys, so it keys callbacks by the combo; id is unused here.
-func (p *EvdevKeyboardProvider) RegisterHotkey(id, hotkey string, callback func() error) error {
+func (p *EvdevKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	p.callbacks[hotkey] = callback

@@ -19,14 +19,14 @@ type HotkeyAction func() error
 
 // HotkeyManager manages keyboard shortcuts, providers, and actions
 type HotkeyManager struct {
-	config          adapters.HotkeyConfig
-	isListening     bool
-	recordingToggle func() error
-	hotkeyActions   map[string]HotkeyAction // Maps hotkey actions to their callbacks
-	hotkeysMutex    sync.Mutex
-	environment     interfaces.EnvironmentType
-	provider        interfaces.KeyboardEventProvider
-	logger          logger.Logger
+	config        adapters.HotkeyConfig
+	isListening   bool
+	recording     func(pressed bool) error
+	hotkeyActions map[string]HotkeyAction // Maps hotkey actions to their callbacks
+	hotkeysMutex  sync.Mutex
+	environment   interfaces.EnvironmentType
+	provider      interfaces.KeyboardEventProvider
+	logger        logger.Logger
 }
 
 // NewHotkeyManager creates a new instance of the HotkeyManager
@@ -46,12 +46,12 @@ func NewHotkeyManager(config adapters.HotkeyConfig, environment interfaces.Envir
 
 // selectProviderForEnvironment is defined in OS-specific files (e.g., manager_linux.go)
 
-// RegisterToggle registers the callback that starts or stops recording. The
-// callback owns the start/stop decision (it consults the recorder's real state),
-// so the hotkey keeps no recording state of its own and never desyncs from the
-// window or tray.
-func (h *HotkeyManager) RegisterToggle(toggle func() error) {
-	h.recordingToggle = toggle
+// RegisterRecording registers the callback for the recording hotkey's press
+// (pressed=true) and release (pressed=false). The callback owns the start/stop
+// decision (it consults the recorder's real state), so the hotkey keeps no
+// recording state of its own and never desyncs from the window or tray.
+func (h *HotkeyManager) RegisterRecording(recording func(pressed bool) error) {
+	h.recording = recording
 }
 
 // RegisterHotkeyAction registers a custom hotkey action
@@ -124,8 +124,8 @@ func (h *HotkeyManager) SimulateHotkeyPress(hotkeyName string) error {
 
 	switch hotkeyName {
 	case "toggle_recording":
-		if h.recordingToggle != nil {
-			return h.recordingToggle()
+		if h.recording != nil {
+			return h.recording(true)
 		}
 	default:
 		return fmt.Errorf("unknown hotkey: %s", hotkeyName)

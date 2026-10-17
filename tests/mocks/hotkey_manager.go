@@ -14,7 +14,7 @@ import (
 type HotkeyManager interface {
 	Start() error
 	Stop()
-	RegisterToggle(toggle func() error)
+	RegisterRecording(recording func(pressed bool) error)
 	RegisterHotkeyAction(action string, callback manager.HotkeyAction)
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
 	CaptureOnce(timeout time.Duration) (string, error)
@@ -29,7 +29,7 @@ type MockHotkeyManager struct {
 	registerHotkeyActionCalled map[string]bool
 	startError                 error
 	callbacks                  struct {
-		toggleRecording func() error
+		recording       func(pressed bool) error
 		showConfig      manager.HotkeyAction
 		resetToDefaults manager.HotkeyAction
 	}
@@ -44,9 +44,9 @@ func (m *MockHotkeyManager) Stop() {
 	m.stopCalled = true
 }
 
-func (m *MockHotkeyManager) RegisterToggle(toggle func() error) {
+func (m *MockHotkeyManager) RegisterRecording(recording func(pressed bool) error) {
 	m.registerCallbacksCalled = true
-	m.callbacks.toggleRecording = toggle
+	m.callbacks.recording = recording
 }
 
 func (m *MockHotkeyManager) RegisterHotkeyAction(action string, callback manager.HotkeyAction) {
@@ -83,8 +83,8 @@ func (m *MockHotkeyManager) WasHotkeyActionRegistered(action string) bool {
 func (m *MockHotkeyManager) TriggerCallback(callbackType string) error {
 	switch callbackType {
 	case "toggleRecording":
-		if m.callbacks.toggleRecording != nil {
-			return m.callbacks.toggleRecording()
+		if m.callbacks.recording != nil {
+			return m.callbacks.recording(true)
 		}
 	case "showConfig":
 		if m.callbacks.showConfig != nil {
