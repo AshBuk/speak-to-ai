@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/AshBuk/dabri/v2/config"
@@ -55,8 +54,9 @@ func (lf *LockFile) TryLock() error {
 		return fmt.Errorf("failed to create lock directory: %w", err)
 	}
 
-	// Try to open/create the lock file
-	file, err := os.OpenFile(lf.path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	// Try to open/create the lock file; truncate only after the lock is held,
+	// so a second instance does not wipe the running instance's PID
+	file, err := os.OpenFile(lf.path, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create lock file: %w", err)
 	}
@@ -68,7 +68,11 @@ func (lf *LockFile) TryLock() error {
 		}
 		return fmt.Errorf("failed to acquire lock: %w", err)
 	}
-	// Write current PID to lock file
+	// Write current PID to lock file, replacing a stale one
+	if err := file.Truncate(0); err != nil {
+		_ = file.Close()
+		return fmt.Errorf("failed to truncate lock file: %w", err)
+	}
 	if _, err := file.WriteString(strconv.Itoa(os.Getpid())); err != nil {
 		_ = file.Close()
 		return fmt.Errorf("failed to write PID to lock file: %w", err)
@@ -97,66 +101,4 @@ func (lf *LockFile) Unlock() error {
 	}
 
 	return nil
-}
-
-// CheckExistingInstance checks if another instance is running
-func (lf *LockFile) CheckExistingInstance() (bool, int, error) {
-	file, err := os.Open(lf.path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, 0, nil // No lock file exists
-		}
-		return false, 0, fmt.Errorf("failed to check lock file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	// Try to read PID from lock file
-	data := make([]byte, 32)
-	n, err := file.Read(data)
-	if err != nil || n == 0 {
-		return false, 0, nil // Invalid lock file
-	}
-
-	pidStr := string(data[:n])
-	pid, err := strconv.Atoi(pidStr)
-	if err != nil {
-		return false, 0, nil // Invalid PID
-	}
-	// Check if process with this PID is still running and is our application
-	if isOurProcess(pid) {
-		return true, pid, nil // Process is running and is dabri
-	}
-
-	return false, pid, nil // Process is not running
-}
-
-// isOurProcess checks if the given PID belongs to a dabri process
-func isOurProcess(pid int) bool {
-	// First check if process exists using syscall.Kill with signal 0
-	if err := syscall.Kill(pid, 0); err != nil {
-		return false // Process doesn't exist or no permission
-	}
-	// Check if the process is actually dabri by reading cmdline
-	// Validate PID to prevent path traversal
-	if pid <= 0 || pid > 4194304 { // Reasonable PID range
-		return false
-	}
-	cmdlinePath := fmt.Sprintf("/proc/%d/cmdline", pid)
-	cmdlineData, err := os.ReadFile(cmdlinePath) // #nosec G304 - PID is validated to be in safe range above
-	if err != nil {
-		return false // Can't read cmdline
-	}
-	// Convert null-terminated string to regular string
-	cmdline := string(cmdlineData)
-	cmdline = strings.ReplaceAll(cmdline, "\x00", " ")
-	cmdline = strings.TrimSpace(cmdline)
-	// Check if this is our dabri process
-	// Handle direct execution and AppImage cases
-	return strings.Contains(cmdline, "dabri") ||
-		strings.Contains(cmdline, "AppRun")
-}
-
-// GetLockFilePath returns the path to the lock file
-func (lf *LockFile) GetLockFilePath() string {
-	return lf.path
 }

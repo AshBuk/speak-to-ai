@@ -4,7 +4,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -48,15 +47,9 @@ func runDaemonCobra(cmd *cobra.Command) error {
 		appLogger.Info("Running inside AppImage, base path: %s", appDir)
 	}
 
-	// Single-instance protection
+	// Single-instance protection: flock is released by the kernel when the process dies,
+	// so a crash never leaves a stale lock
 	lockFile := utils.NewLockFile(utils.GetDefaultLockPath())
-	if isRunning, pid, err := lockFile.CheckExistingInstance(); err != nil {
-		appLogger.Warning("Failed to check existing instance: %v", err)
-	} else if isRunning {
-		fmt.Fprintf(os.Stderr, "Another instance of dabri is already running (PID: %d)\n", pid)
-		fmt.Fprintf(os.Stderr, "If you're sure no other instance is running, remove the lock file: %s\n", lockFile.GetLockFilePath())
-		return fmt.Errorf("daemon already running")
-	}
 	if err := lockFile.TryLock(); err != nil {
 		appLogger.Error("Failed to acquire application lock: %v", err)
 		return err
