@@ -4,11 +4,13 @@
 package recorders
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/AshBuk/dabri/v2/audio/interfaces"
 	"github.com/AshBuk/dabri/v2/audio/processing"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/testutils"
@@ -212,5 +214,19 @@ func TestArecordRecorder_CleanupFile(t *testing.T) {
 	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
 		t.Error("File should be removed after cleanup")
 		os.Remove(fileName) // Clean up in case test failed
+	}
+}
+
+// TestValidateAudioFile_TooShort tests that a header-only file reads as a tap, not a failure
+func TestValidateAudioFile_TooShort(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.Audio.SampleRate = 16000
+	recorder := NewArecordRecorder(cfg, testutils.NewMockLogger(), processing.NewTempFileManager(time.Minute))
+	recorder.outputFile = filepath.Join(t.TempDir(), "tap.wav")
+	if err := os.WriteFile(recorder.outputFile, make([]byte, 44), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := recorder.validateAudioFile(); !errors.Is(err, interfaces.ErrRecordingTooShort) {
+		t.Errorf("validateAudioFile() = %v, want ErrRecordingTooShort", err)
 	}
 }

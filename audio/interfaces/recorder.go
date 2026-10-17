@@ -3,6 +3,12 @@
 
 package interfaces
 
+import "errors"
+
+// ErrRecordingTooShort is returned by StopRecording when the recording holds
+// too little audio to transcribe, as after a quick tap of the hotkey.
+var ErrRecordingTooShort = errors.New("recording too short")
+
 // AudioRecorder defines the contract for an audio recorder
 type AudioRecorder interface {
 	// Start the audio recording process

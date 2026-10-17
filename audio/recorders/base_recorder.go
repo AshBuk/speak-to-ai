@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/AshBuk/dabri/v2/audio/interfaces"
 	"github.com/AshBuk/dabri/v2/audio/processing"
 	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/logger"
@@ -146,14 +147,8 @@ func (b *BaseRecorder) validateAudioFile() error {
 
 	b.logger.Debug("Audio file size: %d bytes", info.Size())
 
-	// A minimal valid WAV header is 44 bytes
-	if info.Size() <= 44 {
-		b.logger.Error("Audio file empty (size=%d) - likely recording failed", info.Size())
-		b.logger.Info("Check audio device availability and permissions")
-		return fmt.Errorf("audio file is empty or invalid (size=%d)", info.Size())
-	}
-
-	// Additional safety: ensure there is at least 0.05s of audio payload to avoid downstream crashes
+	// Ensure there is at least 0.05s of audio payload after the 44-byte WAV header
+	// to avoid downstream crashes; a header-only file is the shortest case
 	// We force output to 16-bit PCM mono, so bytesPerSample = 2
 	payloadBytes := info.Size() - 44
 	sr := b.config.Audio.SampleRate
@@ -162,8 +157,8 @@ func (b *BaseRecorder) validateAudioFile() error {
 	}
 	minPayload := int64((sr / 20) * 2) // ~0.05s of audio
 	if payloadBytes < minPayload {
-		b.logger.Error("Audio file too short (payload=%d bytes, expected >= %d)", payloadBytes, minPayload)
-		return fmt.Errorf("audio file too short (payload=%d < %d)", payloadBytes, minPayload)
+		b.logger.Debug("Audio file too short (payload=%d bytes, expected >= %d)", payloadBytes, minPayload)
+		return fmt.Errorf("%w (payload=%d < %d)", interfaces.ErrRecordingTooShort, payloadBytes, minPayload)
 	}
 
 	b.logger.Debug("Audio file validation successful: %d bytes", info.Size())

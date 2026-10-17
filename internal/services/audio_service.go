@@ -183,6 +183,16 @@ func (as *AudioService) stopAndPrepareTranscription(swallowStopError bool) (stri
 	as.logger.Info("Stopping recording and transcribing...")
 
 	audioFile, err := as.recorder.StopRecording()
+	if errors.Is(err, interfaces.ErrRecordingTooShort) {
+		// A tap, not a failure: discard quietly, skipping the error path and its ffmpeg fallback
+		as.logger.Info("Recording too short, discarded")
+		as.isRecording = false
+		_ = as.recorder.CleanupFile()
+		if as.ui != nil {
+			as.ui.SetRecordingState(false)
+		}
+		return "", nil
+	}
 	if err != nil {
 		as.logger.Warning("StopRecording returned error: %v", err)
 		as.handleRecordingError(err)
