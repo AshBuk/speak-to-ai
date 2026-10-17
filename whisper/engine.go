@@ -34,6 +34,7 @@ func NewWhisperEngine(config func() *config.Config, modelPath string, loggers ..
 	if !utils.IsValidFile(modelPath) {
 		return nil, fmt.Errorf("whisper model not found: %s", modelPath)
 	}
+	loadBackends()
 	model, err := whisper.New(modelPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load whisper model: %w", err)

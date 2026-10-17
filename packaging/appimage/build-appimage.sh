@@ -104,6 +104,10 @@ build_appdir() {
 
     # Copy Whisper libraries
     cp -a lib/libwhisper.so* lib/libggml*.so* "${APPDIR}/usr/lib/" 2>/dev/null || true
+    # ggml loads backend modules from the executable's directory
+    if [ -n "${GGML_CPU_ALL_VARIANTS}" ]; then
+        mv "${APPDIR}"/usr/lib/libggml-cpu-*.so "${APPDIR}/usr/lib/libggml-vulkan.so" "${APPDIR}/usr/bin/"
+    fi
 
     # Copy Whisper model
     [ -f "sources/language-models/small-q5_1.bin" ] && \

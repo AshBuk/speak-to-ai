@@ -28,6 +28,9 @@ DIST_DIR := dist
 # Optional: set to a tag or commit hash to pin whisper.cpp version for reproducible builds
 # Example (CI recommended): make WHISPER_CPP_REF=v1.9.5
 WHISPER_CPP_REF ?= v1.9.5
+# Optional: build every ggml CPU variant as a runtime module for distributable builds,
+# so the binary runs on any x86-64 CPU and picks the best variant at startup
+GGML_CPU_ALL_VARIANTS ?=
 
 # Docker helpers
 DOCKER_RUN := docker compose run --rm dev
@@ -107,9 +110,12 @@ $(LIB_DIR)/whisper.h:
 			git checkout $(WHISPER_CPP_REF); \
 		fi; \
 		rm -rf build && \
-		cmake -B build -DGGML_NATIVE=OFF -DGGML_AVX512=OFF -DGGML_VULKAN=ON && \
+		cmake -B build -DGGML_NATIVE=OFF -DGGML_AVX512=OFF -DGGML_VULKAN=ON \
+			$(if $(GGML_CPU_ALL_VARIANTS),-DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON) && \
 		cmake --build build --config Release
 	mkdir -p $(LIB_DIR)
+	# The Go bindings link -lggml-cpu, which is a runtime module with GGML_CPU_ALL_VARIANTS
+	$(if $(GGML_CPU_ALL_VARIANTS),ar rcs $(LIB_DIR)/libggml-cpu.a)
 	# whisper.cpp >= v1.9 places libraries in build/bin (build/src and build/ggml/src before)
 	find $(BUILD_DIR)/whisper.cpp/build \( -name 'libwhisper*' -o -name 'libggml*' \) \( -name '*.so*' -o -name '*.a' \) -exec cp {} $(LIB_DIR)/ \;
 	@test -f $(LIB_DIR)/libwhisper.so || { echo "ERROR: libwhisper.so was not produced"; exit 1; }
