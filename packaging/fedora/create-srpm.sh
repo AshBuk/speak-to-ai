@@ -55,7 +55,7 @@ tar --transform "s,^,dabri-${APP_VERSION}/," \
     cmd/ config/ hotkeys/ audio/ whisper/ output/ websocket/ internal/ \
     vendor/ \
     go.mod go.sum \
-    Makefile LICENSE README.md CHANGELOG.md \
+    Makefile LICENSE README.md \
     io.github.ashbuk.dabri.desktop \
     io.github.ashbuk.dabri.appdata.xml \
     icons/ docs/
