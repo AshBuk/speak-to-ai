@@ -135,13 +135,6 @@ mv build/whisper.cpp-%{whisper_version} build/whisper.cpp
 # Set RPATH for whisper libraries to find each other in private prefix
 WHISPER_RPATH='%{_libdir}/%{name}'
 
-# x86-only ISA extensions; on aarch64 whisper.cpp auto-detects NEON/dotprod
-%ifarch x86_64
-GGML_ARCH_FLAGS="-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-%else
-GGML_ARCH_FLAGS=""
-%endif
-
 pushd build/whisper.cpp
 cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
@@ -149,8 +142,10 @@ cmake -B build \
     -DCMAKE_INSTALL_RPATH="$WHISPER_RPATH" \
     -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
     -DGGML_NATIVE=OFF \
-    $GGML_ARCH_FLAGS \
-    -DGGML_VULKAN=ON
+    -DGGML_VULKAN=ON \
+    -DGGML_BACKEND_DL=ON \
+    -DGGML_CPU_ALL_VARIANTS=ON \
+    -DGGML_BACKEND_DIR="$WHISPER_RPATH"
 cmake --build build --parallel %{_smp_build_ncpus}
 popd
 
@@ -161,6 +156,8 @@ cp build/whisper.cpp/build/bin/libwhisper.so* lib/
 cp build/whisper.cpp/include/whisper.h lib/
 cp build/whisper.cpp/ggml/include/*.h lib/ 2>/dev/null || :
 cp build/whisper.cpp/build/bin/libggml*.so* lib/
+# The Go bindings link -lggml-cpu, which is a runtime module with GGML_CPU_ALL_VARIANTS
+ar rcs lib/libggml-cpu.a
 
 # =============================================================================
 # 2) Build Go binary with systray support (using vendored deps)
@@ -169,7 +166,7 @@ export CGO_ENABLED=1
 export C_INCLUDE_PATH=$(pwd)/lib
 export LIBRARY_PATH=$(pwd)/lib
 export CGO_CFLAGS="-I$(pwd)/lib"
-export CGO_LDFLAGS="-L$(pwd)/lib -lwhisper -lggml -lggml-cpu -lggml-vulkan"
+export CGO_LDFLAGS="-L$(pwd)/lib"
 export LD_LIBRARY_PATH=$(pwd)/lib
 
 # Set RPATH at build time to find bundled libraries at runtime
@@ -190,7 +187,7 @@ install -D -m 0755 %{name} %{buildroot}%{_bindir}/%{name}
 install -d %{buildroot}%{_libdir}/%{name}
 
 # Find and install the actual versioned libraries, create symlinks for unversioned names
-for lib in lib/libwhisper.so lib/libggml.so lib/libggml-base.so lib/libggml-cpu.so lib/libggml-vulkan.so; do
+for lib in lib/libwhisper.so lib/libggml.so lib/libggml-base.so lib/libggml-cpu-*.so lib/libggml-vulkan.so; do
     [ ! -f "$lib" ] && continue
     base=$(basename "$lib" .so)
     # Find the fully versioned file (e.g., libwhisper.so.1.8.3)
