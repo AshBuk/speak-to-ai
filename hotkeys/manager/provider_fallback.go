@@ -64,24 +64,29 @@ func (h *HotkeyManager) registerAllHotkeysOn(provider interfaces.KeyboardEventPr
 	return nil
 }
 
-// Attempt to switch to a fallback provider if the primary one fails
+// Attempt to switch to the other provider (D-Bus <-> evdev) if the primary one fails
 func startFallbackAfterRegistration(h *HotkeyManager, startErr error) error {
 	h.logger.Error("Primary keyboard provider failed to start: %v", startErr)
-	// Only fall back to evdev if current provider doesn't support capture (i.e., D-Bus)
-	if !h.provider.SupportsCaptureOnce() {
-		fallback := providers.NewEvdevKeyboardProvider(h.logger)
-		if fallback != nil && fallback.IsSupported() {
-			h.logger.Info("Falling back to evdev keyboard provider")
-			h.provider = fallback
-			if err := h.registerAllHotkeysOn(h.provider); err != nil {
-				return fmt.Errorf("failed to register hotkeys on fallback provider: %w", err)
-			}
-			if err := h.provider.Start(); err != nil {
-				return fmt.Errorf("failed to start fallback keyboard provider: %w", err)
-			}
-			h.logger.Info("Fallback keyboard provider started successfully")
-			return nil
-		}
+	var fallback interfaces.KeyboardEventProvider
+	var name string
+	switch h.provider.(type) {
+	case *providers.EvdevKeyboardProvider:
+		fallback, name = providers.NewDbusKeyboardProvider(h.logger), "D-Bus"
+	case *providers.DbusKeyboardProvider:
+		fallback, name = providers.NewEvdevKeyboardProvider(h.logger), "evdev"
 	}
-	return fmt.Errorf("failed to start keyboard provider: %w", startErr)
+	if fallback == nil || !fallback.IsSupported() {
+		return fmt.Errorf("failed to start keyboard provider: %w", startErr)
+	}
+	h.logger.Info("Falling back to %s keyboard provider", name)
+	h.provider = fallback
+	if err := h.registerAllHotkeysOn(h.provider); err != nil {
+		return fmt.Errorf("failed to register hotkeys on fallback provider: %w", err)
+	}
+	if err := h.provider.Start(); err != nil {
+		return fmt.Errorf("failed to start fallback keyboard provider: %w", err)
+	}
+	h.isListening = true
+	h.logger.Info("Fallback keyboard provider started successfully")
+	return nil
 }
