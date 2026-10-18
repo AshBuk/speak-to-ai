@@ -10,6 +10,12 @@ const (
 	OutputModeActiveWindow = "active_window" // Type text into the currently active window
 )
 
+// HotkeyMode constants define how the recording hotkey drives recording.
+const (
+	HotkeyModeToggle = "toggle" // Press to start, press again to stop
+	HotkeyModePTT    = "ptt"    // Record while the key is held
+)
+
 // Config defines the application's configuration structure, organized into logical groups.
 // It uses YAML tags for serialization and deserialization.
 type Config struct {

@@ -27,6 +27,8 @@ type Manager interface {
 	SetModelAction(onSelectModel func(ctx context.Context, modelID string) error)
 	// SetHotkeyRebindAction sets callback to rebind hotkeys by action name
 	SetHotkeyRebindAction(onRebind func(action string) error)
+	// SetHotkeyModeAction sets callback to switch the recording hotkey mode (toggle/ptt)
+	SetHotkeyModeAction(onSelectMode func(mode string) error)
 	// SetSettingsActions sets callbacks for general settings from tray (Language, Notifications)
 	SetSettingsActions(
 		onSelectLanguage func(language string) error,

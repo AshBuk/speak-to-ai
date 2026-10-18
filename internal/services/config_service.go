@@ -124,6 +124,21 @@ func (cs *ConfigService) UpdateOutputMode(mode string) error {
 	return nil
 }
 
+// UpdateHotkeyMode switches the recording hotkey between toggle and push-to-talk
+func (cs *ConfigService) UpdateHotkeyMode(mode string) error {
+	cs.logger.Info("Updating hotkey mode to: %s", mode)
+	if mode != config.HotkeyModeToggle && mode != config.HotkeyModePTT {
+		return fmt.Errorf("unknown hotkey mode: %s", mode)
+	}
+	if cs.GetConfig().Hotkeys.Mode == mode {
+		return nil
+	}
+	if err := cs.update(func(c *config.Config) { c.Hotkeys.Mode = mode }); err != nil {
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+	return nil
+}
+
 // ToggleWorkflowNotifications enables or disables desktop notifications for workflow events
 func (cs *ConfigService) ToggleWorkflowNotifications() error {
 	cs.logger.Info("Toggling workflow notifications")

@@ -84,6 +84,7 @@ func (us *UIService) UpdateSettings(cfg *config.Config) {
 		us.window.SetModel(cfg.General.WhisperModel)
 		us.window.SetLanguage(cfg.General.Language)
 		us.window.SetOutput(cfg.Output.DefaultMode)
+		us.window.SetHotkeyMode(cfg.Hotkeys.Mode)
 	}
 }
 

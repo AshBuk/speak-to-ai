@@ -113,6 +113,28 @@ func (c *ServiceContainer) setOutputMode(mode string) error {
 	return nil
 }
 
+// setHotkeyMode switches the recording hotkey between toggle and push-to-talk.
+// The mode picks the hotkey provider, so hotkeys reload.
+func (c *ServiceContainer) setHotkeyMode(mode string) error {
+	if err := c.Config.UpdateHotkeyMode(mode); err != nil {
+		return err
+	}
+	if err := c.reloadHotkeys(); err != nil {
+		return err
+	}
+	c.updateUISettings()
+	c.WarnIfPushToTalkUnavailable()
+	return nil
+}
+
+// WarnIfPushToTalkUnavailable tells the user when push-to-talk is configured
+// but the hotkey toggles, because evdev input access is missing.
+func (c *ServiceContainer) WarnIfPushToTalkUnavailable() {
+	if c.Config.GetConfig().Hotkeys.Mode == config.HotkeyModePTT && !c.Hotkeys.PushToTalk() {
+		c.UI.ShowNotification("Push-to-talk unavailable", "It needs input device access, so the hotkey toggles recording. See docs/Desktop_Environment_Support.md")
+	}
+}
+
 func (c *ServiceContainer) setRecordingMethod(method string) error {
 	if err := c.Config.UpdateRecordingMethod(method); err != nil {
 		return err

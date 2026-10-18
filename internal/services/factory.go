@@ -169,6 +169,7 @@ func newWindow(ctx context.Context, cfg *config.Config, log logger.Logger) windo
 		ActiveLanguage: cfg.General.Language,
 		OutputMode:     cfg.Output.DefaultMode,
 		Hotkey:         cfg.Hotkeys.StartRecording,
+		HotkeyMode:     cfg.Hotkeys.Mode,
 	}
 	for _, m := range constants.WhisperModels {
 		opts.Models = append(opts.Models, window.ModelChoice{ID: m.ID, Name: m.Name})
@@ -220,15 +221,17 @@ func wireUI(c *ServiceContainer, tm tray.Manager, win window.Manager) {
 	tm.SetCaptureOnceSupport(c.Hotkeys.SupportsCaptureOnce)
 	tm.UpdateSettings(c.Config.GetConfig())
 	tm.SetHotkeyRebindAction(c.rebindHotkey)
+	tm.SetHotkeyModeAction(c.setHotkeyMode)
 	tm.SetExitAction(quit)
 
 	// The no-op window backend ignores these
 	win.SetActions(window.Actions{
-		OnToggleRecording: c.ToggleRecording,
-		OnSelectModel:     c.selectModel,
-		OnSelectLanguage:  c.setLanguage,
-		OnSelectOutput:    c.setOutputMode,
-		OnQuit:            quit,
+		OnToggleRecording:  c.ToggleRecording,
+		OnSelectModel:      c.selectModel,
+		OnSelectLanguage:   c.setLanguage,
+		OnSelectOutput:     c.setOutputMode,
+		OnSelectHotkeyMode: c.setHotkeyMode,
+		OnQuit:             quit,
 	})
 }
 

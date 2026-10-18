@@ -124,9 +124,7 @@ func (a *App) startServices() error {
 	if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
 		a.Runtime.Logger.Warning("Hotkeys not registered: %v", err)
 	}
-	if a.Services.Config.GetConfig().Hotkeys.Mode == "ptt" && !a.Services.Hotkeys.PushToTalk() {
-		a.Services.UI.ShowNotification("Push-to-talk unavailable", "It needs input device access, so the hotkey toggles recording. See docs/Desktop_Environment_Support.md")
-	}
+	a.Services.WarnIfPushToTalkUnavailable()
 
 	a.Runtime.Logger.Info("Application services started successfully")
 	return nil

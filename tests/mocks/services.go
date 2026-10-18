@@ -147,6 +147,10 @@ func (m *MockConfigService) UpdateOutputMode(mode string) error {
 	m.Log.add("Config.OutputMode:" + mode)
 	return nil
 }
+func (m *MockConfigService) UpdateHotkeyMode(mode string) error {
+	m.Log.add("Config.HotkeyMode:" + mode)
+	return nil
+}
 func (m *MockConfigService) UpdateHotkey(action, combo string) error {
 	m.Log.add("Config.Hotkey:" + action + "=" + combo)
 	return nil
