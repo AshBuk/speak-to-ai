@@ -5,7 +5,7 @@
 # =============================================================================
 # Version definitions (single source of truth)
 # =============================================================================
-%global app_version     2.2.5
+%global app_version     2.3.0
 %global go_version      1.26
 %global whisper_version 1.9.5
 
@@ -259,6 +259,9 @@ fi
 %{_datadir}/icons/hicolor/scalable/apps/io.github.ashbuk.dabri.svg
 
 %changelog
+* Sun Oct 18 2026 Asher Buk <AshBuk@users.noreply.github.com> - 2.3.0-1
+- Push-to-talk recording and faster text after you stop; runs on CPUs without AVX2
+
 * Wed Oct 14 2026 Asher Buk <AshBuk@users.noreply.github.com> - 2.2.5-1
 - Portal typing recovers after the portal closes its session; whisper.cpp updated to v1.9.5
 

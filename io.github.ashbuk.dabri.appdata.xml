@@ -47,6 +47,9 @@
     <binary>dabri</binary>
   </provides>
   <releases>
+    <release version="2.3.0" date="2026-10-18">
+      <description><p>Push-to-talk recording and faster text after you stop; runs on CPUs without AVX2</p></description>
+    </release>
     <release version="2.2.5" date="2026-10-14">
       <description><p>Portal typing recovers after the portal closes its session; whisper.cpp updated to v1.9.5</p></description>
     </release>
