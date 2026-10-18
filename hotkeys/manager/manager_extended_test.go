@@ -12,6 +12,7 @@ import (
 	"github.com/AshBuk/dabri/v2/hotkeys/adapters"
 	"github.com/AshBuk/dabri/v2/hotkeys/interfaces"
 	"github.com/AshBuk/dabri/v2/hotkeys/mocks"
+	"github.com/AshBuk/dabri/v2/hotkeys/providers"
 	"github.com/AshBuk/dabri/v2/hotkeys/utils"
 	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
@@ -278,5 +279,27 @@ func TestHotkeyManager_MultipleStartStop(t *testing.T) {
 
 	if manager.isListening {
 		t.Error("Manager should not be listening after final stop")
+	}
+}
+
+func TestHotkeyManager_PushToTalk(t *testing.T) {
+	log := testutils.NewMockLogger()
+	tests := []struct {
+		name     string
+		mode     string
+		provider interfaces.KeyboardEventProvider
+		want     bool
+	}{
+		{"ptt on evdev", "ptt", providers.NewEvdevKeyboardProvider(log), true},
+		{"ptt on portal", "ptt", providers.NewDbusKeyboardProvider(log), false},
+		{"toggle on evdev", "toggle", providers.NewEvdevKeyboardProvider(log), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &HotkeyManager{config: adapters.NewConfigAdapter("alt+r", "auto").WithMode(tt.mode), provider: tt.provider}
+			if got := h.PushToTalk(); got != tt.want {
+				t.Errorf("PushToTalk() = %t, want %t", got, tt.want)
+			}
+		})
 	}
 }

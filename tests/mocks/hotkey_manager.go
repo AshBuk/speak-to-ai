@@ -19,6 +19,7 @@ type HotkeyManager interface {
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
 	CaptureOnce(timeout time.Duration) (string, error)
 	SupportsCaptureOnce() bool
+	PushToTalk() bool
 }
 
 // MockHotkeyManager implements HotkeyManager for testing
@@ -68,6 +69,7 @@ func (m *MockHotkeyManager) ReloadConfig(_ adapters.HotkeyConfig) error { return
 func (m *MockHotkeyManager) CaptureOnce(_ time.Duration) (string, error) { return "alt+r", nil }
 
 func (m *MockHotkeyManager) SupportsCaptureOnce() bool { return true }
+func (m *MockHotkeyManager) PushToTalk() bool          { return false }
 
 // Test helper methods
 func (m *MockHotkeyManager) WasStartCalled() bool { return m.startCalled }

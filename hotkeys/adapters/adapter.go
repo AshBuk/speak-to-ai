@@ -7,6 +7,8 @@ package adapters
 type HotkeyConfig interface {
 	GetStartRecordingHotkey() string
 	GetProvider() string
+	// Return the recording hotkey mode ("toggle" or "ptt")
+	GetMode() string
 	// Return the configured hotkey string for a given logical action name
 	GetActionHotkey(action string) string
 }
@@ -15,6 +17,7 @@ type HotkeyConfig interface {
 type ConfigAdapter struct {
 	startRecording  string
 	provider        string
+	mode            string
 	showConfig      string
 	resetToDefaults string
 }
@@ -32,6 +35,17 @@ func (c *ConfigAdapter) WithAdditionalHotkeys(showConfig, resetToDefaults string
 	c.showConfig = showConfig
 	c.resetToDefaults = resetToDefaults
 	return c
+}
+
+// WithMode sets the recording hotkey mode using a builder pattern
+func (c *ConfigAdapter) WithMode(mode string) *ConfigAdapter {
+	c.mode = mode
+	return c
+}
+
+// GetMode returns the recording hotkey mode
+func (c *ConfigAdapter) GetMode() string {
+	return c.mode
 }
 
 // GetStartRecordingHotkey returns the start recording hotkey

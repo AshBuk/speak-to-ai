@@ -183,6 +183,13 @@ func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
 	return "", fmt.Errorf("capture not supported")
 }
 
+// PushToTalk reports whether the recording hotkey records while held: the
+// config asks for it and the active provider reports key release (evdev only).
+func (h *HotkeyManager) PushToTalk() bool {
+	_, evdev := h.provider.(*providers.EvdevKeyboardProvider)
+	return evdev && h.config.GetMode() == "ptt"
+}
+
 // SupportsCaptureOnce checks if the active provider supports the capture-once functionality
 func (h *HotkeyManager) SupportsCaptureOnce() bool {
 	if h.provider == nil {

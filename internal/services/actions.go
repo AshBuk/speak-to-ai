@@ -35,9 +35,9 @@ func (c *ServiceContainer) ToggleRecording() error {
 }
 
 // RecordingHotkey maps the recording hotkey's press and release to an action
-// for the configured mode: toggle on press, or record while held (push-to-talk).
+// for the active mode: toggle on press, or record while held (push-to-talk).
 func (c *ServiceContainer) RecordingHotkey(pressed bool) error {
-	if c.Config.GetConfig().Hotkeys.Mode != "ptt" {
+	if !c.Hotkeys.PushToTalk() {
 		if !pressed {
 			return nil
 		}
@@ -163,5 +163,6 @@ func (c *ServiceContainer) updateUISettings() {
 // hotkeyConfig adapts the app config to the hotkey manager's view of it.
 func hotkeyConfig(cfg *config.Config) adapters.HotkeyConfig {
 	return adapters.NewConfigAdapter(cfg.Hotkeys.StartRecording, cfg.Hotkeys.Provider).
-		WithAdditionalHotkeys(cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults)
+		WithAdditionalHotkeys(cfg.Hotkeys.ShowConfig, cfg.Hotkeys.ResetToDefaults).
+		WithMode(cfg.Hotkeys.Mode)
 }

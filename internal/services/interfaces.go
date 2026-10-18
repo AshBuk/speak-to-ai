@@ -132,6 +132,9 @@ type HotkeyServiceInterface interface {
 	// SupportsCaptureOnce reports whether interactive hotkey binding is available
 	SupportsCaptureOnce() bool
 
+	// PushToTalk reports whether the recording hotkey records while held
+	PushToTalk() bool
+
 	// Shutdown releases hotkey resources
 	Shutdown() error
 }

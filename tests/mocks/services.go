@@ -161,6 +161,7 @@ func (m *MockConfigService) SetShutdownError(err error) { m.shutdownError = err 
 type MockHotkeyService struct {
 	Log            *CallLog
 	Captured       string // returned by CaptureOnce
+	PTT            bool   // returned by PushToTalk
 	shutdownCalled bool
 	shutdownError  error
 }
@@ -191,6 +192,9 @@ func (m *MockHotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 
 // SupportsCaptureOnce mock implementation
 func (m *MockHotkeyService) SupportsCaptureOnce() bool { return true }
+
+// PushToTalk mock implementation
+func (m *MockHotkeyService) PushToTalk() bool { return m.PTT }
 
 // Test helper methods
 func (m *MockHotkeyService) WasShutdownCalled() bool { return m.shutdownCalled }

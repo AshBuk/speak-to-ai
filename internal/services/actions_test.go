@@ -67,7 +67,7 @@ func TestRecordingHotkey(t *testing.T) {
 
 	// Push-to-talk records while held
 	f = newActionFixture()
-	f.cfg.Cfg.Hotkeys.Mode = "ptt"
+	f.hotkeys.PTT = true
 	_ = f.c.RecordingHotkey(true)
 	_ = f.c.RecordingHotkey(false)
 	f.expect(t, "Audio.Start", "Audio.Stop")

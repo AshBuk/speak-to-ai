@@ -21,6 +21,7 @@ type HotkeyManager interface {
 	ReloadConfig(newConfig adapters.HotkeyConfig) error
 	CaptureOnce(timeout time.Duration) (string, error)
 	SupportsCaptureOnce() bool
+	PushToTalk() bool
 }
 
 // HotkeyService bridges hotkey events to application handlers
@@ -117,6 +118,11 @@ func (hs *HotkeyService) CaptureOnce(timeoutMs int) (string, error) {
 		timeoutMs = 3000
 	}
 	return hs.hotkeyManager.CaptureOnce(time.Duration(timeoutMs) * time.Millisecond)
+}
+
+// PushToTalk reports whether the recording hotkey records while held
+func (hs *HotkeyService) PushToTalk() bool {
+	return hs.hotkeyManager != nil && hs.hotkeyManager.PushToTalk()
 }
 
 // SupportsCaptureOnce checks if interactive hotkey binding is available

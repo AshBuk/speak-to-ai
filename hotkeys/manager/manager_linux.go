@@ -33,9 +33,18 @@ func isHyprland() bool {
 //
 // Override via config: hotkeys.provider = "dbus" | "evdev"
 // Any other value (including empty) triggers auto-selection.
+// hotkeys.mode = "ptt" selects evdev when it is accessible.
 func selectProviderForEnvironment(config adapters.HotkeyConfig, environment interfaces.EnvironmentType, logger logger.Logger) interfaces.KeyboardEventProvider {
 	_ = environment // reserved for future environment-specific logic
 
+	// Push-to-talk needs the key release, which the portal does not deliver reliably
+	if config.GetMode() == "ptt" {
+		if evdevProvider := providers.NewEvdevKeyboardProvider(logger); evdevProvider.IsSupported() {
+			logger.Info("Hotkeys mode ptt: using evdev")
+			return evdevProvider
+		}
+		logger.Warning("Push-to-talk needs evdev input access, the recording hotkey toggles instead — see docs/Desktop_Environment_Support.md")
+	}
 	switch config.GetProvider() {
 	case "evdev":
 		logger.Info("Hotkeys provider override: evdev")
