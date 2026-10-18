@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // MockHotkeyProvider implements KeyboardEventProvider interface for testing
@@ -75,14 +74,6 @@ func (m *MockHotkeyProvider) IsSupported() bool {
 	defer m.mu.RUnlock()
 	return m.isSupported
 }
-
-// CaptureOnce returns a fixed combo for tests
-func (m *MockHotkeyProvider) CaptureOnce(_ time.Duration) (string, error) {
-	return "alt+r", nil
-}
-
-// SupportsCaptureOnce returns true for mock provider
-func (m *MockHotkeyProvider) SupportsCaptureOnce() bool { return true }
 
 // Test helper methods
 

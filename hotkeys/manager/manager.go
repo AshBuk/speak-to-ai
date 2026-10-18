@@ -152,45 +152,33 @@ func (h *HotkeyManager) ReloadConfig(newConfig adapters.HotkeyConfig) error {
 	return nil
 }
 
-// CaptureOnce attempts to capture a single hotkey combination
-// Temporarily stops provider to release devices, then captures on fresh instance
+// CaptureOnce captures a single hotkey combination. Only evdev reads keys
+// directly; with the portal the desktop owns the bindings. The listener stops
+// for the capture, so the pressed keys trigger no action.
 func (h *HotkeyManager) CaptureOnce(timeout time.Duration) (string, error) {
-	if h.provider == nil {
-		return "", fmt.Errorf("no keyboard provider available")
+	evdev, ok := h.provider.(*providers.EvdevKeyboardProvider)
+	if !ok {
+		return "", fmt.Errorf("capture not supported")
 	}
-	// Provider supports capture: stop to release devices, capture on fresh instance, restart
-	if h.provider.SupportsCaptureOnce() {
-		h.provider.Stop()
-
-		// Skip IsSupported() check - if evdev provider was running, evdev is available
-		// CaptureOnce will return error if no devices found
-		captureProvider := providers.NewEvdevKeyboardProvider(h.logger)
-		result, err := captureProvider.CaptureOnce(timeout)
-		if reloadErr := h.ReloadConfig(h.config); reloadErr != nil {
-			h.logger.Error("Failed to restart hotkeys after capture: %v", reloadErr)
+	evdev.Stop()
+	result, err := evdev.CaptureOnce(timeout)
+	if h.isListening {
+		if startErr := evdev.Start(); startErr != nil {
+			h.logger.Error("Failed to restart hotkeys after capture: %v", startErr)
 		}
-		return result, err
 	}
-	// Provider doesn't support capture: use evdev fallback (D-Bus case)
-	// Here we need IsSupported() since evdev wasn't the active provider
-	fallback := providers.NewEvdevKeyboardProvider(h.logger)
-	if fallback != nil && fallback.IsSupported() {
-		return fallback.CaptureOnce(timeout)
-	}
-	return "", fmt.Errorf("capture not supported")
+	return result, err
 }
 
 // PushToTalk reports whether the recording hotkey records while held: the
 // config asks for it and the active provider reports key release (evdev only).
 func (h *HotkeyManager) PushToTalk() bool {
-	_, evdev := h.provider.(*providers.EvdevKeyboardProvider)
-	return evdev && h.config.GetMode() == "ptt"
+	return h.SupportsCaptureOnce() && h.config.GetMode() == "ptt"
 }
 
-// SupportsCaptureOnce checks if the active provider supports the capture-once functionality
+// SupportsCaptureOnce reports whether the active provider reads keys directly
+// (evdev), which both hotkey capture and push-to-talk need.
 func (h *HotkeyManager) SupportsCaptureOnce() bool {
-	if h.provider == nil {
-		return false
-	}
-	return h.provider.SupportsCaptureOnce()
+	_, ok := h.provider.(*providers.EvdevKeyboardProvider)
+	return ok
 }

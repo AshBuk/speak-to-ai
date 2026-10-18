@@ -444,9 +444,6 @@ func (cs *captureSession) cleanup() {
 	}
 }
 
-// SupportsCaptureOnce returns true as evdev supports one-shot hotkey capture
-func (p *EvdevKeyboardProvider) SupportsCaptureOnce() bool { return true }
-
 // CaptureOnce starts a short-lived capture session to get a single hotkey combination
 // Note: This creates a fresh isolated session, not tied to the regular provider lifecycle
 func (p *EvdevKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {

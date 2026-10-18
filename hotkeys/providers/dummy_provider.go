@@ -5,7 +5,6 @@ package providers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
@@ -63,12 +62,4 @@ func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(
 	p.logger.Info("Registered action: %s (%s) (but it will not function with dummy provider)", id, hotkey)
 	p.callbacks[id] = callback
 	return nil
-}
-
-// SupportsCaptureOnce returns false as dummy provider has no real functionality
-func (p *DummyKeyboardProvider) SupportsCaptureOnce() bool { return false }
-
-// CaptureOnce returns an error as this functionality is not supported
-func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
-	return "", fmt.Errorf("captureOnce not supported in dummy provider")
 }
