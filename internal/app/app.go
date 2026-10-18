@@ -121,10 +121,9 @@ func (a *App) startServices() error {
 	if err := a.Services.IO.StartWebSocketServer(); err != nil {
 		a.Runtime.Logger.Warning("WebSocket server not started: %v", err)
 	}
-	if err := a.Services.Hotkeys.RegisterHotkeys(); err != nil {
+	if err := a.Services.StartHotkeys(); err != nil {
 		a.Runtime.Logger.Warning("Hotkeys not registered: %v", err)
 	}
-	a.Services.WarnIfPushToTalkUnavailable()
 
 	a.Runtime.Logger.Info("Application services started successfully")
 	return nil

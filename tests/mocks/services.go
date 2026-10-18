@@ -164,6 +164,7 @@ func (m *MockConfigService) SetShutdownError(err error) { m.shutdownError = err 
 // MockHotkeyService implements HotkeyServiceInterface for testing
 type MockHotkeyService struct {
 	Log            *CallLog
+	ReloadErr      error  // returned by ReloadFromConfig
 	Captured       string // returned by CaptureOnce
 	PTT            bool   // returned by PushToTalk
 	shutdownCalled bool
@@ -185,7 +186,7 @@ func (m *MockHotkeyService) SetupHotkeyCallbacks(
 func (m *MockHotkeyService) RegisterHotkeys() error { return nil }
 func (m *MockHotkeyService) ReloadFromConfig(recording func(pressed bool) error, cfg adapters.HotkeyConfig) error {
 	m.Log.add("Hotkeys.Reload:" + cfg.GetStartRecordingHotkey())
-	return nil
+	return m.ReloadErr
 }
 
 // CaptureOnce mock implementation

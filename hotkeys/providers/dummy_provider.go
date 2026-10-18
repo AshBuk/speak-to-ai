@@ -5,7 +5,6 @@ package providers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/AshBuk/dabri/v2/internal/logger"
 )
@@ -13,17 +12,15 @@ import (
 // DummyKeyboardProvider implements a KeyboardEventProvider with no actual functionality
 // Use as a fallback when no other providers are available
 type DummyKeyboardProvider struct {
-	callbacks   map[string]func(bool) error
-	isListening bool
-	logger      logger.Logger
+	callbacks map[string]func(bool) error
+	logger    logger.Logger
 }
 
 // NewDummyKeyboardProvider creates a new DummyKeyboardProvider
 func NewDummyKeyboardProvider(logger logger.Logger) *DummyKeyboardProvider {
 	return &DummyKeyboardProvider{
-		callbacks:   make(map[string]func(bool) error),
-		isListening: false,
-		logger:      logger,
+		callbacks: make(map[string]func(bool) error),
+		logger:    logger,
 	}
 }
 
@@ -32,13 +29,9 @@ func (p *DummyKeyboardProvider) IsSupported() bool {
 	return true
 }
 
-// Start logs helpful instructions and warnings instead of starting a listener
+// Start logs helpful instructions and fails, so the app can tell the user
+// that hotkeys are unavailable
 func (p *DummyKeyboardProvider) Start() error {
-	if p.isListening {
-		return fmt.Errorf("dummy keyboard provider already started")
-	}
-
-	p.isListening = true
 	p.logger.Warning("Using dummy keyboard provider; hotkeys will not be functional")
 	p.logger.Info("")
 	p.logger.Info("To enable hotkeys, try one of these solutions:")
@@ -58,25 +51,15 @@ func (p *DummyKeyboardProvider) Start() error {
 	p.logger.Info("   - Use the WebSocket interface for remote control")
 	p.logger.Info("")
 
-	return nil
+	return fmt.Errorf("no hotkey provider available")
 }
 
-// Stop updates the state to indicate the provider is stopped
-func (p *DummyKeyboardProvider) Stop() {
-	p.isListening = false
-}
+// Stop does nothing as the dummy provider never listens
+func (p *DummyKeyboardProvider) Stop() {}
 
 // RegisterHotkey stores the callback but never calls it
 func (p *DummyKeyboardProvider) RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error {
 	p.logger.Info("Registered action: %s (%s) (but it will not function with dummy provider)", id, hotkey)
 	p.callbacks[id] = callback
 	return nil
-}
-
-// SupportsCaptureOnce returns false as dummy provider has no real functionality
-func (p *DummyKeyboardProvider) SupportsCaptureOnce() bool { return false }
-
-// CaptureOnce returns an error as this functionality is not supported
-func (p *DummyKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
-	return "", fmt.Errorf("captureOnce not supported in dummy provider")
 }

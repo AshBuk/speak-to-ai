@@ -119,18 +119,25 @@ func (c *ServiceContainer) setHotkeyMode(mode string) error {
 	if err := c.Config.UpdateHotkeyMode(mode); err != nil {
 		return err
 	}
-	if err := c.reloadHotkeys(); err != nil {
-		return err
-	}
-	c.updateUISettings()
-	c.WarnIfPushToTalkUnavailable()
-	return nil
+	return c.reloadHotkeys()
 }
 
-// WarnIfPushToTalkUnavailable tells the user when push-to-talk is configured
-// but the hotkey toggles, because evdev input access is missing.
-func (c *ServiceContainer) WarnIfPushToTalkUnavailable() {
-	if c.Config.GetConfig().Hotkeys.Mode == config.HotkeyModePTT && !c.Hotkeys.PushToTalk() {
+// StartHotkeys registers the hotkeys at startup and reports the outcome.
+func (c *ServiceContainer) StartHotkeys() error {
+	err := c.Hotkeys.RegisterHotkeys()
+	c.hotkeysApplied(err)
+	return err
+}
+
+// hotkeysApplied refreshes the UI for the provider that actually runs, since a
+// fallback may switch it, and tells the user when hotkeys are unavailable or
+// push-to-talk toggles because evdev input access is missing.
+func (c *ServiceContainer) hotkeysApplied(err error) {
+	c.updateUISettings()
+	switch {
+	case err != nil:
+		c.UI.ShowNotification("Hotkeys unavailable", "Record from the tray instead. See docs/Desktop_Environment_Support.md")
+	case c.Config.GetConfig().Hotkeys.Mode == config.HotkeyModePTT && !c.Hotkeys.PushToTalk():
 		c.UI.ShowNotification("Push-to-talk unavailable", "It needs input device access, so the hotkey toggles recording. See docs/Desktop_Environment_Support.md")
 	}
 }
@@ -175,7 +182,9 @@ func (c *ServiceContainer) rebindHotkey(action string) error {
 }
 
 func (c *ServiceContainer) reloadHotkeys() error {
-	return c.Hotkeys.ReloadFromConfig(c.RecordingHotkey, hotkeyConfig(c.Config.GetConfig()))
+	err := c.Hotkeys.ReloadFromConfig(c.RecordingHotkey, hotkeyConfig(c.Config.GetConfig()))
+	c.hotkeysApplied(err)
+	return err
 }
 
 func (c *ServiceContainer) updateUISettings() {

@@ -3,11 +3,7 @@
 
 package interfaces
 
-import (
-	"time"
-
-	"github.com/AshBuk/dabri/v2/internal/platform"
-)
+import "github.com/AshBuk/dabri/v2/internal/platform"
 
 // KeyboardEventProvider defines the contract for a keyboard event source
 type KeyboardEventProvider interface {
@@ -23,10 +19,6 @@ type KeyboardEventProvider interface {
 	RegisterHotkey(id, hotkey string, callback func(pressed bool) error) error
 	// Check if the provider is supported on the current system
 	IsSupported() bool
-	// Capture a single hotkey combination within a given timeout
-	CaptureOnce(timeout time.Duration) (string, error)
-	// Check if the provider supports one-shot hotkey capture
-	SupportsCaptureOnce() bool
 }
 
 // KeyCombination represents a hotkey combination

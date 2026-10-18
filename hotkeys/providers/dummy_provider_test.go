@@ -21,10 +21,6 @@ func TestNewDummyKeyboardProvider(t *testing.T) {
 		t.Error("callbacks map should be initialized")
 	}
 
-	if provider.isListening {
-		t.Error("provider should not be listening initially")
-	}
-
 	// Test that it implements the interface
 	var _ interfaces.KeyboardEventProvider = provider
 }
@@ -48,58 +44,9 @@ func TestDummyKeyboardProvider_IsSupported(t *testing.T) {
 func TestDummyKeyboardProvider_Start(t *testing.T) {
 	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
 
-	// Initial state
-	if provider.isListening {
-		t.Error("provider should not be listening initially")
-	}
-
-	// Start should succeed
-	err := provider.Start()
-	if err != nil {
-		t.Errorf("Start should not return error, got: %v", err)
-	}
-
-	if !provider.isListening {
-		t.Error("provider should be listening after Start()")
-	}
-
-	// Starting again should return error
-	err = provider.Start()
-	if err == nil {
-		t.Error("Starting already started provider should return error")
-	}
-
-	expectedErrMsg := "dummy keyboard provider already started"
-	if err.Error() != expectedErrMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedErrMsg, err.Error())
-	}
-}
-
-func TestDummyKeyboardProvider_Stop(t *testing.T) {
-	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
-
-	// Stop without starting should be safe
-	provider.Stop()
-	if provider.isListening {
-		t.Error("provider should not be listening after Stop()")
-	}
-
-	// Start then stop
-	provider.Start()
-	if !provider.isListening {
-		t.Error("provider should be listening after Start()")
-	}
-
-	provider.Stop()
-	if provider.isListening {
-		t.Error("provider should not be listening after Stop()")
-	}
-
-	// Multiple stops should be safe
-	provider.Stop()
-	provider.Stop()
-	if provider.isListening {
-		t.Error("provider should remain stopped after multiple Stop() calls")
+	// Start fails so the app can report that hotkeys are unavailable
+	if err := provider.Start(); err == nil {
+		t.Error("Start should return an error")
 	}
 }
 
@@ -239,67 +186,5 @@ func TestDummyKeyboardProvider_OverwriteHotkey(t *testing.T) {
 	}
 	if !secondCallbackCalled {
 		t.Error("Second callback should have been called")
-	}
-}
-
-func TestDummyKeyboardProvider_StartStopCycle(t *testing.T) {
-	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
-
-	// Start -> Stop -> Start cycle
-	err := provider.Start()
-	if err != nil {
-		t.Errorf("First start failed: %v", err)
-	}
-
-	provider.Stop()
-
-	err = provider.Start()
-	if err != nil {
-		t.Errorf("Second start failed: %v", err)
-	}
-
-	if !provider.isListening {
-		t.Error("Provider should be listening after restart")
-	}
-
-	provider.Stop()
-	if provider.isListening {
-		t.Error("Provider should not be listening after final stop")
-	}
-}
-
-func TestDummyKeyboardProvider_StateConsistency(t *testing.T) {
-	provider := NewDummyKeyboardProvider(testutils.NewMockLogger())
-
-	// Test various state combinations
-	scenarios := []struct {
-		name          string
-		action        func() error
-		expectedState bool
-		expectError   bool
-	}{
-		{"initial state", func() error { return nil }, false, false},
-		{"first start", provider.Start, true, false},
-		{"start again", provider.Start, true, true},
-		{"stop", func() error { provider.Stop(); return nil }, false, false},
-		{"stop again", func() error { provider.Stop(); return nil }, false, false},
-		{"restart", provider.Start, true, false},
-	}
-
-	for _, scenario := range scenarios {
-		t.Run(scenario.name, func(t *testing.T) {
-			err := scenario.action()
-
-			if scenario.expectError && err == nil {
-				t.Error("Expected error but got none")
-			}
-			if !scenario.expectError && err != nil {
-				t.Errorf("Unexpected error: %v", err)
-			}
-
-			if provider.isListening != scenario.expectedState {
-				t.Errorf("Expected isListening=%v, got %v", scenario.expectedState, provider.isListening)
-			}
-		})
 	}
 }

@@ -69,10 +69,8 @@ func (hs *HotkeyService) RegisterHotkeys() error {
 	if err := hs.hotkeyManager.Start(); err != nil {
 		// Provide helpful guidance for AppImage users when evdev/dbus fails
 		hs.logger.Warning("Failed to register hotkeys: %v", err)
-		if hs.logger != nil {
-			hs.logger.Info("TIP: On Wayland/AppImage, D-Bus GlobalShortcuts is preferred. Ensure the portal is available.")
-			hs.logger.Info("If using evdev, ensure user is in 'input' group and re-login.")
-		}
+		hs.logger.Info("TIP: On Wayland/AppImage, D-Bus GlobalShortcuts is preferred. Ensure the portal is available.")
+		hs.logger.Info("If using evdev, ensure user is in 'input' group and re-login.")
 		return err
 	}
 	return nil

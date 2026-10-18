@@ -142,14 +142,6 @@ func (p *DbusKeyboardProvider) Stop() {
 	p.logger.Info("D-Bus hotkey provider stopped")
 }
 
-// SupportsCaptureOnce returns false as D-Bus GlobalShortcuts portal doesn't support one-shot capture
-func (p *DbusKeyboardProvider) SupportsCaptureOnce() bool { return false }
-
-// CaptureOnce returns an error as this provider does not support capture-once functionality
-func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error) {
-	return "", fmt.Errorf("captureOnce not supported in dbus provider")
-}
-
 // repeatWindow groups Activated events into one press: GNOME re-sends Activated
 // as key autorepeat, the first repeat after its 500 ms default delay.
 const repeatWindow = 600 * time.Millisecond
