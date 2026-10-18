@@ -147,15 +147,15 @@ func (b *BaseRecorder) validateAudioFile() error {
 
 	b.logger.Debug("Audio file size: %d bytes", info.Size())
 
-	// Ensure there is at least 0.05s of audio payload after the 44-byte WAV header
-	// to avoid downstream crashes; a header-only file is the shortest case
+	// Ensure there is at least 0.3s of audio payload after the 44-byte WAV header.
+	// Shorter clips are taps, not speech: Whisper hallucinates text on them.
 	// We force output to 16-bit PCM mono, so bytesPerSample = 2
 	payloadBytes := info.Size() - 44
 	sr := b.config.Audio.SampleRate
 	if sr <= 0 {
 		sr = 16000
 	}
-	minPayload := int64((sr / 20) * 2) // ~0.05s of audio
+	minPayload := int64(sr * 3 / 10 * 2) // 0.3s of audio
 	if payloadBytes < minPayload {
 		b.logger.Debug("Audio file too short (payload=%d bytes, expected >= %d)", payloadBytes, minPayload)
 		return fmt.Errorf("%w (payload=%d < %d)", interfaces.ErrRecordingTooShort, payloadBytes, minPayload)
