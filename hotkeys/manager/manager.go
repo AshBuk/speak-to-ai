@@ -92,8 +92,6 @@ func (h *HotkeyManager) Start() error {
 	if h.provider == nil {
 		return fmt.Errorf("no keyboard provider available - hotkeys will not work")
 	}
-	h.isListening = true
-
 	h.logger.Info("Starting hotkey manager...")
 	h.logger.Info("- Start/Stop recording: %s", h.config.GetStartRecordingHotkey())
 	// Register all hotkeys on the selected provider
@@ -101,11 +99,10 @@ func (h *HotkeyManager) Start() error {
 		return err
 	}
 	// Start the provider and handle potential fallbacks
-	err := h.provider.Start()
-	if err != nil {
-		h.isListening = false
+	if err := h.provider.Start(); err != nil {
 		return startFallbackAfterRegistration(h, err)
 	}
+	h.isListening = true
 	return nil
 }
 
