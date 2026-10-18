@@ -73,6 +73,15 @@ func TestRecordingHotkey(t *testing.T) {
 	f.expect(t, "Audio.Start", "Audio.Stop")
 }
 
+func TestSetHotkeyMode(t *testing.T) {
+	// The mode picks the hotkey provider, so switching it reloads hotkeys
+	f := newActionFixture()
+	if err := f.c.setHotkeyMode(config.HotkeyModePTT); err != nil {
+		t.Fatal(err)
+	}
+	f.expect(t, "Config.HotkeyMode:ptt", "Hotkeys.Reload:alt+r", "UI.UpdateSettings")
+}
+
 func TestResetToDefaults(t *testing.T) {
 	f := newActionFixture()
 	if err := f.c.ResetToDefaults(); err != nil {

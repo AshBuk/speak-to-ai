@@ -32,6 +32,10 @@ const (
 	OutputModeClipboard = models.OutputModeClipboard
 	// OutputModeActiveWindow types transcripts into the focused window.
 	OutputModeActiveWindow = models.OutputModeActiveWindow
+	// HotkeyModeToggle starts and stops recording on each hotkey press.
+	HotkeyModeToggle = models.HotkeyModeToggle
+	// HotkeyModePTT records while the hotkey is held.
+	HotkeyModePTT = models.HotkeyModePTT
 
 	// AppName is the application identifier used in paths.
 	AppName = "dabri"

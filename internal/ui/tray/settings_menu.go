@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"fyne.io/systray"
+	"github.com/AshBuk/dabri/v2/config"
 	"github.com/AshBuk/dabri/v2/internal/constants"
 )
 
@@ -34,11 +35,46 @@ func (tm *TrayManager) populateSettingsMenus() {
 	}
 
 	tm.updateHotkeysMenuUI()
+	tm.setupHotkeyModeMenu()
 	tm.setupAudioRecorderMenu()
 	tm.setupLanguageMenu()
 	tm.setupModelMenu()
 	tm.setupOutputMenu()
 	tm.setupWorkflowNotifications()
+}
+
+// setupHotkeyModeMenu adds the toggle / push-to-talk choice to the hotkeys submenu
+func (tm *TrayManager) setupHotkeyModeMenu() {
+	tm.hotkeyItems["mode_toggle"] = tm.hotkeysMenu.AddSubMenuItem("○ Toggle", "Press to start recording, press again to stop")
+	tm.hotkeyItems["mode_ptt"] = tm.hotkeysMenu.AddSubMenuItem("○ Push-to-talk", "Record while the key is held (needs input device access)")
+
+	// Use closure to read tm.onSelectHotkeyMode at invocation time (not capture time)
+	modeCb := func(mode string) error {
+		if tm.onSelectHotkeyMode != nil {
+			return tm.onSelectHotkeyMode(mode)
+		}
+		return nil
+	}
+	for key, mode := range map[string]string{"mode_toggle": config.HotkeyModeToggle, "mode_ptt": config.HotkeyModePTT} {
+		tm.handleRadioItemClick(tm.hotkeyItems[key], mode, "Hotkey mode switched to %s (UI)", tm.updateHotkeyModeRadioUI, modeCb)
+	}
+	tm.updateHotkeyModeRadioUI(tm.cfg().Hotkeys.Mode)
+}
+
+// updateHotkeyModeRadioUI updates titles to emulate radio selection; any mode
+// other than push-to-talk is toggle
+func (tm *TrayManager) updateHotkeyModeRadioUI(mode string) {
+	toggleItem, pttItem := tm.hotkeyItems["mode_toggle"], tm.hotkeyItems["mode_ptt"]
+	if toggleItem == nil || pttItem == nil {
+		return
+	}
+	if mode == config.HotkeyModePTT {
+		toggleItem.SetTitle("○ Toggle")
+		pttItem.SetTitle("● Push-to-talk")
+	} else {
+		toggleItem.SetTitle("● Toggle")
+		pttItem.SetTitle("○ Push-to-talk")
+	}
 }
 
 // setupAudioRecorderMenu creates and configures the audio recorder submenu

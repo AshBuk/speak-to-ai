@@ -217,13 +217,13 @@ func TestArecordRecorder_CleanupFile(t *testing.T) {
 	}
 }
 
-// TestValidateAudioFile_TooShort tests that a header-only file reads as a tap, not a failure
+// TestValidateAudioFile_TooShort tests that a 0.25s tap reads as too short, not a failure
 func TestValidateAudioFile_TooShort(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Audio.SampleRate = 16000
 	recorder := NewArecordRecorder(cfg, testutils.NewMockLogger(), processing.NewTempFileManager(time.Minute))
 	recorder.outputFile = filepath.Join(t.TempDir(), "tap.wav")
-	if err := os.WriteFile(recorder.outputFile, make([]byte, 44), 0o600); err != nil {
+	if err := os.WriteFile(recorder.outputFile, make([]byte, 44+8000), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := recorder.validateAudioFile(); !errors.Is(err, interfaces.ErrRecordingTooShort) {

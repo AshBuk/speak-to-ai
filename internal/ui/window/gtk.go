@@ -35,6 +35,7 @@ type gtkManager struct {
 	modelCombo  *gtk.ComboBoxText
 	langCombo   *gtk.ComboBoxText
 	outputCombo *gtk.ComboBoxText
+	modeCombo   *gtk.ComboBoxText
 	startButton *gtk.Button
 	trayButton  *gtk.Button
 
@@ -118,6 +119,26 @@ func (m *gtkManager) SetOutput(mode string) {
 		m.outputCombo.SetActiveID(mode)
 		m.suppress = false
 	})
+}
+
+func (m *gtkManager) SetHotkeyMode(mode string) {
+	idle(func() {
+		if m.modeCombo == nil {
+			return
+		}
+		m.suppress = true
+		m.modeCombo.SetActiveID(hotkeyModeID(mode))
+		m.suppress = false
+	})
+}
+
+// hotkeyModeID maps a config mode to a combo ID; any mode other than
+// push-to-talk is toggle
+func hotkeyModeID(mode string) string {
+	if mode == configmodels.HotkeyModePTT {
+		return configmodels.HotkeyModePTT
+	}
+	return configmodels.HotkeyModeToggle
 }
 
 // build constructs the window and its widgets and connects user actions.
@@ -214,6 +235,19 @@ func (m *gtkManager) buildGrid() (*gtk.Grid, error) {
 	m.attachRow(grid, 3, "Output", m.outputCombo)
 
 	m.addRow(grid, 4, "Hotkey", &m.opts.Hotkey)
+
+	m.modeCombo, err = m.newCombo(hotkeyModeID(m.opts.HotkeyMode), func(c *gtk.ComboBoxText) {
+		c.Append(configmodels.HotkeyModeToggle, "Press to start/stop")
+		c.Append(configmodels.HotkeyModePTT, "Hold to talk")
+	}, func(mode string) {
+		if a := m.act(); a.OnSelectHotkeyMode != nil {
+			go m.run("hotkey mode switch", func() error { return a.OnSelectHotkeyMode(mode) })
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	m.attachRow(grid, 5, "Hotkey mode", m.modeCombo)
 	return grid, nil
 }
 

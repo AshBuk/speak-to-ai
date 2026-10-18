@@ -43,17 +43,19 @@ type Options struct {
 	ActiveLanguage string        // active language code
 	OutputMode     string        // active output mode (config value)
 	Hotkey         string        // start-recording hotkey, for display only
+	HotkeyMode     string        // recording hotkey mode (toggle or ptt)
 }
 
 // Actions are the callbacks the window invokes on user interaction; the window
 // itself holds no business logic. They are wired after construction via
 // SetActions, mirroring the tray's callback setters.
 type Actions struct {
-	OnToggleRecording func() error
-	OnSelectModel     func(ctx context.Context, modelID string) error
-	OnSelectLanguage  func(language string) error
-	OnSelectOutput    func(mode string) error
-	OnQuit            func()
+	OnToggleRecording  func() error
+	OnSelectModel      func(ctx context.Context, modelID string) error
+	OnSelectLanguage   func(language string) error
+	OnSelectOutput     func(mode string) error
+	OnSelectHotkeyMode func(mode string) error
+	OnQuit             func()
 }
 
 // Manager drives the main window. The backend is chosen at build time (gotk3 or
@@ -72,4 +74,5 @@ type Manager interface {
 	SetModel(modelID string)
 	SetLanguage(code string)
 	SetOutput(mode string)
+	SetHotkeyMode(mode string)
 }

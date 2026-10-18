@@ -104,6 +104,8 @@ type ConfigServiceInterface interface {
 	UpdateRecordingMethod(method string) error
 	// UpdateOutputMode changes the text output mode
 	UpdateOutputMode(mode string) error
+	// UpdateHotkeyMode switches the recording hotkey between toggle and push-to-talk
+	UpdateHotkeyMode(mode string) error
 	// UpdateHotkey changes the key binding for the given action
 	UpdateHotkey(action, combo string) error
 

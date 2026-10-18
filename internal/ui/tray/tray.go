@@ -66,6 +66,7 @@ type TrayManager struct {
 	onGetOutputTools       func() (clipboardTool, typeTool string)
 	onSelectOutputMode     func(mode string) error
 	onRebindHotkey         func(action string) error
+	onSelectHotkeyMode     func(mode string) error
 
 	// Capability callbacks
 	getCaptureOnceSupport func() bool
@@ -174,6 +175,7 @@ func (tm *TrayManager) UpdateSettings(config *config.Config) {
 	tm.updateHotkeysMenuUI()
 	// The helpers gracefully no-op if items are not yet created
 	tm.updateRecorderRadioUI(config.Audio.RecordingMethod)
+	tm.updateHotkeyModeRadioUI(config.Hotkeys.Mode)
 	tm.updateLanguageRadioUI(config.General.Language)
 	tm.updateModelRadioUI(config.General.WhisperModel)
 	tm.updateWorkflowNotificationUI(config.Notifications.EnableWorkflowNotifications)
@@ -276,6 +278,11 @@ func (tm *TrayManager) SetSettingsActions(
 	tm.onSelectLang = onSelectLanguage
 	tm.onToggleWorkflowNotify = onToggleWorkflowNotifications
 	tm.onSelectOutputMode = onSelectOutputMode
+}
+
+// SetHotkeyModeAction sets callback for switching the recording hotkey mode
+func (tm *TrayManager) SetHotkeyModeAction(onSelectMode func(mode string) error) {
+	tm.onSelectHotkeyMode = onSelectMode
 }
 
 // SetHotkeyRebindAction sets callback for hotkey rebind action

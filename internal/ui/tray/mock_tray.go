@@ -92,3 +92,5 @@ func (tm *MockTrayManager) SetCaptureOnceSupport(_ func() bool) {}
 func (tm *MockTrayManager) SetModelAction(_ func(ctx context.Context, modelID string) error) {}
 
 func (tm *MockTrayManager) SetHotkeyRebindAction(_ func(action string) error) {}
+
+func (tm *MockTrayManager) SetHotkeyModeAction(_ func(mode string) error) {}

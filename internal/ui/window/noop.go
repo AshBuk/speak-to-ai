@@ -34,3 +34,4 @@ func (m *noopManager) SetState(State)       {}
 func (m *noopManager) SetModel(string)      {}
 func (m *noopManager) SetLanguage(string)   {}
 func (m *noopManager) SetOutput(string)     {}
+func (m *noopManager) SetHotkeyMode(string) {}
