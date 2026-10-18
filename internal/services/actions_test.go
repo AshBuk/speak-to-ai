@@ -80,6 +80,14 @@ func TestSetHotkeyMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.expect(t, "Config.HotkeyMode:ptt", "Hotkeys.Reload:alt+r", "UI.UpdateSettings")
+
+	// A failed reload tells the user, since hotkey errors only reach the log
+	f = newActionFixture()
+	f.hotkeys.ReloadErr = errors.New("no provider")
+	if err := f.c.setHotkeyMode(config.HotkeyModeToggle); err == nil {
+		t.Fatal("expected error")
+	}
+	f.expect(t, "Config.HotkeyMode:toggle", "Hotkeys.Reload:alt+r", "UI.UpdateSettings", "UI.Notify:Hotkeys unavailable")
 }
 
 func TestResetToDefaults(t *testing.T) {
@@ -87,7 +95,7 @@ func TestResetToDefaults(t *testing.T) {
 	if err := f.c.ResetToDefaults(); err != nil {
 		t.Fatal(err)
 	}
-	f.expect(t, "Config.Reset", "Hotkeys.Reload:alt+r")
+	f.expect(t, "Config.Reset", "Hotkeys.Reload:alt+r", "UI.UpdateSettings")
 
 	f = newActionFixture()
 	f.cfg.ResetErr = errors.New("boom")
@@ -162,5 +170,5 @@ func TestRebindHotkey(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.expect(t, "UI.Notify:Rebind Hotkey", "Hotkeys.Capture",
-		"Config.Hotkey:start_recording=ctrl+space", "Hotkeys.Reload:alt+r", "UI.Notify:Hotkey Updated")
+		"Config.Hotkey:start_recording=ctrl+space", "Hotkeys.Reload:alt+r", "UI.UpdateSettings", "UI.Notify:Hotkey Updated")
 }
