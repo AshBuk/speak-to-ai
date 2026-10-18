@@ -33,6 +33,7 @@ makedepends=(
     'git'
     # Vulkan SDK for GPU acceleration
     'vulkan-headers'
+    'vulkan-icd-loader'
     'shaderc'
     # SPIRV-Headers cmake config - required by whisper.cpp >= v1.8.5 Vulkan backend
     'spirv-headers'
