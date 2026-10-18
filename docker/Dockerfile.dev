@@ -47,8 +47,9 @@ RUN curl -fsSL "https://github.com/golangci/golangci-lint/releases/download/v${G
         "golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64/golangci-lint" \
     && rm /tmp/golangci-lint.tar.gz
 
-# Install gosec
-RUN go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
+# Install gosec and goimports, pinned so lint runs need no network
+RUN go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0 \
+    && go install golang.org/x/tools/cmd/goimports@v0.52.0
 
 # Set working directory
 WORKDIR /app

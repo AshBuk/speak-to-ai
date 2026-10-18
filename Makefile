@@ -42,17 +42,17 @@ DOCKER_RUN := docker compose run --rm dev
 # Format source code (full: go fmt + goimports)
 fmt:
 	@echo "=== Running go fmt and goimports in Docker ==="
-	$(DOCKER_RUN) bash -c 'go fmt ./... && go install golang.org/x/tools/cmd/goimports@latest && goimports -w .'
+	$(DOCKER_RUN) bash -c 'go fmt ./... && goimports -w .'
 
 # Lint source code
 lint: deps whisper-libs
 	@echo "=== Running linter in Docker ==="
-	$(DOCKER_RUN) bash -c 'go build -v github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper && golangci-lint run --verbose --timeout=5m && go install golang.org/x/tools/cmd/goimports@latest && goimports -l . | grep -v "^build/" | tee /dev/stderr | (! read)'
+	$(DOCKER_RUN) bash -c 'go build -v github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper && golangci-lint run --verbose --timeout=5m && goimports -l . | grep -v "^build/" | tee /dev/stderr | (! read)'
 
 # Security scan with gosec
 gosec:
 	@echo "=== Running gosec security scanner in Docker ==="
-	$(DOCKER_RUN) bash -c 'go install github.com/securego/gosec/v2/cmd/gosec@latest && gosec -fmt=json -out=gosec-report.json ./... || true && gosec ./...'
+	$(DOCKER_RUN) bash -c 'gosec -fmt=json -out=gosec-report.json ./... || true && gosec ./...'
 
 # -----------------------------------------------------------------------------
 # Test targets
