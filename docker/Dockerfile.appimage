@@ -100,8 +100,6 @@ ENV APP_VERSION=${APP_VERSION}
 # Whisper.cpp version pin for reproducible builds
 ARG WHISPER_CPP_REF=v1.9.5
 ENV WHISPER_CPP_REF=${WHISPER_CPP_REF}
-# Run on any x86-64 CPU: ggml picks the best CPU variant at startup
-ENV GGML_CPU_ALL_VARIANTS=1
 
 # Build AppImage at image build time so docker build can produce artifacts
 RUN packaging/appimage/build-appimage.sh

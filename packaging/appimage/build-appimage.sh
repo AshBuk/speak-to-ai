@@ -77,6 +77,11 @@ prepare_environment() {
     if [ -f "bash-scripts/dev-env.sh" ]; then
         source bash-scripts/dev-env.sh || true
     fi
+    # Run on any x86-64 CPU: ggml picks the best CPU variant at startup.
+    # ggml's ARM variants need GCC 14 (SME), newer than the aarch64 base image
+    if [ "${ARCH}" = "x86_64" ]; then
+        export GGML_CPU_ALL_VARIANTS=1
+    fi
     if [ ! -f "lib/whisper.h" ]; then
         make internal-whisper-libs
     fi
@@ -105,7 +110,7 @@ build_appdir() {
     # Copy Whisper libraries
     cp -a lib/libwhisper.so* lib/libggml*.so* "${APPDIR}/usr/lib/" 2>/dev/null || true
     # ggml loads backend modules from the executable's directory
-    if [ -n "${GGML_CPU_ALL_VARIANTS}" ]; then
+    if compgen -G "${APPDIR}/usr/lib/libggml-cpu-*.so" >/dev/null; then
         mv "${APPDIR}"/usr/lib/libggml-cpu-*.so "${APPDIR}/usr/lib/libggml-vulkan.so" "${APPDIR}/usr/bin/"
     fi
 
