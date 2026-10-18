@@ -6,6 +6,8 @@ package providers
 import (
 	"testing"
 
+	"github.com/AshBuk/go-wlportal/shortcuts"
+
 	"github.com/AshBuk/dabri/v2/internal/testutils"
 )
 
@@ -111,5 +113,24 @@ func TestDbusKeyboardProvider_Stop_WhenStarted(t *testing.T) {
 	}
 	if provider.session != nil {
 		t.Error("expected session to be nil after stop")
+	}
+}
+
+func TestDbusKeyboardProvider_ListenFoldsAutorepeat(t *testing.T) {
+	p := NewDbusKeyboardProvider(testutils.NewMockLogger())
+	presses := 0
+	p.callbacks["toggle_recording"] = func(bool) error { presses++; return nil }
+
+	events := make(chan shortcuts.Event, 5)
+	for _, pressed := range []bool{true, true, true, false, true} {
+		events <- shortcuts.Event{ID: "toggle_recording", Pressed: pressed}
+	}
+	close(events)
+	p.wg.Add(1)
+	p.listen(events)
+
+	// Two autorepeats fold into the first press; the release lets the last one through
+	if presses != 2 {
+		t.Errorf("presses = %d, want 2", presses)
 	}
 }

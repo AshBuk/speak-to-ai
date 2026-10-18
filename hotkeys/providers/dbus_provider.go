@@ -150,13 +150,26 @@ func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error
 	return "", fmt.Errorf("captureOnce not supported in dbus provider")
 }
 
+// repeatWindow groups Activated events into one press: GNOME re-sends Activated
+// as key autorepeat, the first repeat after its 500 ms default delay.
+const repeatWindow = 600 * time.Millisecond
+
 // listen dispatches callbacks for activated shortcuts until the session closes.
 // The callbacks map is read-only after Start, so no lock is taken here.
 func (p *DbusKeyboardProvider) listen(events <-chan shortcuts.Event) {
 	defer p.wg.Done()
+	last := make(map[string]time.Time) // latest Activated per action
 	for e := range events {
-		// Release events are unreliable across compositors, so push-to-talk runs on evdev
+		// Release events are unreliable across compositors, so push-to-talk runs on
+		// evdev. A release that does arrive ends the press.
 		if !e.Pressed {
+			delete(last, e.ID)
+			continue
+		}
+		now := time.Now()
+		repeat := now.Sub(last[e.ID]) < repeatWindow
+		last[e.ID] = now
+		if repeat {
 			continue
 		}
 		callback, exists := p.callbacks[e.ID]
