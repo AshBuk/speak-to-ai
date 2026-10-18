@@ -155,12 +155,16 @@ func (p *DbusKeyboardProvider) CaptureOnce(timeout time.Duration) (string, error
 func (p *DbusKeyboardProvider) listen(events <-chan shortcuts.Event) {
 	defer p.wg.Done()
 	for e := range events {
+		// Release events are unreliable across compositors, so push-to-talk runs on evdev
+		if !e.Pressed {
+			continue
+		}
 		callback, exists := p.callbacks[e.ID]
 		if !exists {
 			continue
 		}
-		p.logger.Info("Hotkey %s: pressed=%t", e.ID, e.Pressed)
-		if err := callback(e.Pressed); err != nil {
+		p.logger.Info("Hotkey activated: %s", e.ID)
+		if err := callback(true); err != nil {
 			p.logger.Error("Error executing hotkey callback: %v", err)
 		}
 	}
